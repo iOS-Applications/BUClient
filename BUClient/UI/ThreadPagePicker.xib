@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="4514" systemVersion="13B42" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES">
+    <dependencies>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="3747"/>
+    </dependencies>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner" customClass="BUCThreadViewController">
+            <connections>
+                <outlet property="pageCancel" destination="QCG-fE-Vl9" id="fHS-Yx-Pgk"/>
+                <outlet property="pageDone" destination="yLG-EC-OJq" id="9fY-ur-Gg9"/>
+                <outlet property="pagePicker" destination="0rC-a0-JLR" id="vyU-s1-Di0"/>
+                <outlet property="pageTextfield" destination="Ba7-Bx-QyG" id="jfY-0N-YpR"/>
+                <outlet property="pageToolbar" destination="Vep-eT-3K1" id="nqv-jH-ym9"/>
+            </connections>
+        </placeholder>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <toolbar opaque="NO" clearsContextBeforeDrawing="NO" contentMode="scaleToFill" id="Vep-eT-3K1">
+            <rect key="frame" x="0.0" y="0.0" width="320" height="44"/>
+            <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
+            <items>
+                <barButtonItem systemItem="cancel" id="QCG-fE-Vl9">
+                    <connections>
+                        <action selector="handlePagePick:" destination="-1" id="ezb-nJ-RPl"/>
+                    </connections>
+                </barButtonItem>
+                <barButtonItem style="plain" systemItem="flexibleSpace" id="eWm-Qo-nV0"/>
+                <barButtonItem systemItem="done" id="yLG-EC-OJq">
+                    <connections>
+                        <action selector="handlePagePick:" destination="-1" id="jHR-sK-Yaa"/>
+                    </connections>
+                </barButtonItem>
+            </items>
+        </toolbar>
+        <pickerView contentMode="scaleToFill" id="0rC-a0-JLR">
+            <rect key="frame" x="0.0" y="0.0" width="320" height="216"/>
+            <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxY="YES"/>
+            <connections>
+                <outlet property="dataSource" destination="-1" id="rrr-w3-V9v"/>
+                <outlet property="delegate" destination="-1" id="Uqu-S3-FfI"/>
+            </connections>
+        </pickerView>
+        <textField opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" borderStyle="roundedRect" textAlignment="center" minimumFontSize="17" id="Ba7-Bx-QyG">
+            <rect key="frame" x="0.0" y="0.0" width="100" height="30"/>
+            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+            <fontDescription key="fontDescription" type="system" pointSize="14"/>
+            <textInputTraits key="textInputTraits"/>
+        </textField>
+    </objects>
+</document>
