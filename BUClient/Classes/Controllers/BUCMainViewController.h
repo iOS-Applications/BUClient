@@ -9,6 +9,8 @@
 #import <UIKit/UIKit.h>
 
 @interface BUCMainViewController : UIViewController
-- (void)showIndex;
+@property (weak, nonatomic) IBOutlet UIView *loadingView;
+@property (weak, nonatomic) IBOutlet UIActivityIndicatorView *activityView;
 
+- (void)showIndex;
 @end

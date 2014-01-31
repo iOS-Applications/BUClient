@@ -8,6 +8,8 @@
 
 #import "BUCFrontPageViewController.h"
 #import "BUCFrontPageTableCell.h"
+#import "BUCNetworkEngine.h"
+#import "BUCUser.h"
 
 @interface BUCFrontPageViewController ()
 {
@@ -54,15 +56,11 @@
 
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
 {
-#warning Potentially incomplete method implementation.
-    // Return the number of sections.
     return 1;
 }
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
 {
-#warning Incomplete method implementation.
-    // Return the number of rows in the section.
     return 10;
 }
 

@@ -7,9 +7,11 @@
 //
 
 #import <UIKit/UIKit.h>
+#import "BUCEventInterceptWindow.h"
 
 @interface BUCAppDelegate : UIResponder <UIApplicationDelegate>
 
-@property (strong, nonatomic) UIWindow *window;
+@property (strong, nonatomic) BUCEventInterceptWindow *window;
+@property BOOL appIsJustLaunched;
 
 @end

@@ -18,6 +18,10 @@
 {
     UIWindow *window = [UIApplication sharedApplication].keyWindow;
     BUCMainViewController *mainController = (BUCMainViewController *)window.rootViewController;
+    if (!mainController.loadingView.hidden) {
+        mainController.loadingView.hidden = YES;
+        [mainController.activityView stopAnimating];
+    }
     [mainController showIndex];
 }
 

@@ -6,7 +6,6 @@
 //  Copyright (c) 2014 Jox. All rights reserved.
 //
 
-#import <UIKit/UIKit.h>
 #import "BUCBaseTableViewController.h"
 
 @interface BUCThreadViewController : BUCBaseTableViewController <UIActionSheetDelegate, UIPickerViewDataSource, UIPickerViewDelegate>

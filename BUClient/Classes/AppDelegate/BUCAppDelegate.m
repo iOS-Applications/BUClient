@@ -7,39 +7,67 @@
 //
 
 #import "BUCAppDelegate.h"
+#import "BUCUser.h"
+#import "BUCLoginViewController.h"
 
 @implementation BUCAppDelegate
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
+    NSDictionary *appDefaults = [NSDictionary dictionaryWithObject:@"" forKey:@"username"];
+    [[NSUserDefaults standardUserDefaults] registerDefaults:appDefaults];
+    self.appIsJustLaunched = YES;
+    
     return YES;
-}
-
-- (void)applicationWillResignActive:(UIApplication *)application
-{
-    // Sent when the application is about to move from active to inactive state. This can occur for certain types of temporary interruptions (such as an incoming phone call or SMS message) or when the user quits the application and it begins the transition to the background state.
-    // Use this method to pause ongoing tasks, disable timers, and throttle down OpenGL ES frame rates. Games should use this method to pause the game.
-}
-
-- (void)applicationDidEnterBackground:(UIApplication *)application
-{
-    // Use this method to release shared resources, save user data, invalidate timers, and store enough application state information to restore your application to its current state in case it is terminated later. 
-    // If your application supports background execution, this method is called instead of applicationWillTerminate: when the user quits.
-}
-
-- (void)applicationWillEnterForeground:(UIApplication *)application
-{
-    // Called as part of the transition from the background to the inactive state; here you can undo many of the changes made on entering the background.
 }
 
 - (void)applicationDidBecomeActive:(UIApplication *)application
 {
-    // Restart any tasks that were paused (or not yet started) while the application was inactive. If the application was previously in the background, optionally refresh the user interface.
+    if (self.appIsJustLaunched) {
+        NSString *errorMessage = nil;
+        self.appIsJustLaunched = NO;
+        NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+        NSString *username = [defaults objectForKey:@"username"];
+        if (![username isEqualToString:@""]) {
+            BUCUser *user = [BUCUser sharedInstance];
+            user.username = username;
+            if ([user loginForLaunch]) return;
+            else errorMessage = @"原有密码已失效，请手动登录";
+        }
+        
+        UIStoryboard *storyboard = [UIStoryboard storyboardWithName:@"Main" bundle:nil];
+        BUCLoginViewController *loginVC = [storyboard instantiateViewControllerWithIdentifier:@"loginViewController"];
+        [self.window.rootViewController presentViewController:loginVC animated:NO completion:nil];
+        
+        if (errorMessage) [loginVC alertWithMessage:errorMessage];
+    }
 }
 
-- (void)applicationWillTerminate:(UIApplication *)application
+- (BUCEventInterceptWindow *)window
 {
-    // Called when the application is about to terminate. Save data if appropriate. See also applicationDidEnterBackground:.
+    static BUCEventInterceptWindow *customWindow = nil;
+    if (!customWindow) customWindow = [[BUCEventInterceptWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
+    return customWindow;
 }
-
 @end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

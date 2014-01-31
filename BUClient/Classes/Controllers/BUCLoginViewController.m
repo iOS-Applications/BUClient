@@ -7,11 +7,16 @@
 //
 
 #import "BUCLoginViewController.h"
-#import "NSString+NSString_Extended.h"
+#import "BUCUser.h"
+#import "Reachability.h"
+#import "BUCLoginButtonView.h"
 
 @interface BUCLoginViewController ()
 @property (weak, nonatomic) IBOutlet UITextField *username;
 @property (weak, nonatomic) IBOutlet UITextField *password;
+@property (weak, nonatomic) IBOutlet UIView *loadingView;
+@property (weak, nonatomic) IBOutlet UIActivityIndicatorView *activityView;
+@property (weak, nonatomic) IBOutlet BUCLoginButtonView *loginButton;
 
 @end
 
@@ -29,7 +34,10 @@
 - (void)viewDidLoad
 {
     [super viewDidLoad];
-	// Do any additional setup after loading the view.
+    self.loadingView.layer.cornerRadius = 10.0;
+    
+    BUCEventInterceptWindow *window = (BUCEventInterceptWindow *)[UIApplication sharedApplication].keyWindow;
+    window.eventInterceptDelegate = self;
 }
 
 - (void)didReceiveMemoryWarning
@@ -38,87 +46,96 @@
     // Dispose of any resources that can be recreated.
 }
 
+#pragma mark - IBAction methods
 - (IBAction)login:(id)sender {
+    [self.username resignFirstResponder];
+    [self.password resignFirstResponder];
+    NSString *alertMessage;
+    BOOL ready = YES;
+    
+    Reachability *networkReachability = [Reachability reachabilityForInternetConnection];
+    NetworkStatus networkStatus = [networkReachability currentReachabilityStatus];
+    if (networkStatus == NotReachable) {
+        alertMessage = @"无网络连接";
+        ready = NO;
+    }
+    
     NSString *username = self.username.text;
     NSString *password = self.password.text;
-    
-    
     if ([username length] == 0 || [password length] == 0) {
-        UIAlertView *theAlert = [[UIAlertView alloc] initWithTitle:nil
-                                                           message:@"请输入用户信息"
-                                                          delegate:self
-                                                 cancelButtonTitle:@"OK"
-                                                 otherButtonTitles:nil];
-        [theAlert show];
+        alertMessage = @"请输入用户名与密码";
+        ready = NO;
+    }
+    
+    if (!ready) {
+        [self alertWithMessage:alertMessage];
         return;
     }
     
+    BUCUser *user = [BUCUser sharedInstance];
+    user.username = username;
+    user.password = password;
     
-    NSDictionary *postDicUnencoded = [NSDictionary dictionaryWithObjectsAndKeys:
-                                      @"login", @"action",
-                                      username, @"username",
-                                      password, @"password", nil];
+    [self.activityView startAnimating];
+    self.loadingView.hidden = NO;
     
-    
-    NSMutableDictionary *postDic = [[NSMutableDictionary alloc] init];
-    for (NSString *key in postDicUnencoded) {
-        [postDic setValue:[[postDicUnencoded objectForKey:key] urlencode] forKey:key];
-    }
-    
-    
-    NSError *err = nil;
-    NSData *postData = [NSJSONSerialization dataWithJSONObject:postDic options:0 error:&err];
-    
-    
-    if (!postData) {
-        NSLog(@"Error parsing JSON: %@", err);
-    } else {
-        NSURL *url = [NSURL URLWithString:@"http://out.bitunion.org/open_api/bu_logging.php"];
-        NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:url];
-        [request setHTTPMethod:@"POST"];
-        [request setHTTPBody:postData];
+    BUCLoginViewController * __weak weakSelf = self;
+    [user loginCompletionHandler:^(NSString *errorMessage){
+        weakSelf.loadingView.hidden = YES;
+        [weakSelf.activityView stopAnimating];
         
-        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-            // Peform the request
-            NSURLResponse *response;
-            NSError *error = nil;
-            NSData *receivedData = [NSURLConnection sendSynchronousRequest:request
-                                                         returningResponse:&response
-                                                                     error:&error];
-            if (error) {
-                // Deal with your error
-                if ([response isKindOfClass:[NSHTTPURLResponse class]]) {
-                    NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse*)response;
-                    NSLog(@"HTTP Error: %ld %@", (long)httpResponse.statusCode, error);
-                    return;
-                }
-                NSLog(@"Error %@", error);
-                return;
-            }
-            if ([receivedData length] > 0) {
-                
-                NSString * jsonString = [[NSString alloc] initWithData:receivedData encoding:NSUTF8StringEncoding];
-                NSLog(@"%@", jsonString);
-                
-            } else {
-                NSLog(@"failed :(");
-            }
+        if (user.loginSuccess) {
+            NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+            [defaults setObject:username forKey:@"username"];
+            [defaults synchronize];
             
-            // Assume lowercase
-        });
-    }
+            [user setNewPassword:password];
+            weakSelf.modalTransitionStyle = UIModalTransitionStyleCrossDissolve;
+            [weakSelf dismissViewControllerAnimated:YES completion:nil];
+        } else {
+            if (errorMessage) [weakSelf alertWithMessage:errorMessage];
+        }
+    }];
 }
 
-- (BOOL)textFieldShouldReturn:(UITextField *)theTextField
+#pragma mark - textfield delegate methods
+- (BOOL)textFieldShouldReturn:(UITextField *)textField
 {
-    
-    [theTextField resignFirstResponder];
+    [textField resignFirstResponder];
     
     return YES;
 }
 
-- (BOOL)shouldAutorotate
+#pragma mark - EventInterceptWindow delegate methods
+- (void)interceptEvent:(UIEvent *)event
 {
-    return NO;
+    NSSet *touches = [event touchesForView:self.view];
+    if ([touches count] == 0) {
+        touches = [event touchesForView:(UIView *)self.loginButton];
+        if ([touches count] != 0) return;
+        
+        if (!self.loadingView.hidden) {
+            self.loadingView.hidden = YES;
+            [self.activityView stopAnimating];
+            
+            BUCUser *user = [BUCUser sharedInstance];
+            [user cancelLogin];
+        }
+    } else {
+        [self.username resignFirstResponder];
+        [self.password resignFirstResponder];
+    }
 }
+
+#pragma mark - private methods
+- (void)alertWithMessage:(NSString *)message
+{
+    UIAlertView *theAlert = [[UIAlertView alloc] initWithTitle:nil
+                                                       message:message
+                                                      delegate:self
+                                             cancelButtonTitle:@"OK"
+                                             otherButtonTitles:nil];
+    [theAlert show];
+}
+
 @end
