@@ -10,4 +10,6 @@
 
 @interface NSString (NSString_Extended)
 - (NSString *)urlencode;
+- (NSString *)urldecode;
+- (NSString *)replaceHtmlEntities;
 @end

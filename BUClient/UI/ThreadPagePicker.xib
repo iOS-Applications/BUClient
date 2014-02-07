@@ -4,12 +4,11 @@
         <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="3747"/>
     </dependencies>
     <objects>
-        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner" customClass="BUCThreadViewController">
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner">
             <connections>
                 <outlet property="pageCancel" destination="QCG-fE-Vl9" id="fHS-Yx-Pgk"/>
                 <outlet property="pageDone" destination="yLG-EC-OJq" id="9fY-ur-Gg9"/>
                 <outlet property="pagePicker" destination="0rC-a0-JLR" id="vyU-s1-Di0"/>
-                <outlet property="pageTextfield" destination="Ba7-Bx-QyG" id="jfY-0N-YpR"/>
                 <outlet property="pageToolbar" destination="Vep-eT-3K1" id="nqv-jH-ym9"/>
             </connections>
         </placeholder>
@@ -44,6 +43,9 @@
             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
             <fontDescription key="fontDescription" type="system" pointSize="14"/>
             <textInputTraits key="textInputTraits"/>
+            <connections>
+                <outlet property="delegate" destination="-1" id="dZI-HM-b5n"/>
+            </connections>
         </textField>
     </objects>
 </document>

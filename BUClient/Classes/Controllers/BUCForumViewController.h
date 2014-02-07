@@ -8,6 +8,6 @@
 
 #import "BUCBaseTableViewController.h"
 
-@interface BUCForumViewController : BUCBaseTableViewController
+@interface BUCForumViewController : BUCBaseTableViewController <UIActionSheetDelegate, UIPickerViewDataSource, UIPickerViewDelegate>
 
 @end

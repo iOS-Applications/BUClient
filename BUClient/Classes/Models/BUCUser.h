@@ -13,16 +13,12 @@
 @property NSString *username;
 @property NSString *password;
 @property NSString *session;
-@property BOOL loginSuccess;
-
-@property (nonatomic, strong) NSMutableDictionary *keychainData;
-@property (nonatomic, strong) NSMutableDictionary *genericPasswordQuery;
+@property NSMutableDictionary *loginDic;
+@property NSMutableDictionary *loginDataDic;
 
 + (BUCUser *)sharedInstance;
 
-- (BOOL)loginForLaunch;
-- (void)loginCompletionHandler:(void (^)(NSString *errorMessage))completionHandler;
-- (void)cancelLogin;
 - (void)setNewPassword:(NSString *)newPassword;
+- (NSString *)getPassword;
 
 @end

@@ -11,24 +11,32 @@
 
 @interface BUCThreadViewController ()
 
-@property (strong, nonatomic) IBOutlet UITextField *pageTextfield;
-@property (strong, nonatomic) IBOutlet UIPickerView *pagePicker;
+@property (strong, nonatomic) IBOutlet UITextField *pickerInputField;
+@property (strong, nonatomic) IBOutlet UIPickerView *picker;
 
-@property (strong, nonatomic) IBOutlet UIToolbar *pageToolbar;
-@property (weak, nonatomic) IBOutlet UIBarButtonItem *pageCancel;
-@property (weak, nonatomic) IBOutlet UIBarButtonItem *pageDone;
+@property (strong, nonatomic) IBOutlet UIToolbar *pickerToolbar;
+@property (weak, nonatomic) IBOutlet UIBarButtonItem *cancelPicker;
+@property (weak, nonatomic) IBOutlet UIBarButtonItem *donePicker;
 
-@property NSArray *pages;
+@property NSInteger postCount;
 @end
 
 @implementation BUCThreadViewController
 
-- (id)initWithStyle:(UITableViewStyle)style
+- (id)initWithCoder:(NSCoder *)aDecoder
 {
-    self = [super initWithStyle:style];
+    self = [super initWithCoder:aDecoder];
+    
     if (self) {
-        // Custom initialization
+        [self.postDic setObject:@"thread" forKey:@"url"];
+        [self.postDataDic setObject:@"thread" forKey:@"action"];
+        [self.postDataDic setObject:@"32" forKey:@"fid"];
+        [self.postDataDic setObject:@"0" forKey:@"from"];
+        [self.postDataDic setObject:@"20" forKey:@"to"];
+        self.listKey = @"threadlist";
+        self.postCount = 235695;
     }
+    
     return self;
 }
 
@@ -36,38 +44,25 @@
 {
     [super viewDidLoad];
     
-    self.pages = @[@1, @2, @3, @4, @5, @6, @7, @8];
-    
     [[NSBundle mainBundle] loadNibNamed:@"ThreadPagePicker" owner:self options:nil];
     
-    self.pagePicker.frame = CGRectMake(0, 0, 320, 162);
-    self.pageTextfield.inputView = self.pagePicker;
-    self.pageTextfield.inputAccessoryView = self.pageToolbar;
+    self.picker.frame = CGRectMake(0, 0, 320, 162);
+    self.pickerInputField.inputView = self.picker;
+    self.pickerInputField.inputAccessoryView = self.pickerToolbar;
     
-    UIBarButtonItem *tempBarItem = [[UIBarButtonItem alloc] initWithCustomView:self.pageTextfield];
+    UIBarButtonItem *tempBarItem = [[UIBarButtonItem alloc] initWithCustomView:self.pickerInputField];
     NSMutableArray *items = [self.toolbarItems mutableCopy];
     [items insertObject:tempBarItem atIndex:5];
     
     [self setToolbarItems:items];
     
     
-    // Uncomment the following line to preserve selection between presentations.
-    // self.clearsSelectionOnViewWillAppear = NO;
- 
-    // Uncomment the following line to display an Edit button in the navigation bar for this view controller.
-    // self.navigationItem.rightBarButtonItem = self.editButtonItem;
 }
 
-- (void)didReceiveMemoryWarning
-{
-    [super didReceiveMemoryWarning];
-    // Dispose of any resources that can be recreated.
-}
-
-#pragma mark - actions
+#pragma mark - action methods
 - (IBAction)handlePagePick:(id)sender {
-    [self.pageTextfield resignFirstResponder];
-    self.pageTextfield.text = [NSString stringWithFormat:@"%i/%i", [self.pagePicker selectedRowInComponent:0] + 1, [self.pages count]];
+    [self.pickerInputField resignFirstResponder];
+    self.pickerInputField.text = [NSString stringWithFormat:@"%i/%i", [self.picker selectedRowInComponent:0] + 1, self.postCount];
 }
 
 - (IBAction)showActionSheet:(id)sender {
@@ -80,10 +75,10 @@
     [threadActionSheet showInView:self.view];
 }
 
-#pragma mark - picker view delegate/datasource
+#pragma mark - picker view delegate/datasource methods
 
 - (NSString*)pickerView:(UIPickerView *)pickerView titleForRow:(NSInteger)row forComponent:(NSInteger)component {
-    return [NSString stringWithFormat:@"第%@页", [self.pages objectAtIndex:row]];
+    return [NSString stringWithFormat:@"第%d页", row];
 }
 
 - (NSInteger)numberOfComponentsInPickerView:(UIPickerView *)pickerView {
@@ -91,86 +86,7 @@
 }
 
 - (NSInteger)pickerView:(UIPickerView *)pickerView numberOfRowsInComponent:(NSInteger)component {
-    return [self.pages count];
+    return self.postCount;
 }
-
-
-#pragma mark - Table view data source
-/*0
-- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
-{
-#warning Potentially incomplete method implementation.
-    // Return the number of sections.
-    return 0;
-}
-
-- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
-{
-#warning Incomplete method implementation.
-    // Return the number of rows in the section.
-    return 0;
-}
-
-- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
-{
-    static NSString *CellIdentifier = @"Cell";
-    UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:CellIdentifier forIndexPath:indexPath];
-    
-    // Configure the cell...
-    
-    return cell;
-}
-*/
-
-/*
-// Override to support conditional editing of the table view.
-- (BOOL)tableView:(UITableView *)tableView canEditRowAtIndexPath:(NSIndexPath *)indexPath
-{
-    // Return NO if you do not want the specified item to be editable.
-    return YES;
-}
-*/
-
-/*
-// Override to support editing the table view.
-- (void)tableView:(UITableView *)tableView commitEditingStyle:(UITableViewCellEditingStyle)editingStyle forRowAtIndexPath:(NSIndexPath *)indexPath
-{
-    if (editingStyle == UITableViewCellEditingStyleDelete) {
-        // Delete the row from the data source
-        [tableView deleteRowsAtIndexPaths:@[indexPath] withRowAnimation:UITableViewRowAnimationFade];
-    }   
-    else if (editingStyle == UITableViewCellEditingStyleInsert) {
-        // Create a new instance of the appropriate class, insert it into the array, and add a new row to the table view
-    }   
-}
-*/
-
-/*
-// Override to support rearranging the table view.
-- (void)tableView:(UITableView *)tableView moveRowAtIndexPath:(NSIndexPath *)fromIndexPath toIndexPath:(NSIndexPath *)toIndexPath
-{
-}
-*/
-
-/*
-// Override to support conditional rearranging of the table view.
-- (BOOL)tableView:(UITableView *)tableView canMoveRowAtIndexPath:(NSIndexPath *)indexPath
-{
-    // Return NO if you do not want the item to be re-orderable.
-    return YES;
-}
-*/
-
-/*
-#pragma mark - Navigation
-
-// In a story board-based application, you will often want to do a little preparation before navigation
-- (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender
-{
-    // Get the new view controller using [segue destinationViewController].
-    // Pass the selected object to the new view controller.
-}
-
- */
 
 @end

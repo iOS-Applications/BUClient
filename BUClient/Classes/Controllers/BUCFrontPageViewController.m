@@ -7,176 +7,118 @@
 //
 
 #import "BUCFrontPageViewController.h"
-#import "BUCFrontPageTableCell.h"
-#import "BUCNetworkEngine.h"
-#import "BUCUser.h"
+#import "BUCTableCell.h"
+#import "NSString+NSString_Extended.h"
+#import "BUCRoundButtonView.h"
 
 @interface BUCFrontPageViewController ()
-{
-    NSString *text;
-}
+
 
 @end
 
 @implementation BUCFrontPageViewController
 
-- (id)initWithStyle:(UITableViewStyle)style
+- (id)initWithCoder:(NSCoder *)aDecoder
 {
-    self = [super initWithStyle:style];
+    self = [super initWithCoder:aDecoder];
+
     if (self) {
-        // Custom initialization
+        [self.postDic setObject:@"home" forKey:@"url"];
+        self.listKey = @"newlist";
     }
+    
     return self;
 }
 
-- (void)viewDidLoad
+#pragma mark - unwind methods
+- (IBAction)unwindToFront:(UIStoryboardSegue *)segue
 {
-    [super viewDidLoad];
-    text = @"从香港直飞北京，想带一部iphone5s，怎么过安检？会不会收税？需要拆封么？托运还是随身带";
-    //text = @"世界，你好";
-    //text = @"grails geb -baseUrl option does not work for remote services";
-    text = @"hello, world";
-
-    // Uncomment the following line to preserve selection between presentations.
-    // self.clearsSelectionOnViewWillAppear = NO;
- 
-    // Uncomment the following line to display an Edit button in the navigation bar for this view controller.
-    // self.navigationItem.rightBarButtonItem = self.editButtonItem;
+    
 }
 
-- (void)didReceiveMemoryWarning
-{
-    [super didReceiveMemoryWarning];
-    // Dispose of any resources that can be recreated.
+- (IBAction)shit:(id)sender forEvent:(UIEvent *)event {
+    NSSet *touches = [event allTouches];
+    UITouch *touch = [touches anyObject];
+    CGPoint p = [touch locationInView:self.tableView];
+    NSLog(@"%f, %f", p.x, p.y);
+    NSLog(@"%i", [self.tableView indexPathForRowAtPoint:p].row);
 }
 
 
-
-#pragma mark - Table view data source
-
-- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
-{
-    return 1;
-}
-
-- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
-{
-    return 10;
-}
-
+#pragma mark - Table view data source and delegate methods
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
 {
-    static NSString *CellIdentifier;
-    if (indexPath.row & 1) {
-        CellIdentifier = @"odd";
-    } else {
-        CellIdentifier = @"even";
-    }
+    static NSString *CellIdentifier = @"frontCell";
 
-    BUCFrontPageTableCell *cell = [tableView dequeueReusableCellWithIdentifier:CellIdentifier forIndexPath:indexPath];
+    BUCTableCell *cell = [tableView dequeueReusableCellWithIdentifier:CellIdentifier forIndexPath:indexPath];
+    CGFloat cellHeight = cell.frame.size.height;
+    NSDictionary *post = [self.list objectAtIndex:indexPath.row];
     
-    [cell.author setTitle:@"jox0" forState:UIControlStateNormal];
-    [cell.subforum setTitle:@"iOS Programming" forState:UIControlStateNormal];
-    [cell.replyCount setTitle:@"1000" forState:UIControlStateNormal];
+    [cell.replyCount setTitle:[post objectForKey:@"tid_sum"] forState:UIControlStateNormal];
     
-    NSDictionary *stringAttribute = @{NSFontAttributeName:[UIFont systemFontOfSize:18.0]};
-    CGRect frame = [text boundingRectWithSize:CGSizeMake(230, FLT_MAX)
-                                       options:(NSStringDrawingUsesLineFragmentOrigin | NSStringDrawingUsesFontLeading)
-                                    attributes:stringAttribute
-                                       context:nil];
-    
-    CGFloat padding = 10.0;         // padding of text view is not documented, compensation height need to be set here
-    
-    if (frame.size.height < 25) {   // padding of text is different when there is only one line of text
-        padding = 6.0;
-    }
-    
-    frame.size.height = frame.size.height + padding;
-    frame.size.width = 230.0;       // width of text view need to be set when there is only one line of text
-    CGSize size = frame.size;
+    CGRect frame = CGRectMake(0, 0, 230, cellHeight - 32);
     cell.title.frame = frame;
-    cell.title.text = text;
-    cell.title.font = [UIFont systemFontOfSize:18.0];
-//    [cell.title setTextColor:[UIColor colorWithRed:0.0/255.0 green:100.0/255 blue:255.0/255.0 alpha:1.0]];
+    cell.title.text = [[[post objectForKey:@"pname"] urldecode] replaceHtmlEntities];
+    cell.title.font = [UIFont systemFontOfSize:18];
     
-    stringAttribute = @{NSFontAttributeName: [UIFont systemFontOfSize:15.0]};
-    CGFloat linkY = MAX(60, size.height);
-    
-    size = [cell.author.titleLabel.text sizeWithAttributes:stringAttribute];
-    cell.author.frame = CGRectMake(10, linkY, size.width + 2.0, 27.0);      // 2 is the width to compensate padding of button element
 
-    size = [cell.subforum.titleLabel.text sizeWithAttributes:stringAttribute];
-    cell.subforum.frame = CGRectMake(308 - size.width, linkY, size.width + 2.0, 27.0);
+    NSDictionary *stringAttribute = @{NSFontAttributeName:[UIFont systemFontOfSize:15]};
+    
+    NSString *author = [[post objectForKey:@"author"] urldecode];
+    UIButton *authorBtn = [self cellButtonWithTitle:author];
+
+    CGSize size = [author sizeWithAttributes:stringAttribute];
+    authorBtn.frame = CGRectMake(10, cellHeight - 27, size.width + 2, 27);      // 2 is the width to compensate padding of button element
+    cell.authorBtn = authorBtn;
+    [cell addSubview:authorBtn];
+
+    NSString *subforum = [[post objectForKey:@"fname"] urldecode];
+    UIButton *subforumBtn = [self cellButtonWithTitle:subforum];
+    
+    size = [subforum sizeWithAttributes:stringAttribute];
+    subforumBtn.frame = CGRectMake(308 - size.width, cellHeight - 27, size.width + 2, 27);
+    cell.subforumBtn = subforumBtn;
+    [cell addSubview:subforumBtn];
     
     return cell;
 }
 
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
 {
+    NSDictionary *post = [self.list objectAtIndex:indexPath.row];
+    NSString *text = [[post objectForKey:@"pname"] urldecode];
     CGRect frame = [text boundingRectWithSize:CGSizeMake(230, FLT_MAX)
                                        options:(NSStringDrawingUsesLineFragmentOrigin | NSStringDrawingUsesFontLeading)
-                                    attributes:@{NSFontAttributeName:[UIFont systemFontOfSize:18.0]}
+                                    attributes:@{NSFontAttributeName:[UIFont systemFontOfSize:18]}
                                        context:nil];
     
-    CGFloat padding = 10.0;
+    CGFloat padding = 10;
     
-    if (frame.size.height < 25.0) {
-        padding = 3.0;
+    if (frame.size.height < 25) {
+        padding = 3;
     }
 
-    return MAX(60, frame.size.height) + padding + 32.0; // 32 = 5(bottom space) + 27(height of button)
+    return MAX(60, frame.size.height + padding) + 32; // 32 = 5(space between the bottom buttons and the title) + 27(height of button)
 }
 
-
-/*
-// Override to support conditional editing of the table view.
-- (BOOL)tableView:(UITableView *)tableView canEditRowAtIndexPath:(NSIndexPath *)indexPath
+#pragma mark - private methods
+- (UIButton *)cellButtonWithTitle:(NSString *)title
 {
-    // Return NO if you do not want the specified item to be editable.
-    return YES;
+    UIButton *button = [UIButton buttonWithType:UIButtonTypeSystem];
+    [button setTitle:title forState:UIControlStateNormal];
+    button.titleLabel.font = [UIFont systemFontOfSize:15];
+    
+    return button;
 }
-*/
 
-/*
-// Override to support editing the table view.
-- (void)tableView:(UITableView *)tableView commitEditingStyle:(UITableViewCellEditingStyle)editingStyle forRowAtIndexPath:(NSIndexPath *)indexPath
+#pragma mark - EventInterceptWindow delegate methods
+- (void)interceptEvent:(UIEvent *)event
 {
-    if (editingStyle == UITableViewCellEditingStyleDelete) {
-        // Delete the row from the data source
-        [tableView deleteRowsAtIndexPaths:@[indexPath] withRowAnimation:UITableViewRowAnimationFade];
-    }   
-    else if (editingStyle == UITableViewCellEditingStyleInsert) {
-        // Create a new instance of the appropriate class, insert it into the array, and add a new row to the table view
-    }   
+    NSSet *touches = [event allTouches];
+    UITouch *touch = [touches anyObject];
+    CGPoint p = [touch locationInView:self.tableView];
+    NSIndexPath *path = [self.tableView indexPathForRowAtPoint:p];
+    NSLog(@"%f, %f", p.x, p.y);
+    NSLog(@"%i", path.row);
 }
-*/
-
-/*
-// Override to support rearranging the table view.
-- (void)tableView:(UITableView *)tableView moveRowAtIndexPath:(NSIndexPath *)fromIndexPath toIndexPath:(NSIndexPath *)toIndexPath
-{
-}
-*/
-
-/*
-// Override to support conditional rearranging of the table view.
-- (BOOL)tableView:(UITableView *)tableView canMoveRowAtIndexPath:(NSIndexPath *)indexPath
-{
-    // Return NO if you do not want the item to be re-orderable.
-    return YES;
-}
-*/
-
-/*
-#pragma mark - Navigation
-
-// In a story board-based application, you will often want to do a little preparation before navigation
-- (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender
-{
-    // Get the new view controller using [segue destinationViewController].
-    // Pass the selected object to the new view controller.
-}
-
- */
-
 @end

@@ -12,5 +12,8 @@
 @property (weak, nonatomic) IBOutlet UIView *loadingView;
 @property (weak, nonatomic) IBOutlet UIActivityIndicatorView *activityView;
 
+- (void)displayLoginWithMessage:(NSString *)message;
 - (void)showIndex;
+- (void)displayLoading;
+- (void)hideLoading;
 @end

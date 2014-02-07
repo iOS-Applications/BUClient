@@ -12,13 +12,11 @@
 
 static NSString *kKeychainItemIdentifer = @"org.bitunion.buc.%@.KeychainUI";
 
-
 @interface BUCUser ()
 
 @property NSString *keychainItemIDString;
-@property NSString *loginUrl;
-@property NSMutableDictionary *loginDic;
-@property NSMutableDictionary *loginDataDic;
+@property (nonatomic, strong) NSMutableDictionary *keychainData;
+@property (nonatomic, strong) NSMutableDictionary *genericPasswordQuery;
 
 - (void)setupQueryDictionary;
 - (NSMutableDictionary *)secItemFormatToDictionary:(NSDictionary *)dictionaryToConvert;
@@ -30,7 +28,6 @@ static NSString *kKeychainItemIdentifer = @"org.bitunion.buc.%@.KeychainUI";
 @implementation BUCUser
 
 @synthesize keychainData, genericPasswordQuery;
-@synthesize username, password;
 
 #pragma mark - shared singleton object
 +(BUCUser *)sharedInstance
@@ -51,12 +48,8 @@ static NSString *kKeychainItemIdentifer = @"org.bitunion.buc.%@.KeychainUI";
     self = [super init];
     
     if (self) {
-        _loginUrl = [NSURL URLWithString:@"http://out.bitunion.org/open_api/bu_logging.php"];
-        _session = nil;
-        username = nil;
-        password = nil;
         _loginDic = [[NSMutableDictionary alloc] init];
-        [_loginDic setObject:_loginUrl forKey:@"url"];
+        [_loginDic setObject:@"logging" forKey:@"url"];
         [_loginDic setObject:@"POST" forKey:@"method"];
         _loginDataDic = [[NSMutableDictionary alloc] init];
         [_loginDataDic setObject:@"login" forKey:@"action"];
@@ -67,62 +60,6 @@ static NSString *kKeychainItemIdentifer = @"org.bitunion.buc.%@.KeychainUI";
 }
 
 #pragma mark - public methods
-- (BOOL)loginForLaunch
-{
-    if (!password) password = [self queryPassword];
-    if (!password) {
-        self.keychainData = nil;
-        return NO;
-    }
-    
-    [self.loginDataDic setObject:username forKey:@"username"];
-    [self.loginDataDic setObject:password forKey:@"password"];
-    NSLog(@"%@ %@", username, password);
-    
-    BUCNetworkEngine *engine = [BUCNetworkEngine sharedInstance];
-    
-    [engine processRequestDic:self.loginDic sync:YES completionHandler:nil];
-    
-    if (!engine.responseDic || ![[engine.responseDic objectForKey:@"result"] isEqualToString:@"success"]) return NO;
-
-    self.session = [engine.responseDic objectForKey:@"session"];
-    
-    return YES;
-}
-
-- (void)loginCompletionHandler:(void (^)(NSString *message))completionHandler
-{
-    self.loginSuccess = NO;
-    [self.loginDataDic setObject:username forKey:@"username"];
-    [self.loginDataDic setObject:password forKey:@"password"];
-    BUCUser * __weak weakUser = self;
-    BUCNetworkEngine *engine = [BUCNetworkEngine sharedInstance];
-    [engine processRequestDic:self.loginDic sync:NO completionHandler:^(NSString *errorMessage){
-        if (engine.responseDic && [[engine.responseDic objectForKey:@"result"] isEqualToString:@"success"]) {
-            weakUser.session = [engine.responseDic objectForKey:@"session"];
-            weakUser.loginSuccess = YES;
-        }
-        
-        if (engine.responseDic) {
-            NSString *result = [engine.responseDic objectForKey:@"result"];
-            if ([result isEqualToString:@"success"]) {
-                weakUser.session = [engine.responseDic objectForKey:@"session"];
-                weakUser.loginSuccess = YES;
-            } else if ([result isEqualToString:@"fail"]) {
-                errorMessage = @"用户名或密码错误，请重新尝试";
-            }
-        }
-        
-        completionHandler(errorMessage);
-    }];
-}
-
-- (void)cancelLogin
-{
-    BUCNetworkEngine *engine = [BUCNetworkEngine sharedInstance];
-    [engine cancelCurrentTask];
-}
-
 - (void)setNewPassword:(NSString *)newPassword
 {
     [self setupQueryDictionary];
@@ -130,10 +67,15 @@ static NSString *kKeychainItemIdentifer = @"org.bitunion.buc.%@.KeychainUI";
     NSString *oldPassword = [keychainData objectForKey:(__bridge id)kSecValueData];
     if (![oldPassword isEqual:newPassword])
     {
-        [keychainData setObject:username forKey:(__bridge id)kSecAttrAccount];
+        [keychainData setObject:self.username forKey:(__bridge id)kSecAttrAccount];
         [keychainData setObject:newPassword forKey:(__bridge id)kSecValueData];
         [self writeToKeychain];
     }
+}
+
+- (NSString *)getPassword
+{
+    return [self queryPassword];
 }
 
 #pragma mark - private methods
@@ -144,7 +86,7 @@ static NSString *kKeychainItemIdentifer = @"org.bitunion.buc.%@.KeychainUI";
     [genericPasswordQuery setObject:(__bridge id)kSecClassGenericPassword
                              forKey:(__bridge id)kSecClass];
     
-    self.keychainItemIDString = [NSString stringWithFormat:kKeychainItemIdentifer, username];
+    self.keychainItemIDString = [NSString stringWithFormat:kKeychainItemIdentifer, self.username];
     NSData *keychainItemID = [self.keychainItemIDString dataUsingEncoding:NSUTF8StringEncoding];
     [genericPasswordQuery setObject:keychainItemID
                              forKey:(__bridge id)kSecAttrGeneric];
@@ -231,10 +173,10 @@ static NSString *kKeychainItemIdentifer = @"org.bitunion.buc.%@.KeychainUI";
     {
         [returnDictionary removeObjectForKey:(__bridge id)kSecReturnData];
         
-        password = [[NSString alloc] initWithBytes:[passwordData bytes]
+        self.password = [[NSString alloc] initWithBytes:[passwordData bytes]
                                                       length:[passwordData length]
                                                     encoding:NSUTF8StringEncoding];
-        [returnDictionary setObject:password forKey:(__bridge id)kSecValueData];
+        [returnDictionary setObject:self.password forKey:(__bridge id)kSecValueData];
     }
     else if (keychainError == errSecItemNotFound) {
         NSAssert(NO, @"Nothing was found in the keychain.\n");
@@ -268,10 +210,8 @@ static NSString *kKeychainItemIdentifer = @"org.bitunion.buc.%@.KeychainUI";
     }
     else
     {
-//        NSAssert(SecItemAdd((__bridge CFDictionaryRef)[self dictionaryToSecItemFormat:keychainData], NULL) == noErr,
-//                 @"Couldn't add the Keychain Item." );
-        OSStatus result = SecItemAdd((__bridge CFDictionaryRef)[self dictionaryToSecItemFormat:keychainData], NULL);
-        NSLog(@"error: %d", (int)result);
+        NSAssert(SecItemAdd((__bridge CFDictionaryRef)[self dictionaryToSecItemFormat:keychainData], NULL) == noErr,
+                 @"Couldn't add the Keychain Item." );
     }
 }
 

@@ -7,6 +7,7 @@
 //
 
 #import "BUCMainViewController.h"
+#import "BUCLoginViewController.h"
 
 #define MINTRANSLATION 130.0
 #define MAXTRANSLATION 250.0
@@ -25,15 +26,6 @@
 
 @implementation BUCMainViewController
 
-- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
-{
-    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
-    if (self) {
-
-    }
-    return self;
-}
-
 - (void)viewDidLoad
 {
     [super viewDidLoad];
@@ -44,14 +36,18 @@
     self.content.layer.shadowOpacity = 1.0;
     self.content.layer.shadowRadius = 5.0;
     self.content.layer.shadowPath = [UIBezierPath bezierPathWithRect:self.content.bounds].CGPath;
+    
+    self.loadingView.layer.cornerRadius = 10.0;
 }
 
-- (void)didReceiveMemoryWarning
+#pragma mark - public methods
+- (void)displayLoginWithMessage:(NSString *)message
 {
-    [super didReceiveMemoryWarning];
-    // Dispose of any resources that can be recreated.
+    UIStoryboard *storyboard = [UIStoryboard storyboardWithName:@"Main" bundle:nil];
+    BUCLoginViewController *loginVC = [storyboard instantiateViewControllerWithIdentifier:@"loginViewController"];
+    [self presentViewController:loginVC animated:NO completion:nil];
+    if ([message length]) [loginVC alertWithMessage:message];
 }
-
 - (void)showIndex
 {
     [UIView animateWithDuration:0.75
@@ -67,6 +63,19 @@
     [self.content addGestureRecognizer:self.contentTapRecognizer];
 }
 
+- (void)displayLoading
+{
+    [self.activityView startAnimating];
+    self.loadingView.hidden = NO;
+}
+
+- (void)hideLoading
+{
+    self.loadingView.hidden = YES;
+    [self.activityView stopAnimating];
+}
+
+#pragma mark - gesture handler methods
 - (IBAction)handlePan:(UIPanGestureRecognizer *)recognizer
 {
     CGPoint translation = [recognizer translationInView:self.view];

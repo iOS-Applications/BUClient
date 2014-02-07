@@ -8,16 +8,18 @@
 
 #import "BUCLoginViewController.h"
 #import "BUCUser.h"
-#import "Reachability.h"
 #import "BUCLoginButtonView.h"
+#import "BUCNetworkEngine.h"
 
 @interface BUCLoginViewController ()
 @property (weak, nonatomic) IBOutlet UITextField *username;
 @property (weak, nonatomic) IBOutlet UITextField *password;
+
 @property (weak, nonatomic) IBOutlet UIView *loadingView;
 @property (weak, nonatomic) IBOutlet UIActivityIndicatorView *activityView;
 @property (weak, nonatomic) IBOutlet BUCLoginButtonView *loginButton;
 
+@property UITextField *curTextField;
 @end
 
 @implementation BUCLoginViewController
@@ -34,6 +36,7 @@
 - (void)viewDidLoad
 {
     [super viewDidLoad];
+    
     self.loadingView.layer.cornerRadius = 10.0;
     
     BUCEventInterceptWindow *window = (BUCEventInterceptWindow *)[UIApplication sharedApplication].keyWindow;
@@ -48,14 +51,13 @@
 
 #pragma mark - IBAction methods
 - (IBAction)login:(id)sender {
-    [self.username resignFirstResponder];
-    [self.password resignFirstResponder];
+    [self.curTextField resignFirstResponder];
+    
     NSString *alertMessage;
     BOOL ready = YES;
     
-    Reachability *networkReachability = [Reachability reachabilityForInternetConnection];
-    NetworkStatus networkStatus = [networkReachability currentReachabilityStatus];
-    if (networkStatus == NotReachable) {
+    BUCNetworkEngine *engine = [BUCNetworkEngine sharedInstance];
+    if (!engine.hostIsOn) {
         alertMessage = @"无网络连接";
         ready = NO;
     }
@@ -73,27 +75,48 @@
     }
     
     BUCUser *user = [BUCUser sharedInstance];
-    user.username = username;
-    user.password = password;
+    NSMutableDictionary *loginDataDic = user.loginDataDic;
+    [loginDataDic setObject:username forKey:@"username"];
+    [loginDataDic setObject:password forKey:@"password"];
+    
+    NSMutableDictionary *loginDic = user.loginDic;
     
     [self.activityView startAnimating];
     self.loadingView.hidden = NO;
+    self.loginButton.enabled = NO;
     
     BUCLoginViewController * __weak weakSelf = self;
-    [user loginCompletionHandler:^(NSString *errorMessage){
+    
+    [engine processRequestDic:loginDic sync:NO completionHandler:^(NSString *errorMessage) {
         weakSelf.loadingView.hidden = YES;
         [weakSelf.activityView stopAnimating];
+        weakSelf.loginButton.enabled = YES;
         
-        if (user.loginSuccess) {
-            NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-            [defaults setObject:username forKey:@"username"];
-            [defaults synchronize];
-            
-            [user setNewPassword:password];
-            weakSelf.modalTransitionStyle = UIModalTransitionStyleCrossDissolve;
-            [weakSelf dismissViewControllerAnimated:YES completion:nil];
+        if (engine.responseDic) {
+            NSString *result = [engine.responseDic objectForKey:@"result"];
+            if ([result isEqualToString:@"success"]) {
+                user.username = username;
+                user.password = password;
+                user.session = [engine.responseDic objectForKey:@"session"];
+                
+                NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+                [defaults setObject:username forKey:@"username"];
+                [defaults synchronize];
+                
+                [user setNewPassword:password];
+                
+                BUCEventInterceptWindow *window = (BUCEventInterceptWindow *)[UIApplication sharedApplication].keyWindow;
+                window.eventInterceptDelegate = nil;
+                
+                weakSelf.modalTransitionStyle = UIModalTransitionStyleCrossDissolve;
+                [weakSelf dismissViewControllerAnimated:YES completion:nil];
+            } else if ([result isEqualToString:@"fail"]) {
+                errorMessage = @"用户名与密码不匹配或积分为负无法登录，请联系联盟管理员，或重新尝试";
+            }
+        } else if (errorMessage) {
+            [weakSelf alertWithMessage:errorMessage];
         } else {
-            if (errorMessage) [weakSelf alertWithMessage:errorMessage];
+            [weakSelf alertWithMessage:@"未知错误"];
         }
     }];
 }
@@ -104,6 +127,11 @@
     [textField resignFirstResponder];
     
     return YES;
+}
+
+- (void)textFieldDidBeginEditing:(UITextField *)textField
+{
+    self.curTextField = textField;
 }
 
 #pragma mark - EventInterceptWindow delegate methods
@@ -118,12 +146,10 @@
             self.loadingView.hidden = YES;
             [self.activityView stopAnimating];
             
-            BUCUser *user = [BUCUser sharedInstance];
-            [user cancelLogin];
+            [self cancelLogin];
         }
     } else {
-        [self.username resignFirstResponder];
-        [self.password resignFirstResponder];
+        [self.curTextField resignFirstResponder];
     }
 }
 
@@ -138,4 +164,9 @@
     [theAlert show];
 }
 
+- (void)cancelLogin
+{
+    BUCNetworkEngine *engine = [BUCNetworkEngine sharedInstance];
+    [engine cancelCurrentTask];
+}
 @end

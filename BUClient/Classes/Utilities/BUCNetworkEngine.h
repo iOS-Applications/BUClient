@@ -9,9 +9,12 @@
 #import <Foundation/Foundation.h>
 
 @interface BUCNetworkEngine : NSObject
+@property BOOL hostIsOn;
 @property NSDictionary *responseDic;
 
 + (BUCNetworkEngine *)sharedInstance;
 - (void)processRequestDic:(NSDictionary *)requestDic sync:(BOOL)sync completionHandler:(void (^)(NSString *message))completionHandler;
 - (void)cancelCurrentTask;
+- (BOOL)checkNetworkStatus;
+
 @end

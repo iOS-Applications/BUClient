@@ -13,26 +13,52 @@
 @end
 
 @implementation BUCForumListViewController
-
-- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+- (id)initWithCoder:(NSCoder *)aDecoder
 {
-    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    self = [super initWithCoder:aDecoder];
+    
     if (self) {
-        // Custom initialization
+        [self.postDic setObject:@"forum" forKey:@"url"];
+        [self.postDataDic setObject:@"forum" forKey:@"action"];
+        self.listKey = @"forumslist";
     }
+    
     return self;
 }
 
-- (void)viewDidLoad
+- (IBAction)unwindToForumList:(UIStoryboardSegue *)segue
 {
-    [super viewDidLoad];
-	// Do any additional setup after loading the view.
+    
 }
 
-- (void)didReceiveMemoryWarning
+#pragma mark - Table view data source and delegate methods
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
 {
-    [super didReceiveMemoryWarning];
-    // Dispose of any resources that can be recreated.
+    return [self.list count];
 }
 
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
+    return [[[self.list objectAtIndex:section] objectForKey:@"forumList"] count];
+}
+
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    static NSString *CellIdentifier = @"forumListCell";
+    
+    UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:CellIdentifier forIndexPath:indexPath];
+    NSString *name = [[[[self.list objectAtIndex:indexPath.section] objectForKey:@"forumList"] objectAtIndex:indexPath.row] objectForKey:@"name"];
+    NSRange r = [name rangeOfString:@"站庆专版"];
+    if (r.length) {
+        name = @"> 站庆专版";
+    }
+    cell.textLabel.text = name;
+    
+    return cell;
+}
+
+- (NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section
+{
+    return [[[self.list objectAtIndex:section] objectForKey:@"info"] objectForKey:@"name"];
+}
 @end

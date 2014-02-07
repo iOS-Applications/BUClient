@@ -9,9 +9,12 @@
 #import <UIKit/UIKit.h>
 #import "BUCRoundButtonView.h"
 
-@interface BUCFrontPageTableCell : UITableViewCell
-@property (weak, nonatomic) IBOutlet UIButton *author;
-@property (weak, nonatomic) IBOutlet UIButton *subforum;
+@interface BUCTableCell : UITableViewCell
 @property (weak, nonatomic) IBOutlet UITextView *title;
 @property (weak, nonatomic) IBOutlet BUCRoundButtonView *replyCount;
+
+
+@property UIButton *authorBtn;
+@property UIButton *subforumBtn;
+@property UILabel *timeStamp;
 @end

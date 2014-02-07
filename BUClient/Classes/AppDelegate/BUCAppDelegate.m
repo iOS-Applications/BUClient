@@ -9,12 +9,15 @@
 #import "BUCAppDelegate.h"
 #import "BUCUser.h"
 #import "BUCLoginViewController.h"
+#import "BUCNetworkEngine.h"
+#import "BUCFrontPageViewController.h"
 
 @implementation BUCAppDelegate
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
-    NSDictionary *appDefaults = [NSDictionary dictionaryWithObject:@"" forKey:@"username"];
+    NSDictionary *appDefaults = [NSDictionary dictionaryWithObjectsAndKeys:
+                                 @"", @"username", nil];
     [[NSUserDefaults standardUserDefaults] registerDefaults:appDefaults];
     self.appIsJustLaunched = YES;
     
@@ -24,31 +27,55 @@
 - (void)applicationDidBecomeActive:(UIApplication *)application
 {
     if (self.appIsJustLaunched) {
-        NSString *errorMessage = nil;
+        
         self.appIsJustLaunched = NO;
-        NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-        NSString *username = [defaults objectForKey:@"username"];
-        if (![username isEqualToString:@""]) {
-            BUCUser *user = [BUCUser sharedInstance];
-            user.username = username;
-            if ([user loginForLaunch]) return;
-            else errorMessage = @"原有密码已失效，请手动登录";
+        NSString *errorMessage = [self login];
+        
+        if (errorMessage) {
+            [(BUCMainViewController *)self.window.rootViewController displayLoginWithMessage:errorMessage];
         }
-        
-        UIStoryboard *storyboard = [UIStoryboard storyboardWithName:@"Main" bundle:nil];
-        BUCLoginViewController *loginVC = [storyboard instantiateViewControllerWithIdentifier:@"loginViewController"];
-        [self.window.rootViewController presentViewController:loginVC animated:NO completion:nil];
-        
-        if (errorMessage) [loginVC alertWithMessage:errorMessage];
     }
 }
 
+#pragma mark - custom getter method of property window
 - (BUCEventInterceptWindow *)window
 {
     static BUCEventInterceptWindow *customWindow = nil;
     if (!customWindow) customWindow = [[BUCEventInterceptWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
     return customWindow;
 }
+
+#pragma mark - private methods
+- (NSString *)login
+{
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    NSString *username = [defaults objectForKey:@"username"];
+    
+    BUCNetworkEngine *engine = [BUCNetworkEngine sharedInstance];
+    if (![engine checkNetworkStatus])
+        return @"无法连接到联盟服务器，服务器有可能出现故障，请检查网络连接或稍后再试";
+    else if (![username length]) return @"";
+    else {
+        BUCUser *user = [BUCUser sharedInstance];
+        user.username = username;
+        NSString *password = [user getPassword];
+        
+        NSMutableDictionary *loginDataDic = user.loginDataDic;
+        [loginDataDic setObject:username forKey:@"username"];
+        [loginDataDic setObject:password forKey:@"password"];
+        
+        NSMutableDictionary *loginDic = user.loginDic;
+        [engine processRequestDic:loginDic sync:YES completionHandler:nil];
+        if (!engine.responseDic || ![[engine.responseDic objectForKey:@"result"] isEqualToString:@"success"]) {
+            return @"原有密码已失效，请手动登录";
+        }
+
+        user.session = [engine.responseDic objectForKey:@"session"];
+    }
+    
+    return nil;
+}
+
 @end
 
 

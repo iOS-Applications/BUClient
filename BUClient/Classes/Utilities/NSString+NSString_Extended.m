@@ -29,4 +29,18 @@
     }
     return output;
 }
+
+- (NSString *)urldecode
+{
+    return [[self stringByReplacingOccurrencesOfString:@"+" withString:@" "]
+            stringByReplacingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
+}
+
+- (NSString *)replaceHtmlEntities
+{
+    return [[[[self stringByReplacingOccurrencesOfString:@"&amp;" withString:@"&"]
+            stringByReplacingOccurrencesOfString:@"&quot;" withString:@"\""]
+            stringByReplacingOccurrencesOfString:@"&lt;" withString:@"<"]
+            stringByReplacingOccurrencesOfString:@"&gt;" withString:@">"];
+}
 @end

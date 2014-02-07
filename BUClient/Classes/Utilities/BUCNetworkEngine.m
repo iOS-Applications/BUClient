@@ -8,11 +8,19 @@
 
 #import "BUCNetworkEngine.h"
 #import "NSString+NSString_Extended.h"
+#import "Reachability.h"
 
 @interface BUCNetworkEngine ()
+{
+    Reachability *lanHostReach;
+    Reachability *wanHostReach;
+}
+
 @property NSURLSession *defaultSession;
 @property NSURLSessionConfiguration *defaultConfigObject;
 @property NSURLSessionDataTask *currentTask;
+
+@property NSString *baseUrl;
 @end
 
 @implementation BUCNetworkEngine
@@ -51,8 +59,29 @@
         _defaultConfigObject.timeoutIntervalForResource = 30;
         _defaultSession = [NSURLSession sessionWithConfiguration: _defaultConfigObject delegate: nil delegateQueue: [NSOperationQueue mainQueue]];
         _responseDic = nil;
+        _hostIsOn = NO;
+        
+        // test code begin
+        _baseUrl = @"http://0.0.0.0:8080/open_api/bu_%@.php";
+        _hostIsOn = YES;
+        // test code end
+        
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handleNetworkStatusChange:) name:kReachabilityChangedNotification object:nil];
+        
+        lanHostReach = [Reachability reachabilityWithHostName:@"www.bitunion.org"];
+        [lanHostReach startNotifier];
+        
+        // check if a pathway to a random host exists
+        wanHostReach = [Reachability reachabilityWithHostName:@"out.bitunion.org"];
+        [wanHostReach startNotifier];
     }
     return self;
+}
+
+#pragma mark - notification handler methods
+- (void)handleNetworkStatusChange:(NSNotification *)notice
+{
+    [self checkNetworkStatus];
 }
 
 #pragma mark - public methods
@@ -73,7 +102,8 @@
     }
     
     NSMutableURLRequest *request;
-    NSURL *url = [requestDic objectForKey:@"url"];
+    NSURL *url = [NSURL URLWithString:[NSString stringWithFormat:self.baseUrl, [requestDic objectForKey:@"url"]]];
+
     NSString *method = [requestDic objectForKey:@"method"];
     request = [NSMutableURLRequest requestWithURL:url];
     [request setHTTPMethod:method];
@@ -90,6 +120,39 @@
 - (void)cancelCurrentTask
 {
     [self.currentTask cancel];
+}
+
+- (BOOL)checkNetworkStatus
+{
+    // test code start
+    return YES;
+    // test code end
+    
+    NSData *data = nil;
+    NSError *err = nil;
+    NSURLResponse *response = nil;
+    NSURL *url = [NSURL URLWithString:@"http://www.bitunion.org/"];
+    NSURLRequest *request = [NSURLRequest requestWithURL:url cachePolicy:NSURLRequestReloadIgnoringLocalCacheData timeoutInterval:2];
+    
+    data = [NSURLConnection sendSynchronousRequest:request returningResponse:&response error:&err];
+    
+    if (!err) {
+        self.baseUrl = @"http://www.bitunion.org/open_api/bu_%@.php";
+        self.hostIsOn = YES;
+        return YES;
+    }
+    
+    err = nil;
+    url = [NSURL URLWithString:@"http://out.bitunion.org/"];
+    request = [NSURLRequest requestWithURL:url cachePolicy:NSURLRequestReloadIgnoringLocalCacheData timeoutInterval:2];
+    data = [NSURLConnection sendSynchronousRequest:request returningResponse:&response error:&err];
+    if (!err) {
+        self.baseUrl = @"http://out.bitunion.org/open_api/bu_%@.php";
+        self.hostIsOn = YES;
+        return YES;
+    }
+    
+    return NO;
 }
 
 #pragma mark - private methods
@@ -152,6 +215,7 @@ failed:
                             }
                             
                         done:
+                            
                             completionHandler(errorMessage);
                         }];
     

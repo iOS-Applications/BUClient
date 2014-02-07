@@ -15,37 +15,20 @@
 
 @implementation BUCContentViewController
 
-- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
-{
-    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
-    if (self) {
-        // Custom initialization
-    }
-    return self;
-}
-
 - (void)viewDidLoad
 {
     [super viewDidLoad];
 	// Do any additional setup after loading the view.
     [self performSegueWithIdentifier:@"segueToFront" sender:nil];
-}
-
-- (void)didReceiveMemoryWarning
-{
-    [super didReceiveMemoryWarning];
-    // Dispose of any resources that can be recreated.
+    
 }
 
 - (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender
 {
-    if ([segue.identifier isEqualToString:@"segueToFront"])
-    {
-        [self addChildViewController:segue.destinationViewController];
-        ((UIViewController *)segue.destinationViewController).view.frame = self.view.frame;
-        [self.view addSubview:((UIViewController *)segue.destinationViewController).view];
-        [segue.destinationViewController didMoveToParentViewController:self];
-    }
+    [self addChildViewController:segue.destinationViewController];
+    ((UIViewController *)segue.destinationViewController).view.frame = self.view.frame;
+    [self.view addSubview:((UIViewController *)segue.destinationViewController).view];
+    [segue.destinationViewController didMoveToParentViewController:self];
 }
 
 //- (void)swapFromViewController:(UIViewController *)fromViewController toViewController:(UIViewController *)toViewController
