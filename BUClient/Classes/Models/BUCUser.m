@@ -79,6 +79,18 @@ static NSString *kKeychainItemIdentifer = @"org.bitunion.buc.%@.KeychainUI";
 }
 
 #pragma mark - private methods
+- (void)resetKeychainItem
+{
+    self.keychainData = [[NSMutableDictionary alloc] init];
+    
+    [keychainData setObject:@"BU account" forKey:(__bridge id)kSecAttrLabel];
+    [keychainData setObject:@"username and password" forKey:(__bridge id)kSecAttrDescription];
+    [keychainData setObject:@"Account" forKey:(__bridge id)kSecAttrAccount];
+    [keychainData setObject:@"iOS BU client" forKey:(__bridge id)kSecAttrService];
+    [keychainData setObject:@"Nothing" forKey:(__bridge id)kSecAttrComment];
+    [keychainData setObject:@"password" forKey:(__bridge id)kSecValueData];
+}
+
 -(void)setupQueryDictionary
 {
     genericPasswordQuery = [[NSMutableDictionary alloc] init];
@@ -96,26 +108,6 @@ static NSString *kKeychainItemIdentifer = @"org.bitunion.buc.%@.KeychainUI";
     
     [genericPasswordQuery setObject:(id)kCFBooleanTrue
                              forKey:(__bridge id)kSecReturnAttributes];
-}
-
-- (void)resetKeychainItem
-{
-    if (!keychainData)
-    {
-        self.keychainData = [[NSMutableDictionary alloc] init];
-    }
-    else if (keychainData)
-    {
-        NSMutableDictionary *tmpDictionary = [self dictionaryToSecItemFormat:keychainData];
-        NSAssert(SecItemDelete((__bridge CFDictionaryRef)tmpDictionary) == noErr, @"Problem deleting current keychain item." );
-    }
-    
-    [keychainData setObject:@"BU account" forKey:(__bridge id)kSecAttrLabel];
-    [keychainData setObject:@"username and password" forKey:(__bridge id)kSecAttrDescription];
-    [keychainData setObject:@"Account" forKey:(__bridge id)kSecAttrAccount];
-    [keychainData setObject:@"iOS BU client" forKey:(__bridge id)kSecAttrService];
-    [keychainData setObject:@"Nothing" forKey:(__bridge id)kSecAttrComment];
-    [keychainData setObject:@"password" forKey:(__bridge id)kSecValueData];
 }
 
 - (NSString *)queryPassword

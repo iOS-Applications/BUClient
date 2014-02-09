@@ -8,16 +8,9 @@
 
 #import "BUCFrontPageViewController.h"
 #import "BUCTableCell.h"
-#import "NSString+NSString_Extended.h"
-#import "BUCRoundButtonView.h"
-
-@interface BUCFrontPageViewController ()
-
-
-@end
 
 @implementation BUCFrontPageViewController
-
+#pragma mark - overrided methods
 - (id)initWithCoder:(NSCoder *)aDecoder
 {
     self = [super initWithCoder:aDecoder];
@@ -30,20 +23,38 @@
     return self;
 }
 
-#pragma mark - unwind methods
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    
+    [self loadData:self.postDic];
+}
+
+#pragma mark - IBAction and unwind methods
+- (void)jumpToAuthor:(id)sender forEvent:(UIEvent *)event {
+
+}
+
+- (void)jumpToForum:(id)sender forEvent:(UIEvent *)event {
+    [self.indexController deselectCurrentRow];
+    
+    NSInteger row = [self getRowOfEvent:event];
+    NSDictionary *post = [self.list objectAtIndex:row];
+    NSString *fid = [post objectForKey:@"fid"];
+    NSString *postCount = [post objectForKey:@"fid_sum"];
+    NSString *fname = [[post objectForKey:@"fname"] urldecode];
+    self.contentController.infoDic = @{ @"fid": fid, @"postCount":postCount, @"fname":fname };
+    [self.contentController performSegueWithIdentifier:@"segueToForum" sender:nil];
+}
+
+- (IBAction)jumpToPost:(id)sender forEvent:(UIEvent *)event {
+    
+}
+
 - (IBAction)unwindToFront:(UIStoryboardSegue *)segue
 {
     
 }
-
-- (IBAction)shit:(id)sender forEvent:(UIEvent *)event {
-    NSSet *touches = [event allTouches];
-    UITouch *touch = [touches anyObject];
-    CGPoint p = [touch locationInView:self.tableView];
-    NSLog(@"%f, %f", p.x, p.y);
-    NSLog(@"%i", [self.tableView indexPathForRowAtPoint:p].row);
-}
-
 
 #pragma mark - Table view data source and delegate methods
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
@@ -68,7 +79,8 @@
     UIButton *authorBtn = [self cellButtonWithTitle:author];
 
     CGSize size = [author sizeWithAttributes:stringAttribute];
-    authorBtn.frame = CGRectMake(10, cellHeight - 27, size.width + 2, 27);      // 2 is the width to compensate padding of button element
+    authorBtn.frame = CGRectMake(10, cellHeight - 27, size.width + 2, 27); // 2 is the width to compensate padding of button element
+    [authorBtn addTarget:self action:@selector(jumpToAuthor:forEvent:) forControlEvents:UIControlEventTouchUpInside];
     cell.authorBtn = authorBtn;
     [cell addSubview:authorBtn];
 
@@ -77,6 +89,7 @@
     
     size = [subforum sizeWithAttributes:stringAttribute];
     subforumBtn.frame = CGRectMake(308 - size.width, cellHeight - 27, size.width + 2, 27);
+    [subforumBtn addTarget:self action:@selector(jumpToForum:forEvent:) forControlEvents:UIControlEventTouchUpInside];
     cell.subforumBtn = subforumBtn;
     [cell addSubview:subforumBtn];
     
@@ -111,14 +124,16 @@
     return button;
 }
 
-#pragma mark - EventInterceptWindow delegate methods
-- (void)interceptEvent:(UIEvent *)event
+- (NSInteger)getRowOfEvent:(UIEvent *)event
 {
     NSSet *touches = [event allTouches];
     UITouch *touch = [touches anyObject];
     CGPoint p = [touch locationInView:self.tableView];
-    NSIndexPath *path = [self.tableView indexPathForRowAtPoint:p];
-    NSLog(@"%f, %f", p.x, p.y);
-    NSLog(@"%i", path.row);
+    return [self.tableView indexPathForRowAtPoint:p].row;
 }
 @end
+
+
+
+
+

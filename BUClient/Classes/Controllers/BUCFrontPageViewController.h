@@ -7,8 +7,7 @@
 //
 
 #import "BUCBaseTableViewController.h"
-#import "BUCEventInterceptWindow.h"
 
-@interface BUCFrontPageViewController : BUCBaseTableViewController <EventInterceptWindowDelegate>
+@interface BUCFrontPageViewController : BUCBaseTableViewController
 
 @end

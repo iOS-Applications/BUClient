@@ -9,5 +9,9 @@
 #import <UIKit/UIKit.h>
 
 @interface BUCContentViewController : UIViewController
+@property NSDictionary *infoDic;
 
+- (void)removeChildController;
+- (void)displayLoading;
+- (void)hideLoading;
 @end

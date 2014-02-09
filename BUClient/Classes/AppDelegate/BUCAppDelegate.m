@@ -10,7 +10,7 @@
 #import "BUCUser.h"
 #import "BUCLoginViewController.h"
 #import "BUCNetworkEngine.h"
-#import "BUCFrontPageViewController.h"
+#import "BUCMainViewController.h"
 
 @implementation BUCAppDelegate
 
@@ -64,10 +64,11 @@
         [loginDataDic setObject:username forKey:@"username"];
         [loginDataDic setObject:password forKey:@"password"];
         
-        NSMutableDictionary *loginDic = user.loginDic;
-        [engine processRequestDic:loginDic sync:YES completionHandler:nil];
-        if (!engine.responseDic || ![[engine.responseDic objectForKey:@"result"] isEqualToString:@"success"]) {
-            return @"原有密码已失效，请手动登录";
+        NSString *errorMessage = [engine processSyncRequest:user.loginDic];
+        if (errorMessage) return errorMessage;
+
+        if (!engine.responseDic && [[engine.responseDic objectForKey:@"result"] isEqualToString:@"fail"]) {
+            return @"当前密码已失效，请手动登录";
         }
 
         user.session = [engine.responseDic objectForKey:@"session"];

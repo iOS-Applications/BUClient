@@ -7,40 +7,88 @@
 //
 
 #import "BUCContentViewController.h"
-#import "BUCMainViewController.h"
+#import "BUCUser.h"
 
 @interface BUCContentViewController ()
+@property (strong, nonatomic) IBOutlet UIView *loadingView;
+@property (weak, nonatomic) IBOutlet UIActivityIndicatorView *activityView;
 
+@property BUCUser *user;
 @end
 
 @implementation BUCContentViewController
-
+#pragma mark - overrided methods
 - (void)viewDidLoad
 {
     [super viewDidLoad];
-	// Do any additional setup after loading the view.
-    [self performSegueWithIdentifier:@"segueToFront" sender:nil];
     
+    self.user = [BUCUser sharedInstance];
+    [self.user addObserver:self forKeyPath:@"session" options:NSKeyValueObservingOptionNew context:NULL];
+    
+    self.loadingView.frame = CGRectMake(89, 214, 142, 139);
+    self.loadingView.layer.cornerRadius = 10.0;
 }
 
 - (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender
 {
-    [self addChildViewController:segue.destinationViewController];
-    ((UIViewController *)segue.destinationViewController).view.frame = self.view.frame;
-    [self.view addSubview:((UIViewController *)segue.destinationViewController).view];
-    [segue.destinationViewController didMoveToParentViewController:self];
+    if (![self.childViewControllers count]) {
+        [self addChildViewController:segue.destinationViewController];
+        ((UIViewController *)segue.destinationViewController).view.frame = self.view.frame;
+        [self.view addSubview:((UIViewController *)segue.destinationViewController).view];
+        [segue.destinationViewController didMoveToParentViewController:self];
+    } else {
+        UIViewController *fromVC = [self.childViewControllers lastObject];
+        [self swapFromViewController:fromVC toViewController:segue.destinationViewController];
+    }
 }
 
-//- (void)swapFromViewController:(UIViewController *)fromViewController toViewController:(UIViewController *)toViewController
-//{
-//    toViewController.view.frame = CGRectMake(0, 0, self.view.frame.size.width, self.view.frame.size.height);
-//    
-//    [fromViewController willMoveToParentViewController:nil];
-//    [self addChildViewController:toViewController];
-//    [self transitionFromViewController:fromViewController toViewController:toViewController duration:1.0 options:UIViewAnimationOptionTransitionCrossDissolve animations:nil completion:^(BOOL finished) {
-//        [fromViewController removeFromParentViewController];
-//        [toViewController didMoveToParentViewController:self];
-//    }];
-//}
+#pragma mark - public methods
+- (void)displayLoading
+{
+    [self.activityView startAnimating];
+    [self.view addSubview:self.loadingView];
+}
+
+- (void)hideLoading
+{
+    [self.loadingView removeFromSuperview];
+    [self.activityView stopAnimating];
+}
+
+- (void)removeChildController
+{
+    UIViewController *child = [self.childViewControllers lastObject];
+    [child willMoveToParentViewController:nil];
+    [[child.childViewControllers lastObject] willMoveToParentViewController:nil];
+    [child removeFromParentViewController];
+    [self.user addObserver:self forKeyPath:@"session" options:NSKeyValueObservingOptionNew context:NULL];
+}
+
+#pragma mark - unwind methods
+- (IBAction)unwindToContent:(UIStoryboardSegue *)segue
+{
+    
+}
+
+#pragma mark - key value observation handler methods
+- (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context
+{
+    [self.user removeObserver:self forKeyPath:@"session" context:NULL];
+    [self performSegueWithIdentifier:@"segueToFront" sender:nil];
+}
+
+#pragma mark - private methods
+- (void)swapFromViewController:(UIViewController *)fromViewController toViewController:(UIViewController *)toViewController
+{
+    toViewController.view.frame = CGRectMake(0, 0, self.view.frame.size.width, self.view.frame.size.height);
+    
+    [fromViewController willMoveToParentViewController:nil];
+    [[fromViewController.childViewControllers lastObject] willMoveToParentViewController:nil];
+    [self addChildViewController:toViewController];
+    [self transitionFromViewController:fromViewController toViewController:toViewController duration:0.01 options:UIViewAnimationOptionTransitionCrossDissolve animations:nil completion:^(BOOL finished) {
+        [fromViewController removeFromParentViewController];
+        [toViewController didMoveToParentViewController:self];
+    }];
+}
 
 @end

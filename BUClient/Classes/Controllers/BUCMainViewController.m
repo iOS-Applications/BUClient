@@ -16,6 +16,7 @@
 {
     CGPoint rightCenter;
     CGPoint leftCenter;
+    CGPoint farRightCenter;
 }
 
 @property (weak, nonatomic) IBOutlet UIView *index;
@@ -32,12 +33,11 @@
     
     leftCenter = self.view.center;
     rightCenter = CGPointMake(leftCenter.x + MAXTRANSLATION, leftCenter.y);
+    farRightCenter = CGPointMake(leftCenter.x + 320, leftCenter.y);
     
     self.content.layer.shadowOpacity = 1.0;
     self.content.layer.shadowRadius = 5.0;
-    self.content.layer.shadowPath = [UIBezierPath bezierPathWithRect:self.content.bounds].CGPath;
-    
-    self.loadingView.layer.cornerRadius = 10.0;
+    self.content.layer.shadowPath = [UIBezierPath bezierPathWithRect:self.content.bounds].CGPath;    
 }
 
 #pragma mark - public methods
@@ -48,10 +48,11 @@
     [self presentViewController:loginVC animated:NO completion:nil];
     if ([message length]) [loginVC alertWithMessage:message];
 }
-- (void)showIndex
+
+- (void)revealIndex
 {
     [UIView animateWithDuration:0.75
-                          delay:0.0
+                          delay:0
                         options:UIViewAnimationOptionCurveEaseInOut
                      animations:^(void) {
                          self.content.center = rightCenter;
@@ -63,16 +64,29 @@
     [self.content addGestureRecognizer:self.contentTapRecognizer];
 }
 
-- (void)displayLoading
+- (void)switchContentWith:(NSString *)segueIdendifier
 {
-    [self.activityView startAnimating];
-    self.loadingView.hidden = NO;
-}
-
-- (void)hideLoading
-{
-    self.loadingView.hidden = YES;
-    [self.activityView stopAnimating];
+    [UIView animateWithDuration:0.25
+                          delay:0
+                        options:UIViewAnimationOptionCurveEaseInOut
+                     animations:^{
+                         self.content.center = farRightCenter;
+                     }
+                     completion:^(BOOL finished) {
+                         [UIView animateWithDuration:0.5
+                                               delay:0.05
+                                             options:UIViewAnimationOptionCurveEaseInOut
+                                          animations:^{
+                                              self.content.center = leftCenter;
+                                          }
+                                          completion:nil];
+                         
+                         [self.contentController performSegueWithIdentifier:segueIdendifier sender:nil];
+                     }];
+    
+    UIView *view = [self.content.subviews lastObject];
+    view.userInteractionEnabled = YES;
+    [self.content removeGestureRecognizer:self.contentTapRecognizer];
 }
 
 #pragma mark - gesture handler methods
@@ -103,7 +117,7 @@
         }
         
         [UIView animateWithDuration:0.75
-                              delay:0.0
+                              delay:0
                             options:UIViewAnimationOptionCurveEaseInOut
                          animations:^(void) {
                              recognizer.view.center = endCenter;
@@ -115,8 +129,8 @@
 - (IBAction)handleTap:(UITapGestureRecognizer *)recognizer
 {
     [UIView animateWithDuration:0.5
-                          delay:0.01
-                        options:UIViewAnimationOptionTransitionCurlUp
+                          delay:0
+                        options:UIViewAnimationOptionCurveEaseInOut
                      animations:^(void){
                          recognizer.view.center = leftCenter;
                         }
@@ -125,6 +139,16 @@
     UIView *view = [recognizer.view.subviews lastObject];
     view.userInteractionEnabled = YES;
     [recognizer.view removeGestureRecognizer:self.contentTapRecognizer];
+}
+
+#pragma mark - segue methods
+- (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender
+{
+    if ([segue.identifier isEqualToString:@"segueToContent"]) {
+        self.contentController = segue.destinationViewController;
+    } else if ([segue.identifier isEqualToString:@"segueToIndex"]) {
+        self.indexController = segue.destinationViewController;
+    }
 }
 @end
 

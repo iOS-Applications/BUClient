@@ -7,19 +7,39 @@
 //
 
 #import <UIKit/UIKit.h>
+
 #import "BUCMainViewController.h"
+#import "BUCContentViewController.h"
+#import "BUCUser.h"
+#import "BUCNetworkEngine.h"
+#import "BUCIndexViewController.h"
+#import "NSString+NSString_Extended.h"
 
 @interface BUCBaseTableViewController : UITableViewController
 
-@property BUCMainViewController *mainController;
+@property (weak, nonatomic) BUCMainViewController *mainController;
+@property (weak, nonatomic) BUCContentViewController *contentController;
+@property (weak, nonatomic) BUCIndexViewController *indexController;
+
+@property (weak, nonatomic) BUCUser *user;
+@property (weak, nonatomic) BUCNetworkEngine *engine;
+
 @property NSString *listKey;
 @property NSArray *list;
-@property NSDictionary *listDic;
+@property NSDictionary *responseDic;
+
+@property BOOL loading;
+@property BOOL refreshing;
 
 @property NSMutableDictionary *postDic;
 @property NSMutableDictionary *postDataDic;
 
 - (void)alertWithMessage:(NSString *)message;
-- (void)getData;
+- (IBAction)refresh:(id)sender;
+- (void)loadData:(NSDictionary *)postDic;
+- (void)endLoading;
+- (void)cancelLoading;
+- (void)suspendLoading;
+- (void)resumeLoading;
 
 @end

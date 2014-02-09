@@ -8,7 +8,6 @@
 
 #import "BUCLoginViewController.h"
 #import "BUCUser.h"
-#import "BUCLoginButtonView.h"
 #import "BUCNetworkEngine.h"
 
 @interface BUCLoginViewController ()
@@ -17,27 +16,21 @@
 
 @property (weak, nonatomic) IBOutlet UIView *loadingView;
 @property (weak, nonatomic) IBOutlet UIActivityIndicatorView *activityView;
-@property (weak, nonatomic) IBOutlet BUCLoginButtonView *loginButton;
+@property (weak, nonatomic) IBOutlet UIButton *loginButton;
 
 @property UITextField *curTextField;
 @end
 
 @implementation BUCLoginViewController
 
-- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
-{
-    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
-    if (self) {
-        // Custom initialization
-    }
-    return self;
-}
-
 - (void)viewDidLoad
 {
     [super viewDidLoad];
     
     self.loadingView.layer.cornerRadius = 10.0;
+    
+    self.loginButton.layer.cornerRadius = 3;
+    self.loginButton.layer.masksToBounds = YES;
     
     BUCEventInterceptWindow *window = (BUCEventInterceptWindow *)[UIApplication sharedApplication].keyWindow;
     window.eventInterceptDelegate = self;
@@ -87,7 +80,7 @@
     
     BUCLoginViewController * __weak weakSelf = self;
     
-    [engine processRequestDic:loginDic sync:NO completionHandler:^(NSString *errorMessage) {
+    [engine processAsyncRequest:loginDic completionHandler:^(NSString *errorMessage) {
         weakSelf.loadingView.hidden = YES;
         [weakSelf.activityView stopAnimating];
         weakSelf.loginButton.enabled = YES;
@@ -112,11 +105,13 @@
                 [weakSelf dismissViewControllerAnimated:YES completion:nil];
             } else if ([result isEqualToString:@"fail"]) {
                 errorMessage = @"用户名与密码不匹配或积分为负无法登录，请联系联盟管理员，或重新尝试";
+                [weakSelf alertWithMessage:errorMessage];
+                return;
             }
         } else if (errorMessage) {
+            if (![errorMessage length]) return;
+            
             [weakSelf alertWithMessage:errorMessage];
-        } else {
-            [weakSelf alertWithMessage:@"未知错误"];
         }
     }];
 }

@@ -7,13 +7,15 @@
 //
 
 #import <UIKit/UIKit.h>
+#import "BUCIndexViewController.h"
+#import "BUCContentViewController.h"
 
 @interface BUCMainViewController : UIViewController
-@property (weak, nonatomic) IBOutlet UIView *loadingView;
-@property (weak, nonatomic) IBOutlet UIActivityIndicatorView *activityView;
+@property (weak, nonatomic) BUCIndexViewController *indexController;
+@property (weak, nonatomic) BUCContentViewController *contentController;
 
 - (void)displayLoginWithMessage:(NSString *)message;
-- (void)showIndex;
-- (void)displayLoading;
-- (void)hideLoading;
+- (void)revealIndex;
+- (void)switchContentWith:(NSString *)segueIdendifier;
+
 @end

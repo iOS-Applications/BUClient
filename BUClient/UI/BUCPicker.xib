@@ -35,11 +35,15 @@
             <rect key="frame" x="0.0" y="0.0" width="320" height="44"/>
             <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
             <items>
-                <barButtonItem systemItem="cancel" id="faq-CW-fYO"/>
+                <barButtonItem systemItem="cancel" id="faq-CW-fYO">
+                    <connections>
+                        <action selector="cancelPagePick:" destination="-1" id="eJF-Al-qb6"/>
+                    </connections>
+                </barButtonItem>
                 <barButtonItem systemItem="flexibleSpace" id="3Ur-7x-S3u"/>
                 <barButtonItem systemItem="done" id="esF-ls-gct">
                     <connections>
-                        <action selector="handlePagePick:" destination="-1" id="jrP-Tg-JOB"/>
+                        <action selector="donePagePick:" destination="-1" id="vFD-3j-tKp"/>
                     </connections>
                 </barButtonItem>
             </items>

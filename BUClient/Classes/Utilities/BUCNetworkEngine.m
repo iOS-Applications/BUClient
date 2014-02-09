@@ -45,14 +45,13 @@
     if (self) {
         _defaultConfigObject = [NSURLSessionConfiguration defaultSessionConfiguration];
         NSString *cachePath = @"/MyCacheDirectory";
+
+//        NSArray *myPathList = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES);
+//        NSString *myPath    = [myPathList  objectAtIndex:0];
+//        NSString *bundleIdentifier = [[NSBundle mainBundle] bundleIdentifier];
+//        NSString *fullCachePath = [[myPath stringByAppendingPathComponent:bundleIdentifier] stringByAppendingPathComponent:cachePath];
+//        NSLog(@"Cache path: %@\n", fullCachePath);
         
-        NSArray *myPathList = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES);
-        NSString *myPath    = [myPathList  objectAtIndex:0];
-        
-        NSString *bundleIdentifier = [[NSBundle mainBundle] bundleIdentifier];
-        
-        NSString *fullCachePath = [[myPath stringByAppendingPathComponent:bundleIdentifier] stringByAppendingPathComponent:cachePath];
-        NSLog(@"Cache path: %@\n", fullCachePath);
         NSURLCache *myCache = [[NSURLCache alloc] initWithMemoryCapacity: 16384 diskCapacity: 268435456 diskPath: cachePath];
         _defaultConfigObject.URLCache = myCache;
         _defaultConfigObject.requestCachePolicy = NSURLRequestUseProtocolCachePolicy;
@@ -85,41 +84,57 @@
 }
 
 #pragma mark - public methods
-- (void)processRequestDic:(NSDictionary *)requestDic sync:(BOOL)sync completionHandler:(void (^)(NSString *message))completionHandler
+- (NSString *)processSyncRequest:(NSDictionary *)requestDic
 {
     self.responseDic = nil;
-    NSMutableDictionary *postDic = [[NSMutableDictionary alloc] init];
-    NSDictionary *dataDic = [requestDic objectForKey:@"dataDic"];
-    for (NSString *key in dataDic) {
-        [postDic setValue:[[dataDic objectForKey:key] urlencode] forKey:key];
-    }
     
-    NSError *err = nil;
-    NSData *postData = [NSJSONSerialization dataWithJSONObject:postDic options:0 error:&err];
-    if (!postData) {
-        NSLog(@"Error parsing JSON: %@", err);
+    NSURLRequest *request = [self requestFromDic:requestDic];
+    if (!request) return @"数据解析错误，请重新尝试";
+    
+    NSError *error = nil;
+    NSURLResponse *response;
+    NSData *receivedData = [NSURLConnection sendSynchronousRequest:request returningResponse:&response error:&error];
+    NSString *errorMessage = nil;
+    
+    errorMessage = [self checkError:error response:response data:receivedData];
+    
+    return errorMessage;
+}
+
+- (void)processAsyncRequest:(NSDictionary *)requestDic completionHandler:(void (^)(NSString *message))completionHandler
+{
+    self.responseDic = nil;
+    
+    NSURLRequest *request = [self requestFromDic:requestDic];
+    if (!request) {
+        completionHandler(@"数据解析错误，请重新尝试");
         return;
     }
     
-    NSMutableURLRequest *request;
-    NSURL *url = [NSURL URLWithString:[NSString stringWithFormat:self.baseUrl, [requestDic objectForKey:@"url"]]];
-
-    NSString *method = [requestDic objectForKey:@"method"];
-    request = [NSMutableURLRequest requestWithURL:url];
-    [request setHTTPMethod:method];
-    [request setHTTPBody:postData];
-
-    if (sync) {
-        [self processSyncRequest:request];
-        return;
-    }
+    BUCNetworkEngine * __weak weakEngine = self;
+    self.currentTask = [self.defaultSession dataTaskWithRequest:request
+                                              completionHandler:
+                        ^(NSData *data, NSURLResponse *response, NSError *error) {
+                            NSString *errorMessage = [weakEngine checkError:error response:response data:data];
+                            completionHandler(errorMessage);
+                        }];
     
-    [self processAsyncRequest:request completionHandler:completionHandler];
+    [self.currentTask resume];
 }
 
 - (void)cancelCurrentTask
 {
     [self.currentTask cancel];
+}
+
+- (void)suspendCurrentTask
+{
+    [self.currentTask suspend];
+}
+
+- (void)resumeCurrentTask
+{
+    [self.currentTask resume];
 }
 
 - (BOOL)checkNetworkStatus
@@ -156,70 +171,56 @@
 }
 
 #pragma mark - private methods
-- (void)processSyncRequest:(NSURLRequest *)request;
+- (NSString *)checkError:(NSError *)error response:(NSURLResponse *)response data:(NSData *)data
 {
-    NSError *err = nil;
-    NSURLResponse *response;
-    NSData *receivedData = [NSURLConnection sendSynchronousRequest:request returningResponse:&response error:&err];
+    NSString *errorMessage = nil;
     
-    if (err) {
+    if (error) {
         if ([response isKindOfClass:[NSHTTPURLResponse class]]) {
             NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse*)response;
-            NSLog(@"HTTP Error: %ld %@", (long)httpResponse.statusCode, err);
-            goto failed;
+            if (httpResponse.statusCode == 500) errorMessage = @"服务器错误，请稍后再试";
+        } else if (error.code == NSURLErrorTimedOut) {
+            errorMessage = @"服务器连接超时，请检查网络连接";
+        } else if (error.code == NSURLErrorCancelled) {
+            errorMessage = @"";
+        } else {
+            errorMessage = @"未知错误";
         }
-        NSLog(@"Error %@", err);
-        goto failed;
+        
+        return errorMessage;
     }
     
-    if ([receivedData length] > 0) {
-        self.responseDic = [NSJSONSerialization JSONObjectWithData:receivedData options:NSJSONReadingMutableContainers error:&err];
-        if (!self.responseDic) {
-            NSLog(@"Error parsing JSON: %@", err);
-            goto failed;
-        }
+    if ([data length] > 0) {
+        self.responseDic = [NSJSONSerialization JSONObjectWithData:data options:NSJSONReadingMutableContainers error:&error];
+        if (!self.responseDic) errorMessage = @"数据解析错误，请重新尝试";
     } else {
-        NSLog(@"Error: no data returned :(");
+        errorMessage = @"无法加载数据，请重新尝试";
     }
-
-failed:
-    return;
+    
+    return errorMessage;
 }
 
-- (void)processAsyncRequest:(NSURLRequest *)request completionHandler:(void (^)(NSString *message))completionHandler;
+- (NSURLRequest *)requestFromDic:(NSDictionary *)requestDic
 {
-    BUCNetworkEngine * __weak weakEngine = self;
-    self.currentTask = [self.defaultSession dataTaskWithRequest:request
-                                              completionHandler:
-                        ^(NSData *data, NSURLResponse *response, NSError *error) {
-                            NSString *errorMessage = nil;
-                            if (error) {
-                                if ([response isKindOfClass:[NSHTTPURLResponse class]]) {
-                                    NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse*)response;
-                                    if (httpResponse.statusCode == 500) errorMessage = @"服务器错误，请稍后再试";
-                                    goto done;
-                                } else {
-                                    if (error.code == NSURLErrorTimedOut) errorMessage = @"服务器连接超时，请检查网络连接";
-                                    goto done;
-                                }
-                            }
-                            
-                            if ([data length] > 0) {
-                                weakEngine.responseDic = [NSJSONSerialization JSONObjectWithData:data options:NSJSONReadingMutableContainers error:&error];
-                                if (!weakEngine.responseDic) {
-                                    errorMessage = @"数据解析错误，请重新尝试";
-                                    goto done;
-                                }
-                            } else {
-                                errorMessage = @"无法加载数据，请重新尝试";
-                            }
-                            
-                        done:
-                            
-                            completionHandler(errorMessage);
-                        }];
+    NSMutableDictionary *postDic = [[NSMutableDictionary alloc] init];
+    NSDictionary *dataDic = [requestDic objectForKey:@"dataDic"];
+    for (NSString *key in dataDic) {
+        [postDic setValue:[[dataDic objectForKey:key] urlencode] forKey:key];
+    }
     
-    [self.currentTask resume];
+    NSError *err = nil;
+    NSData *postData = [NSJSONSerialization dataWithJSONObject:postDic options:0 error:&err];
+    if (!postData) return nil;
+    
+    NSMutableURLRequest *request;
+    NSURL *url = [NSURL URLWithString:[NSString stringWithFormat:self.baseUrl, [requestDic objectForKey:@"url"]]];
+    
+    NSString *method = [requestDic objectForKey:@"method"];
+    request = [NSMutableURLRequest requestWithURL:url];
+    [request setHTTPMethod:method];
+    [request setHTTPBody:postData];
+    
+    return request;
 }
 @end
 
