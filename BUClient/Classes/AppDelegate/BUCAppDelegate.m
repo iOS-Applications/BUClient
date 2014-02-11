@@ -10,14 +10,14 @@
 #import "BUCUser.h"
 #import "BUCLoginViewController.h"
 #import "BUCNetworkEngine.h"
-#import "BUCMainViewController.h"
+
 
 @implementation BUCAppDelegate
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
     NSDictionary *appDefaults = [NSDictionary dictionaryWithObjectsAndKeys:
-                                 @"", @"username", nil];
+                                 @"", @"currentUser", @"", @"loadImage", nil];
     [[NSUserDefaults standardUserDefaults] registerDefaults:appDefaults];
     self.appIsJustLaunched = YES;
     
@@ -30,6 +30,7 @@
         
         self.appIsJustLaunched = NO;
         NSString *errorMessage = [self login];
+        self.mainViewController = (BUCMainViewController *)self.window.rootViewController;
         
         if (errorMessage) {
             [(BUCMainViewController *)self.window.rootViewController displayLoginWithMessage:errorMessage];
@@ -49,7 +50,7 @@
 - (NSString *)login
 {
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-    NSString *username = [defaults objectForKey:@"username"];
+    NSString *username = [defaults objectForKey:@"currentUser"];
     
     BUCNetworkEngine *engine = [BUCNetworkEngine sharedInstance];
     if (![engine checkNetworkStatus])
@@ -72,6 +73,8 @@
         }
 
         user.session = [engine.responseDic objectForKey:@"session"];
+        user.isLoggedIn = YES;
+        user.loadImage = [defaults objectForKey:@"loadImage"];
     }
     
     return nil;

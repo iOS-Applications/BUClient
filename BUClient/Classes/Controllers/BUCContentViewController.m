@@ -23,9 +23,9 @@
     [super viewDidLoad];
     
     self.user = [BUCUser sharedInstance];
-    [self.user addObserver:self forKeyPath:@"session" options:NSKeyValueObservingOptionNew context:NULL];
+    [self.user addObserver:self forKeyPath:@"isLoggedIn" options:NSKeyValueObservingOptionNew context:NULL];
     
-    self.loadingView.frame = CGRectMake(89, 214, 142, 139);
+    self.loadingView.center = self.view.center;
     self.loadingView.layer.cornerRadius = 10.0;
 }
 
@@ -59,9 +59,7 @@
 {
     UIViewController *child = [self.childViewControllers lastObject];
     [child willMoveToParentViewController:nil];
-    [[child.childViewControllers lastObject] willMoveToParentViewController:nil];
     [child removeFromParentViewController];
-    [self.user addObserver:self forKeyPath:@"session" options:NSKeyValueObservingOptionNew context:NULL];
 }
 
 #pragma mark - unwind methods
@@ -73,8 +71,7 @@
 #pragma mark - key value observation handler methods
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context
 {
-    [self.user removeObserver:self forKeyPath:@"session" context:NULL];
-    [self performSegueWithIdentifier:@"segueToFront" sender:nil];
+    if (self.user.isLoggedIn) [self performSegueWithIdentifier:@"segueToFront" sender:nil];
 }
 
 #pragma mark - private methods
@@ -83,7 +80,6 @@
     toViewController.view.frame = CGRectMake(0, 0, self.view.frame.size.width, self.view.frame.size.height);
     
     [fromViewController willMoveToParentViewController:nil];
-    [[fromViewController.childViewControllers lastObject] willMoveToParentViewController:nil];
     [self addChildViewController:toViewController];
     [self transitionFromViewController:fromViewController toViewController:toViewController duration:0.01 options:UIViewAnimationOptionTransitionCrossDissolve animations:nil completion:^(BOOL finished) {
         [fromViewController removeFromParentViewController];

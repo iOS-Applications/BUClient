@@ -8,6 +8,8 @@
 
 #import "BUCIndexViewController.h"
 #import "BUCMainViewController.h"
+#import "BUCContentViewController.h"
+#import "BUCUser.h"
 
 @interface BUCIndexViewController ()
 @property NSArray *list;
@@ -20,7 +22,7 @@
     self = [super initWithCoder:aDecoder];
     
     if (self) {
-        _list = [NSArray arrayWithObjects:@"segueToFront", @"segueToForumList", nil];
+        _list = [NSArray arrayWithObjects:@"segueToFront", @"segueToForumList", @"segueToUser", @"segueToSettings", @"logout", nil];
     }
     
     return self;
@@ -47,6 +49,17 @@
 #pragma mark - Table view delegate methods
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
 {
+    if (indexPath.row == 4) {
+        BUCMainViewController *mainController = (BUCMainViewController *)self.parentViewController;
+        BUCContentViewController *contentController = mainController.contentController;
+        [contentController removeChildController];
+        [mainController displayLoginWithMessage:nil];
+        [mainController hideIndex];
+        BUCUser *user = [BUCUser sharedInstance];
+        user.isLoggedIn = NO;
+        return;
+    }
+    
     NSString *segueIdentifier = [self.list objectAtIndex:indexPath.row];
     [(BUCMainViewController *)self.parentViewController switchContentWith:segueIdentifier];
 }

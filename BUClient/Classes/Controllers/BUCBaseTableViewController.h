@@ -34,6 +34,8 @@
 @property NSMutableDictionary *postDic;
 @property NSMutableDictionary *postDataDic;
 
+@property NSString *unwindSegueIdentifier;
+
 - (void)alertWithMessage:(NSString *)message;
 - (IBAction)refresh:(id)sender;
 - (void)loadData:(NSDictionary *)postDic;

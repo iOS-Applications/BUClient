@@ -22,6 +22,7 @@
 @property (weak, nonatomic) IBOutlet UIView *index;
 @property (weak, nonatomic) IBOutlet UIView *content;
 @property (strong, nonatomic) IBOutlet UITapGestureRecognizer *contentTapRecognizer;
+@property (strong, nonatomic) IBOutlet UIPanGestureRecognizer *contentPanRecognizer;
 
 @end
 
@@ -89,11 +90,26 @@
     [self.content removeGestureRecognizer:self.contentTapRecognizer];
 }
 
+- (void)hideIndex
+{
+    self.content.center = leftCenter;
+}
+
+- (void)disableIndex
+{
+    [self.content removeGestureRecognizer:self.contentPanRecognizer];
+}
+
+- (void)enableIndex
+{
+    [self.content addGestureRecognizer:self.contentPanRecognizer];
+}
+
 #pragma mark - gesture handler methods
 - (IBAction)handlePan:(UIPanGestureRecognizer *)recognizer
 {
     CGPoint translation = [recognizer translationInView:self.view];
-    CGFloat stopPositionX = recognizer.view.center.x + translation.x;
+    CGFloat stopPositionX = self.content.center.x + translation.x;
     [recognizer setTranslation:CGPointMake(0, 0) inView:self.view];
     
     if (stopPositionX < leftCenter.x) {
@@ -104,23 +120,23 @@
     
     if (recognizer.state == UIGestureRecognizerStateEnded) {
         CGPoint endCenter;
-        UIView *view = [recognizer.view.subviews lastObject];
+        UIView *view = [self.content.subviews lastObject];
         
         if (stopPositionX > leftCenter.x + MINTRANSLATION) {
             endCenter = rightCenter;
             view.userInteractionEnabled = NO;
-            [recognizer.view addGestureRecognizer:self.contentTapRecognizer];
+            [self.content addGestureRecognizer:self.contentTapRecognizer];
         } else {
             endCenter = leftCenter;
             view.userInteractionEnabled = YES;
-            [recognizer.view removeGestureRecognizer:self.contentTapRecognizer];
+            [self.content removeGestureRecognizer:self.contentTapRecognizer];
         }
         
         [UIView animateWithDuration:0.75
                               delay:0
                             options:UIViewAnimationOptionCurveEaseInOut
                          animations:^(void) {
-                             recognizer.view.center = endCenter;
+                             self.content.center = endCenter;
                          }
                          completion:nil];
     }
@@ -132,11 +148,11 @@
                           delay:0
                         options:UIViewAnimationOptionCurveEaseInOut
                      animations:^(void){
-                         recognizer.view.center = leftCenter;
+                         self.content.center = leftCenter;
                         }
                      completion:nil];
     
-    UIView *view = [recognizer.view.subviews lastObject];
+    UIView *view = [self.content.subviews lastObject];
     view.userInteractionEnabled = YES;
     [recognizer.view removeGestureRecognizer:self.contentTapRecognizer];
 }

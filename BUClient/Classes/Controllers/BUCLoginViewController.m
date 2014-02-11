@@ -18,6 +18,8 @@
 @property (weak, nonatomic) IBOutlet UIActivityIndicatorView *activityView;
 @property (weak, nonatomic) IBOutlet UIButton *loginButton;
 
+@property (weak, nonatomic) BUCEventInterceptWindow *window;
+
 @property UITextField *curTextField;
 @end
 
@@ -32,14 +34,13 @@
     self.loginButton.layer.cornerRadius = 3;
     self.loginButton.layer.masksToBounds = YES;
     
-    BUCEventInterceptWindow *window = (BUCEventInterceptWindow *)[UIApplication sharedApplication].keyWindow;
-    window.eventInterceptDelegate = self;
+    self.window = (BUCEventInterceptWindow *)[UIApplication sharedApplication].keyWindow;
+    self.window.eventInterceptDelegate = self;
 }
 
-- (void)didReceiveMemoryWarning
+- (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender
 {
-    [super didReceiveMemoryWarning];
-    // Dispose of any resources that can be recreated.
+    self.window.eventInterceptDelegate = nil;
 }
 
 #pragma mark - IBAction methods
@@ -93,16 +94,39 @@
                 user.session = [engine.responseDic objectForKey:@"session"];
                 
                 NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-                [defaults setObject:username forKey:@"username"];
+                [defaults setObject:username forKey:@"currentUser"];
+                NSMutableArray *userList = [defaults objectForKey:@"userList"];
+                if (!userList) {
+                    userList = [[NSMutableArray alloc] init];
+                    [userList addObject:username];
+                } else if (![userList containsObject:username]) {
+                    userList = [NSMutableArray arrayWithArray:userList];
+                    [userList addObject:username];
+                }
+                [defaults setObject:userList forKey:@"userList"];
+                
+                NSString *loadImage = [defaults objectForKey:@"loadImage"];
+                if ([loadImage length]) {
+                    user.loadImage = loadImage;
+                } else {
+                    user.loadImage = @"no";
+                    [defaults setObject:@"no" forKey:@"loadImage"];
+                }
+                
                 [defaults synchronize];
+                
                 
                 [user setNewPassword:password];
                 
-                BUCEventInterceptWindow *window = (BUCEventInterceptWindow *)[UIApplication sharedApplication].keyWindow;
-                window.eventInterceptDelegate = nil;
+                if (user.isLoggedIn) { // if user is already logged in with a valid account, then unwind to the user list
+                    [self performSegueWithIdentifier:@"unwindToUserList" sender:nil];
+                    return;
+                }
+                
+                user.isLoggedIn = YES; // if user has not logged in before, set isLoggedIn to YES and bring up the front page 
                 
                 weakSelf.modalTransitionStyle = UIModalTransitionStyleCrossDissolve;
-                [weakSelf dismissViewControllerAnimated:YES completion:nil];
+                [weakSelf performSegueWithIdentifier:@"unwindToContent" sender:nil];
             } else if ([result isEqualToString:@"fail"]) {
                 errorMessage = @"用户名与密码不匹配或积分为负无法登录，请联系联盟管理员，或重新尝试";
                 [weakSelf alertWithMessage:errorMessage];
@@ -164,4 +188,5 @@
     BUCNetworkEngine *engine = [BUCNetworkEngine sharedInstance];
     [engine cancelCurrentTask];
 }
+
 @end

@@ -46,12 +46,6 @@
         _defaultConfigObject = [NSURLSessionConfiguration defaultSessionConfiguration];
         NSString *cachePath = @"/MyCacheDirectory";
 
-//        NSArray *myPathList = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES);
-//        NSString *myPath    = [myPathList  objectAtIndex:0];
-//        NSString *bundleIdentifier = [[NSBundle mainBundle] bundleIdentifier];
-//        NSString *fullCachePath = [[myPath stringByAppendingPathComponent:bundleIdentifier] stringByAppendingPathComponent:cachePath];
-//        NSLog(@"Cache path: %@\n", fullCachePath);
-        
         NSURLCache *myCache = [[NSURLCache alloc] initWithMemoryCapacity: 16384 diskCapacity: 268435456 diskPath: cachePath];
         _defaultConfigObject.URLCache = myCache;
         _defaultConfigObject.requestCachePolicy = NSURLRequestUseProtocolCachePolicy;
@@ -70,10 +64,10 @@
         lanHostReach = [Reachability reachabilityWithHostName:@"www.bitunion.org"];
         [lanHostReach startNotifier];
         
-        // check if a pathway to a random host exists
         wanHostReach = [Reachability reachabilityWithHostName:@"out.bitunion.org"];
         [wanHostReach startNotifier];
     }
+    
     return self;
 }
 
@@ -180,10 +174,12 @@
             NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse*)response;
             if (httpResponse.statusCode == 500) errorMessage = @"服务器错误，请稍后再试";
         } else if (error.code == NSURLErrorTimedOut) {
-            errorMessage = @"服务器连接超时，请检查网络连接";
+            errorMessage = @"服务器连接超时，请检查网络连接或稍后再试";
         } else if (error.code == NSURLErrorCancelled) {
             errorMessage = @"";
-        } else {
+        } else if (error.code == NSURLErrorCannotConnectToHost) {
+            errorMessage = @"无法连接至服务器，请检查网络连接或稍后再试";
+        }else {
             errorMessage = @"未知错误";
         }
         
@@ -222,6 +218,7 @@
     
     return request;
 }
+
 @end
 
 

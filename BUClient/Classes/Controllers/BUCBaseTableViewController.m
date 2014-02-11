@@ -7,7 +7,8 @@
 //
 
 #import "BUCBaseTableViewController.h"
-
+#import "BUCEditorViewController.h"
+#import "BUCAppDelegate.h"
 
 @implementation BUCBaseTableViewController
 @synthesize user, engine;
@@ -27,17 +28,24 @@
         [_postDataDic setObject:user.username forKey:@"username"];
         [_postDataDic setObject:user.session forKey:@"session"];
         [_postDic setObject:_postDataDic forKey:@"dataDic"];
-        _mainController = (BUCMainViewController *)[UIApplication sharedApplication].keyWindow.rootViewController;
-        _contentController = _mainController.contentController;
-        _indexController = _mainController.indexController;
     }
     
     return self;
 }
 
+- (void)dealloc
+{
+    if (self.loading || self.refreshing) [self cancelLoading];
+    [self removeObserver:self forKeyPath:@"responseDic" context:NULL];
+}
+
 - (void)viewDidLoad
 {
     [super viewDidLoad];
+    
+    self.mainController = (BUCMainViewController *)((BUCAppDelegate *)[UIApplication sharedApplication].delegate).mainViewController;
+    self.contentController = self.mainController.contentController;
+    self.indexController = self.mainController.indexController;
     
     UIRefreshControl *refresh = [[UIRefreshControl alloc] init];
     refresh.attributedTitle = [[NSAttributedString alloc] initWithString:@"Loading..."];
@@ -52,19 +60,11 @@
     [self addObserver:self forKeyPath:@"responseDic" options:NSKeyValueObservingOptionNew context:NULL];
 }
 
-- (void)willMoveToParentViewController:(UIViewController *)parent
-{
-    if (!parent) {
-        if (self.loading || self.refreshing) [self cancelLoading];
-        [self removeObserver:self forKeyPath:@"responseDic" context:NULL];
-    }
-
-    [super willMoveToParentViewController:parent];
-}
-
 - (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender
 {
-
+    UINavigationController *navVC = (UINavigationController *)segue.destinationViewController;
+    BUCEditorViewController *editor = (BUCEditorViewController *)[navVC.childViewControllers lastObject];
+    editor.unwindSegueIdendifier = self.unwindSegueIdentifier;
 }
 
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context
@@ -130,6 +130,7 @@
                         if ([result isEqualToString:@"success"]) {
                             [weakSelf loadData:postDic];
                         } else if ([result isEqualToString:@"fail"]) {
+                            weakSelf.user.isLoggedIn = NO;
                             [weakSelf.mainController displayLoginWithMessage:@"当前密码已失效，请重新登录"];
                             [weakSelf.contentController removeChildController];
                         }

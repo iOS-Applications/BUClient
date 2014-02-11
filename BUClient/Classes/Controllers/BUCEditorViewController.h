@@ -8,6 +8,6 @@
 
 #import <UIKit/UIKit.h>
 
-@interface BUCCraftViewController : UIViewController <UITextFieldDelegate, UITextViewDelegate>
-
+@interface BUCEditorViewController : UIViewController <UITextFieldDelegate, UITextViewDelegate>
+@property NSString *unwindSegueIdendifier;
 @end

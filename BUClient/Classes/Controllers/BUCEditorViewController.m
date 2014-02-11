@@ -6,9 +6,9 @@
 //  Copyright (c) 2014 Jox. All rights reserved.
 //
 
-#import "BUCCraftViewController.h"
+#import "BUCEditorViewController.h"
 
-@interface BUCCraftViewController ()
+@interface BUCEditorViewController ()
 @property (weak, nonatomic) IBOutlet UITextView *content;
 @property (weak, nonatomic) IBOutlet UIScrollView *scrollview;
 @property (weak, nonatomic) IBOutlet UITextField *subforum;
@@ -17,7 +17,7 @@
 
 @end
 
-@implementation BUCCraftViewController
+@implementation BUCEditorViewController
 
 - (void)viewDidLoad
 {
@@ -43,6 +43,10 @@
     [self.scrollview.layer addSublayer:bottomBorderB];
     
 	// Do any additional setup after loading the view.
+}
+
+- (IBAction)unwindToPrevious:(id)sender {
+    [self performSegueWithIdentifier:self.unwindSegueIdendifier sender:nil];
 }
 
 #pragma mark - IBAction methods

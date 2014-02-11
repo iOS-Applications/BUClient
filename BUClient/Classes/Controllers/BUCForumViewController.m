@@ -48,6 +48,8 @@
         [self.postDataDic setObject:@"0" forKey:@"from"];
         [self.postDataDic setObject:@"20" forKey:@"to"];
         self.listKey = @"threadlist";
+        
+        self.unwindSegueIdentifier = @"unwindToForum";
     }
     
     return self;
@@ -124,9 +126,33 @@
                                                              delegate:self
                                                     cancelButtonTitle:@"Cancel"
                                                destructiveButtonTitle:nil
-                                                    otherButtonTitles:@"发布新帖", @"返回首页", @"版面列表", nil];
+                                                    otherButtonTitles:@"发布新帖", @"返回首页", @"版面列表", @"返回顶部", nil];
     
     [actionSheet showInView:self.view];
+}
+
+- (void)actionSheet:(UIActionSheet *)actionSheet clickedButtonAtIndex:(NSInteger)buttonIndex
+{
+    switch (buttonIndex) {
+        case 0:
+            [self performSegueWithIdentifier:@"segueToEditor" sender:nil];
+            break;
+            
+        case 1:
+            [self.contentController performSegueWithIdentifier:@"segueToFront" sender:nil];
+            break;
+
+        case 2:
+            [self.contentController performSegueWithIdentifier:@"segueToForumList" sender:nil];
+            break;
+            
+        case 3:
+            [self.tableView scrollToRowAtIndexPath:[NSIndexPath indexPathForRow:0 inSection:0] atScrollPosition:UITableViewScrollPositionTop animated:YES];
+            break;
+            
+        default:
+            break;
+    }
 }
 
 - (IBAction)previous:(id)sender {

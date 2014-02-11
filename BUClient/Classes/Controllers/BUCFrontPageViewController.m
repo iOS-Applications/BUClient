@@ -18,6 +18,8 @@
     if (self) {
         [self.postDic setObject:@"home" forKey:@"url"];
         self.listKey = @"newlist";
+        
+        self.unwindSegueIdentifier = @"unwindToFront";
     }
     
     return self;

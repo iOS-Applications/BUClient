@@ -35,6 +35,7 @@
         [self.postDataDic setObject:@"20" forKey:@"to"];
         self.listKey = @"threadlist";
         self.postCount = 235695;
+        self.unwindSegueIdentifier = @"unwindToThread";
     }
     
     return self;
@@ -73,6 +74,11 @@
                                                           otherButtonTitles:@"发布新帖", @"返回版面", nil];
     
     [threadActionSheet showInView:self.view];
+}
+
+- (IBAction)unwindToThread:(UIStoryboardSegue *)segue
+{
+    
 }
 
 #pragma mark - picker view delegate/datasource methods

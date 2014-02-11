@@ -19,6 +19,8 @@
         [self.postDic setObject:@"forum" forKey:@"url"];
         [self.postDataDic setObject:@"forum" forKey:@"action"];
         self.listKey = @"forumslist";
+        
+        self.unwindSegueIdentifier = @"unwindToForumList";
     }
     
     return self;

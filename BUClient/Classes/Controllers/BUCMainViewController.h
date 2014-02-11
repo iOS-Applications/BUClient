@@ -16,6 +16,10 @@
 
 - (void)displayLoginWithMessage:(NSString *)message;
 - (void)revealIndex;
+- (void)hideIndex;
 - (void)switchContentWith:(NSString *)segueIdendifier;
+
+- (void)disableIndex;
+- (void)enableIndex;
 
 @end

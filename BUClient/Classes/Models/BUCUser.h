@@ -15,6 +15,8 @@
 @property NSString *session;
 @property NSMutableDictionary *loginDic;
 @property NSMutableDictionary *loginDataDic;
+@property BOOL isLoggedIn;
+@property NSString *loadImage;
 
 + (BUCUser *)sharedInstance;
 
