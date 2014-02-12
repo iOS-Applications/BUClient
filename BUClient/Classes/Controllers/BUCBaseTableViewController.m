@@ -47,6 +47,8 @@
     self.contentController = self.mainController.contentController;
     self.indexController = self.mainController.indexController;
     
+    self.responseDataArray = engine.responseDataArray;
+    
     UIRefreshControl *refresh = [[UIRefreshControl alloc] init];
     refresh.attributedTitle = [[NSAttributedString alloc] initWithString:@"Loading..."];
     
@@ -150,6 +152,19 @@
     }];
 }
 
+- (void)loadImage:(NSString *)imageUrl atIndex:(NSInteger)index
+{
+    if (!engine.hostIsOn) {
+        [self endLoading];
+        [self alertWithMessage:@"无网络连接"];
+        return;
+    }
+    
+    NSURL *url = [NSURL URLWithString:imageUrl];
+    NSURLRequest *request = [NSURLRequest requestWithURL:url];
+    [engine processAsyncQueueRequest:request index:index];
+}
+
 - (void)alertWithMessage:(NSString *)message
 {
     UIAlertView *theAlert = [[UIAlertView alloc] initWithTitle:nil
@@ -179,18 +194,6 @@
 - (IBAction)displayMenu:(id)sender
 {
     [self.mainController revealIndex];
-}
-
-
-#pragma mark - Table view data source and delegate methods
-- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
-{
-    return 1;
-}
-
-- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
-{
-    return [self.list count];
 }
 
 @end

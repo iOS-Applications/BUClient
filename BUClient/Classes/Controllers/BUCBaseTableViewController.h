@@ -27,6 +27,7 @@
 @property NSString *listKey;
 @property NSArray *list;
 @property NSDictionary *responseDic;
+@property NSMutableArray *responseDataArray;
 
 @property BOOL loading;
 @property BOOL refreshing;
@@ -39,6 +40,7 @@
 - (void)alertWithMessage:(NSString *)message;
 - (IBAction)refresh:(id)sender;
 - (void)loadData:(NSDictionary *)postDic;
+- (void)loadImage:(NSString *)imageUrl atIndex:(NSInteger)index;
 - (void)endLoading;
 - (void)cancelLoading;
 - (void)suspendLoading;

@@ -9,6 +9,7 @@
 #import "BUCNetworkEngine.h"
 #import "NSString+NSString_Extended.h"
 #import "Reachability.h"
+#import "BUCPost.h"
 
 @interface BUCNetworkEngine ()
 {
@@ -53,6 +54,12 @@
         _defaultSession = [NSURLSession sessionWithConfiguration: _defaultConfigObject delegate: nil delegateQueue: [NSOperationQueue mainQueue]];
         _responseDic = nil;
         _hostIsOn = NO;
+        
+        _responseDataArray = [[NSMutableArray alloc] init];
+        for (int i = 0; i < 20; i++) {
+            BUCPost *post = [[BUCPost alloc] init];
+            [_responseDataArray addObject:post];
+        }
         
         // test code begin
         _baseUrl = @"http://0.0.0.0:8080/open_api/bu_%@.php";
@@ -114,6 +121,20 @@
                         }];
     
     [self.currentTask resume];
+}
+
+- (void)processAsyncQueueRequest:(NSURLRequest *)request index:(NSInteger)index
+{
+    BUCPost *post = [self.responseDataArray objectAtIndex:index];
+    
+    NSURLSessionDataTask *task = [self.defaultSession dataTaskWithRequest:request
+                                              completionHandler:
+                        ^(NSData *data, NSURLResponse *response, NSError *error) {
+                            if (!error && [data length]) {
+                                post.avatar = data;
+                            }
+                        }];
+    [task resume];
 }
 
 - (void)cancelCurrentTask

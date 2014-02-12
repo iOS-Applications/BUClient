@@ -57,6 +57,7 @@
 		D8BFD97618939FE40059DBDE /* BUCNetworkEngine.m in Sources */ = {isa = PBXBuildFile; fileRef = D8BFD97518939FE40059DBDE /* BUCNetworkEngine.m */; };
 		D8BFD97C18942F9D0059DBDE /* screen1136x1136.png in Resources */ = {isa = PBXBuildFile; fileRef = D8BFD97B18942F9D0059DBDE /* screen1136x1136.png */; };
 		D8CA18E118A7DD6B00D4D2F9 /* BUCEditorViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = D8CA18E018A7DD6B00D4D2F9 /* BUCEditorViewController.m */; };
+		D8CF3DAB18AB4A9B009080E4 /* BUCPost.m in Sources */ = {isa = PBXBuildFile; fileRef = D8CF3DAA18AB4A9B009080E4 /* BUCPost.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -145,6 +146,8 @@
 		D8BFD97B18942F9D0059DBDE /* screen1136x1136.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = screen1136x1136.png; sourceTree = "<group>"; };
 		D8CA18DF18A7DD6B00D4D2F9 /* BUCEditorViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BUCEditorViewController.h; sourceTree = "<group>"; };
 		D8CA18E018A7DD6B00D4D2F9 /* BUCEditorViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BUCEditorViewController.m; sourceTree = "<group>"; };
+		D8CF3DA918AB4A9B009080E4 /* BUCPost.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BUCPost.h; sourceTree = "<group>"; };
+		D8CF3DAA18AB4A9B009080E4 /* BUCPost.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BUCPost.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -384,6 +387,8 @@
 			children = (
 				D8BFD971189297900059DBDE /* BUCUser.h */,
 				D8BFD972189297900059DBDE /* BUCUser.m */,
+				D8CF3DA918AB4A9B009080E4 /* BUCPost.h */,
+				D8CF3DAA18AB4A9B009080E4 /* BUCPost.m */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -505,6 +510,7 @@
 				D8114CD9189012BC00F0E1A7 /* BUCMainViewController.m in Sources */,
 				D833DC7E18A84968002998EC /* BUCUserListViewController.m in Sources */,
 				D8BFD96C189289800059DBDE /* BUCForumListViewController.m in Sources */,
+				D8CF3DAB18AB4A9B009080E4 /* BUCPost.m in Sources */,
 				D8BFD96F189289F70059DBDE /* BUCForumViewController.m in Sources */,
 				D8BFD97618939FE40059DBDE /* BUCNetworkEngine.m in Sources */,
 				D8114CD7189012BC00F0E1A7 /* BUCIndexViewController.m in Sources */,

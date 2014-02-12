@@ -49,19 +49,39 @@
 #pragma mark - Table view delegate methods
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
 {
+    BUCMainViewController *mainController = (BUCMainViewController *)self.parentViewController;
+    BUCContentViewController *contentController = mainController.contentController;
+    BUCUser *user = [BUCUser sharedInstance];
+    
     if (indexPath.row == 4) {
-        BUCMainViewController *mainController = (BUCMainViewController *)self.parentViewController;
-        BUCContentViewController *contentController = mainController.contentController;
         [contentController removeChildController];
         [mainController displayLoginWithMessage:nil];
         [mainController hideIndex];
-        BUCUser *user = [BUCUser sharedInstance];
         user.isLoggedIn = NO;
         return;
     }
     
+    if (indexPath.row == 2) {
+        contentController.infoDic = @{@"username": user.username};
+    }
+    
     NSString *segueIdentifier = [self.list objectAtIndex:indexPath.row];
-    [(BUCMainViewController *)self.parentViewController switchContentWith:segueIdentifier];
+    [mainController switchContentWith:segueIdentifier];
 }
 
 @end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
