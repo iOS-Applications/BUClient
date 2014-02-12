@@ -988,11 +988,6 @@
                         </connections>
                     </tableView>
                     <navigationItem key="navigationItem" title="用户列表" id="vFo-of-dej">
-                        <barButtonItem key="leftBarButtonItem" title="❮ 偏好设置" id="xaM-ze-mMa">
-                            <connections>
-                                <segue destination="sTf-PZ-FUy" kind="unwind" unwindAction="unwindToSettings:" id="wfF-5h-DPS"/>
-                            </connections>
-                        </barButtonItem>
                         <barButtonItem key="rightBarButtonItem" systemItem="add" id="mqR-NP-O2o">
                             <connections>
                                 <segue destination="EZi-Vp-Cr8" kind="modal" id="FxI-fP-XrG"/>
@@ -1001,7 +996,6 @@
                     </navigationItem>
                 </tableViewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="hl0-F6-C7S" userLabel="First Responder" sceneMemberID="firstResponder"/>
-                <exit id="sTf-PZ-FUy" userLabel="Exit" sceneMemberID="exit"/>
             </objects>
             <point key="canvasLocation" x="3898" y="1234"/>
         </scene>

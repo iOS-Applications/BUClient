@@ -30,8 +30,6 @@
     self.mainController = appDelegate.mainViewController;
     self.user = [BUCUser sharedInstance];
     
-    self.currentUser.text = self.user.username;
-    
     NSString *loadImage = self.user.loadImage;
     if ([loadImage isEqualToString:@"yes"]) {
         self.loadImage.on = YES;
@@ -46,6 +44,13 @@
 
 }
 
+- (void)viewWillAppear:(BOOL)animated
+{
+    [super viewWillAppear:animated];
+    
+    self.currentUser.text = self.user.username;
+}
+
 - (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender
 {
     [self.mainController disableIndex];
@@ -54,8 +59,7 @@
 #pragma mark - unwind methods and actions
 - (IBAction)unwindToSettings:(UIStoryboardSegue *)segue
 {
-    self.currentUser.text = self.user.username;
-    [self.mainController enableIndex];
+
 }
 
 - (IBAction)toggleImageLoad:(id)sender {

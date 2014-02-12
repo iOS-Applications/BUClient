@@ -21,6 +21,7 @@
 @property NSString *currentUser;
 
 @property BUCContentViewController *contentController;
+@property BUCMainViewController *mainController;
 @end
 
 @implementation BUCUserListViewController
@@ -31,12 +32,19 @@
     self.defaults = [NSUserDefaults standardUserDefaults];
     self.list = [NSMutableArray arrayWithArray:[self.defaults objectForKey:@"userList"]];
     
-    BUCMainViewController *mainController = (BUCMainViewController *)((BUCAppDelegate *)[UIApplication sharedApplication].delegate).mainViewController;
-    self.contentController = mainController.contentController;
+    self.mainController = (BUCMainViewController *)((BUCAppDelegate *)[UIApplication sharedApplication].delegate).mainViewController;
+    self.contentController = self.mainController.contentController;
     
     self.currentUser = [BUCUser sharedInstance].username;
     
     [self.tableView reloadData];
+}
+
+- (void)viewWillDisappear:(BOOL)animated
+{
+    [super viewWillDisappear:animated];
+    
+    [self.mainController enableIndex];
 }
 
 #pragma mark - action methods
