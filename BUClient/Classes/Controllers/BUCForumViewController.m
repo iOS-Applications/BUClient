@@ -10,6 +10,7 @@
 #import "BUCTableCell.h"
 
 @interface BUCForumViewController ()
+
 @property (strong, nonatomic) IBOutlet UITextField *pickerInputField;
 @property (strong, nonatomic) IBOutlet UIPickerView *picker;
 @property (strong, nonatomic) IBOutlet UIToolbar *pickerToolbar;
@@ -20,13 +21,15 @@
 @property (weak, nonatomic) IBOutlet UIBarButtonItem *previous;
 @property (weak, nonatomic) IBOutlet UIBarButtonItem *next;
 
-@property NSString *fid;
-@property NSInteger postCount;
-@property NSInteger pageCount;
-@property NSInteger curPickerRow;
+@property (nonatomic) NSString *fid;
+@property (nonatomic) NSString *fname;
+@property (nonatomic) NSInteger threadCount;
+@property (nonatomic) NSInteger pageCount;
+@property (nonatomic) NSInteger curPickerRow;
 
-@property NSMutableDictionary *helpPostDic;
-@property NSMutableDictionary *helpPostDataDic;
+@property (nonatomic) NSMutableDictionary *helpPostDic;
+@property (nonatomic) NSMutableDictionary *helpPostDataDic;
+
 @end
 
 @implementation BUCForumViewController
@@ -64,7 +67,6 @@
     self.picker.frame = CGRectMake(0, 0, 320, 162);
     self.pickerInputField.inputView = self.picker;
     self.pickerInputField.inputAccessoryView = self.pickerToolbar;
-    self.pickerInputField.delegate = self;
     
     UIBarButtonItem *tempBarItem = [[UIBarButtonItem alloc] initWithCustomView:self.pickerInputField];
     NSMutableArray *items = [self.toolbarItems mutableCopy];
@@ -73,17 +75,17 @@
     
     NSDictionary *infoDic = self.contentController.infoDic;
     self.fid = [infoDic objectForKey:@"fid"];
+    self.fname = [infoDic objectForKey:@"fname"];
+    
     [self.postDataDic setObject:self.fid forKey:@"fid"];
     [self.helpPostDataDic setObject:self.fid forKey:@"fid"];
-    self.postCount = [[infoDic objectForKey:@"postCount"] integerValue];
-    self.pageCount = self.postCount % 20 ? self.postCount/20 + 1 : self.postCount/20;
-    self.pickerInputField.text = [NSString stringWithFormat:@"1/%i", self.pageCount];
-    self.navigationItem.title = [infoDic objectForKey:@"fname"];
-    self.curPickerRow = 0;
-    self.previous.enabled = NO;
-    if (self.postCount <= 20) self.next.enabled = NO;
     
-    [self loadData:self.postDic];
+    self.navigationItem.title = self.fname;
+    
+    self.previous.enabled = NO;
+    self.next.enabled = NO;
+    
+    [self loadData:self.helpPostDic];
 }
 
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context
@@ -91,17 +93,28 @@
     if (self.responseDic) {
         NSString *temp = [self.responseDic objectForKey:@"fid_sum"];
         if (temp) {
-            self.postCount = [temp integerValue];
-            self.pageCount = self.postCount % 20 ? self.postCount/20 + 1 : self.postCount/20;
+            self.threadCount = [temp integerValue];
+            self.pageCount = self.threadCount % 20 ? self.threadCount/20 + 1 : self.threadCount/20;
             self.pickerInputField.text = [NSString stringWithFormat:@"%i/%i", self.curPickerRow + 1, self.pageCount];
             [self updateNavState];
             [self.picker reloadComponent:0];
             [self loadData:self.postDic];
         } else {
             self.list = [self.responseDic objectForKey:self.listKey];
+            [self urldecodeData];
             [self endLoading];
             [self.tableView reloadData];
         }
+    }
+}
+
+- (void)urldecodeData
+{
+    for (NSMutableDictionary *item in self.list) {
+        NSString *string = [[item objectForKey:@"author"] urldecode];
+        [item setObject:string forKey:@"author"];
+        string = [[item objectForKey:@"subject"] urldecode];
+        [item setObject:string forKey:@"subject"];
     }
 }
 
@@ -122,6 +135,8 @@
 }
 
 - (IBAction)showActionSheet:(id)sender {
+    if (self.loading || self.refreshing) [self suspendLoading];
+    
     UIActionSheet *actionSheet = [[UIActionSheet alloc] initWithTitle:nil
                                                              delegate:self
                                                     cancelButtonTitle:@"Cancel"
@@ -151,6 +166,7 @@
             break;
             
         default:
+            if (self.loading || self.refreshing) [self resumeLoading];
             break;
     }
 }
@@ -179,9 +195,16 @@
 
 - (IBAction)donePagePick:(id)sender {
     [self.pickerInputField resignFirstResponder];
-    if (self.loading || self.refreshing) [self cancelLoading];
+    
+    if (self.pageCount == 0) { // page picker is activated before first load ended, so nothing should be done, just resume and return
+        if (self.loading || self.refreshing) [self resumeLoading];
+        return;
+    }
     
     self.curPickerRow = [self.picker selectedRowInComponent:0];
+    
+    if (self.loading || self.refreshing) [self cancelLoading];
+    
     [self.postDataDic setObject:[NSString stringWithFormat:@"%i", 20 * self.curPickerRow] forKey:@"from"];
     [self.postDataDic setObject:[NSString stringWithFormat:@"%i", 20 * (self.curPickerRow + 1)] forKey:@"to"];
     
@@ -216,27 +239,26 @@
     
     BUCTableCell *cell = [tableView dequeueReusableCellWithIdentifier:CellIdentifier forIndexPath:indexPath];
     CGFloat cellHeight = cell.frame.size.height;
-    NSDictionary *post = [self.list objectAtIndex:indexPath.row];
+    NSDictionary *thread = [self.list objectAtIndex:indexPath.row];
     
-    [cell.replyCount setTitle:[post objectForKey:@"replies"] forState:UIControlStateNormal];
+    [cell.replyCount setTitle:[thread objectForKey:@"replies"] forState:UIControlStateNormal];
     
-    CGRect frame = CGRectMake(0, 0, 230, cellHeight - 32);
+    CGRect frame = CGRectMake(0, 0, 250, cellHeight - 32);
     cell.title.frame = frame;
-    cell.title.text = [[[post objectForKey:@"subject"] urldecode] replaceHtmlEntities];
+    cell.title.text = [[thread objectForKey:@"subject"] replaceHtmlEntities];
     cell.title.font = [UIFont systemFontOfSize:18];
-    
     
     NSDictionary *stringAttribute = @{NSFontAttributeName:[UIFont systemFontOfSize:15]};
     
-    NSString *author = [[post objectForKey:@"author"] urldecode];
-    UIButton *authorBtn = [self cellButtonWithTitle:author];
+    NSString *author = [thread objectForKey:@"author"];
+    UIButton *leftBottomBtn = [self cellButtonWithTitle:author];
     
     CGSize size = [author sizeWithAttributes:stringAttribute];
-    authorBtn.frame = CGRectMake(10, cellHeight - 27, size.width + 2, 27); // 2 is the width to compensate padding of button element
-    cell.authorBtn = authorBtn;
-    [cell addSubview:authorBtn];
+    leftBottomBtn.frame = CGRectMake(10, cellHeight - 27, size.width + 2, 27); // 2 is the width to compensate padding of button element
+    cell.leftBottomBtn = leftBottomBtn;
+    [cell addSubview:leftBottomBtn];
     
-    NSString *timestamp = [post objectForKey:@"dateline"];
+    NSString *timestamp = [thread objectForKey:@"dateline"];
     NSDate *date = [NSDate dateWithTimeIntervalSince1970:(NSTimeInterval)[timestamp integerValue]];
     static NSDateFormatter *dateFormatter = nil;
     if (!dateFormatter) {
@@ -258,8 +280,8 @@
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
 {
     NSDictionary *post = [self.list objectAtIndex:indexPath.row];
-    NSString *text = [[post objectForKey:@"subject"] urldecode];
-    CGRect frame = [text boundingRectWithSize:CGSizeMake(230, FLT_MAX)
+    NSString *text = [post objectForKey:@"subject"];
+    CGRect frame = [text boundingRectWithSize:CGSizeMake(250, FLT_MAX)
                                       options:(NSStringDrawingUsesLineFragmentOrigin | NSStringDrawingUsesFontLeading)
                                    attributes:@{NSFontAttributeName:[UIFont systemFontOfSize:18]}
                                       context:nil];
@@ -286,6 +308,8 @@
 #pragma mark - text field delegate methods
 - (BOOL)textFieldShouldBeginEditing:(UITextField *)textField
 {
+    if (self.pageCount == 0) return  NO;
+    
     if (self.loading || self.refreshing) [self suspendLoading];
 
     return YES;

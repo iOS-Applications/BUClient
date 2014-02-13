@@ -41,6 +41,7 @@
 - (IBAction)refresh:(id)sender;
 - (void)loadData:(NSDictionary *)postDic;
 - (void)loadImage:(NSString *)imageUrl atIndex:(NSInteger)index;
+- (void)urldecodeData;
 - (void)endLoading;
 - (void)cancelLoading;
 - (void)suspendLoading;

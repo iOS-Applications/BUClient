@@ -73,6 +73,7 @@
 {
     if (self.responseDic) {
         self.list = [self.responseDic objectForKey:self.listKey];
+        [self urldecodeData];
         [self endLoading];
         [self.tableView reloadData];
     }
@@ -163,6 +164,11 @@
     NSURL *url = [NSURL URLWithString:imageUrl];
     NSURLRequest *request = [NSURLRequest requestWithURL:url];
     [engine processAsyncQueueRequest:request index:index];
+}
+
+- (void)urldecodeData
+{
+    
 }
 
 - (void)alertWithMessage:(NSString *)message

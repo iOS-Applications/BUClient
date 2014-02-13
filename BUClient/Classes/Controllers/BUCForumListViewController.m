@@ -36,7 +36,7 @@
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context
 {
     if (self.responseDic) {
-        // temporary mother fucking forum list solution start
+        // temporary mother fucking forum list solution
         NSMutableArray *tempList = [[NSMutableArray alloc] initWithObjects:@"2", @"129", @"166", @"16", @"13", nil];
         NSDictionary *item;
         NSDictionary *tempDic = [self.responseDic objectForKey:self.listKey];
@@ -85,21 +85,21 @@
             forumList = [[NSMutableArray alloc] init];
             forumInfo = [[NSMutableDictionary alloc] initWithDictionary:[item objectForKey:@"main"]];
             name = [forumInfo objectForKey:@"name"];
-            [forumInfo setObject:[name urldecode] forKey:@"name"];
+            [forumInfo setObject:name forKey:@"name"];
             
             for (NSString *key in item) {
                 if (![key isEqualToString:@"main"]) {
                     stuff = [item objectForKey:key];
                     forum = [NSMutableDictionary dictionaryWithDictionary:[(NSArray *)[stuff objectForKey:@"main"] lastObject]];
                     name = [forum objectForKey:@"name"];
-                    [forum setObject:[name urldecode] forKey:@"name"];
+                    [forum setObject:name forKey:@"name"];
                     [forumList addObject:forum];
                     
                     if ([stuff count] > 1) {
                         subforumList = [stuff objectForKey:@"sub"];
                         for (NSDictionary *element in subforumList) {
                             subforum = [NSMutableDictionary dictionaryWithDictionary:element];
-                            [subforum setObject:[[element objectForKey:@"name"] urldecode] forKey:@"name"];
+                            [subforum setObject:[element objectForKey:@"name"] forKey:@"name"];
                             if ([[subforum objectForKey:@"fup"] isEqualToString:@"14"] &&
                                 [[subforum objectForKey:@"name"] rangeOfString:@"站庆专版"].length) {
                                 
@@ -116,9 +116,28 @@
         }
         
         self.list = (NSArray *)sectionList;
+        [self urldecodeData];
         
         [self endLoading];
         [self.tableView reloadData];
+    }
+}
+
+- (void)urldecodeData
+{
+    for (NSMutableDictionary *item in self.list) {
+        NSMutableDictionary *info = [item objectForKey:@"info"];
+        NSString *sectionName = [[info objectForKey:@"name"] urldecode];
+        [info setObject:sectionName forKey:@"name"];
+        
+        NSMutableArray *forumList = [item objectForKey:@"forumList"];
+        for (NSMutableDictionary *forum in forumList) {
+            NSString *name = [[forum objectForKey:@"name"] urldecode];
+            if ([name rangeOfString:@"站庆专版"].length) {
+                name = @"站庆专版";
+            }
+            [forum setObject:name forKey:@"name"];
+        }
     }
 }
 
@@ -168,9 +187,8 @@
     NSDictionary *forumSection = [self.list objectAtIndex:indexPath.section];
     NSDictionary *forum = [[forumSection objectForKey:@"forumList"] objectAtIndex:indexPath.row];
     NSString *fid = [forum objectForKey:@"fid"];
-    NSString *postCount = [forum objectForKey:@"threads"];
     NSString *fname = [forum objectForKey:@"name"];
-    self.contentController.infoDic = @{ @"fid": fid, @"postCount":postCount, @"fname":fname };
+    self.contentController.infoDic = @{ @"fid": fid, @"fname":fname };
     [self.contentController performSegueWithIdentifier:@"segueToForum" sender:nil];
 }
 
