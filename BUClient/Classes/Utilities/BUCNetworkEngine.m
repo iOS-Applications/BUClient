@@ -9,7 +9,7 @@
 #import "BUCNetworkEngine.h"
 #import "NSString+NSString_Extended.h"
 #import "Reachability.h"
-#import "BUCPost.h"
+#import "BUCAvatar.h"
 
 @interface BUCNetworkEngine ()
 {
@@ -57,8 +57,8 @@
         
         _responseDataArray = [[NSMutableArray alloc] init];
         for (int i = 0; i < 20; i++) {
-            BUCPost *post = [[BUCPost alloc] init];
-            [_responseDataArray addObject:post];
+            BUCAvatar *avatar = [[BUCAvatar alloc] init];
+            [_responseDataArray addObject:avatar];
         }
         
         // test code begin
@@ -125,14 +125,25 @@
 
 - (void)processAsyncQueueRequest:(NSURLRequest *)request index:(NSInteger)index
 {
-    BUCPost *post = [self.responseDataArray objectAtIndex:index];
+    BUCAvatar *avatar = [self.responseDataArray objectAtIndex:index];
+    avatar.loadEnded = NO;
     
     NSURLSessionDataTask *task = [self.defaultSession dataTaskWithRequest:request
                                               completionHandler:
                         ^(NSData *data, NSURLResponse *response, NSError *error) {
-                            if (!error && [data length]) {
-                                post.avatar = data;
+                            if (error) {
+                                avatar.error = error;
+                                goto done;
                             }
+                            
+                            if ([data length]) {
+                                avatar.data = data;
+                            } else {
+                                avatar.error = [NSError errorWithDomain:NSURLErrorDomain code:NSURLErrorUnknown userInfo:nil];
+                            }
+                            
+                        done:
+                            avatar.loadEnded = YES;
                         }];
     [task resume];
 }

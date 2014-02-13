@@ -56,6 +56,8 @@
         [self.list addObject:self.currentUser];
         [self.tableView reloadData];
     }
+    
+    [self.mainController disableIndex];
 }
 
 #pragma mark - Table view data source

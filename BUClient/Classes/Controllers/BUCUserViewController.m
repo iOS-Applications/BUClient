@@ -7,7 +7,7 @@
 //
 
 #import "BUCUserViewController.h"
-#import "BUCPost.h"
+#import "BUCAvatar.h"
 
 @interface BUCUserViewController ()
 @property (weak, nonatomic) IBOutlet UILabel *username;
@@ -46,7 +46,10 @@
 
 - (void)dealloc
 {
-    [self.responseDataArray removeObserver:self fromObjectsAtIndexes:[NSIndexSet indexSetWithIndexesInRange:NSMakeRange(0, 20)] forKeyPath:@"avatar" context:NULL];
+    [self.responseDataArray removeObserver:self
+                      fromObjectsAtIndexes:[NSIndexSet indexSetWithIndex:0]
+                                forKeyPath:@"loadEnded"
+                                   context:NULL];
 }
 
 - (void)viewDidLoad
@@ -59,9 +62,16 @@
     self.navigationItem.title = username;
     
     self.responseDataArray = self.engine.responseDataArray;
-    [self.responseDataArray addObserver:self toObjectsAtIndexes:[NSIndexSet indexSetWithIndexesInRange:NSMakeRange(0, 20)] forKeyPath:@"avatar" options:NSKeyValueObservingOptionNew context:NULL];
+    [self.responseDataArray addObserver:self
+                     toObjectsAtIndexes:[NSIndexSet indexSetWithIndex:0]
+                             forKeyPath:@"loadEnded"
+                                options:NSKeyValueObservingOptionNew
+                                context:NULL];
     
     [self loadData:self.postDic];
+    
+//    NSString *path = [[NSBundle mainBundle] bundlePath];
+//    NSURL *baseURL = [NSURL fileURLWithPath:path];
 }
 
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context
@@ -89,25 +99,30 @@
             self.registerDate.text = [dateFormatter stringFromDate:date];
             
             if (self.loadImage) {
-                NSString *avatar = [[userDic objectForKey:@"avatar"] urldecode];
+                NSString *avatarUrl = [[userDic objectForKey:@"avatar"] urldecode];
                 
                 // test code start
-                avatar = @"http://0.0.0.0:8080/static/avatar.png";
+                avatarUrl = @"http://0.0.0.0:8080/static/avatar.png";
                 // test code end
                 
-                [self loadImage:avatar atIndex:0];
+                [self loadImage:avatarUrl atIndex:0];
             }
             
             [self endLoading];
         }
     } else {
-        NSData *data = ((BUCPost *)[self.responseDataArray objectAtIndex:0]).avatar;
-        self.avatar.image = [UIImage imageWithData:data];
+        BUCAvatar *avatar = [self.responseDataArray objectAtIndex:0];
+        if (!avatar.loadEnded) return;
+        
+        NSError *error = avatar.error;
+        
+        if (!error) {
+            NSData *data = avatar.data;
+            self.avatar.image = [UIImage imageWithData:data];
+        } else {
+            // handle error
+        }
     }
-}
-- (IBAction)testshit:(id)sender {
-    NSData *data = [[self.responseDataArray objectAtIndex:0] objectForKey:@"data"];
-    self.avatar.image = [UIImage imageWithData:data];
 }
 @end
 
