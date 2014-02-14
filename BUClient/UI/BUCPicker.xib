@@ -4,7 +4,7 @@
         <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="3747"/>
     </dependencies>
     <objects>
-        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner" customClass="BUCForumViewController">
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner" customClass="BUCThreadViewController">
             <connections>
                 <outlet property="cancelPicker" destination="faq-CW-fYO" id="8Yl-Jv-BkC"/>
                 <outlet property="donePicker" destination="esF-ls-gct" id="2BJ-nA-rdC"/>
@@ -28,7 +28,7 @@
             <fontDescription key="fontDescription" type="system" pointSize="14"/>
             <textInputTraits key="textInputTraits"/>
             <connections>
-                <outlet property="delegate" destination="-1" id="uEg-Zq-FDk"/>
+                <outlet property="delegate" destination="-1" id="cyQ-lj-1gl"/>
             </connections>
         </textField>
         <toolbar opaque="NO" clearsContextBeforeDrawing="NO" contentMode="scaleToFill" id="fPf-0N-G9d">

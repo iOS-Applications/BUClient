@@ -8,10 +8,12 @@
 //
 
 #import "BUCThreadViewController.h"
-#import "BUCEditorViewController.h"
-#import "BUCTableCell.h"
+#import "BUCAvatar.h"
 
 @interface BUCThreadViewController ()
+{
+    NSIndexSet *allindexes;
+}
 
 @property (strong, nonatomic) IBOutlet UITextField *pickerInputField;
 @property (strong, nonatomic) IBOutlet UIPickerView *picker;
@@ -23,17 +25,15 @@
 @property (weak, nonatomic) IBOutlet UIBarButtonItem *previous;
 @property (weak, nonatomic) IBOutlet UIBarButtonItem *next;
 
-@property (nonatomic) NSString *fid;
-@property (nonatomic) NSString *fname;
-@property (nonatomic) NSString *tid;
-@property (nonatomic) NSString *subject;
-@property (nonatomic) NSInteger postCount;
+@property (nonatomic) BUCForum *forum;
+@property (nonatomic) BUCThread *thread;
 @property (nonatomic) NSInteger pageCount;
 @property (nonatomic) NSInteger curPickerRow;
 
-@property (nonatomic) NSMutableDictionary *helpPostDic;
-@property (nonatomic) NSMutableDictionary *helpPostDataDic;
+@property (nonatomic) NSMutableDictionary *subRequestDic;
+@property (nonatomic) NSMutableDictionary *subJsonDic;
 
+@property (nonatomic) BOOL loadImage;
 @end
 
 @implementation BUCThreadViewController
@@ -43,22 +43,32 @@
     self = [super initWithCoder:aDecoder];
     
     if (self) {
-        _helpPostDataDic = [NSMutableDictionary dictionaryWithDictionary:(NSDictionary *)self.postDataDic];
-        [_helpPostDataDic setObject:@"" forKey:@"fid"];
-        _helpPostDic = [NSMutableDictionary dictionaryWithDictionary:(NSDictionary *)self.postDic];
-        [_helpPostDic setObject:_helpPostDataDic forKey:@"dataDic"];
-        [_helpPostDic setObject:@"fid_tid" forKey:@"url"];
+        _subJsonDic = [NSMutableDictionary dictionaryWithDictionary:(NSDictionary *)self.jsonDic];
+        _subRequestDic = [NSMutableDictionary dictionaryWithDictionary:(NSDictionary *)self.requestDic];
+        [_subJsonDic setObject:@"post" forKey:@"action"];
+        [_subJsonDic setObject:@"0" forKey:@"from"];
+        [_subJsonDic setObject:@"20" forKey:@"to"];
+        [_subRequestDic setObject:_subJsonDic forKey:@"dataDic"];
+        [_subRequestDic setObject:@"post" forKey:@"url"];
         
-        [self.postDic setObject:@"post" forKey:@"url"];
-        [self.postDataDic setObject:@"post" forKey:@"action"];
-        [self.postDataDic setObject:@"0" forKey:@"from"];
-        [self.postDataDic setObject:@"20" forKey:@"to"];
+        [self.requestDic setObject:@"fid_tid" forKey:@"url"];
+        [self.jsonDic setObject:@"" forKey:@"fid"];
         
-        self.listKey = @"postlist";
+        self.rawListKey = @"postlist";
         self.unwindSegueIdentifier = @"unwindToThread";
+        
+        _loadImage = [self.user.loadImage isEqualToString:@"yes"] ? YES : NO;
     }
     
     return self;
+}
+
+- (void)dealloc
+{
+    [self.avatarList removeObserver:self
+                      fromObjectsAtIndexes:allindexes
+                                forKeyPath:@"loadEnded"
+                                   context:NULL];
 }
 
 - (void)viewDidLoad
@@ -76,46 +86,83 @@
     [items insertObject:tempBarItem atIndex:5];
     [self setToolbarItems:items];
     
-    NSDictionary *infoDic = self.contentController.infoDic;
-    self.fid = [infoDic objectForKey:@"fid"];
-    self.fname = [infoDic objectForKey:@"fname"];
-    self.tid = [infoDic objectForKey:@"tid"];
-    self.subject = [infoDic objectForKey:@"subject"];
+    self.thread = (BUCThread *)self.contentController.info;
+    self.forum = self.thread.forum;
     
-    [self.postDataDic setObject:self.tid forKey:@"tid"];
-    [self.helpPostDataDic setObject:self.tid forKey:@"tid"];
+    [self.jsonDic setObject:self.thread.tid forKey:@"tid"];
+    [self.subJsonDic setObject:self.thread.tid forKey:@"tid"];
 
-    self.navigationItem.title = self.title;
+    self.navigationItem.title = self.thread.title;
 
     self.previous.enabled = NO;
     self.next.enabled = NO;
     
-    [self loadData:self.helpPostDic];
+    allindexes = [NSIndexSet indexSetWithIndexesInRange:NSMakeRange(0, 20)];
+    [self.avatarList addObserver:self
+                     toObjectsAtIndexes:allindexes
+                             forKeyPath:@"loadEnded"
+                                options:NSKeyValueObservingOptionNew
+                                context:NULL];
+
+    [self loadData:self.requestDic];
 }
 
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context
 {
-    if (self.responseDic) {
-        NSString *temp = [self.responseDic objectForKey:@"tid_sum"];
-        if (temp) {
-            self.postCount = [temp integerValue];
-            self.pageCount = self.postCount % 20 ? self.postCount/20 + 1 : self.postCount/20;
-            self.pickerInputField.text = [NSString stringWithFormat:@"%i/%i", self.curPickerRow + 1, self.pageCount];
-            [self updateNavState];
-            [self.picker reloadComponent:0];
-            [self loadData:self.postDic];
+    if ([keyPath isEqualToString:@"rawDataDic"] && self.rawDataDic) {
+        NSInteger postCount = [[self.rawDataDic objectForKey:@"tid_sum"] integerValue];
+        if (postCount) {
+            self.thread.postCount = postCount;
+            self.pageCount = postCount % 20 ? postCount/20 + 1 : postCount/20;
+            [self loadData:self.subRequestDic];
         } else {
-            self.list = [self.responseDic objectForKey:self.listKey];
+            self.rawDataList = [self.rawDataDic objectForKey:self.rawListKey];
             [self urldecodeData];
+            [self makeCacheList];
+            if (self.loadImage) {
+                NSString *avatarUrl = nil;
+                NSInteger index = 0;
+                BUCAvatar *avatar = nil;
+                
+                for (NSMutableDictionary *post in self.rawDataList) {
+                    avatarUrl = [post objectForKey:@"avatar"];
+                    avatar = [self.avatarList objectAtIndex:index];
+                    // test code start
+                    avatarUrl = @"http://0.0.0.0:8080/static/avatar.png";
+                    // test code end
+                    if ([avatarUrl length]) {
+                        avatar.useDefaultAvatar = NO;
+                        [self loadImage:avatarUrl atIndex:index];
+                        // load image from internet
+                    } else {
+                        avatar.useDefaultAvatar = YES;
+                        // load default avatar image
+                    }
+                    
+                    index++;
+                }
+            }
+            
+            [self updateNavState];
             [self endLoading];
             [self.tableView reloadData];
+        }
+    } else if ([keyPath isEqualToString:@"loadEnded"]){
+        BUCAvatar *avatar = (BUCAvatar *)object;
+        if (!avatar.loadEnded) return;
+        
+        if (!avatar.error) {
+            BUCTableCell *cell = (BUCTableCell *)[self.tableView cellForRowAtIndexPath:[NSIndexPath indexPathForRow:avatar.index inSection:0]];
+            if (cell) cell.avatar.image = avatar.image;
+        } else {
+            // load default avatar image
         }
     }
 }
 
 - (void)urldecodeData
 {
-    for (NSMutableDictionary *item in self.list) {
+    for (NSMutableDictionary *item in self.rawDataList) {
         NSString *string = [[item objectForKey:@"author"] urldecode];
         [item setObject:string forKey:@"author"];
         string = [[item objectForKey:@"avatar"] urldecode];
@@ -127,12 +174,16 @@
     }
 }
 
+- (void)makeCacheList{
+    
+}
+
 - (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender
 {
     UINavigationController *navVC = (UINavigationController *)segue.destinationViewController;
     BUCEditorViewController *editor = (BUCEditorViewController *)[navVC.childViewControllers lastObject];
     editor.unwindSegueIdendifier = self.unwindSegueIdentifier;
-    editor.postSubject = self.subject;
+    editor.postSubject = self.thread.title;
 }
 
 #pragma mark - action methods
@@ -148,7 +199,7 @@
         self.refreshing = YES;
     }
     
-    [self loadData:self.helpPostDic];
+    [self loadData:self.subRequestDic];
 }
 
 - (IBAction)showActionSheet:(id)sender {
@@ -175,7 +226,7 @@
             break;
             
         case 2:
-            self.contentController.infoDic = @{@"fid": self.fid, @"fname": self.fname };
+            self.contentController.info = self.forum;
             [self.contentController performSegueWithIdentifier:@"segueToForum" sender:nil];
             break;
             
@@ -193,8 +244,8 @@
     if (self.loading || self.refreshing) [self cancelLoading];
     
     self.curPickerRow -= 1;
-    [self.postDataDic setObject:[self.postDataDic objectForKey:@"from"] forKey:@"to"];
-    [self.postDataDic setObject:[NSString stringWithFormat:@"%i", 20 * self.curPickerRow] forKey:@"from"];
+    [self.jsonDic setObject:[self.jsonDic objectForKey:@"from"] forKey:@"to"];
+    [self.jsonDic setObject:[NSString stringWithFormat:@"%i", 20 * self.curPickerRow] forKey:@"from"];
     [self.picker selectRow:self.curPickerRow inComponent:0 animated:NO];
     
     [self refresh:nil];
@@ -204,8 +255,8 @@
     if (self.loading || self.refreshing) [self cancelLoading];
     
     self.curPickerRow += 1;
-    [self.postDataDic setObject:[self.postDataDic objectForKey:@"to"] forKey:@"from"];
-    [self.postDataDic setObject:[NSString stringWithFormat:@"%i", 20 * (self.curPickerRow + 1)] forKey:@"to"];
+    [self.jsonDic setObject:[self.jsonDic objectForKey:@"to"] forKey:@"from"];
+    [self.jsonDic setObject:[NSString stringWithFormat:@"%i", 20 * (self.curPickerRow + 1)] forKey:@"to"];
     [self.picker selectRow:self.curPickerRow inComponent:0 animated:NO];
     
     [self refresh:nil];
@@ -223,8 +274,8 @@
 
     if (self.loading || self.refreshing) [self cancelLoading];
     
-    [self.postDataDic setObject:[NSString stringWithFormat:@"%i", 20 * self.curPickerRow] forKey:@"from"];
-    [self.postDataDic setObject:[NSString stringWithFormat:@"%i", 20 * (self.curPickerRow + 1)] forKey:@"to"];
+    [self.jsonDic setObject:[NSString stringWithFormat:@"%i", 20 * self.curPickerRow] forKey:@"from"];
+    [self.jsonDic setObject:[NSString stringWithFormat:@"%i", 20 * (self.curPickerRow + 1)] forKey:@"to"];
     
     [self refresh:nil];
 }
@@ -248,7 +299,7 @@
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
 {
-    return [self.list count];
+    return [self.rawDataList count];
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
@@ -257,7 +308,18 @@
     
     BUCTableCell *cell = [tableView dequeueReusableCellWithIdentifier:CellIdentifier forIndexPath:indexPath];
 
-    NSDictionary *post = [self.list objectAtIndex:indexPath.row];
+    NSDictionary *post = [self.rawDataList objectAtIndex:indexPath.row];
+    
+    BUCAvatar *avatar = [self.avatarList objectAtIndex:indexPath.row];
+    if (avatar.useDefaultAvatar) {
+        // load default avatar
+    } else if (avatar.loadEnded) {
+        if (!avatar.error) {
+            cell.avatar.image = avatar.image;
+        } else {
+            // load default avatar
+        }
+    }
     
     [cell.leftTopBtn setTitle:[post objectForKey:@"author"] forState:UIControlStateNormal];
     
@@ -286,7 +348,7 @@
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
 {
     return 185;
-    NSDictionary *post = [self.list objectAtIndex:indexPath.row];
+    NSDictionary *post = [self.rawDataList objectAtIndex:indexPath.row];
     NSString *text = [post objectForKey:@"subject"];
     CGRect frame = [text boundingRectWithSize:CGSizeMake(230, FLT_MAX)
                                       options:(NSStringDrawingUsesLineFragmentOrigin | NSStringDrawingUsesFontLeading)
@@ -299,9 +361,9 @@
 }
 
 #pragma mark - picker view delegate/datasource methods
-
 - (NSString*)pickerView:(UIPickerView *)pickerView titleForRow:(NSInteger)row forComponent:(NSInteger)component {
-    return [NSString stringWithFormat:@"第%d页", row + 1];
+    static NSString *formatString = @"第%d页";
+    return [NSString stringWithFormat:formatString, row + 1];
 }
 
 - (NSInteger)numberOfComponentsInPickerView:(UIPickerView *)pickerView {
@@ -345,6 +407,9 @@
     } else {
         self.next.enabled = YES;
     }
+    
+    self.pickerInputField.text = [NSString stringWithFormat:@"%i/%i", self.curPickerRow + 1, self.pageCount];
+    [self.picker reloadComponent:0];
 }
 
 @end

@@ -7,6 +7,7 @@
 //
 
 #import "BUCBaseTableViewController.h"
+#import "BUCAvatar.h"
 
 @interface BUCUserViewController : BUCBaseTableViewController
 

@@ -7,8 +7,6 @@
 //
 
 #import "BUCBaseTableViewController.h"
-#import "BUCEditorViewController.h"
-#import "BUCAppDelegate.h"
 
 @implementation BUCBaseTableViewController
 @synthesize user, engine;
@@ -22,12 +20,15 @@
         user = [BUCUser sharedInstance];
         engine = [BUCNetworkEngine sharedInstance];
         
-        _postDic = [[NSMutableDictionary alloc] init];
-        [_postDic setObject:@"POST" forKey:@"method"];
-        _postDataDic = [[NSMutableDictionary alloc] init];
-        [_postDataDic setObject:user.username forKey:@"username"];
-        [_postDataDic setObject:user.session forKey:@"session"];
-        [_postDic setObject:_postDataDic forKey:@"dataDic"];
+        _requestDic = [[NSMutableDictionary alloc] init];
+        [_requestDic setObject:@"POST" forKey:@"method"];
+        _jsonDic = [[NSMutableDictionary alloc] init];
+        [_jsonDic setObject:user.username forKey:@"username"];
+        [_jsonDic setObject:user.session forKey:@"session"];
+        [_requestDic setObject:_jsonDic forKey:@"dataDic"];
+        
+        _dataList = [[NSMutableArray alloc] init];
+        _cellList = [[NSMutableArray alloc] init];
     }
     
     return self;
@@ -36,7 +37,7 @@
 - (void)dealloc
 {
     if (self.loading || self.refreshing) [self cancelLoading];
-    [self removeObserver:self forKeyPath:@"responseDic" context:NULL];
+    [self removeObserver:self forKeyPath:@"rawDataDic" context:NULL];
 }
 
 - (void)viewDidLoad
@@ -47,7 +48,7 @@
     self.contentController = self.mainController.contentController;
     self.indexController = self.mainController.indexController;
     
-    self.responseDataArray = engine.responseDataArray;
+    self.avatarList = engine.responseDataArray;
     
     UIRefreshControl *refresh = [[UIRefreshControl alloc] init];
     refresh.attributedTitle = [[NSAttributedString alloc] initWithString:@"Loading..."];
@@ -59,7 +60,7 @@
     self.loading = YES;
     self.tableView.bounces = NO;
     
-    [self addObserver:self forKeyPath:@"responseDic" options:NSKeyValueObservingOptionNew context:NULL];
+    [self addObserver:self forKeyPath:@"rawDataDic" options:NSKeyValueObservingOptionNew context:NULL];
 }
 
 - (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender
@@ -71,9 +72,10 @@
 
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context
 {
-    if (self.responseDic) {
-        self.list = [self.responseDic objectForKey:self.listKey];
+    if (self.rawDataDic) {
+        self.rawDataList = [self.rawDataDic objectForKey:self.rawListKey];
         [self urldecodeData];
+        [self makeCacheList];
         [self endLoading];
         [self.tableView reloadData];
     }
@@ -123,7 +125,7 @@
         if (engine.responseDic) {
             NSString *result = [engine.responseDic objectForKey:@"result"];
             if ([result isEqualToString:@"success"]) {
-                weakSelf.responseDic = engine.responseDic;
+                weakSelf.rawDataDic = engine.responseDic;
                 return;
             } else if ([result isEqualToString:@"fail"]) {
                 // current session is expired, must get a new session string
@@ -171,6 +173,11 @@
     
 }
 
+- (void)makeCacheList
+{
+    
+}
+
 - (void)alertWithMessage:(NSString *)message
 {
     UIAlertView *theAlert = [[UIAlertView alloc] initWithTitle:nil
@@ -186,6 +193,9 @@
 {
     if (self.loading || self.refreshing) return;
 
+    self.dataList = [[NSMutableArray alloc] init];
+    self.cellList = [[NSMutableArray alloc] init];
+    
     if (![sender isKindOfClass:[UIRefreshControl class]]) {
         [self.contentController displayLoading];
         self.loading = YES;
@@ -194,7 +204,7 @@
         self.refreshing = YES;
     }
     
-    [self loadData:self.postDic];
+    [self loadData:self.requestDic];
 }
 
 - (IBAction)displayMenu:(id)sender

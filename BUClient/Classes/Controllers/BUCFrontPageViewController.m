@@ -7,7 +7,6 @@
 //
 
 #import "BUCFrontPageViewController.h"
-#import "BUCTableCell.h"
 
 @implementation BUCFrontPageViewController
 #pragma mark - overrided methods
@@ -16,9 +15,8 @@
     self = [super initWithCoder:aDecoder];
 
     if (self) {
-        [self.postDic setObject:@"home" forKey:@"url"];
-        self.listKey = @"newlist";
-        
+        [self.requestDic setObject:@"home" forKey:@"url"];
+        self.rawListKey = @"newlist";
         self.unwindSegueIdentifier = @"unwindToFront";
     }
     
@@ -29,54 +27,44 @@
 {
     [super viewDidLoad];
     
-    [self loadData:self.postDic];
+    [self loadData:self.requestDic];
 }
 
-- (void)urldecodeData
+- (void)makeCacheList
 {
-    for (NSMutableDictionary *item in self.list) {
-        NSString *string = [[item objectForKey:@"author"] urldecode];
-        [item setObject:string forKey:@"author"];
-        string = [[item objectForKey:@"pname"] urldecode];
-        [item setObject:string forKey:@"pname"];
-        string = [[item objectForKey:@"fname"] urldecode];
-        [item setObject:string forKey:@"fname"];
+    BUCThread *thread = nil;
+    for (NSDictionary *rawThread in self.rawDataList) {
+        thread = [[BUCThread alloc] init];
+        thread.poster = [[BUCPoster alloc] init];
+        thread.poster.username = [[rawThread objectForKey:@"author"] urldecode];
+        thread.forum = [[BUCForum alloc] init];
+        thread.forum.fid = [rawThread objectForKey:@"fid"];
+        thread.forum.fname = [[rawThread objectForKey:@"fname"] urldecode];
+        thread.tid = [rawThread objectForKey:@"tid"];
+        thread.replyCount = [rawThread objectForKey:@"tid_sum"];
+        thread.title = [[[rawThread objectForKey:@"pname"] urldecode] replaceHtmlEntities];
+
+        [self.cellList addObject:[self createCellForThread:thread]];
+        [self.dataList addObject:thread];
     }
 }
 
 #pragma mark - IBAction and unwind methods
-- (IBAction)jumpToAuthor:(id)sender forEvent:(UIEvent *)event {
+- (IBAction)jumpToPoster:(id)sender forEvent:(UIEvent *)event {
     [self.indexController deselectCurrentRow];
-    
-    NSInteger row = [self getRowOfEvent:event];
-    NSDictionary *thread = [self.list objectAtIndex:row];
-    NSString *username = [thread objectForKey:@"author"];
-    self.contentController.infoDic = @{ @"username": username };
+    self.contentController.info = ((BUCThread *)[self.dataList objectAtIndex:[self getRowOfEvent:event]]).poster;
     [self.contentController performSegueWithIdentifier:@"segueToUser" sender:nil];
 }
 
 - (IBAction)jumpToForum:(id)sender forEvent:(UIEvent *)event {
     [self.indexController deselectCurrentRow];
-    
-    NSInteger row = [self getRowOfEvent:event];
-    NSDictionary *thread = [self.list objectAtIndex:row];
-    NSString *fid = [thread objectForKey:@"fid"];
-    NSString *fname = [thread objectForKey:@"fname"];
-    self.contentController.infoDic = @{ @"fid": fid, @"fname":fname };
+    self.contentController.info = ((BUCThread *)[self.dataList objectAtIndex:[self getRowOfEvent:event]]).forum;
     [self.contentController performSegueWithIdentifier:@"segueToForum" sender:nil];
 }
 
-- (IBAction)jumpToPost:(id)sender forEvent:(UIEvent *)event {
+- (IBAction)jumpToThread:(id)sender forEvent:(UIEvent *)event {
     [self.indexController deselectCurrentRow];
-    
-    NSInteger row = [self getRowOfEvent:event];
-    NSDictionary *thread = [self.list objectAtIndex:row];
-    NSString *fid = [thread objectForKey:@"fid"];
-    NSString *fname = [thread objectForKey:@"fname"];
-    NSString *tid = [thread objectForKey:@"tid"];
-    NSString *subject = [thread objectForKey:@"pname"];
-    
-    self.contentController.infoDic = @{ @"fid": fid, @"fname": fname, @"tid": tid, @"subject": subject };
+    self.contentController.info = [self.dataList objectAtIndex:[self getRowOfEvent:event]];
     [self.contentController performSegueWithIdentifier:@"segueToThread" sender:nil];
 }
 
@@ -93,78 +81,23 @@
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
 {
-    return [self.list count];
+    return [self.cellList count];
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
 {
-    static NSString *CellIdentifier = @"frontCell";
-
-    BUCTableCell *cell = [tableView dequeueReusableCellWithIdentifier:CellIdentifier forIndexPath:indexPath];
-    CGFloat cellHeight = cell.frame.size.height;
-    NSDictionary *post = [self.list objectAtIndex:indexPath.row];
-    
-    [cell.replyCount setTitle:[post objectForKey:@"tid_sum"] forState:UIControlStateNormal];
-    
-    CGRect frame = CGRectMake(0, 0, 250, cellHeight - 32);
-    cell.title.frame = frame;
-    cell.title.text = [[post objectForKey:@"pname"] replaceHtmlEntities];
-    cell.title.font = [UIFont systemFontOfSize:18];
-    
-
-    NSDictionary *stringAttribute = @{NSFontAttributeName:[UIFont systemFontOfSize:15]};
-    
-    NSString *author = [post objectForKey:@"author"];
-    UIButton *leftBottomBtn = [self cellButtonWithTitle:author];
-
-    CGSize size = [author sizeWithAttributes:stringAttribute];
-    leftBottomBtn.frame = CGRectMake(10, cellHeight - 27, size.width + 2, 27); // 2 is the width to compensate padding of button element
-    [leftBottomBtn addTarget:self action:@selector(jumpToAuthor:forEvent:) forControlEvents:UIControlEventTouchUpInside];
-    cell.leftBottomBtn = leftBottomBtn;
-    [cell addSubview:leftBottomBtn];
-
-    NSString *subforum = [post objectForKey:@"fname"];
-    UIButton *rightBottomBtn = [self cellButtonWithTitle:subforum];
-    
-    size = [subforum sizeWithAttributes:stringAttribute];
-    rightBottomBtn.frame = CGRectMake(308 - size.width, cellHeight - 27, size.width + 2, 27);
-    [rightBottomBtn addTarget:self action:@selector(jumpToForum:forEvent:) forControlEvents:UIControlEventTouchUpInside];
-    cell.rightBottomBtn = rightBottomBtn;
-    [cell addSubview:rightBottomBtn];
-    
-    return cell;
+    return [self.cellList objectAtIndex:indexPath.row];
 }
 
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
 {
-    NSDictionary *post = [self.list objectAtIndex:indexPath.row];
-    NSString *text = [post objectForKey:@"pname"];
-    CGRect frame = [text boundingRectWithSize:CGSizeMake(250, FLT_MAX)
-                                       options:(NSStringDrawingUsesLineFragmentOrigin | NSStringDrawingUsesFontLeading)
-                                    attributes:@{NSFontAttributeName:[UIFont systemFontOfSize:18]}
-                                       context:nil];
-    
-    CGFloat padding = 10;
-    
-    if (frame.size.height < 25) {
-        padding = 3;
-    }
-
-    return MAX(60, frame.size.height + padding) + 32; // 32 = 5(space between the bottom buttons and the title) + 27(height of button)
+    return ((BUCTableCell *)[self.cellList objectAtIndex:indexPath.row]).height;
 }
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
 {
     [self.indexController deselectCurrentRow];
-    
-    NSInteger row = indexPath.row;
-    NSDictionary *thread = [self.list objectAtIndex:row];
-    NSString *fid = [thread objectForKey:@"fid"];
-    NSString *fname = [thread objectForKey:@"fname"];
-    NSString *tid = [thread objectForKey:@"tid"];
-    NSString *subject = [thread objectForKey:@"pname"];
-    
-    self.contentController.infoDic = @{ @"fid": fid, @"fname": fname, @"tid": tid, @"subject": subject };
+    self.contentController.info = [self.dataList objectAtIndex:indexPath.row];
     [self.contentController performSegueWithIdentifier:@"segueToThread" sender:nil];
 }
 
@@ -174,7 +107,6 @@
     UIButton *button = [UIButton buttonWithType:UIButtonTypeSystem];
     [button setTitle:title forState:UIControlStateNormal];
     button.titleLabel.font = [UIFont fontWithName:@"Helvetica-Light" size:15];
-//    button.titleLabel.font = [UIFont systemFontOfSize:15];
     
     return button;
 }
@@ -185,6 +117,53 @@
     UITouch *touch = [touches anyObject];
     CGPoint p = [touch locationInView:self.tableView];
     return [self.tableView indexPathForRowAtPoint:p].row;
+}
+
+- (CGFloat)calculateHeightForText:(NSString *)text
+{
+    CGRect frame = [text boundingRectWithSize:CGSizeMake(250, FLT_MAX)
+                                      options:(NSStringDrawingUsesLineFragmentOrigin | NSStringDrawingUsesFontLeading)
+                                   attributes:@{NSFontAttributeName:[UIFont systemFontOfSize:18]}
+                                      context:nil];
+    
+    CGFloat padding = 10;
+    
+    return MAX(60, frame.size.height + padding) + 32; // 32 = 5(space between the bottom buttons and the title) + 27(height of button)
+}
+
+- (BUCTableCell *)createCellForThread:(BUCThread *)thread
+{
+    static NSString *CellIdentifier = @"frontCell";
+    
+    BUCTableCell *cell = [self.tableView dequeueReusableCellWithIdentifier:CellIdentifier];
+    cell.height = [self calculateHeightForText:thread.title];
+    
+    [cell.replyCount setTitle:thread.replyCount forState:UIControlStateNormal];
+    
+    CGRect frame = CGRectMake(0, 0, 250, cell.height - 32);
+    cell.title.frame = frame;
+    cell.title.text = thread.title;
+    cell.title.font = [UIFont systemFontOfSize:18];
+    
+    NSDictionary *stringAttribute = @{NSFontAttributeName:[UIFont systemFontOfSize:15]};
+    
+    UIButton *leftBottomBtn = [self cellButtonWithTitle:thread.poster.username];
+    
+    CGSize size = [thread.poster.username sizeWithAttributes:stringAttribute];
+    leftBottomBtn.frame = CGRectMake(10, cell.height - 27, size.width + 2, 27); // 2 is the width to compensate padding of button element
+    [leftBottomBtn addTarget:self action:@selector(jumpToPoster:forEvent:) forControlEvents:UIControlEventTouchUpInside];
+    cell.leftBottomBtn = leftBottomBtn;
+    [cell addSubview:leftBottomBtn];
+    
+    UIButton *rightBottomBtn = [self cellButtonWithTitle:thread.forum.fname];
+    
+    size = [thread.forum.fname sizeWithAttributes:stringAttribute];
+    rightBottomBtn.frame = CGRectMake(308 - size.width, cell.height - 27, size.width + 2, 27);
+    [rightBottomBtn addTarget:self action:@selector(jumpToForum:forEvent:) forControlEvents:UIControlEventTouchUpInside];
+    cell.rightBottomBtn = rightBottomBtn;
+    [cell addSubview:rightBottomBtn];
+    
+    return cell;
 }
 @end
 

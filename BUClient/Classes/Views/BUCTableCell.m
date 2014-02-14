@@ -13,8 +13,8 @@
 {
     [super prepareForReuse];
     
-    [self.authorBtn removeFromSuperview];
-    [self.subforumBtn removeFromSuperview];
+    [self.leftBottomBtn removeFromSuperview];
+    [self.rightBottomBtn removeFromSuperview];
     [self.timeStamp removeFromSuperview];
 }
 

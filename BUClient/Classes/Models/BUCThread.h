@@ -16,6 +16,7 @@
 
 @property (nonatomic) NSString *tid;
 @property (nonatomic) NSString *title;
+@property (nonatomic) NSInteger postCount;
 @property (nonatomic) NSString *replyCount;
 @property (nonatomic) NSString *dateline;
 @end

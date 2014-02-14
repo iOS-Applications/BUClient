@@ -7,7 +7,6 @@
 //
 
 #import "BUCForumViewController.h"
-#import "BUCTableCell.h"
 
 @interface BUCForumViewController ()
 
@@ -21,14 +20,12 @@
 @property (weak, nonatomic) IBOutlet UIBarButtonItem *previous;
 @property (weak, nonatomic) IBOutlet UIBarButtonItem *next;
 
-@property (nonatomic) NSString *fid;
-@property (nonatomic) NSString *fname;
-@property (nonatomic) NSInteger threadCount;
+@property (nonatomic) BUCForum *forum;
 @property (nonatomic) NSInteger pageCount;
 @property (nonatomic) NSInteger curPickerRow;
 
-@property (nonatomic) NSMutableDictionary *helpPostDic;
-@property (nonatomic) NSMutableDictionary *helpPostDataDic;
+@property (nonatomic) NSMutableDictionary *subRequestDic;
+@property (nonatomic) NSMutableDictionary *subJsonDic;
 
 @end
 
@@ -40,18 +37,18 @@
     self = [super initWithCoder:aDecoder];
     
     if (self) {
-        _helpPostDataDic = [NSMutableDictionary dictionaryWithDictionary:(NSDictionary *)self.postDataDic];
-        [_helpPostDataDic setObject:@"" forKey:@"tid"];
-        _helpPostDic = [NSMutableDictionary dictionaryWithDictionary:(NSDictionary *)self.postDic];
-        [_helpPostDic setObject:_helpPostDataDic forKey:@"dataDic"];
-        [_helpPostDic setObject:@"fid_tid" forKey:@"url"];
+        _subJsonDic = [NSMutableDictionary dictionaryWithDictionary:(NSDictionary *)self.jsonDic];
+        [_subJsonDic setObject:@"thread" forKey:@"action"];
+        [_subJsonDic setObject:@"0" forKey:@"from"];
+        [_subJsonDic setObject:@"20" forKey:@"to"];
+        _subRequestDic = [NSMutableDictionary dictionaryWithDictionary:(NSDictionary *)self.requestDic];
+        [_subRequestDic setObject:_subJsonDic forKey:@"dataDic"];
+        [_subRequestDic setObject:@"thread" forKey:@"url"];
+
+        [self.requestDic setObject:@"fid_tid" forKey:@"url"];
+        [self.jsonDic setObject:@"" forKey:@"tid"];
         
-        [self.postDic setObject:@"thread" forKey:@"url"];
-        [self.postDataDic setObject:@"thread" forKey:@"action"];
-        [self.postDataDic setObject:@"0" forKey:@"from"];
-        [self.postDataDic setObject:@"20" forKey:@"to"];
-        self.listKey = @"threadlist";
-        
+        self.rawListKey = @"threadlist";
         self.unwindSegueIdentifier = @"unwindToForum";
     }
     
@@ -73,67 +70,83 @@
     [items insertObject:tempBarItem atIndex:5];
     [self setToolbarItems:items];
     
-    NSDictionary *infoDic = self.contentController.infoDic;
-    self.fid = [infoDic objectForKey:@"fid"];
-    self.fname = [infoDic objectForKey:@"fname"];
+    self.forum = (BUCForum *)self.contentController.info;
     
-    [self.postDataDic setObject:self.fid forKey:@"fid"];
-    [self.helpPostDataDic setObject:self.fid forKey:@"fid"];
+    [self.jsonDic setObject:self.forum.fid forKey:@"fid"];
+    [self.subJsonDic setObject:self.forum.fid forKey:@"fid"];
     
-    self.navigationItem.title = self.fname;
+    self.navigationItem.title = self.forum.fname;
     
     self.previous.enabled = NO;
     self.next.enabled = NO;
     
-    [self loadData:self.helpPostDic];
+    [self loadData:self.requestDic];
 }
 
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context
 {
-    if (self.responseDic) {
-        NSString *temp = [self.responseDic objectForKey:@"fid_sum"];
-        if (temp) {
-            self.threadCount = [temp integerValue];
-            self.pageCount = self.threadCount % 20 ? self.threadCount/20 + 1 : self.threadCount/20;
-            self.pickerInputField.text = [NSString stringWithFormat:@"%i/%i", self.curPickerRow + 1, self.pageCount];
-            [self updateNavState];
-            [self.picker reloadComponent:0];
-            [self loadData:self.postDic];
+    if (self.rawDataDic) {
+        NSInteger threadCount = [[self.rawDataDic objectForKey:@"fid_sum"] integerValue];
+        if (threadCount) {
+            self.forum.threadCount = threadCount;
+            self.pageCount = threadCount % 20 ? threadCount/20 + 1 : threadCount/20;
+            [self loadData:self.subRequestDic];
         } else {
-            self.list = [self.responseDic objectForKey:self.listKey];
-            [self urldecodeData];
+            self.rawDataList = [self.rawDataDic objectForKey:self.rawListKey];
+            [self makeCacheList];
+            
+            [self updateNavState];
+            
             [self endLoading];
             [self.tableView reloadData];
         }
     }
 }
 
-- (void)urldecodeData
+- (void)makeCacheList
 {
-    for (NSMutableDictionary *item in self.list) {
-        NSString *string = [[item objectForKey:@"author"] urldecode];
-        [item setObject:string forKey:@"author"];
-        string = [[item objectForKey:@"subject"] urldecode];
-        [item setObject:string forKey:@"subject"];
+    static NSDateFormatter *dateFormatter = nil;
+    if (!dateFormatter) {
+        dateFormatter = [[NSDateFormatter alloc] init];
+        [dateFormatter setDateFormat:@"yyyy-MM-dd HH:mm"];
+        NSLocale *locale = [[NSLocale alloc] initWithLocaleIdentifier:@"en_US"];
+        [dateFormatter setLocale:locale];
+    }
+    
+    static NSString *authorKey = @"author";
+    static NSString *tidKey = @"tid";
+    static NSString *subjectKey = @"subject";
+    static NSString *repliesKey = @"replies";
+    static NSString *datelineKey = @"dateline";
+    
+    BUCThread *thread = nil;
+    for (NSDictionary *rawThread in self.rawDataList) {
+        thread = [[BUCThread alloc] init];
+        thread.forum = self.forum;
+        thread.poster = [[BUCPoster alloc] init];
+        thread.poster.username = [[rawThread objectForKey:authorKey] urldecode];
+        thread.tid = [rawThread objectForKey:tidKey];
+        thread.title = [[[rawThread objectForKey:subjectKey] urldecode] replaceHtmlEntities];
+        thread.replyCount = [rawThread objectForKey:repliesKey];
+        thread.dateline = [dateFormatter stringFromDate:[NSDate dateWithTimeIntervalSince1970:[[rawThread objectForKey:datelineKey] integerValue]]];
+        
+        [self.dataList addObject:thread];
+        [self.cellList addObject:[self createCellWithThread:thread]];
     }
 }
 
 #pragma mark - action and unwind methods
-- (IBAction)refresh:(id)sender
-{
-    if (self.loading || self.refreshing) return;
-    
-    if (![sender isKindOfClass:[UIRefreshControl class]]) {
-        [self.contentController displayLoading];
-        self.loading = YES;
-        self.tableView.bounces = NO;
-    } else {
-        self.refreshing = YES;
-    }
-    
-    [self loadData:self.helpPostDic];
+- (IBAction)jumpToPoster:(id)sender forEvent:(UIEvent *)event {
+    [self.indexController deselectCurrentRow];
+    self.contentController.info = ((BUCThread *)[self.dataList objectAtIndex:[self getRowOfEvent:event]]).poster;
+    [self.contentController performSegueWithIdentifier:@"segueToUser" sender:nil];
 }
 
+- (IBAction)jumpToThread:(id)sender forEvent:(UIEvent *)event {
+    [self.indexController deselectCurrentRow];
+    self.contentController.info = [self.dataList objectAtIndex:[self getRowOfEvent:event]];
+    [self.contentController performSegueWithIdentifier:@"segueToThread" sender:nil];
+}
 - (IBAction)showActionSheet:(id)sender {
     if (self.loading || self.refreshing) [self suspendLoading];
     
@@ -141,7 +154,7 @@
                                                              delegate:self
                                                     cancelButtonTitle:@"Cancel"
                                                destructiveButtonTitle:nil
-                                                    otherButtonTitles:@"发布新帖", @"返回首页", @"版面列表", @"返回顶部", nil];
+                                                    otherButtonTitles:@"发布新帖", @"返回首页", @"版块列表", @"返回顶部", nil];
     
     [actionSheet showInView:self.view];
 }
@@ -175,8 +188,8 @@
     if (self.loading || self.refreshing) [self cancelLoading];
     
     self.curPickerRow -= 1;
-    [self.postDataDic setObject:[self.postDataDic objectForKey:@"from"] forKey:@"to"];
-    [self.postDataDic setObject:[NSString stringWithFormat:@"%i", 20 * self.curPickerRow] forKey:@"from"];
+    [self.jsonDic setObject:[self.jsonDic objectForKey:@"from"] forKey:@"to"];
+    [self.jsonDic setObject:[NSString stringWithFormat:@"%i", 20 * self.curPickerRow] forKey:@"from"];
     [self.picker selectRow:self.curPickerRow inComponent:0 animated:NO];
     
     [self refresh:nil];
@@ -186,8 +199,8 @@
     if (self.loading || self.refreshing) [self cancelLoading];
     
     self.curPickerRow += 1;
-    [self.postDataDic setObject:[self.postDataDic objectForKey:@"to"] forKey:@"from"];
-    [self.postDataDic setObject:[NSString stringWithFormat:@"%i", 20 * (self.curPickerRow + 1)] forKey:@"to"];
+    [self.jsonDic setObject:[self.jsonDic objectForKey:@"to"] forKey:@"from"];
+    [self.jsonDic setObject:[NSString stringWithFormat:@"%i", 20 * (self.curPickerRow + 1)] forKey:@"to"];
     [self.picker selectRow:self.curPickerRow inComponent:0 animated:NO];
     
     [self refresh:nil];
@@ -205,8 +218,8 @@
     
     if (self.loading || self.refreshing) [self cancelLoading];
     
-    [self.postDataDic setObject:[NSString stringWithFormat:@"%i", 20 * self.curPickerRow] forKey:@"from"];
-    [self.postDataDic setObject:[NSString stringWithFormat:@"%i", 20 * (self.curPickerRow + 1)] forKey:@"to"];
+    [self.jsonDic setObject:[NSString stringWithFormat:@"%i", 20 * self.curPickerRow] forKey:@"from"];
+    [self.jsonDic setObject:[NSString stringWithFormat:@"%i", 20 * (self.curPickerRow + 1)] forKey:@"to"];
     
     [self refresh:nil];
 }
@@ -230,71 +243,31 @@
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
 {
-    return [self.list count];
+    return [self.cellList count];
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
 {
-    static NSString *CellIdentifier = @"forumCell";
-    
-    BUCTableCell *cell = [tableView dequeueReusableCellWithIdentifier:CellIdentifier forIndexPath:indexPath];
-    CGFloat cellHeight = cell.frame.size.height;
-    NSDictionary *thread = [self.list objectAtIndex:indexPath.row];
-    
-    [cell.replyCount setTitle:[thread objectForKey:@"replies"] forState:UIControlStateNormal];
-    
-    CGRect frame = CGRectMake(0, 0, 250, cellHeight - 32);
-    cell.title.frame = frame;
-    cell.title.text = [[thread objectForKey:@"subject"] replaceHtmlEntities];
-    cell.title.font = [UIFont systemFontOfSize:18];
-    
-    NSDictionary *stringAttribute = @{NSFontAttributeName:[UIFont systemFontOfSize:15]};
-    
-    NSString *author = [thread objectForKey:@"author"];
-    UIButton *leftBottomBtn = [self cellButtonWithTitle:author];
-    
-    CGSize size = [author sizeWithAttributes:stringAttribute];
-    leftBottomBtn.frame = CGRectMake(10, cellHeight - 27, size.width + 2, 27); // 2 is the width to compensate padding of button element
-    cell.leftBottomBtn = leftBottomBtn;
-    [cell addSubview:leftBottomBtn];
-    
-    NSString *timestamp = [thread objectForKey:@"dateline"];
-    NSDate *date = [NSDate dateWithTimeIntervalSince1970:(NSTimeInterval)[timestamp integerValue]];
-    static NSDateFormatter *dateFormatter = nil;
-    if (!dateFormatter) {
-        dateFormatter = [[NSDateFormatter alloc] init];
-        [dateFormatter setDateFormat:@"yyyy-MM-dd HH:mm"];
-        NSLocale *locale = [[NSLocale alloc] initWithLocaleIdentifier:@"en_US"];
-        [dateFormatter setLocale:locale];
-    }
-    
-    size = [timestamp sizeWithAttributes:stringAttribute];
-    cell.timeStamp = [[UILabel alloc] initWithFrame:CGRectMake(180, cellHeight - 27, 140, 27)];
-    cell.timeStamp.text = [dateFormatter stringFromDate:date];
-    cell.timeStamp.font = [UIFont systemFontOfSize:15];
-    [cell addSubview:cell.timeStamp];
-    
-    return cell;
+    return [self.cellList objectAtIndex:indexPath.row];
 }
 
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
 {
-    NSDictionary *post = [self.list objectAtIndex:indexPath.row];
-    NSString *text = [post objectForKey:@"subject"];
-    CGRect frame = [text boundingRectWithSize:CGSizeMake(250, FLT_MAX)
-                                      options:(NSStringDrawingUsesLineFragmentOrigin | NSStringDrawingUsesFontLeading)
-                                   attributes:@{NSFontAttributeName:[UIFont systemFontOfSize:18]}
-                                      context:nil];
-    
-    CGFloat padding = 10;
-    
-    return MAX(60, frame.size.height + padding) + 32; // 32 = 5(space between the bottom buttons and the title) + 27(height of button)
+    return ((BUCTableCell *)[self.cellList objectAtIndex:indexPath.row]).height;
+}
+
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    [self.indexController deselectCurrentRow];
+    self.contentController.info = [self.dataList objectAtIndex:indexPath.row];
+    [self.contentController performSegueWithIdentifier:@"segueToThread" sender:nil];
 }
 
 #pragma mark - picker view delegate/datasource methods
 
 - (NSString*)pickerView:(UIPickerView *)pickerView titleForRow:(NSInteger)row forComponent:(NSInteger)component {
-    return [NSString stringWithFormat:@"第%d页", row + 1];
+    static NSString  *formatString = @"第%d页";
+    return [NSString stringWithFormat:formatString, row + 1];
 }
 
 - (NSInteger)numberOfComponentsInPickerView:(UIPickerView *)pickerView {
@@ -320,9 +293,17 @@
 {
     UIButton *button = [UIButton buttonWithType:UIButtonTypeSystem];
     [button setTitle:title forState:UIControlStateNormal];
-    button.titleLabel.font = [UIFont systemFontOfSize:15];
+    button.titleLabel.font = [UIFont fontWithName:@"Helvetica-Light" size:15];
     
     return button;
+}
+
+- (NSInteger)getRowOfEvent:(UIEvent *)event
+{
+    NSSet *touches = [event allTouches];
+    UITouch *touch = [touches anyObject];
+    CGPoint p = [touch locationInView:self.tableView];
+    return [self.tableView indexPathForRowAtPoint:p].row;
 }
 
 - (void)updateNavState
@@ -338,6 +319,53 @@
     } else {
         self.next.enabled = YES;
     }
+    
+    self.pickerInputField.text = [NSString stringWithFormat:@"%i/%i", self.curPickerRow + 1, self.pageCount];
+    [self.picker reloadComponent:0];
 }
 
+- (CGFloat)calculateHeightForText:(NSString *)text
+{
+    CGRect frame = [text boundingRectWithSize:CGSizeMake(250, FLT_MAX)
+                                      options:(NSStringDrawingUsesLineFragmentOrigin | NSStringDrawingUsesFontLeading)
+                                   attributes:@{NSFontAttributeName:[UIFont systemFontOfSize:18]}
+                                      context:nil];
+    
+    CGFloat padding = 10;
+    
+    return MAX(60, frame.size.height + padding) + 32; // 32 = 5(space between the bottom buttons and the title) + 27(height of button)
+}
+
+- (BUCTableCell *)createCellWithThread:(BUCThread *)thread
+{
+    static NSString *CellIdentifier = @"forumCell";
+    
+    BUCTableCell *cell = [self.tableView dequeueReusableCellWithIdentifier:CellIdentifier];
+    cell.height = [self calculateHeightForText:thread.title];
+    
+    [cell.replyCount setTitle:thread.replyCount forState:UIControlStateNormal];
+    
+    CGRect frame = CGRectMake(0, 0, 250, cell.height - 32);
+    cell.title.frame = frame;
+    cell.title.text = thread.title;
+    cell.title.font = [UIFont systemFontOfSize:18];
+    
+    NSDictionary *stringAttribute = @{NSFontAttributeName:[UIFont systemFontOfSize:15]};
+    
+    UIButton *leftBottomBtn = [self cellButtonWithTitle:thread.poster.username];
+    CGSize size = [thread.poster.username sizeWithAttributes:stringAttribute];
+    leftBottomBtn.frame = CGRectMake(10, cell.height - 27, size.width + 2, 27); // 2 is the width to compensate padding of button element
+    [leftBottomBtn addTarget:self action:@selector(jumpToPoster:forEvent:) forControlEvents:UIControlEventTouchUpInside];
+    cell.leftBottomBtn = leftBottomBtn;
+    [cell addSubview:leftBottomBtn];
+    
+    size = [thread.dateline sizeWithAttributes:stringAttribute];
+    UILabel *timeStamp = [[UILabel alloc] initWithFrame:CGRectMake(180, cell.height - 27, 140, 27)];
+    timeStamp.text = thread.dateline;
+    timeStamp.font = [UIFont fontWithName:@"Helvetica-Light" size:15];
+    cell.timeStamp = timeStamp;
+    [cell addSubview:timeStamp];
+    
+    return cell;
+}
 @end

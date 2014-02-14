@@ -7,9 +7,9 @@
 //
 
 #import "BUCUserViewController.h"
-#import "BUCAvatar.h"
 
 @interface BUCUserViewController ()
+
 @property (weak, nonatomic) IBOutlet UILabel *username;
 @property (weak, nonatomic) IBOutlet UILabel *credit;
 @property (weak, nonatomic) IBOutlet UILabel *threadCount;
@@ -18,7 +18,10 @@
 @property (weak, nonatomic) IBOutlet UILabel *lastLoginDate;
 @property (weak, nonatomic) IBOutlet UIImageView *avatar;
 
-@property BOOL loadImage;
+@property (nonatomic) BUCPoster *member;
+
+@property (nonatomic) BOOL loadImage;
+
 @end
 
 @implementation BUCUserViewController
@@ -28,9 +31,9 @@
     self = [super initWithCoder:aDecoder];
     
     if (self) {
-        [self.postDic setObject:@"profile" forKey:@"url"];
-        [self.postDataDic setObject:@"profile" forKey:@"action"];
-        [self.postDataDic setObject:@"" forKey:@"uid"];
+        [self.requestDic setObject:@"profile" forKey:@"url"];
+        [self.jsonDic setObject:@"profile" forKey:@"action"];
+        [self.jsonDic setObject:@"" forKey:@"uid"];
         _loadImage = [self.user.loadImage isEqualToString:@"yes"] ? YES : NO;
     }
     
@@ -46,7 +49,7 @@
 
 - (void)dealloc
 {
-    [self.responseDataArray removeObserver:self
+    [self.avatarList removeObserver:self
                       fromObjectsAtIndexes:[NSIndexSet indexSetWithIndex:0]
                                 forKeyPath:@"loadEnded"
                                    context:NULL];
@@ -56,19 +59,18 @@
 {
     [super viewDidLoad];
     
-    NSDictionary *infoDic = self.contentController.infoDic;
-    NSString *username = [infoDic objectForKey:@"username"];
-    [self.postDataDic setObject:username forKey:@"queryusername"];
-    self.navigationItem.title = username;
+    self.member = (BUCPoster *)self.contentController.info;
+    [self.jsonDic setObject:self.member.username forKey:@"queryusername"];
+    self.navigationItem.title = self.member.username;
     
-    self.responseDataArray = self.engine.responseDataArray;
-    [self.responseDataArray addObserver:self
+    self.avatarList = self.engine.responseDataArray;
+    [self.avatarList addObserver:self
                      toObjectsAtIndexes:[NSIndexSet indexSetWithIndex:0]
                              forKeyPath:@"loadEnded"
                                 options:NSKeyValueObservingOptionNew
                                 context:NULL];
     
-    [self loadData:self.postDic];
+    [self loadData:self.requestDic];
     
 //    NSString *path = [[NSBundle mainBundle] bundlePath];
 //    NSURL *baseURL = [NSURL fileURLWithPath:path];
@@ -76,9 +78,9 @@
 
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context
 {
-    if ([keyPath isEqualToString:@"responseDic"]) {
-        if (self.responseDic) {
-            NSDictionary *userDic = [self.responseDic objectForKey:@"memberinfo"];
+    if ([keyPath isEqualToString:@"rawDataDic"]) {
+        if (self.rawDataDic) {
+            NSDictionary *userDic = [self.rawDataDic objectForKey:@"memberinfo"];
             self.username.text = [[userDic objectForKey:@"username"] urldecode];
             self.credit.text = [userDic objectForKey:@"credit"];
             self.threadCount.text = [userDic objectForKey:@"threadnum"];
@@ -111,14 +113,13 @@
             [self endLoading];
         }
     } else {
-        BUCAvatar *avatar = [self.responseDataArray objectAtIndex:0];
+        BUCAvatar *avatar = [self.avatarList objectAtIndex:0];
         if (!avatar.loadEnded) return;
         
         NSError *error = avatar.error;
         
         if (!error) {
-            NSData *data = avatar.data;
-            self.avatar.image = [UIImage imageWithData:data];
+            self.avatar.image = avatar.image;
         } else {
             // handle error
         }

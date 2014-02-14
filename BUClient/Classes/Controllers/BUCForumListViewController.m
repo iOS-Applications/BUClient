@@ -8,6 +8,13 @@
 
 #import "BUCForumListViewController.h"
 
+static NSString *nameKey = @"name";
+static NSString *forumListKey = @"forumList";
+static NSString *mainKey = @"main";
+static NSString *subKey = @"sub";
+static NSString *fidKey = @"fid";
+static NSString *painInMyAss = @"站庆专版";
+
 @implementation BUCForumListViewController
 
 #pragma mark - overrided methods
@@ -16,10 +23,9 @@
     self = [super initWithCoder:aDecoder];
     
     if (self) {
-        [self.postDic setObject:@"forum" forKey:@"url"];
-        [self.postDataDic setObject:@"forum" forKey:@"action"];
-        self.listKey = @"forumslist";
-        
+        [self.requestDic setObject:@"forum" forKey:@"url"];
+        [self.jsonDic setObject:@"forum" forKey:@"action"];
+        self.rawListKey = @"forumslist";
         self.unwindSegueIdentifier = @"unwindToForumList";
     }
     
@@ -30,114 +36,78 @@
 {
     [super viewDidLoad];
     
-    [self loadData:self.postDic];
+    [self loadData:self.requestDic];
 }
 
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context
 {
-    if (self.responseDic) {
+    if (self.rawDataDic) {
         // temporary mother fucking forum list solution
-        NSMutableArray *tempList = [[NSMutableArray alloc] initWithObjects:@"2", @"129", @"166", @"16", @"13", nil];
-        NSDictionary *item;
-        NSDictionary *tempDic = [self.responseDic objectForKey:self.listKey];
+        NSMutableArray *tempDataList = [[NSMutableArray alloc]
+                                        initWithObjects:[NSNull null],[NSNull null], [NSNull null], [NSNull null], [NSNull null], nil];
+        NSMutableArray *tempCellList = [NSMutableArray arrayWithArray:tempDataList];
         
-        for (NSString *key in tempDic) {
-            item = [tempDic objectForKey:key];
-            if (![key length] || ([item count] == 1)) continue;
+        NSDictionary *indexDic = @{ @"2": @0, @"129": @1, @"166": @2, @"16": @3, @"13": @4 };
+        NSInteger index;
+        
+        NSDictionary *rawSection = nil;
+        NSDictionary *rawDic = [self.rawDataDic objectForKey:self.rawListKey];
+        
+        for (NSString *key in rawDic) {
+            rawSection = [rawDic objectForKey:key];
+            if (![key length] || ([rawSection count] == 1)) continue;
             
-            switch ([key integerValue]) {
-                case 2:
-                    [tempList setObject:item atIndexedSubscript:0];
-                    break;
-                case 129:
-                    [tempList setObject:item atIndexedSubscript:1];
-                    break;
-                case 166:
-                    [tempList setObject:item atIndexedSubscript:2];
-                    break;
-                case 16:
-                    [tempList setObject:item atIndexedSubscript:3];
-                    break;
-                case 13:
-                    [tempList setObject:item atIndexedSubscript:4];
-                    break;
-                default:
-                    break;
-            }
-        }
-        
-        NSMutableArray *sectionList = [[NSMutableArray alloc] init];
-        NSDictionary *section;
-        
-        NSMutableDictionary *forumInfo;
-        NSMutableArray *forumList;
-        NSArray *subforumList;
-        
-        NSDictionary *stuff;
-        NSMutableDictionary *forum;
-        NSMutableDictionary *subforum;
-        
-        NSString *name;
-        
-        for (id item in tempList) {
-            if ([item isKindOfClass:[NSString class]]) continue;
+            BUCSection *section = [[BUCSection alloc] init];
+            NSMutableArray *cellSection = [[NSMutableArray alloc] init];
             
-            forumList = [[NSMutableArray alloc] init];
-            forumInfo = [[NSMutableDictionary alloc] initWithDictionary:[item objectForKey:@"main"]];
-            name = [forumInfo objectForKey:@"name"];
-            [forumInfo setObject:name forKey:@"name"];
+            section.forumList = [[NSMutableArray alloc] init];
+            section.sname = [[[rawSection objectForKey:mainKey] objectForKey:nameKey] urldecode];
+            BUCForum *forum = nil;
+            NSString *fname = nil;
             
-            for (NSString *key in item) {
-                if (![key isEqualToString:@"main"]) {
-                    stuff = [item objectForKey:key];
-                    forum = [NSMutableDictionary dictionaryWithDictionary:[(NSArray *)[stuff objectForKey:@"main"] lastObject]];
-                    name = [forum objectForKey:@"name"];
-                    [forum setObject:name forKey:@"name"];
-                    [forumList addObject:forum];
-                    
-                    if ([stuff count] > 1) {
-                        subforumList = [stuff objectForKey:@"sub"];
-                        for (NSDictionary *element in subforumList) {
-                            subforum = [NSMutableDictionary dictionaryWithDictionary:element];
-                            [subforum setObject:[element objectForKey:@"name"] forKey:@"name"];
-                            if ([[subforum objectForKey:@"fup"] isEqualToString:@"14"] &&
-                                [[subforum objectForKey:@"name"] rangeOfString:@"站庆专版"].length) {
-                                
-                                [subforum setObject:@"站庆专版" forKey:@"name"];
-                            }
-                            [forumList addObject:subforum];
-                        }
-                    }
+            for (NSString *key in rawSection) {
+                if ([key isEqualToString:mainKey]) continue;
+                
+                NSDictionary *rawForumDic = [rawSection objectForKey:key];
+                for (NSDictionary *rawForum in [rawForumDic objectForKey:mainKey]) {
+                    forum = [[BUCForum alloc] init];
+                    forum.fid = [rawForum objectForKey:fidKey];
+                    forum.fname = [[rawForum objectForKey:nameKey] urldecode];
+                    forum.type = mainKey;
+                    [cellSection addObject:[self createCellForForum:forum]];
+                    [section.forumList addObject:forum];
+                }
+                
+                for (NSDictionary *rawForum in [rawForumDic objectForKey:subKey]) {
+                    forum = [[BUCForum alloc] init];
+                    forum.fid = [rawForum objectForKey:fidKey];
+                    fname = [[rawForum objectForKey:nameKey] urldecode];
+                    forum.fname = [fname rangeOfString:painInMyAss].length ? painInMyAss : fname;
+                    forum.type = subKey;
+                    [cellSection addObject:[self createCellForForum:forum]];
+                    [section.forumList addObject:forum];
                 }
             }
             
-            section = [[NSDictionary alloc] initWithObjectsAndKeys:forumInfo, @"info", forumList, @"forumList", nil];
-            [sectionList addObject:section];
+            index = [[indexDic objectForKey:key] integerValue];
+            [tempDataList setObject:section atIndexedSubscript:index];
+            [tempCellList setObject:cellSection atIndexedSubscript:index];
         }
         
-        self.list = (NSArray *)sectionList;
-        [self urldecodeData];
+        [tempCellList enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
+            if (obj == [NSNull null]) return;
+            
+            [self.cellList addObject:obj];
+        }];
+        
+        [tempDataList enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
+            if (obj == [NSNull null]) return;
+            
+            [self.dataList addObject:obj];
+        }];
         
         [self endLoading];
         [self.tableView reloadData];
-    }
-}
-
-- (void)urldecodeData
-{
-    for (NSMutableDictionary *item in self.list) {
-        NSMutableDictionary *info = [item objectForKey:@"info"];
-        NSString *sectionName = [[info objectForKey:@"name"] urldecode];
-        [info setObject:sectionName forKey:@"name"];
-        
-        NSMutableArray *forumList = [item objectForKey:@"forumList"];
-        for (NSMutableDictionary *forum in forumList) {
-            NSString *name = [[forum objectForKey:@"name"] urldecode];
-            if ([name rangeOfString:@"站庆专版"].length) {
-                name = @"站庆专版";
-            }
-            [forum setObject:name forKey:@"name"];
-        }
     }
 }
 
@@ -150,48 +120,44 @@
 #pragma mark - Table view data source and delegate methods
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
 {
-    return [self.list count];
+    return [self.cellList count];
 }
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
 {
-    return [[[self.list objectAtIndex:section] objectForKey:@"forumList"] count];
+    return [[self.cellList objectAtIndex:section] count];
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
 {
-    static NSString *CellIdentifier = @"forumListCell";
-    
-    UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:CellIdentifier forIndexPath:indexPath];
-    NSDictionary *forum = [[[self.list objectAtIndex:indexPath.section] objectForKey:@"forumList"] objectAtIndex:indexPath.row];
-    NSString *name = [forum objectForKey:@"name"];
-    
-    if ([[forum objectForKey:@"type"] isEqualToString:@"sub"]) {
-        name = [NSString stringWithFormat:@"> %@", name];
-    }
-    
-    cell.textLabel.text = name;
-    
-    return cell;
+    return [[self.cellList objectAtIndex:indexPath.section] objectAtIndex:indexPath.row];
 }
 
 - (NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section
 {
-    return [[[self.list objectAtIndex:section] objectForKey:@"info"] objectForKey:@"name"];
+    return ((BUCSection *)[self.dataList objectAtIndex:section]).sname;
 }
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
 {
     [self.indexController deselectCurrentRow];
     
-    NSDictionary *forumSection = [self.list objectAtIndex:indexPath.section];
-    NSDictionary *forum = [[forumSection objectForKey:@"forumList"] objectAtIndex:indexPath.row];
-    NSString *fid = [forum objectForKey:@"fid"];
-    NSString *fname = [forum objectForKey:@"name"];
-    self.contentController.infoDic = @{ @"fid": fid, @"fname":fname };
+    BUCForum *forum = [((BUCSection *)[self.dataList objectAtIndex:indexPath.section]).forumList objectAtIndex:indexPath.row];
+    self.contentController.info = forum;
     [self.contentController performSegueWithIdentifier:@"segueToForum" sender:nil];
 }
 
+#pragma mark - private methods
+- (UITableViewCell *)createCellForForum:(BUCForum *)forum
+{
+    static NSString *CellIdentifier = @"forumListCell";
+    static NSString *subForumFormat = @"> %@";
+    
+    UITableViewCell *cell = [self.tableView dequeueReusableCellWithIdentifier:CellIdentifier];
+    cell.textLabel.text = [forum.type isEqualToString:subKey] ? [NSString stringWithFormat:subForumFormat, forum.fname] : forum.fname;
+    
+    return cell;
+}
 @end
 
 

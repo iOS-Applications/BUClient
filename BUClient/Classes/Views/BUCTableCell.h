@@ -12,9 +12,11 @@
 @interface BUCTableCell : UITableViewCell
 @property (weak, nonatomic) IBOutlet UITextView *title;
 @property (weak, nonatomic) IBOutlet BUCRoundButtonView *replyCount;
+@property (weak, nonatomic) IBOutlet UIButton *leftTopBtn;
+@property (weak, nonatomic) IBOutlet UIImageView *avatar;
 
-
-@property UIButton *authorBtn;
-@property UIButton *subforumBtn;
-@property UILabel *timeStamp;
+@property (nonatomic) UIButton *leftBottomBtn;
+@property (nonatomic) UIButton *rightBottomBtn;
+@property (nonatomic) UILabel *timeStamp;
+@property (nonatomic) CGFloat height;
 @end

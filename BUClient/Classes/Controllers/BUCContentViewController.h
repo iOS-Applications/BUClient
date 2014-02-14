@@ -9,6 +9,7 @@
 #import <UIKit/UIKit.h>
 
 @interface BUCContentViewController : UIViewController
+@property (nonatomic) id info;
 @property NSDictionary *infoDic;
 
 - (void)removeChildController;

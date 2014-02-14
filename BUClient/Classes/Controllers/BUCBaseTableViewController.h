@@ -8,11 +8,18 @@
 
 #import <UIKit/UIKit.h>
 
+#import "BUCAppDelegate.h"
 #import "BUCMainViewController.h"
+#import "BUCIndexViewController.h"
 #import "BUCContentViewController.h"
+#import "BUCEditorViewController.h"
 #import "BUCUser.h"
 #import "BUCNetworkEngine.h"
-#import "BUCIndexViewController.h"
+#import "BUCSection.h"
+#import "BUCForum.h"
+#import "BUCPost.h"
+#import "BUCPoster.h"
+#import "BUCTableCell.h"
 #import "NSString+NSString_Extended.h"
 
 @interface BUCBaseTableViewController : UITableViewController
@@ -24,24 +31,27 @@
 @property (weak, nonatomic) BUCUser *user;
 @property (weak, nonatomic) BUCNetworkEngine *engine;
 
-@property NSString *listKey;
-@property NSArray *list;
-@property NSDictionary *responseDic;
-@property NSMutableArray *responseDataArray;
+@property (nonatomic) NSDictionary *rawDataDic;
+@property (nonatomic) NSString *rawListKey;
+@property (nonatomic) NSArray *rawDataList;
+@property (nonatomic) NSMutableArray *dataList;
+@property (nonatomic) NSMutableArray *cellList;
+@property (nonatomic) NSMutableArray *avatarList;
 
-@property BOOL loading;
-@property BOOL refreshing;
+@property (nonatomic) BOOL loading;
+@property (nonatomic) BOOL refreshing;
 
-@property NSMutableDictionary *postDic;
-@property NSMutableDictionary *postDataDic;
+@property (nonatomic) NSMutableDictionary *requestDic;
+@property (nonatomic) NSMutableDictionary *jsonDic;
 
-@property NSString *unwindSegueIdentifier;
+@property (nonatomic) NSString *unwindSegueIdentifier;
 
 - (void)alertWithMessage:(NSString *)message;
 - (IBAction)refresh:(id)sender;
 - (void)loadData:(NSDictionary *)postDic;
 - (void)loadImage:(NSString *)imageUrl atIndex:(NSInteger)index;
 - (void)urldecodeData;
+- (void)makeCacheList;
 - (void)endLoading;
 - (void)cancelLoading;
 - (void)suspendLoading;
