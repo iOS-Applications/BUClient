@@ -10,13 +10,13 @@
 
 @interface BUCUser : NSObject
 
-@property NSString *username;
-@property NSString *password;
-@property NSString *session;
-@property NSMutableDictionary *loginDic;
-@property NSMutableDictionary *loginDataDic;
-@property BOOL isLoggedIn;
-@property NSString *loadImage;
+@property (nonatomic) NSString *username;
+@property (nonatomic) NSString *password;
+@property (nonatomic) NSString *session;
+@property (nonatomic) NSMutableDictionary *loginDic;
+@property (nonatomic) NSMutableDictionary *loginJsonDic;
+@property (nonatomic) BOOL isLoggedIn;
+@property (nonatomic) NSString *loadImage;
 
 + (BUCUser *)sharedInstance;
 

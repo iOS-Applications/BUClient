@@ -139,7 +139,7 @@
 - (IBAction)jumpToPoster:(id)sender forEvent:(UIEvent *)event {
     [self.indexController deselectCurrentRow];
     self.contentController.info = ((BUCThread *)[self.dataList objectAtIndex:[self getRowOfEvent:event]]).poster;
-    [self.contentController performSegueWithIdentifier:@"segueToUser" sender:nil];
+    [self performSegueWithIdentifier:@"segueToUser" sender:nil];
 }
 
 - (IBAction)jumpToThread:(id)sender forEvent:(UIEvent *)event {

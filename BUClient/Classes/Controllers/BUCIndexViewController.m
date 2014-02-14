@@ -12,7 +12,7 @@
 #import "BUCUser.h"
 
 @interface BUCIndexViewController ()
-@property NSArray *list;
+@property (nonatomic) NSArray *list;
 @end
 
 @implementation BUCIndexViewController
@@ -62,7 +62,9 @@
     }
     
     if (indexPath.row == 2) {
-        contentController.infoDic = @{@"username": user.username};
+        BUCPoster *poster = [[BUCPoster alloc] init];
+        poster.username = user.username;
+        contentController.info = poster;
     }
     
     NSString *segueIdentifier = [self.list objectAtIndex:indexPath.row];

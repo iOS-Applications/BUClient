@@ -61,7 +61,7 @@
         user.username = username;
         NSString *password = [user getPassword];
         
-        NSMutableDictionary *loginDataDic = user.loginDataDic;
+        NSMutableDictionary *loginDataDic = user.loginJsonDic;
         [loginDataDic setObject:username forKey:@"username"];
         [loginDataDic setObject:password forKey:@"password"];
         

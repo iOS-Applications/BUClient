@@ -13,7 +13,7 @@
 @property (strong, nonatomic) IBOutlet UIView *loadingView;
 @property (weak, nonatomic) IBOutlet UIActivityIndicatorView *activityView;
 
-@property BUCUser *user;
+@property (nonatomic) BUCUser *user;
 @end
 
 @implementation BUCContentViewController

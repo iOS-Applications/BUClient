@@ -22,6 +22,8 @@
     CGContextFillEllipseInRect (context, borderRect);
     CGContextStrokeEllipseInRect(context, borderRect);
     CGContextFillPath(context);
+    
+//    self.showsTouchWhenHighlighted = YES;
 }
 
 

@@ -10,7 +10,6 @@
 
 @interface BUCContentViewController : UIViewController
 @property (nonatomic) id info;
-@property NSDictionary *infoDic;
 
 - (void)removeChildController;
 - (void)displayLoading;

@@ -20,7 +20,7 @@
 
 @property (weak, nonatomic) BUCEventInterceptWindow *window;
 
-@property UITextField *curTextField;
+@property (weak, nonatomic) UITextField *curTextField;
 @end
 
 @implementation BUCLoginViewController
@@ -69,7 +69,7 @@
     }
     
     BUCUser *user = [BUCUser sharedInstance];
-    NSMutableDictionary *loginDataDic = user.loginDataDic;
+    NSMutableDictionary *loginDataDic = user.loginJsonDic;
     [loginDataDic setObject:username forKey:@"username"];
     [loginDataDic setObject:password forKey:@"password"];
     

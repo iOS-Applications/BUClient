@@ -50,7 +50,6 @@
 - (IBAction)refresh:(id)sender;
 - (void)loadData:(NSDictionary *)postDic;
 - (void)loadImage:(NSString *)imageUrl atIndex:(NSInteger)index;
-- (void)urldecodeData;
 - (void)makeCacheList;
 - (void)endLoading;
 - (void)cancelLoading;

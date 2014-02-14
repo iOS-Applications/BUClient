@@ -19,6 +19,9 @@
     CGPoint farRightCenter;
 }
 
+@property (weak, readwrite, nonatomic) BUCIndexViewController *indexController;
+@property (weak, readwrite, nonatomic) BUCContentViewController *contentController;
+
 @property (weak, nonatomic) IBOutlet UIView *index;
 @property (weak, nonatomic) IBOutlet UIView *content;
 @property (strong, nonatomic) IBOutlet UITapGestureRecognizer *contentTapRecognizer;

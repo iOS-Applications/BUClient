@@ -9,5 +9,6 @@
 #import <UIKit/UIKit.h>
 
 @interface BUCEditorViewController : UIViewController <UITextFieldDelegate, UITextViewDelegate>
-@property NSString *unwindSegueIdendifier;
+@property (nonatomic) NSString *unwindSegueIdendifier;
+@property (nonatomic) NSString *postSubject;
 @end

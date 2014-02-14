@@ -10,6 +10,8 @@
 #import "BUCThreadViewController.h"
 #import "BUCAvatar.h"
 
+static NSString *fontKey = @"Helvetica-Light";
+
 @interface BUCThreadViewController ()
 {
     NSIndexSet *allindexes;
@@ -34,6 +36,7 @@
 @property (nonatomic) NSMutableDictionary *subJsonDic;
 
 @property (nonatomic) BOOL loadImage;
+@property (nonatomic) UIImage *defaultAvatar;
 @end
 
 @implementation BUCThreadViewController
@@ -65,10 +68,12 @@
 
 - (void)dealloc
 {
-    [self.avatarList removeObserver:self
-                      fromObjectsAtIndexes:allindexes
-                                forKeyPath:@"loadEnded"
-                                   context:NULL];
+    if (self.loadImage) {
+        [self.avatarList removeObserver:self
+                   fromObjectsAtIndexes:allindexes
+                             forKeyPath:@"loadEnded"
+                                context:NULL];
+    }
 }
 
 - (void)viewDidLoad
@@ -97,12 +102,15 @@
     self.previous.enabled = NO;
     self.next.enabled = NO;
     
-    allindexes = [NSIndexSet indexSetWithIndexesInRange:NSMakeRange(0, 20)];
-    [self.avatarList addObserver:self
-                     toObjectsAtIndexes:allindexes
-                             forKeyPath:@"loadEnded"
-                                options:NSKeyValueObservingOptionNew
-                                context:NULL];
+    if (self.loadImage) {
+        self.defaultAvatar = [UIImage imageNamed:@"avatar.png"];
+        allindexes = [NSIndexSet indexSetWithIndexesInRange:NSMakeRange(0, 20)];
+        [self.avatarList addObserver:self
+                  toObjectsAtIndexes:allindexes
+                          forKeyPath:@"loadEnded"
+                             options:NSKeyValueObservingOptionNew
+                             context:NULL];
+    }
 
     [self loadData:self.requestDic];
 }
@@ -117,65 +125,54 @@
             [self loadData:self.subRequestDic];
         } else {
             self.rawDataList = [self.rawDataDic objectForKey:self.rawListKey];
-            [self urldecodeData];
             [self makeCacheList];
-            if (self.loadImage) {
-                NSString *avatarUrl = nil;
-                NSInteger index = 0;
-                BUCAvatar *avatar = nil;
-                
-                for (NSMutableDictionary *post in self.rawDataList) {
-                    avatarUrl = [post objectForKey:@"avatar"];
-                    avatar = [self.avatarList objectAtIndex:index];
-                    // test code start
-                    avatarUrl = @"http://0.0.0.0:8080/static/avatar.png";
-                    // test code end
-                    if ([avatarUrl length]) {
-                        avatar.useDefaultAvatar = NO;
-                        [self loadImage:avatarUrl atIndex:index];
-                        // load image from internet
-                    } else {
-                        avatar.useDefaultAvatar = YES;
-                        // load default avatar image
-                    }
-                    
-                    index++;
-                }
-            }
-            
             [self updateNavState];
             [self endLoading];
             [self.tableView reloadData];
         }
-    } else if ([keyPath isEqualToString:@"loadEnded"]){
+    } else if ([keyPath isEqualToString:@"loadEnded"]) {
         BUCAvatar *avatar = (BUCAvatar *)object;
         if (!avatar.loadEnded) return;
         
         if (!avatar.error) {
-            BUCTableCell *cell = (BUCTableCell *)[self.tableView cellForRowAtIndexPath:[NSIndexPath indexPathForRow:avatar.index inSection:0]];
-            if (cell) cell.avatar.image = avatar.image;
+            ((BUCTableCell *)[self.cellList objectAtIndex:avatar.index]).avatar.image = avatar.image;
         } else {
             // load default avatar image
         }
     }
 }
 
-- (void)urldecodeData
-{
-    for (NSMutableDictionary *item in self.rawDataList) {
-        NSString *string = [[item objectForKey:@"author"] urldecode];
-        [item setObject:string forKey:@"author"];
-        string = [[item objectForKey:@"avatar"] urldecode];
-        [item setObject:string forKey:@"avatar"];
-        string = [[item objectForKey:@"message"] urldecode];
-        [item setObject:string forKey:@"message"];
-        string = [[item objectForKey:@"subject"] urldecode];
-        [item setObject:string forKey:@"subject"];
-    }
-}
-
 - (void)makeCacheList{
+    static NSDateFormatter *dateFormatter = nil;
+    if (!dateFormatter) {
+        dateFormatter = [[NSDateFormatter alloc] init];
+        [dateFormatter setDateFormat:@"yyyy-MM-dd HH:mm"];
+        NSLocale *locale = [[NSLocale alloc] initWithLocaleIdentifier:@"en_US"];
+        [dateFormatter setLocale:locale];
+    }
     
+    static NSString *authorKey = @"author";
+    static NSString *avatarKey = @"avatar";
+    static NSString *messageKey = @"message";
+    static NSString *subjectKey = @"subject";
+    static NSString *datelineKey = @"dateline";
+    
+    BUCPost *post = nil;
+    NSInteger index = 0;
+    for (NSMutableDictionary *rawPost in self.rawDataList) {
+        post = [[BUCPost alloc] init];
+        post.thread = self.thread;
+        post.poster = [[BUCPoster alloc] init];
+        post.poster.username = [[rawPost objectForKey:authorKey] urldecode];
+        post.poster.avatarUrl = [[rawPost objectForKey:avatarKey] urldecode];
+        post.message = [[rawPost objectForKey:messageKey] urldecode];
+        post.title = [[rawPost objectForKey:subjectKey] urldecode];
+        post.dateline = [dateFormatter stringFromDate:[NSDate dateWithTimeIntervalSince1970:[[rawPost objectForKey:datelineKey] integerValue]]];
+        post.index = index;
+        [self.dataList addObject:post];
+        [self.cellList addObject:[self createCellForPost:post]];
+        index++;
+    }
 }
 
 - (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender
@@ -187,19 +184,10 @@
 }
 
 #pragma mark - action methods
-- (IBAction)refresh:(id)sender
-{
-    if (self.loading || self.refreshing) return;
-    
-    if (![sender isKindOfClass:[UIRefreshControl class]]) {
-        [self.contentController displayLoading];
-        self.loading = YES;
-        self.tableView.bounces = NO;
-    } else {
-        self.refreshing = YES;
-    }
-    
-    [self loadData:self.subRequestDic];
+- (IBAction)jumpToPoster:(id)sender forEvent:(UIEvent *)event {
+    [self.indexController deselectCurrentRow];
+    self.contentController.info = ((BUCThread *)[self.dataList objectAtIndex:[self getRowOfEvent:event]]).poster;
+    [self performSegueWithIdentifier:@"segueToUser" sender:nil];
 }
 
 - (IBAction)showActionSheet:(id)sender {
@@ -299,65 +287,17 @@
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
 {
-    return [self.rawDataList count];
+    return [self.cellList count];
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
 {
-    static NSString *CellIdentifier = @"threadCell";
-    
-    BUCTableCell *cell = [tableView dequeueReusableCellWithIdentifier:CellIdentifier forIndexPath:indexPath];
-
-    NSDictionary *post = [self.rawDataList objectAtIndex:indexPath.row];
-    
-    BUCAvatar *avatar = [self.avatarList objectAtIndex:indexPath.row];
-    if (avatar.useDefaultAvatar) {
-        // load default avatar
-    } else if (avatar.loadEnded) {
-        if (!avatar.error) {
-            cell.avatar.image = avatar.image;
-        } else {
-            // load default avatar
-        }
-    }
-    
-    [cell.leftTopBtn setTitle:[post objectForKey:@"author"] forState:UIControlStateNormal];
-    
-    NSString *timestamp = [post objectForKey:@"dateline"];
-    NSDate *date = [NSDate dateWithTimeIntervalSince1970:(NSTimeInterval)[timestamp integerValue]];
-    static NSDateFormatter *dateFormatter = nil;
-    if (!dateFormatter) {
-        dateFormatter = [[NSDateFormatter alloc] init];
-        [dateFormatter setDateFormat:@"yyyy-MM-dd HH:mm"];
-        NSLocale *locale = [[NSLocale alloc] initWithLocaleIdentifier:@"en_US"];
-        [dateFormatter setLocale:locale];
-    }
-    
-    UILabel *dateLabel = (UILabel *)[cell viewWithTag:3];
-    dateLabel.text = [dateFormatter stringFromDate:date];
-    
-    UITextView *textview = (UITextView *)[cell viewWithTag:4];
-    textview.text = [post objectForKey:@"subject"];
-    
-    textview = (UITextView *)[cell viewWithTag:5];
-    textview.text = [post objectForKey:@"message"];
-    
-    return cell;
+    return [self.cellList objectAtIndex:indexPath.row];
 }
 
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
 {
-    return 185;
-    NSDictionary *post = [self.rawDataList objectAtIndex:indexPath.row];
-    NSString *text = [post objectForKey:@"subject"];
-    CGRect frame = [text boundingRectWithSize:CGSizeMake(230, FLT_MAX)
-                                      options:(NSStringDrawingUsesLineFragmentOrigin | NSStringDrawingUsesFontLeading)
-                                   attributes:@{NSFontAttributeName:[UIFont systemFontOfSize:18]}
-                                      context:nil];
-    
-    CGFloat padding = 10;
-    
-    return MAX(60, frame.size.height + padding) + 32; // 32 = 5(space between the bottom buttons and the title) + 27(height of button)
+    return ((BUCTableCell *)[self.cellList objectAtIndex:indexPath.row]).height;
 }
 
 #pragma mark - picker view delegate/datasource methods
@@ -385,11 +325,19 @@
 }
 
 #pragma mark - private methods
+- (NSInteger)getRowOfEvent:(UIEvent *)event
+{
+    NSSet *touches = [event allTouches];
+    UITouch *touch = [touches anyObject];
+    CGPoint p = [touch locationInView:self.tableView];
+    return [self.tableView indexPathForRowAtPoint:p].row;
+}
+
 - (UIButton *)cellButtonWithTitle:(NSString *)title
 {
     UIButton *button = [UIButton buttonWithType:UIButtonTypeSystem];
     [button setTitle:title forState:UIControlStateNormal];
-    button.titleLabel.font = [UIFont systemFontOfSize:15];
+    button.titleLabel.font = [UIFont fontWithName:fontKey size:15];
     
     return button;
 }
@@ -410,6 +358,68 @@
     
     self.pickerInputField.text = [NSString stringWithFormat:@"%i/%i", self.curPickerRow + 1, self.pageCount];
     [self.picker reloadComponent:0];
+}
+
+- (BUCTableCell *)createCellForPost:(BUCPost *)post
+{
+    static NSString *CellIdentifier = @"threadCell";
+    static NSString *quoteKey = @"引用";
+    static NSString *indexKey = @"%d楼";
+    static NSString *testurlKey = @"http://0.0.0.0:8080/static/avatar.png"; // just for test
+    
+    BUCTableCell *cell = [self.tableView dequeueReusableCellWithIdentifier:CellIdentifier];
+
+    // configure user button
+    NSDictionary *stringAttribute = @{NSFontAttributeName:[UIFont systemFontOfSize:15]};
+    UIButton *leftTopBtn = [self cellButtonWithTitle:post.poster.username];
+    CGSize size = [post.poster.username sizeWithAttributes:stringAttribute];
+    leftTopBtn.frame = CGRectMake(5, 5, size.width + 2, 20); // 2 is the width to compensate padding of button element
+    [leftTopBtn addTarget:self action:@selector(jumpToPoster:forEvent:) forControlEvents:UIControlEventTouchUpInside];
+    cell.leftTopBtn = leftTopBtn;
+    [cell addSubview:leftTopBtn];
+    
+    // configure post index
+    cell.postIndex.text = [NSString stringWithFormat:indexKey, post.index + 1];
+
+    // configure avatar
+    if (self.loadImage) {
+        // test code start
+        post.poster.avatarUrl = testurlKey;
+        // test code end
+        if ([post.poster.avatarUrl length]) {
+            [self loadImage:post.poster.avatarUrl atIndex:post.index];
+        } else {
+            cell.avatar.image = self.defaultAvatar;
+        }
+    }
+    // configure message content
+    NSString *path = [[NSBundle mainBundle] bundlePath];
+    NSURL *baseURL = [NSURL fileURLWithPath:path];
+    UIWebView *content = [[UIWebView alloc] initWithFrame:CGRectMake(80, 25, 240, 200)];
+    content.scrollView.scrollEnabled = NO;
+    content.paginationMode = UIWebPaginationModeTopToBottom;
+    [content loadHTMLString:post.message baseURL:baseURL];
+    cell.content = content;
+    [cell addSubview:content];
+    
+    // configure dateline
+    UILabel *timeStamp = [[UILabel alloc] initWithFrame:CGRectMake(5, 220, 140, 20)];
+    timeStamp.text = post.dateline;
+    timeStamp.font = [UIFont fontWithName:fontKey size:15];
+    cell.timeStamp = timeStamp;
+    [cell addSubview:timeStamp];
+    
+    // configure quote button
+
+    UIButton *quoteBtn = [self cellButtonWithTitle:quoteKey];
+    quoteBtn.frame = CGRectMake(275, 220, 40, 20);
+    quoteBtn.titleLabel.font = [UIFont fontWithName:fontKey size:15];
+    cell.rightBottomBtn = quoteBtn;
+    [cell addSubview:quoteBtn];
+    
+    cell.height = 240;
+    
+    return cell;
 }
 
 @end

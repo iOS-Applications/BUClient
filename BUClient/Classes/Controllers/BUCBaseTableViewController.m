@@ -65,6 +65,8 @@
 
 - (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender
 {
+    if (![segue.identifier isEqualToString:@"segueToEditor"]) return;
+    
     UINavigationController *navVC = (UINavigationController *)segue.destinationViewController;
     BUCEditorViewController *editor = (BUCEditorViewController *)[navVC.childViewControllers lastObject];
     editor.unwindSegueIdendifier = self.unwindSegueIdentifier;
@@ -74,7 +76,6 @@
 {
     if (self.rawDataDic) {
         self.rawDataList = [self.rawDataDic objectForKey:self.rawListKey];
-        [self urldecodeData];
         [self makeCacheList];
         [self endLoading];
         [self.tableView reloadData];
@@ -166,11 +167,6 @@
     NSURL *url = [NSURL URLWithString:imageUrl];
     NSURLRequest *request = [NSURLRequest requestWithURL:url];
     [engine processAsyncQueueRequest:request index:index];
-}
-
-- (void)urldecodeData
-{
-    
 }
 
 - (void)makeCacheList

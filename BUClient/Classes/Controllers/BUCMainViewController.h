@@ -11,8 +11,8 @@
 #import "BUCContentViewController.h"
 
 @interface BUCMainViewController : UIViewController
-@property (weak, nonatomic) BUCIndexViewController *indexController;
-@property (weak, nonatomic) BUCContentViewController *contentController;
+@property (weak, readonly, nonatomic) BUCIndexViewController *indexController;
+@property (weak, readonly, nonatomic) BUCContentViewController *contentController;
 
 - (void)displayLoginWithMessage:(NSString *)message;
 - (void)revealIndex;
