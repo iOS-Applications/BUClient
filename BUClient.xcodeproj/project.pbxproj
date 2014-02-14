@@ -35,6 +35,11 @@
 		D833DC7B18A82763002998EC /* BUCUserViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = D833DC7A18A82763002998EC /* BUCUserViewController.m */; };
 		D833DC7E18A84968002998EC /* BUCUserListViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = D833DC7D18A84968002998EC /* BUCUserListViewController.m */; };
 		D839AB3518A3F59400A7187B /* BUCBaseTableViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = D839AB3418A3F59400A7187B /* BUCBaseTableViewController.m */; };
+		D8477A4318ADB49E00006B7C /* BUCSection.m in Sources */ = {isa = PBXBuildFile; fileRef = D8477A4218ADB49E00006B7C /* BUCSection.m */; };
+		D8477A4618ADB4C200006B7C /* BUCForum.m in Sources */ = {isa = PBXBuildFile; fileRef = D8477A4518ADB4C200006B7C /* BUCForum.m */; };
+		D8477A4918ADB54D00006B7C /* BUCThread.m in Sources */ = {isa = PBXBuildFile; fileRef = D8477A4818ADB54D00006B7C /* BUCThread.m */; };
+		D8477A4C18ADB5C900006B7C /* BUCPost.m in Sources */ = {isa = PBXBuildFile; fileRef = D8477A4B18ADB5C900006B7C /* BUCPost.m */; };
+		D8477A5218ADB72F00006B7C /* BUCPoster.m in Sources */ = {isa = PBXBuildFile; fileRef = D8477A5118ADB72F00006B7C /* BUCPoster.m */; };
 		D8A2461718910A9A00AFD27A /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = D8A2461518910A9A00AFD27A /* Main.storyboard */; };
 		D8A3BF98187C895E006CBF64 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D8A3BF97187C895E006CBF64 /* Foundation.framework */; };
 		D8A3BF9A187C895E006CBF64 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D8A3BF99187C895E006CBF64 /* CoreGraphics.framework */; };
@@ -114,6 +119,16 @@
 		D833DC7D18A84968002998EC /* BUCUserListViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BUCUserListViewController.m; sourceTree = "<group>"; };
 		D839AB3318A3F59400A7187B /* BUCBaseTableViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BUCBaseTableViewController.h; sourceTree = "<group>"; };
 		D839AB3418A3F59400A7187B /* BUCBaseTableViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BUCBaseTableViewController.m; sourceTree = "<group>"; };
+		D8477A4118ADB49E00006B7C /* BUCSection.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BUCSection.h; sourceTree = "<group>"; };
+		D8477A4218ADB49E00006B7C /* BUCSection.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BUCSection.m; sourceTree = "<group>"; };
+		D8477A4418ADB4C200006B7C /* BUCForum.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BUCForum.h; sourceTree = "<group>"; };
+		D8477A4518ADB4C200006B7C /* BUCForum.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BUCForum.m; sourceTree = "<group>"; };
+		D8477A4718ADB54D00006B7C /* BUCThread.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BUCThread.h; sourceTree = "<group>"; };
+		D8477A4818ADB54D00006B7C /* BUCThread.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BUCThread.m; sourceTree = "<group>"; };
+		D8477A4A18ADB5C900006B7C /* BUCPost.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BUCPost.h; sourceTree = "<group>"; };
+		D8477A4B18ADB5C900006B7C /* BUCPost.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BUCPost.m; sourceTree = "<group>"; };
+		D8477A5018ADB72F00006B7C /* BUCPoster.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BUCPoster.h; sourceTree = "<group>"; };
+		D8477A5118ADB72F00006B7C /* BUCPoster.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BUCPoster.m; sourceTree = "<group>"; };
 		D8A2461518910A9A00AFD27A /* Main.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; path = Main.storyboard; sourceTree = "<group>"; };
 		D8A3BF94187C895E006CBF64 /* BUClient.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BUClient.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D8A3BF97187C895E006CBF64 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
@@ -389,6 +404,16 @@
 				D8BFD972189297900059DBDE /* BUCUser.m */,
 				D8CF3DBA18ABD652009080E4 /* BUCAvatar.h */,
 				D8CF3DBB18ABD652009080E4 /* BUCAvatar.m */,
+				D8477A4118ADB49E00006B7C /* BUCSection.h */,
+				D8477A4218ADB49E00006B7C /* BUCSection.m */,
+				D8477A4418ADB4C200006B7C /* BUCForum.h */,
+				D8477A4518ADB4C200006B7C /* BUCForum.m */,
+				D8477A4718ADB54D00006B7C /* BUCThread.h */,
+				D8477A4818ADB54D00006B7C /* BUCThread.m */,
+				D8477A4A18ADB5C900006B7C /* BUCPost.h */,
+				D8477A4B18ADB5C900006B7C /* BUCPost.m */,
+				D8477A5018ADB72F00006B7C /* BUCPoster.h */,
+				D8477A5118ADB72F00006B7C /* BUCPoster.m */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -506,6 +531,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D8477A4918ADB54D00006B7C /* BUCThread.m in Sources */,
+				D8477A4618ADB4C200006B7C /* BUCForum.m in Sources */,
 				D8BFD973189297900059DBDE /* BUCUser.m in Sources */,
 				D8114CD9189012BC00F0E1A7 /* BUCMainViewController.m in Sources */,
 				D833DC7E18A84968002998EC /* BUCUserListViewController.m in Sources */,
@@ -513,6 +540,7 @@
 				D8BFD96F189289F70059DBDE /* BUCForumViewController.m in Sources */,
 				D8BFD97618939FE40059DBDE /* BUCNetworkEngine.m in Sources */,
 				D8114CD7189012BC00F0E1A7 /* BUCIndexViewController.m in Sources */,
+				D8477A4C18ADB5C900006B7C /* BUCPost.m in Sources */,
 				D833DC7B18A82763002998EC /* BUCUserViewController.m in Sources */,
 				D8276DBD18A51B4700C18C52 /* BUCTableCell.m in Sources */,
 				D80E28A118A7F52F00A397B1 /* BUCSettingsViewController.m in Sources */,
@@ -522,8 +550,10 @@
 				D8114CD4189012BC00F0E1A7 /* BUCAppDelegate.m in Sources */,
 				D8CF3DBC18ABD652009080E4 /* BUCAvatar.m in Sources */,
 				D8A771A5189AEAA4001E4431 /* Reachability.m in Sources */,
+				D8477A4318ADB49E00006B7C /* BUCSection.m in Sources */,
 				D8114CDC189012BC00F0E1A7 /* NSString+NSString_Extended.m in Sources */,
 				D8114CD6189012BC00F0E1A7 /* BUCFrontPageViewController.m in Sources */,
+				D8477A5218ADB72F00006B7C /* BUCPoster.m in Sources */,
 				D8114CDB189012BC00F0E1A7 /* BUCEmptySegue.m in Sources */,
 				D8114CDF189012BC00F0E1A7 /* BUCRoundButtonView.m in Sources */,
 				D8114CDA189012BC00F0E1A7 /* BUCThreadViewController.m in Sources */,
