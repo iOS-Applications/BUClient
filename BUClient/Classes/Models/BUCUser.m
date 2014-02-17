@@ -48,12 +48,8 @@ static NSString *kKeychainItemIdentifer = @"org.bitunion.buc.%@.KeychainUI";
     self = [super init];
     
     if (self) {
-        _loginDic = [[NSMutableDictionary alloc] init];
-        [_loginDic setObject:@"logging" forKey:@"url"];
-        [_loginDic setObject:@"POST" forKey:@"method"];
-        _loginJsonDic = [[NSMutableDictionary alloc] init];
-        [_loginJsonDic setObject:@"login" forKey:@"action"];
-        [_loginDic setObject:_loginJsonDic forKey:@"dataDic"];
+        _json = [[NSMutableDictionary alloc] init];
+        [_json setObject:@"login" forKey:@"action"];
         _isLoggedIn = NO;
     }
     

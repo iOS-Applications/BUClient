@@ -13,8 +13,8 @@
 @property (nonatomic) NSString *username;
 @property (nonatomic) NSString *password;
 @property (nonatomic) NSString *session;
-@property (nonatomic) NSMutableDictionary *loginDic;
-@property (nonatomic) NSMutableDictionary *loginJsonDic;
+@property (nonatomic) NSMutableDictionary *json;
+@property (nonatomic) NSURLRequest *req;
 @property (nonatomic) BOOL isLoggedIn;
 @property (nonatomic) NSString *loadImage;
 

@@ -10,20 +10,12 @@
 
 @interface BUCNetworkEngine : NSObject
 
-@property BOOL hostIsOn;
-
-@property NSDictionary *responseDic;
-@property NSMutableArray *responseDataArray;
+@property (nonatomic) BOOL hostIsOn;
+@property (readonly, nonatomic) NSString *baseUrl;
 
 + (BUCNetworkEngine *)sharedInstance;
 
-- (NSString *)processSyncRequest:(NSDictionary *)requestDic;
-- (void)processAsyncRequest:(NSDictionary *)requestDic completionHandler:(void (^)(NSString *message))completionHandler;
-- (void)processAsyncQueueRequest:(NSURLRequest *)request index:(NSInteger)index;
-
-- (void)cancelCurrentTask;
-- (void)suspendCurrentTask;
-- (void)resumeCurrentTask;
+- (NSURLSessionDataTask *)processRequest:(NSURLRequest *)request completionHandler:(void (^)(NSData *data, NSError *error))completionHandler;
 
 - (BOOL)checkNetworkStatus;
 

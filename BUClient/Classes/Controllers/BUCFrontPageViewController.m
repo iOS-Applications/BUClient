@@ -15,9 +15,9 @@
     self = [super initWithCoder:aDecoder];
 
     if (self) {
-        [self.requestDic setObject:@"home" forKey:@"url"];
-        self.rawListKey = @"newlist";
+        self.jsonListKey = @"newlist";
         self.unwindSegueIdentifier = @"unwindToFront";
+        self.task.url = @"home";
     }
     
     return self;
@@ -27,13 +27,17 @@
 {
     [super viewDidLoad];
     
-    [self loadData:self.requestDic];
+    [self startAllTasks];
 }
 
 - (void)makeCacheList
 {
     BUCThread *thread = nil;
-    for (NSDictionary *rawThread in self.rawDataList) {
+    BUCTask *task = [self.taskList objectAtIndex:0];
+    NSArray *jsonDataList = [task.jsonData objectForKey:self.jsonListKey];
+    NSMutableArray *cellList = [[NSMutableArray alloc] init];
+    NSMutableArray *dataList = [[NSMutableArray alloc] init];
+    for (NSDictionary *rawThread in jsonDataList) {
         thread = [[BUCThread alloc] init];
         thread.poster = [[BUCPoster alloc] init];
         thread.poster.username = [[rawThread objectForKey:@"author"] urldecode];
@@ -44,9 +48,13 @@
         thread.replyCount = [rawThread objectForKey:@"tid_sum"];
         thread.title = [[[rawThread objectForKey:@"pname"] urldecode] replaceHtmlEntities];
 
-        [self.cellList addObject:[self createCellForThread:thread]];
-        [self.dataList addObject:thread];
+        [cellList addObject:[self createCellForThread:thread]];
+        [dataList addObject:thread];
     }
+    
+    self.dataList = dataList;
+    self.cellList = cellList;
+    task.done = YES;
 }
 
 #pragma mark - IBAction and unwind methods

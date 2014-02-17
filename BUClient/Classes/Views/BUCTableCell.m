@@ -13,6 +13,8 @@
 {
     [super prepareForReuse];
     
+    [self.content removeFromSuperview];
+    [self.leftTopBtn removeFromSuperview];
     [self.leftBottomBtn removeFromSuperview];
     [self.rightBottomBtn removeFromSuperview];
     [self.timeStamp removeFromSuperview];

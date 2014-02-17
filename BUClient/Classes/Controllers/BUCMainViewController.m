@@ -68,7 +68,7 @@
     [self.content addGestureRecognizer:self.contentTapRecognizer];
 }
 
-- (void)switchContentWith:(NSString *)segueIdendifier
+- (void)switchContentWith:(NSString *)segueIdendifier completion:(void (^)(void))completeHandler
 {
     [UIView animateWithDuration:0.25
                           delay:0
@@ -83,7 +83,9 @@
                                           animations:^{
                                               self.content.center = leftCenter;
                                           }
-                                          completion:nil];
+                                          completion:^(BOOL finished) {
+                                              completeHandler();
+                                          }];
                          
                          [self.contentController performSegueWithIdentifier:segueIdendifier sender:nil];
                      }];

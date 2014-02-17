@@ -10,7 +10,7 @@
 #import "BUCUser.h"
 #import "BUCLoginViewController.h"
 #import "BUCNetworkEngine.h"
-
+#import "NSObject+BUCTools.h"
 
 @implementation BUCAppDelegate
 
@@ -33,7 +33,7 @@
         self.mainViewController = (BUCMainViewController *)self.window.rootViewController;
         
         if (errorMessage) {
-            [(BUCMainViewController *)self.window.rootViewController displayLoginWithMessage:errorMessage];
+            [self.mainViewController displayLoginWithMessage:errorMessage];
         }
     }
 }
@@ -61,20 +61,35 @@
         user.username = username;
         NSString *password = [user getPassword];
         
-        NSMutableDictionary *loginDataDic = user.loginJsonDic;
-        [loginDataDic setObject:username forKey:@"username"];
-        [loginDataDic setObject:password forKey:@"password"];
+        NSMutableDictionary *json = user.json;
+        [json setObject:username forKey:@"username"];
+        [json setObject:password forKey:@"password"];
         
-        NSString *errorMessage = [engine processSyncRequest:user.loginDic];
-        if (errorMessage) return errorMessage;
-
-        if (!engine.responseDic && [[engine.responseDic objectForKey:@"result"] isEqualToString:@"fail"]) {
-            return @"当前密码已失效，请手动登录";
+        NSString *url = [NSString stringWithFormat:engine.baseUrl, @"logging"];
+        NSURLRequest *req = [self requestWithUrl:url json:json];
+        if (!req) return @"未知错误";
+        
+        NSURLResponse *response;
+        NSError *error = nil;
+        NSData *data = [NSURLConnection sendSynchronousRequest:req returningResponse:&response error:&error];
+        if (error) {
+            error = [self checkErr:error response:response];
+            return error.localizedDescription;
+        } else if (![data length]) {
+            return @"未知错误";
         }
 
-        user.session = [engine.responseDic objectForKey:@"session"];
+        json = [NSJSONSerialization JSONObjectWithData:data options:0 error:&error];
+        if (!json) {
+            return @"未知错误";
+        }
+
+        user.session = [json objectForKey:@"session"];
         user.isLoggedIn = YES;
         user.loadImage = [defaults objectForKey:@"loadImage"];
+        user.req = req;
+        [user.json setObject:username forKey:@"username"];
+        [user.json setObject:user.session forKey:@"session"];
     }
     
     return nil;

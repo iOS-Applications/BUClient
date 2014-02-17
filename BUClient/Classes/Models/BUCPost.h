@@ -14,4 +14,6 @@
 @property (nonatomic) BUCPoster *poster;
 @property (nonatomic) NSString *title;
 @property (nonatomic) NSString *message;
+@property (nonatomic) NSString *dateline;
+@property (nonatomic) NSInteger index;
 @end

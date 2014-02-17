@@ -7,7 +7,6 @@
 //
 
 #import <UIKit/UIKit.h>
-#import "BUCBaseTableViewController.h"
 
 @interface BUCUserListViewController : UITableViewController <UIAlertViewDelegate>
 

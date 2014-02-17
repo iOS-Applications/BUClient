@@ -40,6 +40,8 @@
 		D8477A4918ADB54D00006B7C /* BUCThread.m in Sources */ = {isa = PBXBuildFile; fileRef = D8477A4818ADB54D00006B7C /* BUCThread.m */; };
 		D8477A4C18ADB5C900006B7C /* BUCPost.m in Sources */ = {isa = PBXBuildFile; fileRef = D8477A4B18ADB5C900006B7C /* BUCPost.m */; };
 		D8477A5218ADB72F00006B7C /* BUCPoster.m in Sources */ = {isa = PBXBuildFile; fileRef = D8477A5118ADB72F00006B7C /* BUCPoster.m */; };
+		D855B03418AFF89B000D3AD8 /* NSObject+BUCTools.m in Sources */ = {isa = PBXBuildFile; fileRef = D855B03318AFF89B000D3AD8 /* NSObject+BUCTools.m */; };
+		D8835E7018B17070001E1925 /* BUCTask.m in Sources */ = {isa = PBXBuildFile; fileRef = D8835E6F18B17070001E1925 /* BUCTask.m */; };
 		D8A2461718910A9A00AFD27A /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = D8A2461518910A9A00AFD27A /* Main.storyboard */; };
 		D8A3BF98187C895E006CBF64 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D8A3BF97187C895E006CBF64 /* Foundation.framework */; };
 		D8A3BF9A187C895E006CBF64 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D8A3BF99187C895E006CBF64 /* CoreGraphics.framework */; };
@@ -61,7 +63,6 @@
 		D8BFD97618939FE40059DBDE /* BUCNetworkEngine.m in Sources */ = {isa = PBXBuildFile; fileRef = D8BFD97518939FE40059DBDE /* BUCNetworkEngine.m */; };
 		D8BFD97C18942F9D0059DBDE /* screen1136x1136.png in Resources */ = {isa = PBXBuildFile; fileRef = D8BFD97B18942F9D0059DBDE /* screen1136x1136.png */; };
 		D8CA18E118A7DD6B00D4D2F9 /* BUCEditorViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = D8CA18E018A7DD6B00D4D2F9 /* BUCEditorViewController.m */; };
-		D8CF3DBC18ABD652009080E4 /* BUCAvatar.m in Sources */ = {isa = PBXBuildFile; fileRef = D8CF3DBB18ABD652009080E4 /* BUCAvatar.m */; };
 		D8CF3DC018ABEAEF009080E4 /* menu.png in Resources */ = {isa = PBXBuildFile; fileRef = D8CF3DBF18ABEAEF009080E4 /* menu.png */; };
 /* End PBXBuildFile section */
 
@@ -129,6 +130,10 @@
 		D8477A4B18ADB5C900006B7C /* BUCPost.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BUCPost.m; sourceTree = "<group>"; };
 		D8477A5018ADB72F00006B7C /* BUCPoster.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BUCPoster.h; sourceTree = "<group>"; };
 		D8477A5118ADB72F00006B7C /* BUCPoster.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BUCPoster.m; sourceTree = "<group>"; };
+		D855B03218AFF89B000D3AD8 /* NSObject+BUCTools.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSObject+BUCTools.h"; sourceTree = "<group>"; };
+		D855B03318AFF89B000D3AD8 /* NSObject+BUCTools.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSObject+BUCTools.m"; sourceTree = "<group>"; };
+		D855B03518B03691000D3AD8 /* BUCTask.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BUCTask.h; sourceTree = "<group>"; };
+		D8835E6F18B17070001E1925 /* BUCTask.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BUCTask.m; sourceTree = "<group>"; };
 		D8A2461518910A9A00AFD27A /* Main.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; path = Main.storyboard; sourceTree = "<group>"; };
 		D8A3BF94187C895E006CBF64 /* BUClient.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BUClient.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D8A3BF97187C895E006CBF64 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
@@ -160,8 +165,6 @@
 		D8BFD97B18942F9D0059DBDE /* screen1136x1136.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = screen1136x1136.png; sourceTree = "<group>"; };
 		D8CA18DF18A7DD6B00D4D2F9 /* BUCEditorViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BUCEditorViewController.h; sourceTree = "<group>"; };
 		D8CA18E018A7DD6B00D4D2F9 /* BUCEditorViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BUCEditorViewController.m; sourceTree = "<group>"; };
-		D8CF3DBA18ABD652009080E4 /* BUCAvatar.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BUCAvatar.h; sourceTree = "<group>"; };
-		D8CF3DBB18ABD652009080E4 /* BUCAvatar.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BUCAvatar.m; sourceTree = "<group>"; };
 		D8CF3DBF18ABEAEF009080E4 /* menu.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = menu.png; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -254,6 +257,8 @@
 				D8114CBC189012BC00F0E1A7 /* NSString+NSString_Extended.m */,
 				D8BFD97418939FE40059DBDE /* BUCNetworkEngine.h */,
 				D8BFD97518939FE40059DBDE /* BUCNetworkEngine.m */,
+				D855B03218AFF89B000D3AD8 /* NSObject+BUCTools.h */,
+				D855B03318AFF89B000D3AD8 /* NSObject+BUCTools.m */,
 			);
 			path = Utilities;
 			sourceTree = "<group>";
@@ -402,8 +407,8 @@
 			children = (
 				D8BFD971189297900059DBDE /* BUCUser.h */,
 				D8BFD972189297900059DBDE /* BUCUser.m */,
-				D8CF3DBA18ABD652009080E4 /* BUCAvatar.h */,
-				D8CF3DBB18ABD652009080E4 /* BUCAvatar.m */,
+				D855B03518B03691000D3AD8 /* BUCTask.h */,
+				D8835E6F18B17070001E1925 /* BUCTask.m */,
 				D8477A4118ADB49E00006B7C /* BUCSection.h */,
 				D8477A4218ADB49E00006B7C /* BUCSection.m */,
 				D8477A4418ADB4C200006B7C /* BUCForum.h */,
@@ -538,17 +543,18 @@
 				D833DC7E18A84968002998EC /* BUCUserListViewController.m in Sources */,
 				D8BFD96C189289800059DBDE /* BUCForumListViewController.m in Sources */,
 				D8BFD96F189289F70059DBDE /* BUCForumViewController.m in Sources */,
+				D8835E7018B17070001E1925 /* BUCTask.m in Sources */,
 				D8BFD97618939FE40059DBDE /* BUCNetworkEngine.m in Sources */,
 				D8114CD7189012BC00F0E1A7 /* BUCIndexViewController.m in Sources */,
 				D8477A4C18ADB5C900006B7C /* BUCPost.m in Sources */,
 				D833DC7B18A82763002998EC /* BUCUserViewController.m in Sources */,
 				D8276DBD18A51B4700C18C52 /* BUCTableCell.m in Sources */,
+				D855B03418AFF89B000D3AD8 /* NSObject+BUCTools.m in Sources */,
 				D80E28A118A7F52F00A397B1 /* BUCSettingsViewController.m in Sources */,
 				D8A771B2189C1D45001E4431 /* BUCEventInterceptWindow.m in Sources */,
 				D8CA18E118A7DD6B00D4D2F9 /* BUCEditorViewController.m in Sources */,
 				D8A3BFA4187C895E006CBF64 /* main.m in Sources */,
 				D8114CD4189012BC00F0E1A7 /* BUCAppDelegate.m in Sources */,
-				D8CF3DBC18ABD652009080E4 /* BUCAvatar.m in Sources */,
 				D8A771A5189AEAA4001E4431 /* Reachability.m in Sources */,
 				D8477A4318ADB49E00006B7C /* BUCSection.m in Sources */,
 				D8114CDC189012BC00F0E1A7 /* NSString+NSString_Extended.m in Sources */,

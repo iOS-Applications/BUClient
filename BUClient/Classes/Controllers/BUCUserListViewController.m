@@ -13,15 +13,17 @@
 #import "BUCMainViewController.h"
 #import "BUCContentViewController.h"
 #import "BUCLoginViewController.h"
+#import "NSObject+BUCTools.h"
 
 @interface BUCUserListViewController ()
-@property NSMutableArray *list;
-@property NSUserDefaults *defaults;
-@property NSInteger selectedRow;
-@property NSString *currentUser;
+@property (nonatomic) NSMutableArray *list;
+@property (nonatomic) NSUserDefaults *defaults;
+@property (nonatomic )NSInteger selectedRow;
+@property (nonatomic) NSString *currentUser;
 
-@property BUCContentViewController *contentController;
-@property BUCMainViewController *mainController;
+@property (weak, nonatomic) BUCContentViewController *contentController;
+@property (weak, nonatomic) BUCMainViewController *mainController;
+
 @end
 
 @implementation BUCUserListViewController
@@ -31,7 +33,11 @@
     [super viewDidLoad];
     
     self.defaults = [NSUserDefaults standardUserDefaults];
-    self.list = [NSMutableArray arrayWithArray:[self.defaults objectForKey:@"userList"]];
+    self.list = [[NSMutableArray alloc] init];
+    NSDictionary *userDic = [self.defaults objectForKey:@"userDic"];
+    for (NSString *key in userDic) {
+        [self.list addObject:key];
+    }
     
     self.mainController = (BUCMainViewController *)((BUCAppDelegate *)[UIApplication sharedApplication].delegate).mainViewController;
     self.contentController = self.mainController.contentController;
@@ -144,41 +150,43 @@
     user.username = username;
     NSString *password = [user getPassword];
     
-    NSMutableDictionary *loginDataDic = user.loginJsonDic;
-    [loginDataDic setObject:username forKey:@"username"];
-    [loginDataDic setObject:password forKey:@"password"];
+    NSMutableDictionary *json = user.json;
+    [json setObject:@"login" forKey:@"action"];
+    [json setObject:username forKey:@"username"];
+    [json setObject:password forKey:@"password"];
+    
+    static NSString *url = @"logging";
+    BUCNetworkEngine *engine = [BUCNetworkEngine sharedInstance];
+    NSURLRequest *req = [self requestWithUrl:[NSString stringWithFormat:engine.baseUrl, url] json:json];
+    
     [self displayLoading];
     
     BUCUserListViewController __weak *weakSelf = self;
-    BUCNetworkEngine *engine = [BUCNetworkEngine sharedInstance];
-    [engine processAsyncRequest:user.loginDic completionHandler:^(NSString *errorMessage) {
+    [engine processRequest:req completionHandler:^(NSData *data, NSError *error) {
         [weakSelf hideLoading];
+        if (error) return [weakSelf alertWithMessage:error.localizedDescription];
         
-        if (engine.responseDic) {
-            NSString *result = [engine.responseDic objectForKey:@"result"];
-            if ([result isEqualToString:@"success"]) {
-                user.username = username;
-                user.password = password;
-                user.session = [engine.responseDic objectForKey:@"session"];
-                
-                NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-                [defaults setObject:username forKey:@"currentUser"];
-                [defaults synchronize];
-                
-                [user setNewPassword:password];
-                weakSelf.currentUser = username;
-                [weakSelf.tableView reloadData];
-            } else if ([result isEqualToString:@"fail"]) {
-                errorMessage = @"当前密码已失效，请手动登录";
-                [weakSelf alertWithMessage:errorMessage];
-                [self performSegueWithIdentifier:@"segueToLogin" sender:nil];
-                return;
-            }
-        } else if (errorMessage) {
-            if (![errorMessage length]) return;
+        NSDictionary *json = [NSJSONSerialization JSONObjectWithData:data options:NSJSONReadingMutableContainers error:&error];
+        if (!json) return [weakSelf alertWithMessage:@"未知错误"];
+
+        NSString *result = [json objectForKey:@"result"];
+        if ([result isEqualToString:@"success"]) {
+            user.username = username;
+            user.password = password;
+            user.session = [json objectForKey:@"session"];
             
-            [weakSelf alertWithMessage:errorMessage];
+            NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+            [defaults setObject:username forKey:@"currentUser"];
+            [defaults synchronize];
+            
+            [user setNewPassword:password];
+            weakSelf.currentUser = username;
+            [weakSelf.tableView reloadData];
+        } else if ([result isEqualToString:@"fail"]) {
+            [weakSelf alertWithMessage:@"当前密码已失效，请手动登录"];
+            return [self performSegueWithIdentifier:@"segueToLogin" sender:nil];
         }
+
     }];
 }
 

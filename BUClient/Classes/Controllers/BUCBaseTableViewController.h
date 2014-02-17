@@ -21,6 +21,8 @@
 #import "BUCPoster.h"
 #import "BUCTableCell.h"
 #import "NSString+NSString_Extended.h"
+#import "NSObject+BUCTools.h"
+#import "BUCTask.h"
 
 @interface BUCBaseTableViewController : UITableViewController
 
@@ -28,29 +30,28 @@
 @property (weak, nonatomic) BUCContentViewController *contentController;
 @property (weak, nonatomic) BUCIndexViewController *indexController;
 
-@property (weak, nonatomic) BUCUser *user;
-@property (weak, nonatomic) BUCNetworkEngine *engine;
+@property (nonatomic) BUCUser *user;
+@property (nonatomic) BUCNetworkEngine *engine;
 
-@property (nonatomic) NSDictionary *rawDataDic;
-@property (nonatomic) NSString *rawListKey;
-@property (nonatomic) NSArray *rawDataList;
+@property (nonatomic) BUCTask *task;
+@property (nonatomic) NSMutableArray *taskList;
+@property (nonatomic) NSString *jsonListKey;
+
 @property (nonatomic) NSMutableArray *dataList;
 @property (nonatomic) NSMutableArray *cellList;
-@property (nonatomic) NSMutableArray *avatarList;
 
 @property (nonatomic) BOOL loading;
 @property (nonatomic) BOOL refreshing;
-
-@property (nonatomic) NSMutableDictionary *requestDic;
-@property (nonatomic) NSMutableDictionary *jsonDic;
+@property (nonatomic) NSInteger pageCount;
 
 @property (nonatomic) NSString *unwindSegueIdentifier;
 
 - (void)alertWithMessage:(NSString *)message;
 - (IBAction)refresh:(id)sender;
-- (void)loadData:(NSDictionary *)postDic;
-- (void)loadImage:(NSString *)imageUrl atIndex:(NSInteger)index;
+- (void)loadDataOfTask:(BUCTask *)task;
+- (void)loadJSONOfTask:(BUCTask *)task;
 - (void)makeCacheList;
+- (void)startAllTasks;
 - (void)endLoading;
 - (void)cancelLoading;
 - (void)suspendLoading;

@@ -17,7 +17,7 @@
 - (void)displayLoginWithMessage:(NSString *)message;
 - (void)revealIndex;
 - (void)hideIndex;
-- (void)switchContentWith:(NSString *)segueIdendifier;
+- (void)switchContentWith:(NSString *)segueIdendifier completion:(void (^)(void))completeHandler;
 
 - (void)disableIndex;
 - (void)enableIndex;

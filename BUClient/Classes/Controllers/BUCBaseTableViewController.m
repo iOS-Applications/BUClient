@@ -8,6 +8,10 @@
 
 #import "BUCBaseTableViewController.h"
 
+@interface BUCBaseTableViewController ()
+@property (nonatomic) NSString *baseUrl;
+@end
+
 @implementation BUCBaseTableViewController
 @synthesize user, engine;
 
@@ -20,15 +24,12 @@
         user = [BUCUser sharedInstance];
         engine = [BUCNetworkEngine sharedInstance];
         
-        _requestDic = [[NSMutableDictionary alloc] init];
-        [_requestDic setObject:@"POST" forKey:@"method"];
-        _jsonDic = [[NSMutableDictionary alloc] init];
-        [_jsonDic setObject:user.username forKey:@"username"];
-        [_jsonDic setObject:user.session forKey:@"session"];
-        [_requestDic setObject:_jsonDic forKey:@"dataDic"];
-        
-        _dataList = [[NSMutableArray alloc] init];
-        _cellList = [[NSMutableArray alloc] init];
+        _taskList = [[NSMutableArray alloc] init];
+        _task = [[BUCTask alloc] init];
+        _task.index = 0;
+        _task.json = user.json;
+        _task.silence = NO;
+        [_taskList addObject:_task];
     }
     
     return self;
@@ -37,7 +38,9 @@
 - (void)dealloc
 {
     if (self.loading || self.refreshing) [self cancelLoading];
-    [self removeObserver:self forKeyPath:@"rawDataDic" context:NULL];
+    for (BUCTask *task in self.taskList) {
+        [task removeObserver:self forKeyPath:@"jsonData" context:NULL];
+    }
 }
 
 - (void)viewDidLoad
@@ -47,8 +50,6 @@
     self.mainController = (BUCMainViewController *)((BUCAppDelegate *)[UIApplication sharedApplication].delegate).mainViewController;
     self.contentController = self.mainController.contentController;
     self.indexController = self.mainController.indexController;
-    
-    self.avatarList = engine.responseDataArray;
     
     UIRefreshControl *refresh = [[UIRefreshControl alloc] init];
     refresh.attributedTitle = [[NSAttributedString alloc] initWithString:@"Loading..."];
@@ -60,7 +61,8 @@
     self.loading = YES;
     self.tableView.bounces = NO;
     
-    [self addObserver:self forKeyPath:@"rawDataDic" options:NSKeyValueObservingOptionNew context:NULL];
+
+    [self.task addObserver:self forKeyPath:@"jsonData" options:NSKeyValueObservingOptionNew context:NULL];
 }
 
 - (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender
@@ -74,34 +76,44 @@
 
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context
 {
-    if (self.rawDataDic) {
-        self.rawDataList = [self.rawDataDic objectForKey:self.rawListKey];
-        [self makeCacheList];
-        [self endLoading];
-        [self.tableView reloadData];
-    }
+    [self makeCacheList];
+    [self endLoading];
+    [self.tableView reloadData];
 }
 
 #pragma mark - public methods
 - (void)cancelLoading
 {
     [self endLoading];
-    
-    [engine cancelCurrentTask];
+    for (BUCTask *task in self.taskList) {
+        [task.task cancel];
+        for (BUCTask *task in task.taskList) {
+            [task.task cancel];
+        }
+    }
 }
 
 - (void)suspendLoading
 {
     [self.contentController hideLoading];
     [self.refreshControl endRefreshing];
-    [engine suspendCurrentTask];
+    for (BUCTask *task in self.taskList) {
+        [task.task suspend];
+        for (BUCTask *task in task.taskList) {
+            [task.task suspend];
+        }
+    }
 }
 
 - (void)resumeLoading
 {
     [self.contentController displayLoading];
-    
-    [engine resumeCurrentTask];
+    for (BUCTask *task in self.taskList) {
+        [task.task resume];
+        for (BUCTask *task in task.taskList) {
+            [task.task resume];
+        }
+    }
 }
 
 - (void)endLoading
@@ -113,69 +125,102 @@
     self.tableView.bounces = YES;
 }
 
-- (void)loadData:(NSDictionary *)postDic
+- (void)loadJSONOfTask:(BUCTask *)task
 {
+    if (!task.json || !task.url) return; // ad hoc message, do nothing, just return
+    
+    BOOL silence = task.silence;
+    
     if (!engine.hostIsOn) {
-        [self endLoading];
-        [self alertWithMessage:@"无网络连接"];
+        if (!silence) return [self alertWithMessage:@"无网络连接"];
         return;
     }
     
+    NSURLRequest *req = [self requestWithUrl:[NSString stringWithFormat:engine.baseUrl, task.url] json:task.json];
+    if (!req) {
+        if (!silence) return [self alertWithMessage:@"未知错误"];
+        return;
+    }
+    
+    task.done = NO;
     BUCBaseTableViewController * __weak weakSelf = self;
-    [engine processAsyncRequest:postDic completionHandler:^(NSString *message) {
-        if (engine.responseDic) {
-            NSString *result = [engine.responseDic objectForKey:@"result"];
-            if ([result isEqualToString:@"success"]) {
-                weakSelf.rawDataDic = engine.responseDic;
-                return;
-            } else if ([result isEqualToString:@"fail"]) {
-                // current session is expired, must get a new session string
-                [engine processAsyncRequest:user.loginDic completionHandler:^(NSString *message) {
-                    if (engine.responseDic) {
-                        NSString *result = [engine.responseDic objectForKey:@"result"];
-                        if ([result isEqualToString:@"success"]) {
-                            [weakSelf loadData:postDic];
-                        } else if ([result isEqualToString:@"fail"]) {
-                            weakSelf.user.isLoggedIn = NO;
-                            [weakSelf.mainController displayLoginWithMessage:@"当前密码已失效，请重新登录"];
-                            [weakSelf.contentController removeChildController];
-                        }
-                    } else if (message) {
-                        if (![message length]) return;
-                        
-                        [weakSelf alertWithMessage:message];
-                    }
-                }];
-            }
-        } else if (message) {
-            [weakSelf endLoading];
-            if (![message length]) return;
-            
-            [weakSelf alertWithMessage:message];
+    task.task = [engine processRequest:req completionHandler:^(NSData *data, NSError *error) {
+        if (error) {
+            if (!silence) return [weakSelf alertWithMessage:error.localizedDescription];
+            return;
         }
+        
+        NSDictionary *jsonData = [NSJSONSerialization JSONObjectWithData:data options:NSJSONReadingMutableContainers error:&error];
+        if (!jsonData) {
+            if (!silence) return [weakSelf alertWithMessage:@"未知错误"];
+            return;
+        }
+        
+        NSString *result = [jsonData objectForKey:@"result"];
+        if ([result isEqualToString:@"fail"]) {
+            // current session is expired, must get a new session string
+            task.task = [engine processRequest:user.req completionHandler:^(NSData *data, NSError *error) {
+                if (error) {
+                    if (!silence) return [weakSelf alertWithMessage:error.localizedDescription];
+                    return;
+                }
+                
+                NSDictionary *jsonData = [NSJSONSerialization JSONObjectWithData:data options:NSJSONReadingMutableContainers error:&error];
+                if (!jsonData) {
+                    return [weakSelf alertWithMessage:@"未知错误"];
+                    return;
+                }
+                
+                NSString *result = [jsonData objectForKey:@"result"];
+                if ([result isEqualToString:@"fail"]) {
+                    user.isLoggedIn = NO;
+                    [weakSelf.mainController displayLoginWithMessage:@"当前密码已失效，请重新登录"];
+                    return [weakSelf.contentController removeChildController];
+                }
+                
+                user.session = [jsonData objectForKey:@"session"];
+                [task.json setObject:user.session forKey:@"session"];
+                [weakSelf loadJSONOfTask:task];
+            }];
+            return;
+        }
+        task.jsonData = jsonData;
     }];
 }
 
-- (void)loadImage:(NSString *)imageUrl atIndex:(NSInteger)index
+- (void)loadDataOfTask:(BUCTask *)task
 {
-    if (!engine.hostIsOn) {
-        [self endLoading];
-        [self alertWithMessage:@"无网络连接"];
-        return;
-    }
+    if (!engine.hostIsOn) return;
     
-    NSURL *url = [NSURL URLWithString:imageUrl];
-    NSURLRequest *request = [NSURLRequest requestWithURL:url];
-    [engine processAsyncQueueRequest:request index:index];
+    NSMutableURLRequest *req = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:task.url]
+                                                       cachePolicy:NSURLRequestReturnCacheDataElseLoad
+                                                   timeoutInterval:30];
+    
+    task.done = NO;
+    task.task = [engine processRequest:req completionHandler:^(NSData *data, NSError *error) {
+        task.done = YES;
+        if (error || ![data length]) return;
+        
+        task.data = data;
+    }];
 }
 
 - (void)makeCacheList
 {
-    
+
+}
+
+- (void)startAllTasks
+{
+    for (BUCTask *task in self.taskList) {
+        [self loadJSONOfTask:task];
+    }
 }
 
 - (void)alertWithMessage:(NSString *)message
 {
+    [self endLoading];
+    if (![message length]) return;
     UIAlertView *theAlert = [[UIAlertView alloc] initWithTitle:nil
                                                        message:message
                                                       delegate:nil
@@ -188,9 +233,6 @@
 - (IBAction)refresh:(id)sender
 {
     if (self.loading || self.refreshing) return;
-
-    self.dataList = [[NSMutableArray alloc] init];
-    self.cellList = [[NSMutableArray alloc] init];
     
     if (![sender isKindOfClass:[UIRefreshControl class]]) {
         [self.contentController displayLoading];
@@ -200,7 +242,7 @@
         self.refreshing = YES;
     }
     
-    [self loadData:self.requestDic];
+    [self startAllTasks];
 }
 
 - (IBAction)displayMenu:(id)sender

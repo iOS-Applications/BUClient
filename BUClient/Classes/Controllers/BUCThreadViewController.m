@@ -8,7 +8,6 @@
 //
 
 #import "BUCThreadViewController.h"
-#import "BUCAvatar.h"
 
 static NSString *fontKey = @"Helvetica-Light";
 
@@ -32,11 +31,11 @@ static NSString *fontKey = @"Helvetica-Light";
 @property (nonatomic) NSInteger pageCount;
 @property (nonatomic) NSInteger curPickerRow;
 
-@property (nonatomic) NSMutableDictionary *subRequestDic;
-@property (nonatomic) NSMutableDictionary *subJsonDic;
+@property (nonatomic) BUCTask *navTask;
+@property (nonatomic) BUCTask *profileTask;
+@property (nonatomic) BUCTask *avatarTask;
 
 @property (nonatomic) BOOL loadImage;
-@property (nonatomic) UIImage *defaultAvatar;
 @end
 
 @implementation BUCThreadViewController
@@ -46,18 +45,47 @@ static NSString *fontKey = @"Helvetica-Light";
     self = [super initWithCoder:aDecoder];
     
     if (self) {
-        _subJsonDic = [NSMutableDictionary dictionaryWithDictionary:(NSDictionary *)self.jsonDic];
-        _subRequestDic = [NSMutableDictionary dictionaryWithDictionary:(NSDictionary *)self.requestDic];
-        [_subJsonDic setObject:@"post" forKey:@"action"];
-        [_subJsonDic setObject:@"0" forKey:@"from"];
-        [_subJsonDic setObject:@"20" forKey:@"to"];
-        [_subRequestDic setObject:_subJsonDic forKey:@"dataDic"];
-        [_subRequestDic setObject:@"post" forKey:@"url"];
+        _navTask = [[BUCTask alloc] init];
+        _navTask.json = [NSMutableDictionary dictionaryWithDictionary:self.task.json];
+        [_navTask.json setObject:@"" forKey:@"fid"];
+        _navTask.url = @"fid_tid";
+        _navTask.index = 1;
+        _navTask.silence = NO;
+        [self.taskList addObject:_navTask];
+
+        _profileTask = [[BUCTask alloc] init];
+        _profileTask.taskList = [[NSMutableArray alloc] init];
         
-        [self.requestDic setObject:@"fid_tid" forKey:@"url"];
-        [self.jsonDic setObject:@"" forKey:@"fid"];
+        _avatarTask = [[BUCTask alloc] init];
+        _avatarTask.taskList = [[NSMutableArray alloc] init];
         
-        self.rawListKey = @"postlist";
+        _profileTask.json = [NSMutableDictionary dictionaryWithDictionary:self.task.json];
+        NSMutableDictionary *profileJson = [NSMutableDictionary dictionaryWithDictionary:self.task.json];
+        [profileJson setObject:@"profile" forKey:@"action"];
+        static NSString *profileUrl = @"profile";
+        BUCTask *task = nil;
+        for (int i = 0; i < 20; ++i) {
+            task = [[BUCTask alloc] init];
+            task.url = profileUrl;
+            task.json = profileJson;
+            task.index = i;
+            task.silence = YES;
+            [_profileTask.taskList addObject:task];
+            
+            task = [[BUCTask alloc] init];
+            task.index = i;
+            [_avatarTask.taskList addObject:task];
+        }
+        
+        [self.taskList addObject:_profileTask];
+        [self.taskList addObject:_avatarTask];
+        
+        [self.task.json setObject:@"post" forKey:@"action"];
+        [self.task.json setObject:@"0" forKey:@"from"];
+        [self.task.json setObject:@"20" forKey:@"to"];
+        self.task.url = @"post";
+        
+        self.jsonListKey = @"postlist";
         self.unwindSegueIdentifier = @"unwindToThread";
         
         _loadImage = [self.user.loadImage isEqualToString:@"yes"] ? YES : NO;
@@ -68,12 +96,15 @@ static NSString *fontKey = @"Helvetica-Light";
 
 - (void)dealloc
 {
-    if (self.loadImage) {
-        [self.avatarList removeObserver:self
-                   fromObjectsAtIndexes:allindexes
-                             forKeyPath:@"loadEnded"
-                                context:NULL];
-    }
+    [self.profileTask.taskList removeObserver:self
+                         fromObjectsAtIndexes:allindexes
+                                   forKeyPath:@"jsonData"
+                                      context:NULL];
+    
+    [self.avatarTask.taskList removeObserver:self
+                        fromObjectsAtIndexes:allindexes
+                                  forKeyPath:@"data"
+                                     context:NULL];
 }
 
 - (void)viewDidLoad
@@ -94,51 +125,70 @@ static NSString *fontKey = @"Helvetica-Light";
     self.thread = (BUCThread *)self.contentController.info;
     self.forum = self.thread.forum;
     
-    [self.jsonDic setObject:self.thread.tid forKey:@"tid"];
-    [self.subJsonDic setObject:self.thread.tid forKey:@"tid"];
+    [self.task.json setObject:self.thread.tid forKey:@"tid"];
+    [self.navTask.json setObject:self.thread.tid forKey:@"tid"];
 
     self.navigationItem.title = self.thread.title;
 
     self.previous.enabled = NO;
     self.next.enabled = NO;
-    
-    if (self.loadImage) {
-        self.defaultAvatar = [UIImage imageNamed:@"avatar.png"];
-        allindexes = [NSIndexSet indexSetWithIndexesInRange:NSMakeRange(0, 20)];
-        [self.avatarList addObserver:self
-                  toObjectsAtIndexes:allindexes
-                          forKeyPath:@"loadEnded"
-                             options:NSKeyValueObservingOptionNew
-                             context:NULL];
-    }
 
-    [self loadData:self.requestDic];
+    allindexes = [NSIndexSet indexSetWithIndexesInRange:NSMakeRange(0, 20)];
+    [self.navTask addObserver:self forKeyPath:@"jsonData" options:NSKeyValueObservingOptionNew context:NULL];
+    
+    // ad hoc kvo start
+    [self.profileTask addObserver:self forKeyPath:@"jsonData" options:NSKeyValueObservingOptionNew context:NULL];
+    [self.avatarTask addObserver:self forKeyPath:@"jsonData" options:NSKeyValueObservingOptionNew context:NULL];
+    // ad hoc kvo end
+    
+    [self.profileTask.taskList addObserver:self
+                        toObjectsAtIndexes:allindexes
+                                forKeyPath:@"jsonData"
+                                   options:NSKeyValueObservingOptionNew
+                                   context:NULL];
+
+    [self.avatarTask.taskList addObserver:self
+                       toObjectsAtIndexes:allindexes
+                               forKeyPath:@"data"
+                                  options:NSKeyValueObservingOptionNew
+                                  context:NULL];
+
+    [self startAllTasks];
 }
 
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context
 {
-    if ([keyPath isEqualToString:@"rawDataDic"] && self.rawDataDic) {
-        NSInteger postCount = [[self.rawDataDic objectForKey:@"tid_sum"] integerValue];
-        if (postCount) {
+    BUCTask *task = (BUCTask *)object;
+    if ([keyPath isEqualToString:@"jsonData"]) {
+        NSDictionary *jsonData = task.jsonData;
+        
+        // mother fucking temporary credit solution
+        if (task.silence) {
+            BUCTableCell *cell = [self.cellList objectAtIndex:task.index];
+            static NSString *formatKey = @"积分: %@";
+            static NSString *memberinfoKey = @"memberinfo";
+            static NSString *creditKey = @"credit";
+            cell.credit.text = [NSString stringWithFormat:formatKey, [[jsonData objectForKey:memberinfoKey] objectForKey:creditKey]];
+            return;
+        }
+        // mother fucking temporary credit solution end
+        
+        if (task.index == 1) {
+            NSInteger postCount = [[jsonData objectForKey:@"tid_sum"] integerValue];
             self.thread.postCount = postCount;
             self.pageCount = postCount % 20 ? postCount/20 + 1 : postCount/20;
-            [self loadData:self.subRequestDic];
+            task.done = YES;
+            task = self.task;
+            if (task.done) [self updateUI];
         } else {
-            self.rawDataList = [self.rawDataDic objectForKey:self.rawListKey];
             [self makeCacheList];
-            [self updateNavState];
-            [self endLoading];
-            [self.tableView reloadData];
+            task.done = YES;
+            task = self.navTask;
+            if (task.done) [self updateUI];
         }
-    } else if ([keyPath isEqualToString:@"loadEnded"]) {
-        BUCAvatar *avatar = (BUCAvatar *)object;
-        if (!avatar.loadEnded) return;
-        
-        if (!avatar.error) {
-            ((BUCTableCell *)[self.cellList objectAtIndex:avatar.index]).avatar.image = avatar.image;
-        } else {
-            // load default avatar image
-        }
+    } else {
+        BUCTableCell *cell = [self.cellList objectAtIndex:task.index];
+        cell.avatar.image = [UIImage imageWithData:task.data];
     }
 }
 
@@ -156,23 +206,50 @@ static NSString *fontKey = @"Helvetica-Light";
     static NSString *messageKey = @"message";
     static NSString *subjectKey = @"subject";
     static NSString *datelineKey = @"dateline";
+    static NSString *uidKey = @"uid";
+    static NSString *queryusernameKey = @"queryusername";
     
+    BUCTask *task = self.task;
+    NSArray *jsonDataList = [task.jsonData objectForKey:self.jsonListKey];
     BUCPost *post = nil;
     NSInteger index = 0;
-    for (NSMutableDictionary *rawPost in self.rawDataList) {
+    NSMutableArray *dataList = [[NSMutableArray alloc] init];
+    NSMutableArray *cellList = [[NSMutableArray alloc] init];
+    for (NSMutableDictionary *rawPost in jsonDataList) {
         post = [[BUCPost alloc] init];
         post.thread = self.thread;
         post.poster = [[BUCPoster alloc] init];
         post.poster.username = [[rawPost objectForKey:authorKey] urldecode];
+        post.poster.uid = [rawPost objectForKey:uidKey];
+        
+        // mother fucking temporary solution start
+        BUCTask *profileTask = [self.profileTask.taskList objectAtIndex:index];
+        [profileTask.json setObject:post.poster.uid forKey:uidKey];
+        [profileTask.json setObject:post.poster.username forKey:queryusernameKey];
+        [self loadJSONOfTask:profileTask];
+        // mother fucking temporary solution end
+        
         post.poster.avatarUrl = [[rawPost objectForKey:avatarKey] urldecode];
+        BUCTask *avatarTask = [self.avatarTask.taskList objectAtIndex:index];
+        
+        // test code start
+        static NSString *testUrl = @"http://0.0.0.0:8080/static/funny.png";
+        avatarTask.url = testUrl;
+        // test code end
+        
+        if (self.loadImage) [self loadDataOfTask:avatarTask];
+        
         post.message = [[rawPost objectForKey:messageKey] urldecode];
         post.title = [[rawPost objectForKey:subjectKey] urldecode];
         post.dateline = [dateFormatter stringFromDate:[NSDate dateWithTimeIntervalSince1970:[[rawPost objectForKey:datelineKey] integerValue]]];
         post.index = index;
-        [self.dataList addObject:post];
-        [self.cellList addObject:[self createCellForPost:post]];
+        [dataList addObject:post];
+        [cellList addObject:[self createCellForPost:post]];
         index++;
     }
+    
+    self.dataList = dataList;
+    self.cellList = cellList;
 }
 
 - (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender
@@ -232,8 +309,8 @@ static NSString *fontKey = @"Helvetica-Light";
     if (self.loading || self.refreshing) [self cancelLoading];
     
     self.curPickerRow -= 1;
-    [self.jsonDic setObject:[self.jsonDic objectForKey:@"from"] forKey:@"to"];
-    [self.jsonDic setObject:[NSString stringWithFormat:@"%i", 20 * self.curPickerRow] forKey:@"from"];
+    [self.navTask.json setObject:[self.navTask.json objectForKey:@"from"] forKey:@"to"];
+    [self.navTask.json setObject:[NSString stringWithFormat:@"%i", 20 * self.curPickerRow] forKey:@"from"];
     [self.picker selectRow:self.curPickerRow inComponent:0 animated:NO];
     
     [self refresh:nil];
@@ -243,8 +320,8 @@ static NSString *fontKey = @"Helvetica-Light";
     if (self.loading || self.refreshing) [self cancelLoading];
     
     self.curPickerRow += 1;
-    [self.jsonDic setObject:[self.jsonDic objectForKey:@"to"] forKey:@"from"];
-    [self.jsonDic setObject:[NSString stringWithFormat:@"%i", 20 * (self.curPickerRow + 1)] forKey:@"to"];
+    [self.navTask.json setObject:[self.navTask.json objectForKey:@"to"] forKey:@"from"];
+    [self.navTask.json setObject:[NSString stringWithFormat:@"%i", 20 * (self.curPickerRow + 1)] forKey:@"to"];
     [self.picker selectRow:self.curPickerRow inComponent:0 animated:NO];
     
     [self refresh:nil];
@@ -262,8 +339,8 @@ static NSString *fontKey = @"Helvetica-Light";
 
     if (self.loading || self.refreshing) [self cancelLoading];
     
-    [self.jsonDic setObject:[NSString stringWithFormat:@"%i", 20 * self.curPickerRow] forKey:@"from"];
-    [self.jsonDic setObject:[NSString stringWithFormat:@"%i", 20 * (self.curPickerRow + 1)] forKey:@"to"];
+    [self.navTask.json setObject:[NSString stringWithFormat:@"%i", 20 * self.curPickerRow] forKey:@"from"];
+    [self.navTask.json setObject:[NSString stringWithFormat:@"%i", 20 * (self.curPickerRow + 1)] forKey:@"to"];
     
     [self refresh:nil];
 }
@@ -325,6 +402,13 @@ static NSString *fontKey = @"Helvetica-Light";
 }
 
 #pragma mark - private methods
+- (void)updateUI
+{
+    [self endLoading];
+    [self updateNavState];
+    [self.tableView reloadData];
+}
+
 - (NSInteger)getRowOfEvent:(UIEvent *)event
 {
     NSSet *touches = [event allTouches];
@@ -365,7 +449,6 @@ static NSString *fontKey = @"Helvetica-Light";
     static NSString *CellIdentifier = @"threadCell";
     static NSString *quoteKey = @"引用";
     static NSString *indexKey = @"%d楼";
-    static NSString *testurlKey = @"http://0.0.0.0:8080/static/avatar.png"; // just for test
     
     BUCTableCell *cell = [self.tableView dequeueReusableCellWithIdentifier:CellIdentifier];
 
@@ -373,53 +456,51 @@ static NSString *fontKey = @"Helvetica-Light";
     NSDictionary *stringAttribute = @{NSFontAttributeName:[UIFont systemFontOfSize:15]};
     UIButton *leftTopBtn = [self cellButtonWithTitle:post.poster.username];
     CGSize size = [post.poster.username sizeWithAttributes:stringAttribute];
-    leftTopBtn.frame = CGRectMake(5, 5, size.width + 2, 20); // 2 is the width to compensate padding of button element
+    leftTopBtn.frame = CGRectMake(65, 5, size.width + 2, 20); // 2 is the width to compensate padding of button element
     [leftTopBtn addTarget:self action:@selector(jumpToPoster:forEvent:) forControlEvents:UIControlEventTouchUpInside];
     cell.leftTopBtn = leftTopBtn;
     [cell addSubview:leftTopBtn];
     
     // configure post index
     cell.postIndex.text = [NSString stringWithFormat:indexKey, post.index + 1];
-
-    // configure avatar
-    if (self.loadImage) {
-        // test code start
-        post.poster.avatarUrl = testurlKey;
-        // test code end
-        if ([post.poster.avatarUrl length]) {
-            [self loadImage:post.poster.avatarUrl atIndex:post.index];
-        } else {
-            cell.avatar.image = self.defaultAvatar;
-        }
-    }
+    
     // configure message content
     NSString *path = [[NSBundle mainBundle] bundlePath];
     NSURL *baseURL = [NSURL fileURLWithPath:path];
-    UIWebView *content = [[UIWebView alloc] initWithFrame:CGRectMake(80, 25, 240, 200)];
+    UIWebView *content = [[UIWebView alloc] initWithFrame:CGRectMake(0, 60, 320, 0.01)];
     content.scrollView.scrollEnabled = NO;
-    content.paginationMode = UIWebPaginationModeTopToBottom;
+    content.dataDetectorTypes = UIDataDetectorTypeNone;
+    content.delegate = self;
     [content loadHTMLString:post.message baseURL:baseURL];
     cell.content = content;
     [cell addSubview:content];
     
     // configure dateline
-    UILabel *timeStamp = [[UILabel alloc] initWithFrame:CGRectMake(5, 220, 140, 20)];
-    timeStamp.text = post.dateline;
-    timeStamp.font = [UIFont fontWithName:fontKey size:15];
-    cell.timeStamp = timeStamp;
-    [cell addSubview:timeStamp];
+    cell.dateline.text = post.dateline;
+    
+    // configure credit
     
     // configure quote button
-
     UIButton *quoteBtn = [self cellButtonWithTitle:quoteKey];
     quoteBtn.frame = CGRectMake(275, 220, 40, 20);
     quoteBtn.titleLabel.font = [UIFont fontWithName:fontKey size:15];
     cell.rightBottomBtn = quoteBtn;
     [cell addSubview:quoteBtn];
     
-    cell.height = 240;
+    cell.height = 150;
     
     return cell;
 }
 
+- (void)webViewDidFinishLoad:(UIWebView *)webView
+{
+    static NSString *jsString = @"document.body.scrollHeight;";
+    NSInteger height = [[webView stringByEvaluatingJavaScriptFromString:jsString] integerValue];
+    BUCTableCell *cell = (BUCTableCell *)webView.superview.superview;
+    cell.height = 60 + height + 30;
+    cell.content.frame = CGRectMake(0, 60, 320, height);
+    cell.rightBottomBtn.frame = CGRectMake(270, cell.height - 25, 40, 20);
+    webView.delegate = nil;
+    [self.tableView reloadData];
+}
 @end

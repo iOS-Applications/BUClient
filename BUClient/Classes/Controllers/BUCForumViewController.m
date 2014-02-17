@@ -21,12 +21,9 @@
 @property (weak, nonatomic) IBOutlet UIBarButtonItem *next;
 
 @property (nonatomic) BUCForum *forum;
-@property (nonatomic) NSInteger pageCount;
 @property (nonatomic) NSInteger curPickerRow;
 
-@property (nonatomic) NSMutableDictionary *subRequestDic;
-@property (nonatomic) NSMutableDictionary *subJsonDic;
-
+@property (nonatomic) BUCTask *navTask;
 @end
 
 @implementation BUCForumViewController
@@ -37,18 +34,21 @@
     self = [super initWithCoder:aDecoder];
     
     if (self) {
-        _subJsonDic = [NSMutableDictionary dictionaryWithDictionary:(NSDictionary *)self.jsonDic];
-        [_subJsonDic setObject:@"thread" forKey:@"action"];
-        [_subJsonDic setObject:@"0" forKey:@"from"];
-        [_subJsonDic setObject:@"20" forKey:@"to"];
-        _subRequestDic = [NSMutableDictionary dictionaryWithDictionary:(NSDictionary *)self.requestDic];
-        [_subRequestDic setObject:_subJsonDic forKey:@"dataDic"];
-        [_subRequestDic setObject:@"thread" forKey:@"url"];
-
-        [self.requestDic setObject:@"fid_tid" forKey:@"url"];
-        [self.jsonDic setObject:@"" forKey:@"tid"];
+        _navTask = [[BUCTask alloc] init];
+        _navTask.index = 1;
+        _navTask.json = [NSMutableDictionary dictionaryWithDictionary:(NSDictionary *)self.task.json];
+        [_navTask.json setObject:@"" forKey:@"tid"];
+        _navTask.url = @"fid_tid";
+        _navTask.silence = NO;
+        [self.taskList addObject:_navTask];
         
-        self.rawListKey = @"threadlist";
+        [self.task.json setObject:@"thread" forKey:@"action"];
+        [self.task.json setObject:@"0" forKey:@"from"];
+        [self.task.json setObject:@"20" forKey:@"to"];
+        [self.task.json setObject:@"" forKey:@"tid"];
+        self.task.url = @"thread";
+        
+        self.jsonListKey = @"threadlist";
         self.unwindSegueIdentifier = @"unwindToForum";
     }
     
@@ -72,34 +72,36 @@
     
     self.forum = (BUCForum *)self.contentController.info;
     
-    [self.jsonDic setObject:self.forum.fid forKey:@"fid"];
-    [self.subJsonDic setObject:self.forum.fid forKey:@"fid"];
+    [self.task.json setObject:self.forum.fid forKey:@"fid"];
+    [self.navTask.json setObject:self.forum.fid forKey:@"fid"];
     
     self.navigationItem.title = self.forum.fname;
     
     self.previous.enabled = NO;
     self.next.enabled = NO;
     
-    [self loadData:self.requestDic];
+    [self.navTask addObserver:self forKeyPath:@"jsonData" options:NSKeyValueObservingOptionNew context:NULL];
+    [self startAllTasks];
 }
 
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context
 {
-    if (self.rawDataDic) {
-        NSInteger threadCount = [[self.rawDataDic objectForKey:@"fid_sum"] integerValue];
-        if (threadCount) {
-            self.forum.threadCount = threadCount;
-            self.pageCount = threadCount % 20 ? threadCount/20 + 1 : threadCount/20;
-            [self loadData:self.subRequestDic];
-        } else {
-            self.rawDataList = [self.rawDataDic objectForKey:self.rawListKey];
-            [self makeCacheList];
-            
-            [self updateNavState];
-            
-            [self endLoading];
-            [self.tableView reloadData];
-        }
+    BUCTask *task = (BUCTask *)object;
+    BUCTask *subtask = nil;
+    NSDictionary *jsonData = task.jsonData;
+    
+    if (task.index == 1) {
+        NSInteger threadCount = [[jsonData objectForKey:@"fid_sum"] integerValue];
+        self.forum.threadCount = threadCount;
+        self.pageCount = threadCount % 20 ? threadCount/20 + 1 : threadCount/20;
+        task.done = YES;
+        subtask = [self.taskList objectAtIndex:1];
+        if (subtask.done) [self updateUI];
+    } else {
+        [self makeCacheList];
+        task.done = YES;
+        subtask = [self.taskList objectAtIndex:0];
+        if (subtask.done) [self updateUI];
     }
 }
 
@@ -119,8 +121,12 @@
     static NSString *repliesKey = @"replies";
     static NSString *datelineKey = @"dateline";
     
+    BUCTask *task = self.task;
+    NSArray *jsonDataList = [task.jsonData objectForKey:self.jsonListKey];
     BUCThread *thread = nil;
-    for (NSDictionary *rawThread in self.rawDataList) {
+    NSMutableArray *dataList = [[NSMutableArray alloc] init];
+    NSMutableArray *cellList = [[NSMutableArray alloc] init];
+    for (NSDictionary *rawThread in jsonDataList) {
         thread = [[BUCThread alloc] init];
         thread.forum = self.forum;
         thread.poster = [[BUCPoster alloc] init];
@@ -130,9 +136,11 @@
         thread.replyCount = [rawThread objectForKey:repliesKey];
         thread.dateline = [dateFormatter stringFromDate:[NSDate dateWithTimeIntervalSince1970:[[rawThread objectForKey:datelineKey] integerValue]]];
         
-        [self.dataList addObject:thread];
-        [self.cellList addObject:[self createCellWithThread:thread]];
+        [dataList addObject:thread];
+        [cellList addObject:[self createCellWithThread:thread]];
     }
+    self.dataList = dataList;
+    self.cellList = cellList;
 }
 
 #pragma mark - action and unwind methods
@@ -147,6 +155,7 @@
     self.contentController.info = [self.dataList objectAtIndex:[self getRowOfEvent:event]];
     [self.contentController performSegueWithIdentifier:@"segueToThread" sender:nil];
 }
+
 - (IBAction)showActionSheet:(id)sender {
     if (self.loading || self.refreshing) [self suspendLoading];
     
@@ -188,8 +197,8 @@
     if (self.loading || self.refreshing) [self cancelLoading];
     
     self.curPickerRow -= 1;
-    [self.jsonDic setObject:[self.jsonDic objectForKey:@"from"] forKey:@"to"];
-    [self.jsonDic setObject:[NSString stringWithFormat:@"%i", 20 * self.curPickerRow] forKey:@"from"];
+    [self.navTask.json setObject:[self.navTask.json objectForKey:@"from"] forKey:@"to"];
+    [self.navTask.json setObject:[NSString stringWithFormat:@"%i", 20 * self.curPickerRow] forKey:@"from"];
     [self.picker selectRow:self.curPickerRow inComponent:0 animated:NO];
     
     [self refresh:nil];
@@ -199,8 +208,8 @@
     if (self.loading || self.refreshing) [self cancelLoading];
     
     self.curPickerRow += 1;
-    [self.jsonDic setObject:[self.jsonDic objectForKey:@"to"] forKey:@"from"];
-    [self.jsonDic setObject:[NSString stringWithFormat:@"%i", 20 * (self.curPickerRow + 1)] forKey:@"to"];
+    [self.navTask.json setObject:[self.navTask.json objectForKey:@"to"] forKey:@"from"];
+    [self.navTask.json setObject:[NSString stringWithFormat:@"%i", 20 * (self.curPickerRow + 1)] forKey:@"to"];
     [self.picker selectRow:self.curPickerRow inComponent:0 animated:NO];
     
     [self refresh:nil];
@@ -218,8 +227,8 @@
     
     if (self.loading || self.refreshing) [self cancelLoading];
     
-    [self.jsonDic setObject:[NSString stringWithFormat:@"%i", 20 * self.curPickerRow] forKey:@"from"];
-    [self.jsonDic setObject:[NSString stringWithFormat:@"%i", 20 * (self.curPickerRow + 1)] forKey:@"to"];
+    [self.navTask.json setObject:[NSString stringWithFormat:@"%i", 20 * self.curPickerRow] forKey:@"from"];
+    [self.navTask.json setObject:[NSString stringWithFormat:@"%i", 20 * (self.curPickerRow + 1)] forKey:@"to"];
     
     [self refresh:nil];
 }
@@ -289,6 +298,13 @@
 }
 
 #pragma mark - private methods
+- (void)updateUI
+{
+    [self endLoading];
+    [self updateNavState];
+    [self.tableView reloadData];
+}
+
 - (UIButton *)cellButtonWithTitle:(NSString *)title
 {
     UIButton *button = [UIButton buttonWithType:UIButtonTypeSystem];

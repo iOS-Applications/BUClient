@@ -68,7 +68,10 @@
     }
     
     NSString *segueIdentifier = [self.list objectAtIndex:indexPath.row];
-    [mainController switchContentWith:segueIdentifier];
+    self.tableView.userInteractionEnabled = NO;
+    [mainController switchContentWith:segueIdentifier completion:^{
+        self.tableView.userInteractionEnabled = YES;
+    }];
 }
 
 @end

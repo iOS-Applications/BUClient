@@ -23,10 +23,10 @@ static NSString *painInMyAss = @"站庆专版";
     self = [super initWithCoder:aDecoder];
     
     if (self) {
-        [self.requestDic setObject:@"forum" forKey:@"url"];
-        [self.jsonDic setObject:@"forum" forKey:@"action"];
-        self.rawListKey = @"forumslist";
+        [self.task.json setObject:@"forum" forKey:@"action"];
+        self.jsonListKey = @"forumslist";
         self.unwindSegueIdentifier = @"unwindToForumList";
+        self.task.url = @"forum";
     }
     
     return self;
@@ -36,79 +36,83 @@ static NSString *painInMyAss = @"站庆专版";
 {
     [super viewDidLoad];
     
-    [self loadData:self.requestDic];
+    [self startAllTasks];
 }
 
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context
 {
-    if (self.rawDataDic) {
-        // temporary mother fucking forum list solution
-        NSMutableArray *tempDataList = [[NSMutableArray alloc]
-                                        initWithObjects:[NSNull null],[NSNull null], [NSNull null], [NSNull null], [NSNull null], nil];
-        NSMutableArray *tempCellList = [NSMutableArray arrayWithArray:tempDataList];
+    // temporary mother fucking forum list solution
+    NSMutableArray *tempDataList = [[NSMutableArray alloc]
+                                    initWithObjects:[NSNull null],[NSNull null], [NSNull null], [NSNull null], [NSNull null], nil];
+    NSMutableArray *tempCellList = [NSMutableArray arrayWithArray:tempDataList];
+    
+    NSDictionary *indexDic = @{ @"2": @0, @"129": @1, @"166": @2, @"16": @3, @"13": @4 };
+    NSInteger index;
+    
+    BUCTask *task = [self.taskList objectAtIndex:0];
+    NSDictionary *rawSection = nil;
+    NSDictionary *rawDic = [task.jsonData objectForKey:self.jsonListKey];
+    
+    for (NSString *key in rawDic) {
+        rawSection = [rawDic objectForKey:key];
+        if (![key length] || ([rawSection count] == 1)) continue;
         
-        NSDictionary *indexDic = @{ @"2": @0, @"129": @1, @"166": @2, @"16": @3, @"13": @4 };
-        NSInteger index;
+        BUCSection *section = [[BUCSection alloc] init];
+        NSMutableArray *cellSection = [[NSMutableArray alloc] init];
         
-        NSDictionary *rawSection = nil;
-        NSDictionary *rawDic = [self.rawDataDic objectForKey:self.rawListKey];
+        section.forumList = [[NSMutableArray alloc] init];
+        section.sname = [[[rawSection objectForKey:mainKey] objectForKey:nameKey] urldecode];
+        BUCForum *forum = nil;
+        NSString *fname = nil;
         
-        for (NSString *key in rawDic) {
-            rawSection = [rawDic objectForKey:key];
-            if (![key length] || ([rawSection count] == 1)) continue;
+        for (NSString *key in rawSection) {
+            if ([key isEqualToString:mainKey]) continue;
             
-            BUCSection *section = [[BUCSection alloc] init];
-            NSMutableArray *cellSection = [[NSMutableArray alloc] init];
-            
-            section.forumList = [[NSMutableArray alloc] init];
-            section.sname = [[[rawSection objectForKey:mainKey] objectForKey:nameKey] urldecode];
-            BUCForum *forum = nil;
-            NSString *fname = nil;
-            
-            for (NSString *key in rawSection) {
-                if ([key isEqualToString:mainKey]) continue;
-                
-                NSDictionary *rawForumDic = [rawSection objectForKey:key];
-                for (NSDictionary *rawForum in [rawForumDic objectForKey:mainKey]) {
-                    forum = [[BUCForum alloc] init];
-                    forum.fid = [rawForum objectForKey:fidKey];
-                    forum.fname = [[rawForum objectForKey:nameKey] urldecode];
-                    forum.type = mainKey;
-                    [cellSection addObject:[self createCellForForum:forum]];
-                    [section.forumList addObject:forum];
-                }
-                
-                for (NSDictionary *rawForum in [rawForumDic objectForKey:subKey]) {
-                    forum = [[BUCForum alloc] init];
-                    forum.fid = [rawForum objectForKey:fidKey];
-                    fname = [[rawForum objectForKey:nameKey] urldecode];
-                    forum.fname = [fname rangeOfString:painInMyAss].length ? painInMyAss : fname;
-                    forum.type = subKey;
-                    [cellSection addObject:[self createCellForForum:forum]];
-                    [section.forumList addObject:forum];
-                }
+            NSDictionary *rawForumDic = [rawSection objectForKey:key];
+            for (NSDictionary *rawForum in [rawForumDic objectForKey:mainKey]) {
+                forum = [[BUCForum alloc] init];
+                forum.fid = [rawForum objectForKey:fidKey];
+                forum.fname = [[rawForum objectForKey:nameKey] urldecode];
+                forum.type = mainKey;
+                [cellSection addObject:[self createCellForForum:forum]];
+                [section.forumList addObject:forum];
             }
             
-            index = [[indexDic objectForKey:key] integerValue];
-            [tempDataList setObject:section atIndexedSubscript:index];
-            [tempCellList setObject:cellSection atIndexedSubscript:index];
+            for (NSDictionary *rawForum in [rawForumDic objectForKey:subKey]) {
+                forum = [[BUCForum alloc] init];
+                forum.fid = [rawForum objectForKey:fidKey];
+                fname = [[rawForum objectForKey:nameKey] urldecode];
+                forum.fname = [fname rangeOfString:painInMyAss].length ? painInMyAss : fname;
+                forum.type = subKey;
+                [cellSection addObject:[self createCellForForum:forum]];
+                [section.forumList addObject:forum];
+            }
         }
         
-        [tempCellList enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
-            if (obj == [NSNull null]) return;
-            
-            [self.cellList addObject:obj];
-        }];
-        
-        [tempDataList enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
-            if (obj == [NSNull null]) return;
-            
-            [self.dataList addObject:obj];
-        }];
-        
-        [self endLoading];
-        [self.tableView reloadData];
+        index = [[indexDic objectForKey:key] integerValue];
+        [tempDataList setObject:section atIndexedSubscript:index];
+        [tempCellList setObject:cellSection atIndexedSubscript:index];
     }
+    
+    NSMutableArray *cellList = [[NSMutableArray alloc] init];
+    [tempCellList enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
+        if (obj == [NSNull null]) return;
+        
+        [cellList addObject:obj];
+    }];
+    self.cellList = cellList;
+    
+    NSMutableArray *dataList = [[NSMutableArray alloc] init];
+    [tempDataList enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
+        if (obj == [NSNull null]) return;
+        
+        [dataList addObject:obj];
+    }];
+    self.dataList = dataList;
+    
+    task.done = YES;
+    [self endLoading];
+    [self.tableView reloadData];
 }
 
 #pragma mark - unwind method

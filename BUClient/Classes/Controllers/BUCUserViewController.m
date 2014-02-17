@@ -20,6 +20,8 @@
 
 @property (nonatomic) BUCPoster *member;
 
+@property (nonatomic) BUCTask *avatarTask;
+
 @property (nonatomic) BOOL loadImage;
 
 @end
@@ -31,28 +33,22 @@
     self = [super initWithCoder:aDecoder];
     
     if (self) {
-        [self.requestDic setObject:@"profile" forKey:@"url"];
-        [self.jsonDic setObject:@"profile" forKey:@"action"];
-        [self.jsonDic setObject:@"" forKey:@"uid"];
+        self.task.json = self.user.json;
+        [self.task.json setObject:@"profile" forKey:@"action"];
+        [self.task.json setObject:@"" forKey:@"uid"];
+        self.task.url = @"profile";
         _loadImage = [self.user.loadImage isEqualToString:@"yes"] ? YES : NO;
     }
     
     return self;
 }
 
-- (void)viewWillAppear:(BOOL)animated
-{
-    if (!self.loadImage) {
-        self.avatar.hidden = YES;
-    }
-}
-
 - (void)dealloc
 {
-    [self.avatarList removeObserver:self
-                      fromObjectsAtIndexes:[NSIndexSet indexSetWithIndex:0]
-                                forKeyPath:@"loadEnded"
-                                   context:NULL];
+    if (self.loadImage) {
+        if (!self.avatarTask.done) [self.avatarTask.task cancel];
+        [self.avatarTask removeObserver:self forKeyPath:@"data" context:NULL];
+    }
 }
 
 - (void)viewDidLoad
@@ -60,69 +56,56 @@
     [super viewDidLoad];
     
     self.member = (BUCPoster *)self.contentController.info;
-    [self.jsonDic setObject:self.member.username forKey:@"queryusername"];
+    [self.task.json setObject:self.member.username forKey:@"queryusername"];
     self.navigationItem.title = self.member.username;
     
-    self.avatarList = self.engine.responseDataArray;
-    [self.avatarList addObserver:self
-                     toObjectsAtIndexes:[NSIndexSet indexSetWithIndex:0]
-                             forKeyPath:@"loadEnded"
-                                options:NSKeyValueObservingOptionNew
-                                context:NULL];
+    if (self.loadImage) {
+        self.avatarTask = [[BUCTask alloc] init];
+        self.avatarTask.done = YES;
+        [self.avatarTask addObserver:self forKeyPath:@"data" options:NSKeyValueObservingOptionNew context:NULL];
+    }
     
-    [self loadData:self.requestDic];
-    
-//    NSString *path = [[NSBundle mainBundle] bundlePath];
-//    NSURL *baseURL = [NSURL fileURLWithPath:path];
+    [self startAllTasks];
 }
 
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context
 {
-    if ([keyPath isEqualToString:@"rawDataDic"]) {
-        if (self.rawDataDic) {
-            NSDictionary *userDic = [self.rawDataDic objectForKey:@"memberinfo"];
-            self.username.text = [[userDic objectForKey:@"username"] urldecode];
-            self.credit.text = [userDic objectForKey:@"credit"];
-            self.threadCount.text = [userDic objectForKey:@"threadnum"];
-            self.postCount.text = [userDic objectForKey:@"postnum"];
-            NSString *timestamp = [userDic objectForKey:@"lastvisit"];
-            NSDate *date = [NSDate dateWithTimeIntervalSince1970:(NSTimeInterval)[timestamp integerValue]];
-            static NSDateFormatter *dateFormatter = nil;
-            if (!dateFormatter) {
-                dateFormatter = [[NSDateFormatter alloc] init];
-                [dateFormatter setDateFormat:@"yyyy-MM-dd HH:mm"];
-                NSLocale *locale = [[NSLocale alloc] initWithLocaleIdentifier:@"en_US"];
-                [dateFormatter setLocale:locale];
-            }
-            self.lastLoginDate.text = [dateFormatter stringFromDate:date];
-            
-            timestamp = [userDic objectForKey:@"regdate"];
-            date = [NSDate dateWithTimeIntervalSince1970:(NSTimeInterval)[timestamp integerValue]];
-            self.registerDate.text = [dateFormatter stringFromDate:date];
-            
-            if (self.loadImage) {
-                NSString *avatarUrl = [[userDic objectForKey:@"avatar"] urldecode];
-                
-                // test code start
-                avatarUrl = @"http://0.0.0.0:8080/static/avatar.png";
-                // test code end
-                
-                [self loadImage:avatarUrl atIndex:0];
-            }
-            
-            [self endLoading];
+    BUCTask *task = (BUCTask *)object;
+    
+    if ([keyPath isEqualToString:@"jsonData"]) {
+        NSDictionary *userDic = [task.jsonData objectForKey:@"memberinfo"];
+        self.username.text = [[userDic objectForKey:@"username"] urldecode];
+        self.credit.text = [userDic objectForKey:@"credit"];
+        self.threadCount.text = [userDic objectForKey:@"threadnum"];
+        self.postCount.text = [userDic objectForKey:@"postnum"];
+        NSString *timestamp = [userDic objectForKey:@"lastvisit"];
+        NSDate *date = [NSDate dateWithTimeIntervalSince1970:(NSTimeInterval)[timestamp integerValue]];
+        static NSDateFormatter *dateFormatter = nil;
+        if (!dateFormatter) {
+            dateFormatter = [[NSDateFormatter alloc] init];
+            [dateFormatter setDateFormat:@"yyyy-MM-dd HH:mm"];
+            NSLocale *locale = [[NSLocale alloc] initWithLocaleIdentifier:@"en_US"];
+            [dateFormatter setLocale:locale];
         }
+        self.lastLoginDate.text = [dateFormatter stringFromDate:date];
+        
+        timestamp = [userDic objectForKey:@"regdate"];
+        date = [NSDate dateWithTimeIntervalSince1970:(NSTimeInterval)[timestamp integerValue]];
+        self.registerDate.text = [dateFormatter stringFromDate:date];
+        
+        if (self.loadImage) {
+            self.avatarTask.url = [[userDic objectForKey:@"avatar"] urldecode];
+            
+            // test code start
+            self.avatarTask.url = @"http://0.0.0.0:8080/static/funny.png";
+            // test code end
+            
+            [self loadDataOfTask:self.avatarTask];
+        }
+        
+        [self endLoading];
     } else {
-        BUCAvatar *avatar = [self.avatarList objectAtIndex:0];
-        if (!avatar.loadEnded) return;
-        
-        NSError *error = avatar.error;
-        
-        if (!error) {
-            self.avatar.image = avatar.image;
-        } else {
-            // handle error
-        }
+        self.avatar.image = [UIImage imageWithData:task.data];
     }
 }
 @end

@@ -9,6 +9,7 @@
 #import "BUCLoginViewController.h"
 #import "BUCUser.h"
 #import "BUCNetworkEngine.h"
+#import "NSObject+BUCTools.h"
 
 @interface BUCLoginViewController ()
 @property (weak, nonatomic) IBOutlet UITextField *username;
@@ -21,6 +22,13 @@
 @property (weak, nonatomic) BUCEventInterceptWindow *window;
 
 @property (weak, nonatomic) UITextField *curTextField;
+
+@property (nonatomic) BUCNetworkEngine *engine;
+@property (nonatomic) BUCUser *user;
+@property (nonatomic) NSMutableDictionary *json;
+@property (nonatomic) NSURLSessionDataTask *curTask;
+
+@property (nonatomic) NSString *url;
 @end
 
 @implementation BUCLoginViewController
@@ -36,6 +44,12 @@
     
     self.window = (BUCEventInterceptWindow *)[UIApplication sharedApplication].keyWindow;
     self.window.eventInterceptDelegate = self;
+    
+    self.engine = [BUCNetworkEngine sharedInstance];
+    self.user = [BUCUser sharedInstance];
+    self.json = self.user.json;
+    
+    self.url = [NSString stringWithFormat:self.engine.baseUrl, @"logging"];
 }
 
 - (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender
@@ -47,95 +61,50 @@
 - (IBAction)login:(id)sender {
     [self.curTextField resignFirstResponder];
     
-    NSString *alertMessage;
-    BOOL ready = YES;
-    
-    BUCNetworkEngine *engine = [BUCNetworkEngine sharedInstance];
-    if (!engine.hostIsOn) {
-        alertMessage = @"无网络连接";
-        ready = NO;
-    }
-    
     NSString *username = self.username.text;
     NSString *password = self.password.text;
-    if ([username length] == 0 || [password length] == 0) {
-        alertMessage = @"请输入用户名与密码";
-        ready = NO;
-    }
+    if (![self validateUsername:username password:password]) return;
     
-    if (!ready) {
-        [self alertWithMessage:alertMessage];
-        return;
-    }
-    
-    BUCUser *user = [BUCUser sharedInstance];
-    NSMutableDictionary *loginDataDic = user.loginJsonDic;
-    [loginDataDic setObject:username forKey:@"username"];
-    [loginDataDic setObject:password forKey:@"password"];
-    
-    NSMutableDictionary *loginDic = user.loginDic;
-    
-    [self.activityView startAnimating];
-    self.loadingView.hidden = NO;
-    self.loginButton.enabled = NO;
-    
+    BUCUser *user = self.user;
+    BUCNetworkEngine *engine = self.engine;
     BUCLoginViewController * __weak weakSelf = self;
     
-    [engine processAsyncRequest:loginDic completionHandler:^(NSString *errorMessage) {
-        weakSelf.loadingView.hidden = YES;
-        [weakSelf.activityView stopAnimating];
-        weakSelf.loginButton.enabled = YES;
+    NSMutableDictionary *json = self.json;
+    [json setObject:@"login" forKey:@"action"];
+    [json setObject:username forKey:@"username"];
+    [json setObject:password forKey:@"password"];
+    
+    NSURLRequest *req = [self requestWithUrl:self.url json:json];
+    if (!req) return [self alertWithMessage:@"未知错误"];
+    
+    [self displaLoading];
+    self.curTask = [engine processRequest:req completionHandler:^(NSData *data, NSError *error) {
+        [weakSelf hideLoading];
+        if (error) return [weakSelf alertWithMessage:error.localizedDescription];
         
-        if (engine.responseDic) {
-            NSString *result = [engine.responseDic objectForKey:@"result"];
-            if ([result isEqualToString:@"success"]) {
-                user.username = username;
-                user.password = password;
-                user.session = [engine.responseDic objectForKey:@"session"];
-                
-                NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-                [defaults setObject:username forKey:@"currentUser"];
-                NSMutableArray *userList = [defaults objectForKey:@"userList"];
-                if (!userList) {
-                    userList = [[NSMutableArray alloc] init];
-                    [userList addObject:username];
-                } else if (![userList containsObject:username]) {
-                    userList = [NSMutableArray arrayWithArray:userList];
-                    [userList addObject:username];
-                }
-                [defaults setObject:userList forKey:@"userList"];
-                
-                NSString *loadImage = [defaults objectForKey:@"loadImage"];
-                if ([loadImage length]) {
-                    user.loadImage = loadImage;
-                } else {
-                    user.loadImage = @"no";
-                    [defaults setObject:@"no" forKey:@"loadImage"];
-                }
-                
-                [defaults synchronize];
-                
-                
-                [user setNewPassword:password];
-                
-                if (user.isLoggedIn) { // if user is already logged in with a valid account, then unwind to the user list
-                    [self performSegueWithIdentifier:@"unwindToUserList" sender:nil];
-                    return;
-                }
-                
-                user.isLoggedIn = YES; // if user has not logged in before, set isLoggedIn to YES and bring up the front page 
-                
-                weakSelf.modalTransitionStyle = UIModalTransitionStyleCrossDissolve;
-                [weakSelf performSegueWithIdentifier:@"unwindToContent" sender:nil];
-            } else if ([result isEqualToString:@"fail"]) {
-                errorMessage = @"用户名与密码不匹配或积分为负无法登录，请联系联盟管理员，或重新尝试";
-                [weakSelf alertWithMessage:errorMessage];
-                return;
-            }
-        } else if (errorMessage) {
-            if (![errorMessage length]) return;
+        NSDictionary *json = [NSJSONSerialization JSONObjectWithData:data options:NSJSONReadingMutableContainers error:&error];
+        if (!json) return [weakSelf alertWithMessage:@"未知错误"];
+        
+        NSString *result = [json objectForKey:@"result"];
+        if ([result isEqualToString:@"success"]) {
+            user.username = username;
+            user.password = password;
+            user.session = [json objectForKey:@"session"];
+            [user.json setObject:username forKey:@"username"];
+            [user.json setObject:user.session forKey:@"session"];
+            user.req = req;
+            [user setNewPassword:password];
+            [weakSelf saveUserDefault:username];
             
-            [weakSelf alertWithMessage:errorMessage];
+            if (user.isLoggedIn) return [weakSelf performSegueWithIdentifier:@"unwindToUserList" sender:nil];
+            // if user is already logged in with a valid account, then unwind to the user list
+            
+            // if user has not logged in before, set isLoggedIn to YES and bring up the front page
+            user.isLoggedIn = YES;
+            weakSelf.modalTransitionStyle = UIModalTransitionStyleCrossDissolve;
+            [weakSelf performSegueWithIdentifier:@"unwindToContent" sender:nil];
+        } else {
+            [weakSelf alertWithMessage:@"用户名与密码不匹配或积分为负无法登录，请联系联盟管理员，或重新尝试"];
         }
     }];
 }
@@ -175,6 +144,8 @@
 #pragma mark - private methods
 - (void)alertWithMessage:(NSString *)message
 {
+    if (![message length]) return;
+
     UIAlertView *theAlert = [[UIAlertView alloc] initWithTitle:nil
                                                        message:message
                                                       delegate:self
@@ -185,8 +156,60 @@
 
 - (void)cancelLogin
 {
-    BUCNetworkEngine *engine = [BUCNetworkEngine sharedInstance];
-    [engine cancelCurrentTask];
+    [self.curTask cancel];
 }
 
+- (void)displaLoading
+{
+    [self.activityView startAnimating];
+    self.loadingView.hidden = NO;
+    self.loginButton.enabled = NO;
+}
+
+- (void)hideLoading
+{
+    self.loadingView.hidden = YES;
+    [self.activityView stopAnimating];
+    self.loginButton.enabled = YES;
+}
+
+- (BOOL)validateUsername:(NSString *)username password:(NSString *)password
+{
+    BUCNetworkEngine *engine = self.engine;
+    if (!engine.hostIsOn) {
+        [self alertWithMessage:@"无网络连接"];
+        return NO;
+    }
+    
+    if ([username length] == 0 || [password length] == 0) {
+        [self alertWithMessage:@"请输入用户名与密码"];
+        return NO;
+    }
+    
+    return YES;
+}
+
+- (void)saveUserDefault:(NSString *)username
+{
+    BUCUser *user = self.user;
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    [defaults setObject:username forKey:@"currentUser"];
+    NSMutableDictionary *userDic = [defaults objectForKey:@"userDic"];
+    if (![userDic objectForKey:username]) {
+        userDic = [NSMutableDictionary dictionaryWithDictionary:userDic];
+        [userDic setObject:@{@"signature": @""} forKey:username];
+        [defaults setObject:userDic forKey:@"userDic"];
+    }
+    
+    NSString *loadImage = [defaults objectForKey:@"loadImage"];
+    if ([loadImage length]) {
+        user.loadImage = loadImage;
+    } else {
+        user.loadImage = @"no";
+        [defaults setObject:@"no" forKey:@"loadImage"];
+    }
+    
+    [defaults synchronize];
+
+}
 @end

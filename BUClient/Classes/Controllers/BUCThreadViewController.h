@@ -8,6 +8,6 @@
 
 #import "BUCBaseTableViewController.h"
 
-@interface BUCThreadViewController : BUCBaseTableViewController <UIActionSheetDelegate, UITextFieldDelegate, UIPickerViewDataSource, UIPickerViewDelegate>
+@interface BUCThreadViewController : BUCBaseTableViewController <UIActionSheetDelegate, UITextFieldDelegate, UIPickerViewDataSource, UIPickerViewDelegate, UIWebViewDelegate>
 
 @end
