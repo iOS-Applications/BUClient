@@ -8,6 +8,7 @@
 //
 
 #import "BUCThreadViewController.h"
+#import "BUCHTMLParser.h"
 
 static NSString *fontKey = @"Helvetica-Light";
 
@@ -36,6 +37,8 @@ static NSString *fontKey = @"Helvetica-Light";
 @property (nonatomic) BUCTask *avatarTask;
 
 @property (nonatomic) BOOL loadImage;
+
+@property (nonatomic) BUCHTMLParser *parser;
 @end
 
 @implementation BUCThreadViewController
@@ -74,6 +77,7 @@ static NSString *fontKey = @"Helvetica-Light";
             
             task = [[BUCTask alloc] init];
             task.index = i;
+            task.silence = YES;
             [_avatarTask.taskList addObject:task];
         }
         
@@ -89,6 +93,8 @@ static NSString *fontKey = @"Helvetica-Light";
         self.unwindSegueIdentifier = @"unwindToThread";
         
         _loadImage = [self.user.loadImage isEqualToString:@"yes"] ? YES : NO;
+        
+        _parser = [BUCHTMLParser sharedInstance];
     }
     
     return self;
@@ -105,6 +111,10 @@ static NSString *fontKey = @"Helvetica-Light";
                         fromObjectsAtIndexes:allindexes
                                   forKeyPath:@"data"
                                      context:NULL];
+    
+    for (BUCTableCell *cell in self.cellList) {
+        cell.content.delegate = nil;
+    }
 }
 
 - (void)viewDidLoad
@@ -164,6 +174,8 @@ static NSString *fontKey = @"Helvetica-Light";
         
         // mother fucking temporary credit solution
         if (task.silence) {
+            if (task.index >= [self.cellList count]) return;
+            
             BUCTableCell *cell = [self.cellList objectAtIndex:task.index];
             static NSString *formatKey = @"积分: %@";
             static NSString *memberinfoKey = @"memberinfo";
@@ -174,7 +186,7 @@ static NSString *fontKey = @"Helvetica-Light";
         // mother fucking temporary credit solution end
         
         if (task.index == 1) {
-            NSInteger postCount = [[jsonData objectForKey:@"tid_sum"] integerValue];
+            NSInteger postCount = [[jsonData objectForKey:@"tid_sum"] integerValue] + 1;
             self.thread.postCount = postCount;
             self.pageCount = postCount % 20 ? postCount/20 + 1 : postCount/20;
             task.done = YES;
@@ -231,15 +243,10 @@ static NSString *fontKey = @"Helvetica-Light";
         
         post.poster.avatarUrl = [[rawPost objectForKey:avatarKey] urldecode];
         BUCTask *avatarTask = [self.avatarTask.taskList objectAtIndex:index];
-        
-        // test code start
-        static NSString *testUrl = @"http://0.0.0.0:8080/static/funny.png";
-        avatarTask.url = testUrl;
-        // test code end
-        
+        avatarTask.url = post.poster.avatarUrl;
         if (self.loadImage) [self loadDataOfTask:avatarTask];
         
-        post.message = [[rawPost objectForKey:messageKey] urldecode];
+        post.message = [self.parser parse:[[rawPost objectForKey:messageKey] urldecode]];
         post.title = [[rawPost objectForKey:subjectKey] urldecode];
         post.dateline = [dateFormatter stringFromDate:[NSDate dateWithTimeIntervalSince1970:[[rawPost objectForKey:datelineKey] integerValue]]];
         post.index = index;
@@ -306,23 +313,33 @@ static NSString *fontKey = @"Helvetica-Light";
 }
 
 - (IBAction)previous:(id)sender {
-    if (self.loading || self.refreshing) [self cancelLoading];
+    if (self.loading || self.refreshing) {
+        [self cancelLoading];
+        [self updateNavState];
+    }
     
-    self.curPickerRow -= 1;
-    [self.navTask.json setObject:[self.navTask.json objectForKey:@"from"] forKey:@"to"];
-    [self.navTask.json setObject:[NSString stringWithFormat:@"%i", 20 * self.curPickerRow] forKey:@"from"];
+    if (self.curPickerRow > 0) self.curPickerRow -= 1;
+    
+    [self updateNavState];
+    [self.task.json setObject:[self.task.json objectForKey:@"from"] forKey:@"to"];
+    [self.task.json setObject:[NSString stringWithFormat:@"%li", 20 * self.curPickerRow] forKey:@"from"];
     [self.picker selectRow:self.curPickerRow inComponent:0 animated:NO];
     
     [self refresh:nil];
 }
 
 - (IBAction)next:(id)sender {
-    if (self.loading || self.refreshing) [self cancelLoading];
+    if (self.loading || self.refreshing) {
+        [self cancelLoading];
+        [self updateNavState];
+    }
     
-    self.curPickerRow += 1;
-    [self.navTask.json setObject:[self.navTask.json objectForKey:@"to"] forKey:@"from"];
-    [self.navTask.json setObject:[NSString stringWithFormat:@"%i", 20 * (self.curPickerRow + 1)] forKey:@"to"];
-    [self.picker selectRow:self.curPickerRow inComponent:0 animated:NO];
+    if (self.curPickerRow < self.pageCount - 1) {
+        self.curPickerRow += 1;
+        [self.task.json setObject:[self.task.json objectForKey:@"to"] forKey:@"from"];
+        [self.task.json setObject:[NSString stringWithFormat:@"%li", 20 * (self.curPickerRow + 1)] forKey:@"to"];
+        [self.picker selectRow:self.curPickerRow inComponent:0 animated:NO];
+    }
     
     [self refresh:nil];
 }
@@ -339,8 +356,8 @@ static NSString *fontKey = @"Helvetica-Light";
 
     if (self.loading || self.refreshing) [self cancelLoading];
     
-    [self.navTask.json setObject:[NSString stringWithFormat:@"%i", 20 * self.curPickerRow] forKey:@"from"];
-    [self.navTask.json setObject:[NSString stringWithFormat:@"%i", 20 * (self.curPickerRow + 1)] forKey:@"to"];
+    [self.task.json setObject:[NSString stringWithFormat:@"%li", 20 * self.curPickerRow] forKey:@"from"];
+    [self.task.json setObject:[NSString stringWithFormat:@"%li", 20 * (self.curPickerRow + 1)] forKey:@"to"];
     
     [self refresh:nil];
 }
@@ -407,6 +424,7 @@ static NSString *fontKey = @"Helvetica-Light";
     [self endLoading];
     [self updateNavState];
     [self.tableView reloadData];
+    [self.tableView scrollToRowAtIndexPath:[NSIndexPath indexPathForRow:NSNotFound inSection:0] atScrollPosition:UITableViewScrollPositionTop animated:YES];
 }
 
 - (NSInteger)getRowOfEvent:(UIEvent *)event
@@ -440,7 +458,7 @@ static NSString *fontKey = @"Helvetica-Light";
         self.next.enabled = YES;
     }
     
-    self.pickerInputField.text = [NSString stringWithFormat:@"%i/%i", self.curPickerRow + 1, self.pageCount];
+    self.pickerInputField.text = [NSString stringWithFormat:@"%li/%li", self.curPickerRow + 1, (long)self.pageCount];
     [self.picker reloadComponent:0];
 }
 
@@ -462,7 +480,7 @@ static NSString *fontKey = @"Helvetica-Light";
     [cell addSubview:leftTopBtn];
     
     // configure post index
-    cell.postIndex.text = [NSString stringWithFormat:indexKey, post.index + 1];
+    cell.postIndex.text = [NSString stringWithFormat:indexKey, post.index + self.curPickerRow * 20 + 1];
     
     // configure message content
     NSString *path = [[NSBundle mainBundle] bundlePath];
@@ -478,8 +496,6 @@ static NSString *fontKey = @"Helvetica-Light";
     // configure dateline
     cell.dateline.text = post.dateline;
     
-    // configure credit
-    
     // configure quote button
     UIButton *quoteBtn = [self cellButtonWithTitle:quoteKey];
     quoteBtn.frame = CGRectMake(275, 220, 40, 20);
@@ -492,15 +508,32 @@ static NSString *fontKey = @"Helvetica-Light";
     return cell;
 }
 
+-(BOOL) webView:(UIWebView *)inWeb shouldStartLoadWithRequest:(NSURLRequest *)inRequest navigationType:(UIWebViewNavigationType)inType {
+    if ( inType == UIWebViewNavigationTypeLinkClicked) {
+        [[UIApplication sharedApplication] openURL:[inRequest URL]];
+        return NO;
+    }
+    
+    return YES;
+}
+
 - (void)webViewDidFinishLoad:(UIWebView *)webView
 {
     static NSString *jsString = @"document.body.scrollHeight;";
-    NSInteger height = [[webView stringByEvaluatingJavaScriptFromString:jsString] integerValue];
+    NSInteger tempHeight = [[webView stringByEvaluatingJavaScriptFromString:jsString] integerValue];
+    NSInteger height;
+    
+    while (YES) {
+        height = [[webView stringByEvaluatingJavaScriptFromString:jsString] integerValue];
+        if (height == tempHeight) break;
+        tempHeight = height;
+    }
+    // oddly, result of first calculation may be incorrect. maybe it's because webview doesn't finish loading
+    
     BUCTableCell *cell = (BUCTableCell *)webView.superview.superview;
     cell.height = 60 + height + 30;
     cell.content.frame = CGRectMake(0, 60, 320, height);
     cell.rightBottomBtn.frame = CGRectMake(270, cell.height - 25, 40, 20);
-    webView.delegate = nil;
     [self.tableView reloadData];
 }
 @end

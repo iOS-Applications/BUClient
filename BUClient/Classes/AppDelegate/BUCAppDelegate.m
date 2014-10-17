@@ -53,8 +53,9 @@
     NSString *username = [defaults objectForKey:@"currentUser"];
     
     BUCNetworkEngine *engine = [BUCNetworkEngine sharedInstance];
-    if (![engine checkNetworkStatus])
+    if (![engine checkNetworkStatus]) {
         return @"无法连接到联盟服务器，服务器有可能出现故障，请检查网络连接或稍后再试";
+    }
     else if (![username length]) return @"";
     else {
         BUCUser *user = [BUCUser sharedInstance];

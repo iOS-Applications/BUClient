@@ -35,7 +35,6 @@
     if (self) {
         self.task.json = self.user.json;
         [self.task.json setObject:@"profile" forKey:@"action"];
-        [self.task.json setObject:@"" forKey:@"uid"];
         self.task.url = @"profile";
         _loadImage = [self.user.loadImage isEqualToString:@"yes"] ? YES : NO;
     }
@@ -97,7 +96,7 @@
             self.avatarTask.url = [[userDic objectForKey:@"avatar"] urldecode];
             
             // test code start
-            self.avatarTask.url = @"http://0.0.0.0:8080/static/funny.png";
+//            self.avatarTask.url = @"http://0.0.0.0:8080/static/funny.png";
             // test code end
             
             [self loadDataOfTask:self.avatarTask];

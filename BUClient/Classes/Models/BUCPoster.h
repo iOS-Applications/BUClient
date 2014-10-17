@@ -14,8 +14,4 @@
 @property (nonatomic) NSString *uid;
 @property (nonatomic) NSString *username;
 @property (nonatomic) NSString *credit;
-
-// temporary solution, since current buapi has some design issues.
-// these properties will be removed once buapi is more sophisticated, well, I hope so
-@property (nonatomic) NSDictionary *jsonData;
 @end

@@ -49,12 +49,24 @@
     self.user = [BUCUser sharedInstance];
     self.json = self.user.json;
     
-    self.url = [NSString stringWithFormat:self.engine.baseUrl, @"logging"];
+    if (self.engine.hostIsOn) self.url = [NSString stringWithFormat:self.engine.baseUrl, @"logging"];
+    
+    [self.engine addObserver:self forKeyPath:@"baseUrl" options:NSKeyValueObservingOptionNew context:NULL];
+}
+
+- (void)dealloc
+{
+    [self.engine removeObserver:self forKeyPath:@"baseUrl" context:NULL];
 }
 
 - (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender
 {
     self.window.eventInterceptDelegate = nil;
+}
+
+- (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context
+{
+    if (self.engine.hostIsOn) self.url = [NSString stringWithFormat:self.engine.baseUrl, @"logging"];
 }
 
 #pragma mark - IBAction methods
@@ -104,7 +116,7 @@
             weakSelf.modalTransitionStyle = UIModalTransitionStyleCrossDissolve;
             [weakSelf performSegueWithIdentifier:@"unwindToContent" sender:nil];
         } else {
-            [weakSelf alertWithMessage:@"用户名与密码不匹配或积分为负无法登录，请联系联盟管理员，或重新尝试"];
+            [weakSelf alertWithMessage:@"登录失败，请检查帐号状态"];
         }
     }];
 }

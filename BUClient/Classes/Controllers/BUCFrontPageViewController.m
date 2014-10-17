@@ -136,7 +136,7 @@
     
     CGFloat padding = 10;
     
-    return MAX(60, frame.size.height + padding) + 32; // 32 = 5(space between the bottom buttons and the title) + 27(height of button)
+    return MAX(60, frame.size.height + padding) + 42; // 42 = 15(spaces:5 + 5) + 27(height of button)
 }
 
 - (BUCTableCell *)createCellForThread:(BUCThread *)thread

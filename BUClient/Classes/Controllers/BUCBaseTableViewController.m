@@ -87,7 +87,9 @@
     [self endLoading];
     for (BUCTask *task in self.taskList) {
         [task.task cancel];
-        for (BUCTask *task in task.taskList) {
+        if (!task.taskList) continue;
+        NSArray *taskList = task.taskList;
+        for (BUCTask *task in taskList) {
             [task.task cancel];
         }
     }
@@ -99,7 +101,9 @@
     [self.refreshControl endRefreshing];
     for (BUCTask *task in self.taskList) {
         [task.task suspend];
-        for (BUCTask *task in task.taskList) {
+        if (!task.taskList) continue;
+        NSArray *taskList = task.taskList;
+        for (BUCTask *task in taskList) {
             [task.task suspend];
         }
     }
@@ -110,7 +114,9 @@
     [self.contentController displayLoading];
     for (BUCTask *task in self.taskList) {
         [task.task resume];
-        for (BUCTask *task in task.taskList) {
+        if (!task.taskList) continue;
+        NSArray *taskList = task.taskList;
+        for (BUCTask *task in taskList) {
             [task.task resume];
         }
     }
@@ -167,7 +173,7 @@
                 
                 NSDictionary *jsonData = [NSJSONSerialization JSONObjectWithData:data options:NSJSONReadingMutableContainers error:&error];
                 if (!jsonData) {
-                    return [weakSelf alertWithMessage:@"未知错误"];
+                    if (!silence) return [weakSelf alertWithMessage:@"未知错误"];
                     return;
                 }
                 

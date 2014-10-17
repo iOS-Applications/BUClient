@@ -41,6 +41,8 @@
 		D8477A4C18ADB5C900006B7C /* BUCPost.m in Sources */ = {isa = PBXBuildFile; fileRef = D8477A4B18ADB5C900006B7C /* BUCPost.m */; };
 		D8477A5218ADB72F00006B7C /* BUCPoster.m in Sources */ = {isa = PBXBuildFile; fileRef = D8477A5118ADB72F00006B7C /* BUCPoster.m */; };
 		D855B03418AFF89B000D3AD8 /* NSObject+BUCTools.m in Sources */ = {isa = PBXBuildFile; fileRef = D855B03318AFF89B000D3AD8 /* NSObject+BUCTools.m */; };
+		D878CF2318B290F60007441A /* BUCHTMLParser.m in Sources */ = {isa = PBXBuildFile; fileRef = D878CF2218B290F60007441A /* BUCHTMLParser.m */; };
+		D878CF2618B2994B0007441A /* default.html in Resources */ = {isa = PBXBuildFile; fileRef = D878CF2518B2994B0007441A /* default.html */; };
 		D8835E7018B17070001E1925 /* BUCTask.m in Sources */ = {isa = PBXBuildFile; fileRef = D8835E6F18B17070001E1925 /* BUCTask.m */; };
 		D8A2461718910A9A00AFD27A /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = D8A2461518910A9A00AFD27A /* Main.storyboard */; };
 		D8A3BF98187C895E006CBF64 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D8A3BF97187C895E006CBF64 /* Foundation.framework */; };
@@ -57,6 +59,7 @@
 		D8A771A5189AEAA4001E4431 /* Reachability.m in Sources */ = {isa = PBXBuildFile; fileRef = D8A771A4189AEAA4001E4431 /* Reachability.m */; };
 		D8A771AF189B1DFA001E4431 /* Default-568h@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = D8A771AE189B1DFA001E4431 /* Default-568h@2x.png */; };
 		D8A771B2189C1D45001E4431 /* BUCEventInterceptWindow.m in Sources */ = {isa = PBXBuildFile; fileRef = D8A771B1189C1D45001E4431 /* BUCEventInterceptWindow.m */; };
+		D8A8E1C618B3657400D355D4 /* funny.png in Resources */ = {isa = PBXBuildFile; fileRef = D8A8E1C518B3657400D355D4 /* funny.png */; };
 		D8BFD96C189289800059DBDE /* BUCForumListViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = D8BFD96B189289800059DBDE /* BUCForumListViewController.m */; };
 		D8BFD96F189289F70059DBDE /* BUCForumViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = D8BFD96E189289F70059DBDE /* BUCForumViewController.m */; };
 		D8BFD973189297900059DBDE /* BUCUser.m in Sources */ = {isa = PBXBuildFile; fileRef = D8BFD972189297900059DBDE /* BUCUser.m */; };
@@ -133,6 +136,9 @@
 		D855B03218AFF89B000D3AD8 /* NSObject+BUCTools.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSObject+BUCTools.h"; sourceTree = "<group>"; };
 		D855B03318AFF89B000D3AD8 /* NSObject+BUCTools.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSObject+BUCTools.m"; sourceTree = "<group>"; };
 		D855B03518B03691000D3AD8 /* BUCTask.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BUCTask.h; sourceTree = "<group>"; };
+		D878CF2118B290F60007441A /* BUCHTMLParser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BUCHTMLParser.h; sourceTree = "<group>"; };
+		D878CF2218B290F60007441A /* BUCHTMLParser.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BUCHTMLParser.m; sourceTree = "<group>"; };
+		D878CF2518B2994B0007441A /* default.html */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.html; path = default.html; sourceTree = "<group>"; };
 		D8835E6F18B17070001E1925 /* BUCTask.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BUCTask.m; sourceTree = "<group>"; };
 		D8A2461518910A9A00AFD27A /* Main.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; path = Main.storyboard; sourceTree = "<group>"; };
 		D8A3BF94187C895E006CBF64 /* BUClient.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BUClient.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -154,6 +160,7 @@
 		D8A771AE189B1DFA001E4431 /* Default-568h@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Default-568h@2x.png"; sourceTree = "<group>"; };
 		D8A771B0189C1D45001E4431 /* BUCEventInterceptWindow.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BUCEventInterceptWindow.h; sourceTree = "<group>"; };
 		D8A771B1189C1D45001E4431 /* BUCEventInterceptWindow.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BUCEventInterceptWindow.m; sourceTree = "<group>"; };
+		D8A8E1C518B3657400D355D4 /* funny.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = funny.png; sourceTree = "<group>"; };
 		D8BFD96A189289800059DBDE /* BUCForumListViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BUCForumListViewController.h; sourceTree = "<group>"; };
 		D8BFD96B189289800059DBDE /* BUCForumListViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BUCForumListViewController.m; sourceTree = "<group>"; };
 		D8BFD96D189289F70059DBDE /* BUCForumViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BUCForumViewController.h; sourceTree = "<group>"; };
@@ -259,6 +266,8 @@
 				D8BFD97518939FE40059DBDE /* BUCNetworkEngine.m */,
 				D855B03218AFF89B000D3AD8 /* NSObject+BUCTools.h */,
 				D855B03318AFF89B000D3AD8 /* NSObject+BUCTools.m */,
+				D878CF2118B290F60007441A /* BUCHTMLParser.h */,
+				D878CF2218B290F60007441A /* BUCHTMLParser.m */,
 			);
 			path = Utilities;
 			sourceTree = "<group>";
@@ -279,6 +288,7 @@
 		D8114CC4189012BC00F0E1A7 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				D878CF2418B2994B0007441A /* layout */,
 				D8141E4D189E2AB800342108 /* Gifs */,
 				D8114CC5189012BC00F0E1A7 /* Icons */,
 				D8114CD1189012BC00F0E1A7 /* Images */,
@@ -309,6 +319,7 @@
 				D8BFD97B18942F9D0059DBDE /* screen1136x1136.png */,
 				D8114CD2189012BC00F0E1A7 /* avatar.png */,
 				D8114CD3189012BC00F0E1A7 /* greyBackground.png */,
+				D8A8E1C518B3657400D355D4 /* funny.png */,
 			);
 			path = Images;
 			sourceTree = "<group>";
@@ -319,6 +330,14 @@
 				D8141E52189E2C1800342108 /* bunny.gif */,
 			);
 			path = Gifs;
+			sourceTree = "<group>";
+		};
+		D878CF2418B2994B0007441A /* layout */ = {
+			isa = PBXGroup;
+			children = (
+				D878CF2518B2994B0007441A /* default.html */,
+			);
+			path = layout;
 			sourceTree = "<group>";
 		};
 		D8A2461418910A9A00AFD27A /* UI */ = {
@@ -468,7 +487,7 @@
 			isa = PBXProject;
 			attributes = {
 				CLASSPREFIX = BUC;
-				LastUpgradeCheck = 0500;
+				LastUpgradeCheck = 0510;
 				ORGANIZATIONNAME = Jox;
 				TargetAttributes = {
 					D8A3BFAE187C895F006CBF64 = {
@@ -499,6 +518,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D878CF2618B2994B0007441A /* default.html in Resources */,
 				D8114CE0189012BC00F0E1A7 /* home.png in Resources */,
 				D8114CE6189012BC00F0E1A7 /* out.png in Resources */,
 				D8114CEA189012BC00F0E1A7 /* user.png in Resources */,
@@ -506,6 +526,7 @@
 				D8114CEB189012BC00F0E1A7 /* avatar.png in Resources */,
 				D8276DBA18A516ED00C18C52 /* BUCPicker.xib in Resources */,
 				D8A2461718910A9A00AFD27A /* Main.storyboard in Resources */,
+				D8A8E1C618B3657400D355D4 /* funny.png in Resources */,
 				D8114CE1189012BC00F0E1A7 /* left.png in Resources */,
 				D8114CE8189012BC00F0E1A7 /* right.png in Resources */,
 				D8A3BFA2187C895E006CBF64 /* InfoPlist.strings in Resources */,
@@ -537,6 +558,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				D8477A4918ADB54D00006B7C /* BUCThread.m in Sources */,
+				D878CF2318B290F60007441A /* BUCHTMLParser.m in Sources */,
 				D8477A4618ADB4C200006B7C /* BUCForum.m in Sources */,
 				D8BFD973189297900059DBDE /* BUCUser.m in Sources */,
 				D8114CD9189012BC00F0E1A7 /* BUCMainViewController.m in Sources */,
@@ -611,7 +633,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ARCHS = "$(ARCHS_STANDARD_INCLUDING_64_BIT)";
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
 				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_ENABLE_MODULES = YES;
@@ -650,7 +671,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ARCHS = "$(ARCHS_STANDARD_INCLUDING_64_BIT)";
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
 				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_ENABLE_MODULES = YES;
@@ -708,7 +728,6 @@
 		D8A3BFC4187C895F006CBF64 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD_INCLUDING_64_BIT)";
 				BUNDLE_LOADER = "$(BUILT_PRODUCTS_DIR)/BUClient.app/BUClient";
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(SDKROOT)/Developer/Library/Frameworks",
@@ -731,7 +750,6 @@
 		D8A3BFC5187C895F006CBF64 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD_INCLUDING_64_BIT)";
 				BUNDLE_LOADER = "$(BUILT_PRODUCTS_DIR)/BUClient.app/BUClient";
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(SDKROOT)/Developer/Library/Frameworks",

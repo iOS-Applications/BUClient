@@ -54,11 +54,6 @@
         _defaultSession = [NSURLSession sessionWithConfiguration: _defaultConfigObject delegate: nil delegateQueue: [NSOperationQueue mainQueue]];
         _hostIsOn = NO;
         
-        // test code begin
-        _baseUrl = @"http://0.0.0.0:8080/open_api/bu_%@.php";
-        _hostIsOn = YES;
-        // test code end
-        
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handleNetworkStatusChange:) name:kReachabilityChangedNotification object:nil];
         
         lanHostReach = [Reachability reachabilityWithHostName:@"www.bitunion.org"];
@@ -74,35 +69,34 @@
 #pragma mark - notification handler methods
 - (void)handleNetworkStatusChange:(NSNotification *)notice
 {
-    [self checkNetworkStatus];
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        [self checkNetworkStatus];
+    });
 }
 
 #pragma mark - public methods
 - (NSURLSessionDataTask *)processRequest:(NSURLRequest *)request completionHandler:(void (^)(NSData *, NSError *))completionHandler
 {
+    BUCNetworkEngine * __weak weakSelf = self;
     NSURLSessionDataTask *task = [self.defaultSession dataTaskWithRequest:request
-                                              completionHandler:^(NSData *data, NSURLResponse *response, NSError *error) {
-                                                  if (error) {
-                                                      error = [self checkErr:error response:response];
-                                                  }
+                                                        completionHandler:^(NSData *data, NSURLResponse *response, NSError *error) {
+                                                            if (error) {
+                                                                error = [weakSelf checkErr:error response:response];
+                                                            }
                                                   
-                                                  completionHandler(data, error);
-                                              }];
+                                                            completionHandler(data, error);
+                                                        }];
     [task resume];
     return task;
 }
 
 - (BOOL)checkNetworkStatus
-{
-    // test code start
-    return YES;
-    // test code end
-    
+{    
     NSData *data = nil;
     NSError *err = nil;
     NSURLResponse *response = nil;
     NSURL *url = [NSURL URLWithString:@"http://www.bitunion.org/"];
-    NSURLRequest *request = [NSURLRequest requestWithURL:url cachePolicy:NSURLRequestReloadIgnoringLocalCacheData timeoutInterval:5];
+    NSURLRequest *request = [NSURLRequest requestWithURL:url cachePolicy:NSURLRequestReloadIgnoringLocalCacheData timeoutInterval:3];
     
     data = [NSURLConnection sendSynchronousRequest:request returningResponse:&response error:&err];
     
@@ -114,7 +108,7 @@
     
     err = nil;
     url = [NSURL URLWithString:@"http://out.bitunion.org/"];
-    request = [NSURLRequest requestWithURL:url cachePolicy:NSURLRequestReloadIgnoringLocalCacheData timeoutInterval:5];
+    request = [NSURLRequest requestWithURL:url cachePolicy:NSURLRequestReloadIgnoringLocalCacheData timeoutInterval:3];
     data = [NSURLConnection sendSynchronousRequest:request returningResponse:&response error:&err];
     if (!err) {
         self.baseUrl = @"http://out.bitunion.org/open_api/bu_%@.php";
@@ -125,6 +119,7 @@
     return NO;
 }
 
+#pragma mark - private methods
 @end
 
 

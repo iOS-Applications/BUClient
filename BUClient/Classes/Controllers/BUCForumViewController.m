@@ -96,12 +96,16 @@
         self.pageCount = threadCount % 20 ? threadCount/20 + 1 : threadCount/20;
         task.done = YES;
         subtask = [self.taskList objectAtIndex:1];
-        if (subtask.done) [self updateUI];
+        if (subtask.done) {
+            [self updateUI];
+        }
     } else {
         [self makeCacheList];
         task.done = YES;
         subtask = [self.taskList objectAtIndex:0];
-        if (subtask.done) [self updateUI];
+        if (subtask.done) {
+            [self updateUI];
+        }
     }
 }
 
@@ -196,22 +200,24 @@
 - (IBAction)previous:(id)sender {
     if (self.loading || self.refreshing) [self cancelLoading];
     
+    [self updateNavState];
     self.curPickerRow -= 1;
-    [self.navTask.json setObject:[self.navTask.json objectForKey:@"from"] forKey:@"to"];
-    [self.navTask.json setObject:[NSString stringWithFormat:@"%i", 20 * self.curPickerRow] forKey:@"from"];
+    [self.task.json setObject:[self.task.json objectForKey:@"from"] forKey:@"to"];
+    [self.task.json setObject:[NSString stringWithFormat:@"%li", 20 * self.curPickerRow] forKey:@"from"];
     [self.picker selectRow:self.curPickerRow inComponent:0 animated:NO];
-    
+    [self updateNavState];
     [self refresh:nil];
 }
 
 - (IBAction)next:(id)sender {
     if (self.loading || self.refreshing) [self cancelLoading];
     
+    [self updateNavState];
     self.curPickerRow += 1;
-    [self.navTask.json setObject:[self.navTask.json objectForKey:@"to"] forKey:@"from"];
-    [self.navTask.json setObject:[NSString stringWithFormat:@"%i", 20 * (self.curPickerRow + 1)] forKey:@"to"];
+    [self.task.json setObject:[self.task.json objectForKey:@"to"] forKey:@"from"];
+    [self.task.json setObject:[NSString stringWithFormat:@"%li", 20 * (self.curPickerRow + 1)] forKey:@"to"];
     [self.picker selectRow:self.curPickerRow inComponent:0 animated:NO];
-    
+    [self updateNavState];
     [self refresh:nil];
 }
 
@@ -227,9 +233,10 @@
     
     if (self.loading || self.refreshing) [self cancelLoading];
     
-    [self.navTask.json setObject:[NSString stringWithFormat:@"%i", 20 * self.curPickerRow] forKey:@"from"];
-    [self.navTask.json setObject:[NSString stringWithFormat:@"%i", 20 * (self.curPickerRow + 1)] forKey:@"to"];
+    [self.task.json setObject:[NSString stringWithFormat:@"%li", 20 * self.curPickerRow] forKey:@"from"];
+    [self.task.json setObject:[NSString stringWithFormat:@"%li", 20 * (self.curPickerRow + 1)] forKey:@"to"];
     
+    [self updateNavState];
     [self refresh:nil];
 }
 
@@ -303,6 +310,7 @@
     [self endLoading];
     [self updateNavState];
     [self.tableView reloadData];
+    [self.tableView scrollToRowAtIndexPath:[NSIndexPath indexPathForRow:NSNotFound inSection:0] atScrollPosition:UITableViewScrollPositionTop animated:YES];
 }
 
 - (UIButton *)cellButtonWithTitle:(NSString *)title
@@ -336,7 +344,7 @@
         self.next.enabled = YES;
     }
     
-    self.pickerInputField.text = [NSString stringWithFormat:@"%i/%i", self.curPickerRow + 1, self.pageCount];
+    self.pickerInputField.text = [NSString stringWithFormat:@"%li/%li", self.curPickerRow + 1, (long)self.pageCount];
     [self.picker reloadComponent:0];
 }
 
@@ -349,7 +357,7 @@
     
     CGFloat padding = 10;
     
-    return MAX(60, frame.size.height + padding) + 32; // 32 = 5(space between the bottom buttons and the title) + 27(height of button)
+    return MAX(60, frame.size.height + padding) + 42; // 42 = 15(spaces: 10 + 5) + 27(height of button)
 }
 
 - (BUCTableCell *)createCellWithThread:(BUCThread *)thread
