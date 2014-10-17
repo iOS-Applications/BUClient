@@ -17,6 +17,4 @@
 
 - (NSURLSessionDataTask *)processRequest:(NSURLRequest *)request completionHandler:(void (^)(NSData *data, NSError *error))completionHandler;
 
-- (BOOL)checkNetworkStatus;
-
 @end

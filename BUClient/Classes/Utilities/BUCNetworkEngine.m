@@ -52,26 +52,11 @@
         _defaultConfigObject.requestCachePolicy = NSURLRequestUseProtocolCachePolicy;
         _defaultConfigObject.timeoutIntervalForResource = 30;
         _defaultSession = [NSURLSession sessionWithConfiguration: _defaultConfigObject delegate: nil delegateQueue: [NSOperationQueue mainQueue]];
-        _hostIsOn = NO;
         
-        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handleNetworkStatusChange:) name:kReachabilityChangedNotification object:nil];
-        
-        lanHostReach = [Reachability reachabilityWithHostName:@"www.bitunion.org"];
-        [lanHostReach startNotifier];
-        
-        wanHostReach = [Reachability reachabilityWithHostName:@"out.bitunion.org"];
-        [wanHostReach startNotifier];
+        _baseUrl = @"http://out.bitunion.org/open_api/bu_%@.php";
     }
     
     return self;
-}
-
-#pragma mark - notification handler methods
-- (void)handleNetworkStatusChange:(NSNotification *)notice
-{
-    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-        [self checkNetworkStatus];
-    });
 }
 
 #pragma mark - public methods
@@ -90,36 +75,6 @@
     return task;
 }
 
-- (BOOL)checkNetworkStatus
-{    
-    NSData *data = nil;
-    NSError *err = nil;
-    NSURLResponse *response = nil;
-    NSURL *url = [NSURL URLWithString:@"http://www.bitunion.org/"];
-    NSURLRequest *request = [NSURLRequest requestWithURL:url cachePolicy:NSURLRequestReloadIgnoringLocalCacheData timeoutInterval:3];
-    
-    data = [NSURLConnection sendSynchronousRequest:request returningResponse:&response error:&err];
-    
-    if (!err) {
-        self.baseUrl = @"http://www.bitunion.org/open_api/bu_%@.php";
-        self.hostIsOn = YES;
-        return YES;
-    }
-    
-    err = nil;
-    url = [NSURL URLWithString:@"http://out.bitunion.org/"];
-    request = [NSURLRequest requestWithURL:url cachePolicy:NSURLRequestReloadIgnoringLocalCacheData timeoutInterval:3];
-    data = [NSURLConnection sendSynchronousRequest:request returningResponse:&response error:&err];
-    if (!err) {
-        self.baseUrl = @"http://out.bitunion.org/open_api/bu_%@.php";
-        self.hostIsOn = YES;
-        return YES;
-    }
-    
-    return NO;
-}
-
-#pragma mark - private methods
 @end
 
 

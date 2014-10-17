@@ -29,7 +29,7 @@
         errMsg = cancelErrMsg;
     } else if (error.code == NSURLErrorCannotConnectToHost) {
         errMsg = connectErrMsg;
-    }else {
+    } else {
         errMsg = unknownErrMsg;
     }
     

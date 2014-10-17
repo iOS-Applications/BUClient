@@ -52,12 +52,8 @@
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
     NSString *username = [defaults objectForKey:@"currentUser"];
     
-    BUCNetworkEngine *engine = [BUCNetworkEngine sharedInstance];
-    if (![engine checkNetworkStatus]) {
-        return @"无法连接到联盟服务器，服务器有可能出现故障，请检查网络连接或稍后再试";
-    }
-    else if (![username length]) return @"";
-    else {
+    if ([username length]) {
+        BUCNetworkEngine *engine = [BUCNetworkEngine sharedInstance];
         BUCUser *user = [BUCUser sharedInstance];
         user.username = username;
         NSString *password = [user getPassword];
@@ -67,8 +63,9 @@
         [json setObject:password forKey:@"password"];
         
         NSString *url = [NSString stringWithFormat:engine.baseUrl, @"logging"];
-        NSURLRequest *req = [self requestWithUrl:url json:json];
+        NSMutableURLRequest *req = [[self requestWithUrl:url json:json] mutableCopy];
         if (!req) return @"未知错误";
+        req.timeoutInterval = 3;
         
         NSURLResponse *response;
         NSError *error = nil;
