@@ -52,14 +52,6 @@
     }
 }
 
-#pragma mark - custom getter method of property window
-- (BUCEventInterceptWindow *)window
-{
-    static BUCEventInterceptWindow *customWindow = nil;
-    if (!customWindow) customWindow = [[BUCEventInterceptWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
-    return customWindow;
-}
-
 #pragma mark - private methods
 - (NSString *)loginWithUsername:(NSString *)username
 {

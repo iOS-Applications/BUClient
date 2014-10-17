@@ -7,7 +7,6 @@
 //
 
 #import <UIKit/UIKit.h>
-#import "BUCEventInterceptWindow.h"
 
 @interface BUCLoginViewController : UIViewController <UITextFieldDelegate, EventInterceptWindowDelegate>
 - (void)alertWithMessage:(NSString *)message;

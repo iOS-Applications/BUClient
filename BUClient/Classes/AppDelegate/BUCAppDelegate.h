@@ -7,11 +7,10 @@
 //
 
 #import <UIKit/UIKit.h>
-#import "BUCEventInterceptWindow.h"
 #import "BUCMainViewController.h"
 
 @interface BUCAppDelegate : UIResponder <UIApplicationDelegate>
 
-@property (strong, nonatomic) BUCEventInterceptWindow *window;
+@property (strong, nonatomic) UIWindow *window;
 @property (weak, nonatomic) BUCMainViewController *mainViewController;
 @end

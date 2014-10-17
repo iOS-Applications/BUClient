@@ -19,8 +19,6 @@
 @property (weak, nonatomic) IBOutlet UIActivityIndicatorView *activityView;
 @property (weak, nonatomic) IBOutlet UIButton *loginButton;
 
-@property (weak, nonatomic) BUCEventInterceptWindow *window;
-
 @property (weak, nonatomic) UITextField *curTextField;
 
 @property (nonatomic) BUCNetworkEngine *engine;
@@ -42,19 +40,11 @@
     self.loginButton.layer.cornerRadius = 3;
     self.loginButton.layer.masksToBounds = YES;
     
-    self.window = (BUCEventInterceptWindow *)[UIApplication sharedApplication].keyWindow;
-    self.window.eventInterceptDelegate = self;
-    
     self.engine = [BUCNetworkEngine sharedInstance];
     self.user = [BUCUser sharedInstance];
     self.json = self.user.json;
     
     self.url = [NSString stringWithFormat:self.engine.baseUrl, @"logging"];
-}
-
-- (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender
-{
-    self.window.eventInterceptDelegate = nil;
 }
 
 #pragma mark - IBAction methods
@@ -120,25 +110,6 @@
 - (void)textFieldDidBeginEditing:(UITextField *)textField
 {
     self.curTextField = textField;
-}
-
-#pragma mark - EventInterceptWindow delegate methods
-- (void)interceptEvent:(UIEvent *)event
-{
-    NSSet *touches = [event touchesForView:self.view];
-    if ([touches count] == 0) {
-        touches = [event touchesForView:(UIView *)self.loginButton];
-        if ([touches count] != 0) return;
-        
-        if (!self.loadingView.hidden) {
-            self.loadingView.hidden = YES;
-            [self.activityView stopAnimating];
-            
-            [self cancelLogin];
-        }
-    } else {
-        [self.curTextField resignFirstResponder];
-    }
 }
 
 #pragma mark - private methods
