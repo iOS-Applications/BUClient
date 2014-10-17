@@ -137,11 +137,6 @@
     
     BOOL silence = task.silence;
     
-    if (!engine.hostIsOn) {
-        if (!silence) return [self alertWithMessage:@"无网络连接"];
-        return;
-    }
-    
     NSURLRequest *req = [self requestWithUrl:[NSString stringWithFormat:engine.baseUrl, task.url] json:task.json];
     if (!req) {
         if (!silence) return [self alertWithMessage:@"未知错误"];
@@ -196,8 +191,6 @@
 
 - (void)loadDataOfTask:(BUCTask *)task
 {
-    if (!engine.hostIsOn) return;
-    
     NSMutableURLRequest *req = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:task.url]
                                                        cachePolicy:NSURLRequestReturnCacheDataElseLoad
                                                    timeoutInterval:30];

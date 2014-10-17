@@ -49,24 +49,12 @@
     self.user = [BUCUser sharedInstance];
     self.json = self.user.json;
     
-    if (self.engine.hostIsOn) self.url = [NSString stringWithFormat:self.engine.baseUrl, @"logging"];
-    
-    [self.engine addObserver:self forKeyPath:@"baseUrl" options:NSKeyValueObservingOptionNew context:NULL];
-}
-
-- (void)dealloc
-{
-    [self.engine removeObserver:self forKeyPath:@"baseUrl" context:NULL];
+    self.url = [NSString stringWithFormat:self.engine.baseUrl, @"logging"];
 }
 
 - (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender
 {
     self.window.eventInterceptDelegate = nil;
-}
-
-- (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context
-{
-    if (self.engine.hostIsOn) self.url = [NSString stringWithFormat:self.engine.baseUrl, @"logging"];
 }
 
 #pragma mark - IBAction methods
@@ -187,12 +175,6 @@
 
 - (BOOL)validateUsername:(NSString *)username password:(NSString *)password
 {
-    BUCNetworkEngine *engine = self.engine;
-    if (!engine.hostIsOn) {
-        [self alertWithMessage:@"无网络连接"];
-        return NO;
-    }
-    
     if ([username length] == 0 || [password length] == 0) {
         [self alertWithMessage:@"请输入用户名与密码"];
         return NO;

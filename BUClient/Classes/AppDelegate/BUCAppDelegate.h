@@ -14,6 +14,4 @@
 
 @property (strong, nonatomic) BUCEventInterceptWindow *window;
 @property (weak, nonatomic) BUCMainViewController *mainViewController;
-@property (nonatomic) BOOL appIsJustLaunched;
-
 @end

@@ -10,7 +10,6 @@
 
 @interface BUCNetworkEngine : NSObject
 
-@property (nonatomic) BOOL hostIsOn;
 @property (readonly, nonatomic) NSString *baseUrl;
 
 + (BUCNetworkEngine *)sharedInstance;
