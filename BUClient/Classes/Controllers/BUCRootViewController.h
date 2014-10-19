@@ -1,5 +1,5 @@
 //
-//  BUCMainViewController.h
+//  BUCRootViewController.h
 //  BUClient
 //
 //  Created by Joe Jeong on 1/12/14.
@@ -10,16 +10,15 @@
 #import "BUCIndexViewController.h"
 #import "BUCContentViewController.h"
 
-@interface BUCMainViewController : UIViewController
+@interface BUCRootViewController : UIViewController
 @property (weak, readonly, nonatomic) BUCIndexViewController *indexController;
 @property (weak, readonly, nonatomic) BUCContentViewController *contentController;
 
-- (void)displayLoginWithMessage:(NSString *)message;
-- (void)revealIndex;
-- (void)hideIndex;
 - (void)switchContentWith:(NSString *)segueIdendifier completion:(void (^)(void))completeHandler;
-
-- (void)disableIndex;
-- (void)enableIndex;
+- (void)showMenu;
+- (void)hideMenu;
+- (void)disableMenu;
+- (void)enableMenu;
+- (void)displayLogin;
 
 @end

@@ -13,7 +13,7 @@
 		D8114CD6189012BC00F0E1A7 /* BUCFrontPageViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = D8114CAF189012BC00F0E1A7 /* BUCFrontPageViewController.m */; };
 		D8114CD7189012BC00F0E1A7 /* BUCIndexViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = D8114CB1189012BC00F0E1A7 /* BUCIndexViewController.m */; };
 		D8114CD8189012BC00F0E1A7 /* BUCLoginViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = D8114CB3189012BC00F0E1A7 /* BUCLoginViewController.m */; };
-		D8114CD9189012BC00F0E1A7 /* BUCMainViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = D8114CB5189012BC00F0E1A7 /* BUCMainViewController.m */; };
+		D8114CD9189012BC00F0E1A7 /* BUCRootViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = D8114CB5189012BC00F0E1A7 /* BUCRootViewController.m */; };
 		D8114CDA189012BC00F0E1A7 /* BUCThreadViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = D8114CB7189012BC00F0E1A7 /* BUCThreadViewController.m */; };
 		D8114CDB189012BC00F0E1A7 /* BUCEmptySegue.m in Sources */ = {isa = PBXBuildFile; fileRef = D8114CBA189012BC00F0E1A7 /* BUCEmptySegue.m */; };
 		D8114CDC189012BC00F0E1A7 /* NSString+NSString_Extended.m in Sources */ = {isa = PBXBuildFile; fileRef = D8114CBC189012BC00F0E1A7 /* NSString+NSString_Extended.m */; };
@@ -56,7 +56,6 @@
 		D8A3BFB3187C895F006CBF64 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D8A3BF9B187C895E006CBF64 /* UIKit.framework */; };
 		D8A3BFBB187C895F006CBF64 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = D8A3BFB9187C895F006CBF64 /* InfoPlist.strings */; };
 		D8A3BFBD187C895F006CBF64 /* BUClientTests.m in Sources */ = {isa = PBXBuildFile; fileRef = D8A3BFBC187C895F006CBF64 /* BUClientTests.m */; };
-		D8A771A5189AEAA4001E4431 /* Reachability.m in Sources */ = {isa = PBXBuildFile; fileRef = D8A771A4189AEAA4001E4431 /* Reachability.m */; };
 		D8A771AF189B1DFA001E4431 /* Default-568h@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = D8A771AE189B1DFA001E4431 /* Default-568h@2x.png */; };
 		D8A8E1C618B3657400D355D4 /* funny.png in Resources */ = {isa = PBXBuildFile; fileRef = D8A8E1C518B3657400D355D4 /* funny.png */; };
 		D8BFD96C189289800059DBDE /* BUCForumListViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = D8BFD96B189289800059DBDE /* BUCForumListViewController.m */; };
@@ -91,8 +90,8 @@
 		D8114CB1189012BC00F0E1A7 /* BUCIndexViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BUCIndexViewController.m; sourceTree = "<group>"; };
 		D8114CB2189012BC00F0E1A7 /* BUCLoginViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BUCLoginViewController.h; sourceTree = "<group>"; };
 		D8114CB3189012BC00F0E1A7 /* BUCLoginViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BUCLoginViewController.m; sourceTree = "<group>"; };
-		D8114CB4189012BC00F0E1A7 /* BUCMainViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BUCMainViewController.h; sourceTree = "<group>"; };
-		D8114CB5189012BC00F0E1A7 /* BUCMainViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BUCMainViewController.m; sourceTree = "<group>"; };
+		D8114CB4189012BC00F0E1A7 /* BUCRootViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BUCRootViewController.h; sourceTree = "<group>"; };
+		D8114CB5189012BC00F0E1A7 /* BUCRootViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BUCRootViewController.m; sourceTree = "<group>"; };
 		D8114CB6189012BC00F0E1A7 /* BUCThreadViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BUCThreadViewController.h; sourceTree = "<group>"; };
 		D8114CB7189012BC00F0E1A7 /* BUCThreadViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BUCThreadViewController.m; sourceTree = "<group>"; };
 		D8114CB9189012BC00F0E1A7 /* BUCEmptySegue.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BUCEmptySegue.h; sourceTree = "<group>"; };
@@ -154,8 +153,6 @@
 		D8A3BFB8187C895F006CBF64 /* BUClientTests-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "BUClientTests-Info.plist"; sourceTree = "<group>"; };
 		D8A3BFBA187C895F006CBF64 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		D8A3BFBC187C895F006CBF64 /* BUClientTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BUClientTests.m; sourceTree = "<group>"; };
-		D8A771A3189AEAA4001E4431 /* Reachability.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Reachability.h; sourceTree = "<group>"; };
-		D8A771A4189AEAA4001E4431 /* Reachability.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Reachability.m; sourceTree = "<group>"; };
 		D8A771AE189B1DFA001E4431 /* Default-568h@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Default-568h@2x.png"; sourceTree = "<group>"; };
 		D8A8E1C518B3657400D355D4 /* funny.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = funny.png; sourceTree = "<group>"; };
 		D8BFD96A189289800059DBDE /* BUCForumListViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BUCForumListViewController.h; sourceTree = "<group>"; };
@@ -220,8 +217,8 @@
 		D8114CAB189012BC00F0E1A7 /* Controllers */ = {
 			isa = PBXGroup;
 			children = (
-				D8114CB4189012BC00F0E1A7 /* BUCMainViewController.h */,
-				D8114CB5189012BC00F0E1A7 /* BUCMainViewController.m */,
+				D8114CB4189012BC00F0E1A7 /* BUCRootViewController.h */,
+				D8114CB5189012BC00F0E1A7 /* BUCRootViewController.m */,
 				D8114CB0189012BC00F0E1A7 /* BUCIndexViewController.h */,
 				D8114CB1189012BC00F0E1A7 /* BUCIndexViewController.m */,
 				D8114CAC189012BC00F0E1A7 /* BUCContentViewController.h */,
@@ -253,8 +250,6 @@
 		D8114CB8189012BC00F0E1A7 /* Utilities */ = {
 			isa = PBXGroup;
 			children = (
-				D8A771A3189AEAA4001E4431 /* Reachability.h */,
-				D8A771A4189AEAA4001E4431 /* Reachability.m */,
 				D8114CB9189012BC00F0E1A7 /* BUCEmptySegue.h */,
 				D8114CBA189012BC00F0E1A7 /* BUCEmptySegue.m */,
 				D8114CBB189012BC00F0E1A7 /* NSString+NSString_Extended.h */,
@@ -556,7 +551,7 @@
 				D878CF2318B290F60007441A /* BUCHTMLParser.m in Sources */,
 				D8477A4618ADB4C200006B7C /* BUCForum.m in Sources */,
 				D8BFD973189297900059DBDE /* BUCUser.m in Sources */,
-				D8114CD9189012BC00F0E1A7 /* BUCMainViewController.m in Sources */,
+				D8114CD9189012BC00F0E1A7 /* BUCRootViewController.m in Sources */,
 				D833DC7E18A84968002998EC /* BUCUserListViewController.m in Sources */,
 				D8BFD96C189289800059DBDE /* BUCForumListViewController.m in Sources */,
 				D8BFD96F189289F70059DBDE /* BUCForumViewController.m in Sources */,
@@ -571,7 +566,6 @@
 				D8CA18E118A7DD6B00D4D2F9 /* BUCEditorViewController.m in Sources */,
 				D8A3BFA4187C895E006CBF64 /* main.m in Sources */,
 				D8114CD4189012BC00F0E1A7 /* BUCAppDelegate.m in Sources */,
-				D8A771A5189AEAA4001E4431 /* Reachability.m in Sources */,
 				D8477A4318ADB49E00006B7C /* BUCSection.m in Sources */,
 				D8114CDC189012BC00F0E1A7 /* NSString+NSString_Extended.m in Sources */,
 				D8114CD6189012BC00F0E1A7 /* BUCFrontPageViewController.m in Sources */,

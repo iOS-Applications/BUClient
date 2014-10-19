@@ -7,10 +7,9 @@
 //
 
 #import <UIKit/UIKit.h>
-#import "BUCMainViewController.h"
 
 @interface BUCAppDelegate : UIResponder <UIApplicationDelegate>
 
 @property (strong, nonatomic) UIWindow *window;
-@property (weak, nonatomic) BUCMainViewController *mainViewController;
+
 @end
