@@ -7,9 +7,7 @@
 //
 
 #import "BUCLoginViewController.h"
-#import "BUCUser.h"
-#import "BUCNetworkEngine.h"
-#import "NSObject+BUCTools.h"
+#import "BUCAuthManager.h"
 
 @interface BUCLoginViewController ()
 @property (weak, nonatomic) IBOutlet UITextField *username;
@@ -34,6 +32,30 @@
     
     self.loginButton.layer.cornerRadius = 3;
     self.loginButton.layer.masksToBounds = YES;
+    
+    UIView *borderA = [[UIView alloc]
+                       initWithFrame:CGRectMake(self.username.frame.origin.x,
+                                                self.username.frame.origin.y +
+                                                self.username.frame.size.height + 2.0f - 0.5f,
+                                                self.username.frame.size.width,
+                                                0.5f)];
+    borderA.backgroundColor = [UIColor colorWithRed:160.0f/255.0f
+                                              green:160.0f/255.0f
+                                               blue:160.0f/255.0f
+                                              alpha:1.0f];
+    [self.view addSubview:borderA];
+    
+    UIView *borderB = [[UIView alloc]
+                       initWithFrame:CGRectMake(self.password.frame.origin.x,
+                                                self.password.frame.origin.y +
+                                                self.password.frame.size.height + 2.0f - 0.5f,
+                                                self.password.frame.size.width,
+                                                0.5f)];
+    borderB.backgroundColor = [UIColor colorWithRed:160.0f/255.0f
+                                              green:160.0f/255.0f
+                                               blue:160.0f/255.0f
+                                              alpha:1.0f];
+    [self.view addSubview:borderB];
 }
 
 #pragma mark - IBAction methods
@@ -47,64 +69,20 @@
         return;
     }
     
-    BUCUser *user = [BUCUser sharedInstance];    
-    NSMutableDictionary *json = user.json;
-    [json setObject:@"login" forKey:@"action"];
-    [json setObject:username forKey:@"username"];
-    [json setObject:password forKey:@"password"];
-
-    BUCNetworkEngine *engine = [BUCNetworkEngine sharedInstance];
-    NSString *url = [NSString stringWithFormat:engine.baseUrl, @"logging"];
-    NSURLRequest *req = [self requestWithUrl:url json:json];
-    if (!req) {
-        return [self alertWithMessage:@"未知错误"];
-    }
-    
+    BUCAuthManager *authManager = [BUCAuthManager sharedInstance];
     BUCLoginViewController * __weak weakSelf = self;
-    self.view.userInteractionEnabled = NO;
     
-    [engine processRequest:req completionHandler:^(NSData *data, NSError *error) {
-        [weakSelf hideLoading];
-        weakSelf.view.userInteractionEnabled = YES;
-        if (error) {
-            [weakSelf alertWithMessage:error.localizedDescription];
-            return;
-        }
-        
-        NSDictionary *json = [NSJSONSerialization JSONObjectWithData:data options:NSJSONReadingMutableContainers error:&error];
-        if (!json) {
-            [weakSelf alertWithMessage:@"未知错误"];
-            return;
-        }
-        
-        NSString *result = [json objectForKey:@"result"];
-        if ([result isEqualToString:@"success"]) {
-            user.username = username;
-            user.password = password;
-            user.session = [json objectForKey:@"session"];
-            [user.json setObject:username forKey:@"username"];
-            [user.json setObject:user.session forKey:@"session"];
-            user.req = req;
-            [user setNewPassword:password];
-            
-            NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-            [defaults setObject:username forKey:@"currentUser"];
-            [defaults synchronize];
-            
-            if (user.isLoggedIn) {
-                [weakSelf performSegueWithIdentifier:@"unwindToUserList" sender:nil];
-                return;
-            }
-            // if user is already logged in with a valid account, then unwind to the user list
-            
-            // if user has not logged in before, set isLoggedIn to YES and bring up the front page
-            user.isLoggedIn = YES;
-            weakSelf.modalTransitionStyle = UIModalTransitionStyleCrossDissolve;
-            [weakSelf performSegueWithIdentifier:@"unwindToContent" sender:nil];
-        } else {
-            [weakSelf alertWithMessage:@"登录失败，请检查帐号状态"];
-        }
-    }];
+    [authManager loginWithUsername:username
+                       andPassword:password
+                         onSuccess:^(void) {
+                             [weakSelf hideLoading];
+                             weakSelf.modalTransitionStyle = UIModalTransitionStyleCrossDissolve;
+                             [weakSelf performSegueWithIdentifier:@"unwindToContent" sender:nil];
+                         }
+                            onFail:^(NSString *errorMsg) {
+                                [weakSelf hideLoading];
+                                [weakSelf alertWithMessage:errorMsg];
+                            }];
     
     [self displaLoading];
 }
@@ -141,14 +119,14 @@
 {
     [self.activityView startAnimating];
     self.loadingView.hidden = NO;
-    self.loginButton.enabled = NO;
+    self.view.userInteractionEnabled = NO;
 }
 
 - (void)hideLoading
 {
     self.loadingView.hidden = YES;
     [self.activityView stopAnimating];
-    self.loginButton.enabled = YES;
+    self.view.userInteractionEnabled = YES;
 }
 
 @end

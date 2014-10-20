@@ -9,6 +9,5 @@
 #import <Foundation/Foundation.h>
 
 @interface NSObject (BUCTools)
-- (NSURLRequest *)requestWithUrl:(NSString *)url json:(NSMutableDictionary *)json;
-- (NSError *)checkErr:(NSError *)error response:(NSURLResponse *)response;
+- (NSURLRequest *)requestWithUrl:(NSString *)url json:(NSDictionary *)json;
 @end

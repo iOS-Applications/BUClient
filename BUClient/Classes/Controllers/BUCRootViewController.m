@@ -48,7 +48,7 @@
 {
     [super viewDidAppear:animated];
     
-    if (![[NSUserDefaults standardUserDefaults] boolForKey:@"loggedIn"]) {
+    if (![[NSUserDefaults standardUserDefaults] boolForKey:@"isLoggedIn"]) {
         [self displayLogin];
     }
 }

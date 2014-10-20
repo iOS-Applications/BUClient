@@ -8,6 +8,9 @@
 
 #import <Foundation/Foundation.h>
 
+typedef void(^networkResultBlock) (NSDictionary *);
+typedef void(^networkErrorBlock) (NSString *errorMsg);
+
 @interface BUCNetworkEngine : NSObject
 
 @property (readonly, nonatomic) NSString *baseUrl;
@@ -16,4 +19,5 @@
 
 - (NSURLSessionDataTask *)processRequest:(NSURLRequest *)request completionHandler:(void (^)(NSData *data, NSError *error))completionHandler;
 
+- (NSURLSessionDataTask *)processRequest:(NSURLRequest *)request onResult:(networkResultBlock)resultBlock onError:(networkErrorBlock)errorBlock;
 @end

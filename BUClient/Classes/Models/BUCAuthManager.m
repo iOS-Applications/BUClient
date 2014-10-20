@@ -1,37 +1,52 @@
 //
-//  BUCUser.m
+//  BUCAuthManager.m
 //  BUClient
 //
-//  Created by Joe Jeong on 1/24/14.
+//  Created by Joe Jeong on 10/20/14.
 //  Copyright (c) 2014 Jox. All rights reserved.
 //
 
-#import "BUCUser.h"
-#import <Security/Security.h>
+#import "BUCAuthManager.h"
+#import "BUCNetworkEngine.h"
+#import "NSObject+BUCTools.h"
+
+static NSString *unknownError = @"未知错误";
+static NSString *failError = @"登录失败，请检查帐号状态";
 
 static NSString *kKeychainItemIdentifer = @"org.bitunion.buc.%@.KeychainUI";
 
-@interface BUCUser ()
+@interface BUCAuthManager ()
+
+@property (nonatomic, readwrite) BOOL isLoggedIn;
+@property (nonatomic, readwrite) NSString *curUser;
+@property (nonatomic, readwrite) NSString *session;
+
+@property (nonatomic) NSMutableDictionary *json;
+
 
 @property NSString *keychainItemIDString;
-@property (nonatomic, strong) NSMutableDictionary *keychainData;
-@property (nonatomic, strong) NSMutableDictionary *genericPasswordQuery;
+@property (nonatomic) NSMutableDictionary *keychainData;
+@property (nonatomic) NSMutableDictionary *genericPasswordQuery;
 
-- (void)setupQueryDictionary;
+- (void)setNewPassword:(NSString *)password account:(NSString *)account;
+- (NSString *)queryPasswordForAccount:(NSString *)account;
+
+- (void)setupQueryDicForAccount:(NSString *)account;
+- (void)resetKeychainItem;
 - (NSMutableDictionary *)secItemFormatToDictionary:(NSDictionary *)dictionaryToConvert;
 - (NSMutableDictionary *)dictionaryToSecItemFormat:(NSDictionary *)dictionaryToConvert;
 - (void)writeToKeychain;
 
 @end
 
-@implementation BUCUser
+@implementation BUCAuthManager
 
 @synthesize keychainData, genericPasswordQuery;
 
-#pragma mark - shared singleton object
-+(BUCUser *)sharedInstance
+#pragma mark - public methods
++ (BUCAuthManager *)sharedInstance
 {
-    static BUCUser *sharedInstance = nil;
+    static BUCAuthManager *sharedInstance = nil;
     static dispatch_once_t onceSecurePredicate;
     dispatch_once(&onceSecurePredicate,^
                   {
@@ -41,40 +56,101 @@ static NSString *kKeychainItemIdentifer = @"org.bitunion.buc.%@.KeychainUI";
     return sharedInstance;
 }
 
-#pragma mark - init
--(id)init
+- (id)init
 {
     self = [super init];
     
     if (self) {
-        _json = [[NSMutableDictionary alloc] init];
-        [_json setObject:@"login" forKey:@"action"];
-        _isLoggedIn = NO;
+        _isLoggedIn = [[NSUserDefaults standardUserDefaults] boolForKey:@"isLoggedIn"];
+        _curUser = [[NSUserDefaults standardUserDefaults] stringForKey:@"curUser"];
+        
+        _json = [[NSMutableDictionary alloc] initWithObjectsAndKeys:@"login", @"action", nil];
     }
     
     return self;
 }
 
-#pragma mark - public methods
-- (void)setNewPassword:(NSString *)newPassword
+- (void)loginWithUsername:(NSString *)username andPassword:(NSString *)password onSuccess:(AuthSuccessBlock)successBlock onFail:(AuthFailBlock)failBlock
 {
-    [self setupQueryDictionary];
+    NSMutableDictionary *queryJSON = self.json;
+    [queryJSON setObject:username forKey:@"username"];
+    [queryJSON setObject:password forKey:@"password"];
+    
+    BUCNetworkEngine *engine = [BUCNetworkEngine sharedInstance];
+    NSString *url = [NSString stringWithFormat:engine.baseUrl, @"logging"];
+    
+    NSURLRequest *req = [self requestWithUrl:url json:queryJSON];
+    if (!req) {
+        failBlock(unknownError);
+        return;
+    }
+    
+    BUCAuthManager * __weak weakSelf = self;
+    [engine processRequest:req
+                  onResult:^(NSDictionary *resultJSON) {
+                      NSString *result = [resultJSON objectForKey:@"result"];
+                      if (![result isEqualToString:@"success"]) {
+                          failBlock(failError);
+                          return;
+                      }
+                      
+                      weakSelf.curUser = username;
+                      weakSelf.session = [resultJSON objectForKey:@"session"];
+                      weakSelf.isLoggedIn = YES;
+                      [weakSelf setNewPassword:password account:username];
+                      NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+                      [defaults setObject:username forKey:@"curUser"];
+                      [defaults setBool:weakSelf.isLoggedIn forKey:@"isLoggedIn"];
+                      [defaults synchronize];
+                      successBlock();
+                  }
+                   onError:^(NSString *errorMsg) {
+                       failBlock(errorMsg);
+                   }];
+    
+}
+
+- (void)updateSessionOnSuccess:(AuthSessionBlock)sessionBlock onFail:(AuthFailBlock)failBlock
+{
+    
+}
+
+#pragma mark - key chain stuff
+- (void)setNewPassword:(NSString *)password account:(NSString *)account
+{
+    [self setupQueryDicForAccount:account];
     [self resetKeychainItem];
     NSString *oldPassword = [keychainData objectForKey:(__bridge id)kSecValueData];
-    if (![oldPassword isEqual:newPassword])
+    if (![oldPassword isEqual:password])
     {
-        [keychainData setObject:self.username forKey:(__bridge id)kSecAttrAccount];
-        [keychainData setObject:newPassword forKey:(__bridge id)kSecValueData];
+        [keychainData setObject:account forKey:(__bridge id)kSecAttrAccount];
+        [keychainData setObject:password forKey:(__bridge id)kSecValueData];
         [self writeToKeychain];
     }
 }
 
-- (NSString *)getPassword
+- (NSString *)queryPasswordForAccount:(NSString *)account
 {
-    return [self queryPassword];
+    [self setupQueryDicForAccount:account];
+    
+    OSStatus keychainErr = noErr;
+    CFDictionaryRef outDictionaryCF = nil;
+    
+    keychainErr = SecItemCopyMatching((__bridge CFDictionaryRef)genericPasswordQuery, (CFTypeRef *)&outDictionaryCF);
+    NSDictionary *outDictionary = (__bridge NSDictionary *)outDictionaryCF;
+    
+    if (keychainErr == noErr) {
+        self.keychainData = [self secItemFormatToDictionary:outDictionary];
+        return [keychainData objectForKey:(__bridge id)kSecValueData];
+    } else if (keychainErr == errSecItemNotFound) {
+        [self resetKeychainItem];
+    } else {
+        NSAssert(NO, @"Serious error.\n");
+    }
+    
+    return nil;
 }
 
-#pragma mark - private methods
 - (void)resetKeychainItem
 {
     self.keychainData = [[NSMutableDictionary alloc] init];
@@ -87,14 +163,14 @@ static NSString *kKeychainItemIdentifer = @"org.bitunion.buc.%@.KeychainUI";
     [keychainData setObject:@"password" forKey:(__bridge id)kSecValueData];
 }
 
-- (void)setupQueryDicForUser:(NSString *)username
+- (void)setupQueryDicForAccount:(NSString *)account
 {
     genericPasswordQuery = [[NSMutableDictionary alloc] init];
     
     [genericPasswordQuery setObject:(__bridge id)kSecClassGenericPassword
                              forKey:(__bridge id)kSecClass];
     
-    self.keychainItemIDString = [NSString stringWithFormat:kKeychainItemIdentifer, username];
+    self.keychainItemIDString = [NSString stringWithFormat:kKeychainItemIdentifer, account];
     NSData *keychainItemID = [self.keychainItemIDString dataUsingEncoding:NSUTF8StringEncoding];
     [genericPasswordQuery setObject:keychainItemID
                              forKey:(__bridge id)kSecAttrGeneric];
@@ -104,84 +180,6 @@ static NSString *kKeychainItemIdentifer = @"org.bitunion.buc.%@.KeychainUI";
     
     [genericPasswordQuery setObject:(id)kCFBooleanTrue
                              forKey:(__bridge id)kSecReturnAttributes];
-}
-
--(void)setupQueryDictionary
-{
-    genericPasswordQuery = [[NSMutableDictionary alloc] init];
-    
-    [genericPasswordQuery setObject:(__bridge id)kSecClassGenericPassword
-                             forKey:(__bridge id)kSecClass];
-    
-    self.keychainItemIDString = [NSString stringWithFormat:kKeychainItemIdentifer, self.username];
-    NSData *keychainItemID = [self.keychainItemIDString dataUsingEncoding:NSUTF8StringEncoding];
-    [genericPasswordQuery setObject:keychainItemID
-                             forKey:(__bridge id)kSecAttrGeneric];
-    
-    [genericPasswordQuery setObject:(__bridge id)kSecMatchLimitOne
-                             forKey:(__bridge id)kSecMatchLimit];
-    
-    [genericPasswordQuery setObject:(id)kCFBooleanTrue
-                             forKey:(__bridge id)kSecReturnAttributes];
-}
-
-- (NSString *)getPasswordForUser:(NSString *)username
-{
-    // set up query dictionary
-    genericPasswordQuery = [[NSMutableDictionary alloc] init];
-    
-    [genericPasswordQuery setObject:(__bridge id)kSecClassGenericPassword
-                             forKey:(__bridge id)kSecClass];
-    
-    self.keychainItemIDString = [NSString stringWithFormat:kKeychainItemIdentifer, username];
-    NSData *keychainItemID = [self.keychainItemIDString dataUsingEncoding:NSUTF8StringEncoding];
-    [genericPasswordQuery setObject:keychainItemID
-                             forKey:(__bridge id)kSecAttrGeneric];
-    
-    [genericPasswordQuery setObject:(__bridge id)kSecMatchLimitOne
-                             forKey:(__bridge id)kSecMatchLimit];
-    
-    [genericPasswordQuery setObject:(id)kCFBooleanTrue
-                             forKey:(__bridge id)kSecReturnAttributes];
-    
-    OSStatus keychainErr = noErr;
-    CFDictionaryRef outDictionaryCF = nil;
-    
-    keychainErr = SecItemCopyMatching((__bridge CFDictionaryRef)genericPasswordQuery, (CFTypeRef *)&outDictionaryCF);
-    NSDictionary *outDictionary = (__bridge NSDictionary *)outDictionaryCF;
-    
-    if (keychainErr == noErr) {
-        self.keychainData = [self secItemFormatToDictionary:outDictionary];
-        return [keychainData objectForKey:(__bridge id)kSecValueData];
-    } else if (keychainErr == errSecItemNotFound) {
-        [self resetKeychainItem];
-    } else {
-        NSAssert(NO, @"Serious error.\n");
-    }
-    
-    return nil;
-}
-
-- (NSString *)queryPassword
-{
-    [self setupQueryDictionary];
-    
-    OSStatus keychainErr = noErr;
-    CFDictionaryRef outDictionaryCF = nil;
-    
-    keychainErr = SecItemCopyMatching((__bridge CFDictionaryRef)genericPasswordQuery, (CFTypeRef *)&outDictionaryCF);
-    NSDictionary *outDictionary = (__bridge NSDictionary *)outDictionaryCF;
-    
-    if (keychainErr == noErr) {
-        self.keychainData = [self secItemFormatToDictionary:outDictionary];
-        return [keychainData objectForKey:(__bridge id)kSecValueData];
-    } else if (keychainErr == errSecItemNotFound) {
-        [self resetKeychainItem];
-    } else {
-        NSAssert(NO, @"Serious error.\n");
-    }
-    
-    return nil;
 }
 
 - (NSMutableDictionary *)dictionaryToSecItemFormat:(NSDictionary *)dictionaryToConvert
@@ -189,7 +187,7 @@ static NSString *kKeychainItemIdentifer = @"org.bitunion.buc.%@.KeychainUI";
     NSMutableDictionary *returnDictionary = [NSMutableDictionary dictionaryWithDictionary:dictionaryToConvert];
     
     NSData *keychainItemID = [self.keychainItemIDString dataUsingEncoding:NSUTF8StringEncoding];
-
+    
     [returnDictionary setObject:keychainItemID forKey:(__bridge id)kSecAttrGeneric];
     
     [returnDictionary setObject:(__bridge id)kSecClassGenericPassword forKey:(__bridge id)kSecClass];
@@ -206,21 +204,22 @@ static NSString *kKeychainItemIdentifer = @"org.bitunion.buc.%@.KeychainUI";
     
     [returnDictionary setObject:(id)kCFBooleanTrue forKey:(__bridge id)kSecReturnData];
     [returnDictionary setObject:(__bridge id)kSecClassGenericPassword forKey:(__bridge id)kSecClass];
-
+    
     CFDataRef passwordDataCF = NULL;
     OSStatus keychainError = noErr;
     keychainError = SecItemCopyMatching((__bridge CFDictionaryRef)returnDictionary, (CFTypeRef *)&passwordDataCF);
     
     NSData *passwordData = (__bridge NSData *)passwordDataCF;
+    NSString *password = nil;
     
     if (keychainError == noErr)
     {
         [returnDictionary removeObjectForKey:(__bridge id)kSecReturnData];
         
-        self.password = [[NSString alloc] initWithBytes:[passwordData bytes]
-                                                      length:[passwordData length]
-                                                    encoding:NSUTF8StringEncoding];
-        [returnDictionary setObject:self.password forKey:(__bridge id)kSecValueData];
+        password = [[NSString alloc] initWithBytes:[passwordData bytes]
+                                                 length:[passwordData length]
+                                               encoding:NSUTF8StringEncoding];
+        [returnDictionary setObject:password forKey:(__bridge id)kSecValueData];
     }
     else if (keychainError == errSecItemNotFound) {
         NSAssert(NO, @"Nothing was found in the keychain.\n");

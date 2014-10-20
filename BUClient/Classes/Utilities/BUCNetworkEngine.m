@@ -7,16 +7,15 @@
 //
 
 #import "BUCNetworkEngine.h"
-#import "NSString+NSString_Extended.h"
-#import "Reachability.h"
-#import "BUCPoster.h"
 #import "NSObject+BUCTools.h"
 
+static NSString *serverErrMsg = @"服务器错误，请稍后再试";
+static NSString *timeoutErrMsg = @"服务器连接超时，请检查网络连接";
+static NSString *cancelErrMsg = @"";
+static NSString *connectErrMsg = @"无法连接至服务器，请检查网络连接";
+static NSString *unknownErrMsg = @"未知错误";
+
 @interface BUCNetworkEngine ()
-{
-    Reachability *lanHostReach;
-    Reachability *wanHostReach;
-}
 
 @property (nonatomic) NSURLSession *defaultSession;
 @property (nonatomic) NSURLSessionConfiguration *defaultConfigObject;
@@ -62,11 +61,10 @@
 #pragma mark - public methods
 - (NSURLSessionDataTask *)processRequest:(NSURLRequest *)request completionHandler:(void (^)(NSData *, NSError *))completionHandler
 {
-    BUCNetworkEngine * __weak weakSelf = self;
     NSURLSessionDataTask *task = [self.defaultSession dataTaskWithRequest:request
                                                         completionHandler:^(NSData *data, NSURLResponse *response, NSError *error) {
                                                             if (error) {
-                                                                error = [weakSelf checkErr:error response:response];
+                                                                
                                                             }
                                                   
                                                             completionHandler(data, error);
@@ -75,6 +73,50 @@
     return task;
 }
 
+- (NSURLSessionDataTask *)processRequest:(NSURLRequest *)request onResult:(networkResultBlock)resultBlock onError:(networkErrorBlock)errorBlock
+{
+    BUCNetworkEngine * __weak weakSelf = self;
+    NSURLSessionDataTask *task = [self.defaultSession dataTaskWithRequest:request
+                                                        completionHandler:^(NSData *data, NSURLResponse *response, NSError *error) {
+                                                            if (error) {
+                                                                errorBlock([weakSelf checkErr:error response:response]);
+                                                                return;
+                                                            }
+                                                            
+                                                            NSDictionary *resultJSON = [NSJSONSerialization JSONObjectWithData:data options:NSJSONReadingMutableContainers error:&error];
+                                                            if (!resultJSON) {
+                                                                errorBlock(unknownErrMsg);
+                                                                return;
+                                                            }
+                                                            
+                                                            resultBlock(resultJSON);
+                                                        }];
+    
+    [task resume];
+    return task;
+}
+
+#pragma mark - private methods
+- (NSString *)checkErr:(NSError *)error response:(NSURLResponse *)response
+{
+    NSString *errMsg;
+    
+    
+    if ([response isKindOfClass:[NSHTTPURLResponse class]]) {
+        NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse*)response;
+        if (httpResponse.statusCode == 500) errMsg = serverErrMsg;
+    } else if (error.code == NSURLErrorTimedOut) {
+        errMsg = timeoutErrMsg;
+    } else if (error.code == NSURLErrorCancelled) {
+        errMsg = cancelErrMsg;
+    } else if (error.code == NSURLErrorCannotConnectToHost) {
+        errMsg = connectErrMsg;
+    } else {
+        errMsg = unknownErrMsg;
+    }
+    
+    return errMsg;
+}
 @end
 
 
