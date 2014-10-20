@@ -24,5 +24,6 @@ typedef void(^AuthSessionBlock) (NSString *session);
                  onSuccess:(AuthSuccessBlock)successBlock
                   onFail:(AuthFailBlock)failBlock;
 - (void)updateSessionOnSuccess:(AuthSessionBlock)sessionBlock onFail:(AuthFailBlock)failBlock;
+- (void)logout;
 
 @end

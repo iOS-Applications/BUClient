@@ -115,6 +115,13 @@ static NSString *kKeychainItemIdentifer = @"org.bitunion.buc.%@.KeychainUI";
     
 }
 
+- (void)logout
+{
+    self.isLoggedIn = NO;
+    [[NSUserDefaults standardUserDefaults] setBool:NO forKey:@"isLoggedIn"];
+    [[NSUserDefaults standardUserDefaults] synchronize];
+}
+
 #pragma mark - key chain stuff
 - (void)setNewPassword:(NSString *)password account:(NSString *)account
 {

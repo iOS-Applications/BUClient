@@ -38,7 +38,7 @@
     leftCenter = self.view.center;
     rightCenter = CGPointMake(leftCenter.x + MAXTRANSLATION, leftCenter.y);
     farRightCenter = CGPointMake(leftCenter.x + 320, leftCenter.y);
-    
+
     self.content.layer.shadowOpacity = 1.0;
     self.content.layer.shadowRadius = 5.0;
     self.content.layer.shadowPath = [UIBezierPath bezierPathWithRect:self.content.bounds].CGPath;

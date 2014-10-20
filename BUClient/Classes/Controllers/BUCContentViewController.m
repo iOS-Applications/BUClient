@@ -7,13 +7,11 @@
 //
 
 #import "BUCContentViewController.h"
-#import "BUCUser.h"
 
 @interface BUCContentViewController ()
 @property (strong, nonatomic) IBOutlet UIView *loadingView;
 @property (weak, nonatomic) IBOutlet UIActivityIndicatorView *activityView;
 
-@property (nonatomic) BUCUser *user;
 @end
 
 @implementation BUCContentViewController
@@ -22,11 +20,10 @@
 {
     [super viewDidLoad];
     
-    self.user = [BUCUser sharedInstance];
-    [self.user addObserver:self forKeyPath:@"isLoggedIn" options:NSKeyValueObservingOptionNew context:NULL];
-    
     self.loadingView.center = self.view.center;
     self.loadingView.layer.cornerRadius = 10.0;
+    
+    [self performSegueWithIdentifier:@"segueToFront" sender:nil];
 }
 
 - (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender
@@ -66,12 +63,6 @@
 - (IBAction)unwindToContent:(UIStoryboardSegue *)segue
 {
     
-}
-
-#pragma mark - key value observation handler methods
-- (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context
-{
-    if (self.user.isLoggedIn) [self performSegueWithIdentifier:@"segueToFront" sender:nil];
 }
 
 #pragma mark - private methods
