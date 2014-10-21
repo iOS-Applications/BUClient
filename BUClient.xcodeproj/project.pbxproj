@@ -38,7 +38,7 @@
 		D8477A4318ADB49E00006B7C /* BUCSection.m in Sources */ = {isa = PBXBuildFile; fileRef = D8477A4218ADB49E00006B7C /* BUCSection.m */; };
 		D8477A4618ADB4C200006B7C /* BUCForum.m in Sources */ = {isa = PBXBuildFile; fileRef = D8477A4518ADB4C200006B7C /* BUCForum.m */; };
 		D8477A4918ADB54D00006B7C /* BUCThread.m in Sources */ = {isa = PBXBuildFile; fileRef = D8477A4818ADB54D00006B7C /* BUCThread.m */; };
-		D8477A4C18ADB5C900006B7C /* BUCPost.m in Sources */ = {isa = PBXBuildFile; fileRef = D8477A4B18ADB5C900006B7C /* BUCPost.m */; };
+		D8477A4C18ADB5C900006B7C /* BUCPostOld.m in Sources */ = {isa = PBXBuildFile; fileRef = D8477A4B18ADB5C900006B7C /* BUCPostOld.m */; };
 		D8477A5218ADB72F00006B7C /* BUCPoster.m in Sources */ = {isa = PBXBuildFile; fileRef = D8477A5118ADB72F00006B7C /* BUCPoster.m */; };
 		D855B03418AFF89B000D3AD8 /* NSObject+BUCTools.m in Sources */ = {isa = PBXBuildFile; fileRef = D855B03318AFF89B000D3AD8 /* NSObject+BUCTools.m */; };
 		D878CF2318B290F60007441A /* BUCHTMLParser.m in Sources */ = {isa = PBXBuildFile; fileRef = D878CF2218B290F60007441A /* BUCHTMLParser.m */; };
@@ -59,6 +59,8 @@
 		D8A771AF189B1DFA001E4431 /* Default-568h@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = D8A771AE189B1DFA001E4431 /* Default-568h@2x.png */; };
 		D8A8E1C618B3657400D355D4 /* funny.png in Resources */ = {isa = PBXBuildFile; fileRef = D8A8E1C518B3657400D355D4 /* funny.png */; };
 		D8B766F519F41A1A00EB63D2 /* BUCAuthManager.m in Sources */ = {isa = PBXBuildFile; fileRef = D8B766F419F41A1A00EB63D2 /* BUCAuthManager.m */; };
+		D8B766F819F4FCA100EB63D2 /* BUCDataManager.m in Sources */ = {isa = PBXBuildFile; fileRef = D8B766F719F4FCA100EB63D2 /* BUCDataManager.m */; };
+		D8B766FB19F50D1C00EB63D2 /* BUCPost.m in Sources */ = {isa = PBXBuildFile; fileRef = D8B766FA19F50D1C00EB63D2 /* BUCPost.m */; };
 		D8BFD96C189289800059DBDE /* BUCForumListViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = D8BFD96B189289800059DBDE /* BUCForumListViewController.m */; };
 		D8BFD96F189289F70059DBDE /* BUCForumViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = D8BFD96E189289F70059DBDE /* BUCForumViewController.m */; };
 		D8BFD973189297900059DBDE /* BUCUser.m in Sources */ = {isa = PBXBuildFile; fileRef = D8BFD972189297900059DBDE /* BUCUser.m */; };
@@ -128,8 +130,8 @@
 		D8477A4518ADB4C200006B7C /* BUCForum.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BUCForum.m; sourceTree = "<group>"; };
 		D8477A4718ADB54D00006B7C /* BUCThread.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BUCThread.h; sourceTree = "<group>"; };
 		D8477A4818ADB54D00006B7C /* BUCThread.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BUCThread.m; sourceTree = "<group>"; };
-		D8477A4A18ADB5C900006B7C /* BUCPost.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BUCPost.h; sourceTree = "<group>"; };
-		D8477A4B18ADB5C900006B7C /* BUCPost.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BUCPost.m; sourceTree = "<group>"; };
+		D8477A4A18ADB5C900006B7C /* BUCPostOld.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BUCPostOld.h; sourceTree = "<group>"; };
+		D8477A4B18ADB5C900006B7C /* BUCPostOld.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BUCPostOld.m; sourceTree = "<group>"; };
 		D8477A5018ADB72F00006B7C /* BUCPoster.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BUCPoster.h; sourceTree = "<group>"; };
 		D8477A5118ADB72F00006B7C /* BUCPoster.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BUCPoster.m; sourceTree = "<group>"; };
 		D855B03218AFF89B000D3AD8 /* NSObject+BUCTools.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSObject+BUCTools.h"; sourceTree = "<group>"; };
@@ -158,6 +160,10 @@
 		D8A8E1C518B3657400D355D4 /* funny.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = funny.png; sourceTree = "<group>"; };
 		D8B766F319F41A1A00EB63D2 /* BUCAuthManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BUCAuthManager.h; sourceTree = "<group>"; };
 		D8B766F419F41A1A00EB63D2 /* BUCAuthManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BUCAuthManager.m; sourceTree = "<group>"; };
+		D8B766F619F4FCA100EB63D2 /* BUCDataManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BUCDataManager.h; sourceTree = "<group>"; };
+		D8B766F719F4FCA100EB63D2 /* BUCDataManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BUCDataManager.m; sourceTree = "<group>"; };
+		D8B766F919F50D1C00EB63D2 /* BUCPost.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BUCPost.h; sourceTree = "<group>"; };
+		D8B766FA19F50D1C00EB63D2 /* BUCPost.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BUCPost.m; sourceTree = "<group>"; };
 		D8BFD96A189289800059DBDE /* BUCForumListViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BUCForumListViewController.h; sourceTree = "<group>"; };
 		D8BFD96B189289800059DBDE /* BUCForumListViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BUCForumListViewController.m; sourceTree = "<group>"; };
 		D8BFD96D189289F70059DBDE /* BUCForumViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BUCForumViewController.h; sourceTree = "<group>"; };
@@ -419,6 +425,10 @@
 			children = (
 				D8B766F319F41A1A00EB63D2 /* BUCAuthManager.h */,
 				D8B766F419F41A1A00EB63D2 /* BUCAuthManager.m */,
+				D8B766F619F4FCA100EB63D2 /* BUCDataManager.h */,
+				D8B766F719F4FCA100EB63D2 /* BUCDataManager.m */,
+				D8B766F919F50D1C00EB63D2 /* BUCPost.h */,
+				D8B766FA19F50D1C00EB63D2 /* BUCPost.m */,
 				D8BFD971189297900059DBDE /* BUCUser.h */,
 				D8BFD972189297900059DBDE /* BUCUser.m */,
 				D855B03518B03691000D3AD8 /* BUCTask.h */,
@@ -429,8 +439,8 @@
 				D8477A4518ADB4C200006B7C /* BUCForum.m */,
 				D8477A4718ADB54D00006B7C /* BUCThread.h */,
 				D8477A4818ADB54D00006B7C /* BUCThread.m */,
-				D8477A4A18ADB5C900006B7C /* BUCPost.h */,
-				D8477A4B18ADB5C900006B7C /* BUCPost.m */,
+				D8477A4A18ADB5C900006B7C /* BUCPostOld.h */,
+				D8477A4B18ADB5C900006B7C /* BUCPostOld.m */,
 				D8477A5018ADB72F00006B7C /* BUCPoster.h */,
 				D8477A5118ADB72F00006B7C /* BUCPoster.m */,
 			);
@@ -556,6 +566,7 @@
 				D878CF2318B290F60007441A /* BUCHTMLParser.m in Sources */,
 				D8477A4618ADB4C200006B7C /* BUCForum.m in Sources */,
 				D8BFD973189297900059DBDE /* BUCUser.m in Sources */,
+				D8B766FB19F50D1C00EB63D2 /* BUCPost.m in Sources */,
 				D8114CD9189012BC00F0E1A7 /* BUCRootViewController.m in Sources */,
 				D833DC7E18A84968002998EC /* BUCUserListViewController.m in Sources */,
 				D8BFD96C189289800059DBDE /* BUCForumListViewController.m in Sources */,
@@ -563,11 +574,12 @@
 				D8835E7018B17070001E1925 /* BUCTask.m in Sources */,
 				D8BFD97618939FE40059DBDE /* BUCNetworkEngine.m in Sources */,
 				D8114CD7189012BC00F0E1A7 /* BUCIndexViewController.m in Sources */,
-				D8477A4C18ADB5C900006B7C /* BUCPost.m in Sources */,
+				D8477A4C18ADB5C900006B7C /* BUCPostOld.m in Sources */,
 				D833DC7B18A82763002998EC /* BUCUserViewController.m in Sources */,
 				D8276DBD18A51B4700C18C52 /* BUCTableCell.m in Sources */,
 				D855B03418AFF89B000D3AD8 /* NSObject+BUCTools.m in Sources */,
 				D80E28A118A7F52F00A397B1 /* BUCSettingsViewController.m in Sources */,
+				D8B766F819F4FCA100EB63D2 /* BUCDataManager.m in Sources */,
 				D8CA18E118A7DD6B00D4D2F9 /* BUCEditorViewController.m in Sources */,
 				D8A3BFA4187C895E006CBF64 /* main.m in Sources */,
 				D8114CD4189012BC00F0E1A7 /* BUCAppDelegate.m in Sources */,

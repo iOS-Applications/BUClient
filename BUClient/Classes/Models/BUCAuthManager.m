@@ -12,6 +12,7 @@
 
 static NSString *unknownError = @"未知错误";
 static NSString *failError = @"登录失败，请检查帐号状态";
+static NSString *BUCErrorDomain = @"BUClient.ErrorDomain";
 
 static NSString *kKeychainItemIdentifer = @"org.bitunion.buc.%@.KeychainUI";
 
@@ -22,7 +23,7 @@ static NSString *kKeychainItemIdentifer = @"org.bitunion.buc.%@.KeychainUI";
 @property (nonatomic, readwrite) NSString *session;
 
 @property (nonatomic) NSMutableDictionary *json;
-
+@property (nonatomic) NSURLRequest *req;
 
 @property NSString *keychainItemIDString;
 @property (nonatomic) NSMutableDictionary *keychainData;
@@ -72,31 +73,27 @@ static NSString *kKeychainItemIdentifer = @"org.bitunion.buc.%@.KeychainUI";
 
 - (void)loginWithUsername:(NSString *)username andPassword:(NSString *)password onSuccess:(AuthSuccessBlock)successBlock onFail:(AuthFailBlock)failBlock
 {
-    NSMutableDictionary *queryJSON = self.json;
-    [queryJSON setObject:username forKey:@"username"];
-    [queryJSON setObject:password forKey:@"password"];
-    
-    BUCNetworkEngine *engine = [BUCNetworkEngine sharedInstance];
-    NSString *url = [NSString stringWithFormat:engine.baseUrl, @"logging"];
-    
-    NSURLRequest *req = [self requestWithUrl:url json:queryJSON];
+    NSError *error = nil;
+    NSURLRequest *req = [self setupRequest:username password:password error:&error];
     if (!req) {
-        failBlock(unknownError);
+        failBlock(error);
         return;
     }
-    
+
+    BUCNetworkEngine *engine = [BUCNetworkEngine sharedInstance];
     BUCAuthManager * __weak weakSelf = self;
     [engine processRequest:req
                   onResult:^(NSDictionary *resultJSON) {
                       NSString *result = [resultJSON objectForKey:@"result"];
                       if (![result isEqualToString:@"success"]) {
-                          failBlock(failError);
+                          failBlock([NSError errorWithDomain:BUCErrorDomain code:1 userInfo:@{NSLocalizedDescriptionKey:failError}]);
                           return;
                       }
                       
                       weakSelf.curUser = username;
                       weakSelf.session = [resultJSON objectForKey:@"session"];
                       weakSelf.isLoggedIn = YES;
+                      weakSelf.req = req;
                       [weakSelf setNewPassword:password account:username];
                       NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
                       [defaults setObject:username forKey:@"curUser"];
@@ -104,15 +101,40 @@ static NSString *kKeychainItemIdentifer = @"org.bitunion.buc.%@.KeychainUI";
                       [defaults synchronize];
                       successBlock();
                   }
-                   onError:^(NSString *errorMsg) {
-                       failBlock(errorMsg);
+                   onError:^(NSError *error) {
+                       failBlock(error);
                    }];
     
 }
 
 - (void)updateSessionOnSuccess:(AuthSessionBlock)sessionBlock onFail:(AuthFailBlock)failBlock
 {
+    NSURLRequest *req;
+    if (!self.req) {
+        NSError *error = nil;
+        req = [self setupRequest:self.curUser password:[self queryPasswordForAccount:self.curUser] error:&error];
+        if (!req) {
+            failBlock(error);
+            return;
+        }
+    }
     
+    BUCNetworkEngine *engine = [BUCNetworkEngine sharedInstance];
+    BUCAuthManager * __weak weakSelf = self;
+    [engine processRequest:req
+                  onResult:^(NSDictionary *resultJSON) {
+                      NSString *result = [resultJSON objectForKey:@"result"];
+                      if (![result isEqualToString:@"success"]) {
+                          failBlock([NSError errorWithDomain:BUCErrorDomain code:1 userInfo:@{NSLocalizedDescriptionKey:failError}]);
+                          return;
+                      }
+                      
+                      weakSelf.session = [resultJSON objectForKey:@"session"];
+                      weakSelf.req = req;
+                      sessionBlock();
+                  }onError:^(NSError *error) {
+                      failBlock(error);
+                  }];
 }
 
 - (void)logout
@@ -123,6 +145,23 @@ static NSString *kKeychainItemIdentifer = @"org.bitunion.buc.%@.KeychainUI";
 }
 
 #pragma mark - key chain stuff
+- (NSURLRequest *)setupRequest:(NSString *)username password:(NSString *)password error:(NSError **)error
+{
+    NSMutableDictionary *queryJSON = self.json;
+    [queryJSON setObject:username forKey:@"username"];
+    [queryJSON setObject:password forKey:@"password"];
+    
+    BUCNetworkEngine *engine = [BUCNetworkEngine sharedInstance];
+    NSString *url = [NSString stringWithFormat:engine.baseUrl, @"logging"];
+    
+    NSURLRequest *req = [self requestWithUrl:url json:queryJSON error:error];
+    if (!req) {
+        return nil;
+    }
+    
+    return req;
+}
+
 - (void)setNewPassword:(NSString *)password account:(NSString *)account
 {
     [self setupQueryDicForAccount:account];

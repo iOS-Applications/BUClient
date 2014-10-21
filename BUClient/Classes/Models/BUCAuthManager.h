@@ -9,8 +9,8 @@
 #import <Foundation/Foundation.h>
 
 typedef void(^AuthSuccessBlock) (void);
-typedef void(^AuthFailBlock) (NSString *errMsg);
-typedef void(^AuthSessionBlock) (NSString *session);
+typedef void(^AuthFailBlock) (NSError *error);
+typedef void(^AuthSessionBlock) (void);
 
 @interface BUCAuthManager : NSObject
 

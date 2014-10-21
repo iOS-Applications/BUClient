@@ -79,9 +79,9 @@
                              weakSelf.modalTransitionStyle = UIModalTransitionStyleCrossDissolve;
                              [weakSelf performSegueWithIdentifier:@"unwindToContent" sender:nil];
                          }
-                            onFail:^(NSString *errorMsg) {
+                            onFail:^(NSError *error) {
                                 [weakSelf hideLoading];
-                                [weakSelf alertWithMessage:errorMsg];
+                                [weakSelf alertWithMessage:error.localizedDescription];
                             }];
     
     [self displaLoading];
