@@ -7,6 +7,7 @@
 //
 
 #import "BUCFrontPageViewController.h"
+#import "BUCDataManager.h"
 
 @implementation BUCFrontPageViewController
 #pragma mark - overrided methods
@@ -26,7 +27,14 @@
 - (void)viewDidLoad
 {
     [super viewDidLoad];
-    
+    BUCDataManager *dataManager = [BUCDataManager sharedInstance];
+    [dataManager getFrontListOnSuccess:^(NSArray *list) {
+        
+    }
+                                onFail:^(NSError *error) {
+                                    
+                                }];
+
     [self startAllTasks];
 }
 

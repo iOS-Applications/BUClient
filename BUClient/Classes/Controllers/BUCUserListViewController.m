@@ -10,7 +10,7 @@
 #import "BUCUser.h"
 #import "BUCNetworkEngine.h"
 #import "BUCAppDelegate.h"
-#import "BUCMainViewController.h"
+#import "BUCRootViewController.h"
 #import "BUCContentViewController.h"
 #import "BUCLoginViewController.h"
 #import "NSObject+BUCTools.h"
@@ -22,7 +22,7 @@
 @property (nonatomic) NSString *currentUser;
 
 @property (weak, nonatomic) BUCContentViewController *contentController;
-@property (weak, nonatomic) BUCMainViewController *mainController;
+@property (weak, nonatomic) BUCRootViewController *mainController;
 
 @end
 
@@ -39,7 +39,6 @@
         [self.list addObject:key];
     }
     
-    self.mainController = (BUCMainViewController *)((BUCAppDelegate *)[UIApplication sharedApplication].delegate).mainViewController;
     self.contentController = self.mainController.contentController;
     
     self.currentUser = [BUCUser sharedInstance].username;
@@ -51,7 +50,7 @@
 {
     [super viewWillDisappear:animated];
     
-    [self.mainController enableIndex];
+    [self.mainController enableMenu];
 }
 
 #pragma mark - action methods
@@ -64,7 +63,7 @@
         [self.tableView reloadData];
     }
     
-    [self.mainController disableIndex];
+    [self.mainController disableMenu];
 }
 
 #pragma mark - Table view data source
@@ -157,7 +156,8 @@
     
     static NSString *url = @"logging";
     BUCNetworkEngine *engine = [BUCNetworkEngine sharedInstance];
-    NSURLRequest *req = [self requestWithUrl:[NSString stringWithFormat:engine.baseUrl, url] json:json];
+    NSError *error;
+    NSURLRequest *req = [self requestWithUrl:[NSString stringWithFormat:engine.baseUrl, url] json:json error:&error];
     
     [self displayLoading];
     

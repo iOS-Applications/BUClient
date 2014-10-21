@@ -223,12 +223,12 @@ static NSString *fontKey = @"Helvetica-Light";
     
     BUCTask *task = self.task;
     NSArray *jsonDataList = [task.jsonData objectForKey:self.jsonListKey];
-    BUCPost *post = nil;
+    BUCPostOld *post = nil;
     NSInteger index = 0;
     NSMutableArray *dataList = [[NSMutableArray alloc] init];
     NSMutableArray *cellList = [[NSMutableArray alloc] init];
     for (NSMutableDictionary *rawPost in jsonDataList) {
-        post = [[BUCPost alloc] init];
+        post = [[BUCPostOld alloc] init];
         post.thread = self.thread;
         post.poster = [[BUCPoster alloc] init];
         post.poster.username = [[rawPost objectForKey:authorKey] urldecode];
@@ -462,7 +462,7 @@ static NSString *fontKey = @"Helvetica-Light";
     [self.picker reloadComponent:0];
 }
 
-- (BUCTableCell *)createCellForPost:(BUCPost *)post
+- (BUCTableCell *)createCellForPost:(BUCPostOld *)post
 {
     static NSString *CellIdentifier = @"threadCell";
     static NSString *quoteKey = @"引用";

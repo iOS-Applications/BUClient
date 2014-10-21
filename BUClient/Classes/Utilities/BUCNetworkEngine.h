@@ -9,7 +9,7 @@
 #import <Foundation/Foundation.h>
 
 typedef void(^networkResultBlock) (NSDictionary *);
-typedef void(^networkErrorBlock) (NSString *errorMsg);
+typedef void(^networkErrorBlock) (NSError *error);
 
 @interface BUCNetworkEngine : NSObject
 

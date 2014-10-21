@@ -47,7 +47,7 @@
 {
     [super viewDidLoad];
     
-    self.mainController = (BUCMainViewController *)((BUCAppDelegate *)[UIApplication sharedApplication].delegate).mainViewController;
+    self.mainController = (BUCRootViewController *)(((BUCAppDelegate *)[UIApplication sharedApplication].delegate).window.rootViewController);
     self.contentController = self.mainController.contentController;
     self.indexController = self.mainController.indexController;
     
@@ -136,8 +136,8 @@
     if (!task.json || !task.url) return; // ad hoc message, do nothing, just return
     
     BOOL silence = task.silence;
-    
-    NSURLRequest *req = [self requestWithUrl:[NSString stringWithFormat:engine.baseUrl, task.url] json:task.json];
+    NSError *error = nil;
+    NSURLRequest *req = [self requestWithUrl:[NSString stringWithFormat:engine.baseUrl, task.url] json:task.json error:&error];
     if (!req) {
         if (!silence) return [self alertWithMessage:@"未知错误"];
         return;
@@ -175,7 +175,7 @@
                 NSString *result = [jsonData objectForKey:@"result"];
                 if ([result isEqualToString:@"fail"]) {
                     user.isLoggedIn = NO;
-                    [weakSelf.mainController displayLoginWithMessage:@"当前密码已失效，请重新登录"];
+                    [weakSelf.mainController displayLogin];
                     return [weakSelf.contentController removeChildController];
                 }
                 
@@ -246,7 +246,7 @@
 
 - (IBAction)displayMenu:(id)sender
 {
-    [self.mainController revealIndex];
+    [self.mainController showMenu];
 }
 
 @end

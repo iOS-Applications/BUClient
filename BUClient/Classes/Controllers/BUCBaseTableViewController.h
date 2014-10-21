@@ -9,7 +9,7 @@
 #import <UIKit/UIKit.h>
 
 #import "BUCAppDelegate.h"
-#import "BUCMainViewController.h"
+#import "BUCRootViewController.h"
 #import "BUCIndexViewController.h"
 #import "BUCContentViewController.h"
 #import "BUCEditorViewController.h"
@@ -17,7 +17,7 @@
 #import "BUCNetworkEngine.h"
 #import "BUCSection.h"
 #import "BUCForum.h"
-#import "BUCPost.h"
+#import "BUCPostOld.h"
 #import "BUCPoster.h"
 #import "BUCTableCell.h"
 #import "NSString+NSString_Extended.h"
@@ -26,7 +26,7 @@
 
 @interface BUCBaseTableViewController : UITableViewController
 
-@property (weak, nonatomic) BUCMainViewController *mainController;
+@property (weak, nonatomic) BUCRootViewController *mainController;
 @property (weak, nonatomic) BUCContentViewController *contentController;
 @property (weak, nonatomic) BUCIndexViewController *indexController;
 

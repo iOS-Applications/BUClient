@@ -7,14 +7,14 @@
 //
 
 #import "BUCSettingsViewController.h"
-#import "BUCMainViewController.h"
+#import "BUCRootViewController.h"
 #import "BUCAppDelegate.h"
 #import "BUCUserListViewController.h"
 #import "BUCUser.h"
 
 @interface BUCSettingsViewController ()
 //@property (weak, nonatomic) IBOutlet UIWebView *imageContainer;
-@property BUCMainViewController *mainController;
+@property BUCRootViewController *mainController;
 @property BUCUser *user;
 
 @property (weak, nonatomic) IBOutlet UISwitch *loadImage;
@@ -27,7 +27,7 @@
 {
     [super viewDidLoad];
     BUCAppDelegate *appDelegate = [UIApplication sharedApplication].delegate;
-    self.mainController = appDelegate.mainViewController;
+    self.mainController = (BUCRootViewController *)appDelegate.window.rootViewController;
     self.user = [BUCUser sharedInstance];
     
     NSString *loadImage = self.user.loadImage;
@@ -53,7 +53,7 @@
 
 - (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender
 {
-    [self.mainController disableIndex];
+    [self.mainController disableMenu];
 }
 
 #pragma mark - unwind methods and actions
@@ -78,7 +78,7 @@
 
 #pragma mark - private methods
 - (IBAction)displayIndex:(id)sender {
-    [self.mainController revealIndex];
+    [self.mainController showMenu];
 }
 
 @end

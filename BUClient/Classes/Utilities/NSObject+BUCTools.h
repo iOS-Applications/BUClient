@@ -7,7 +7,8 @@
 //
 
 #import <Foundation/Foundation.h>
+#import "NSString+NSString_Extended.h"
 
 @interface NSObject (BUCTools)
-- (NSURLRequest *)requestWithUrl:(NSString *)url json:(NSDictionary *)json;
+- (NSURLRequest *)requestWithUrl:(NSString *)url json:(NSDictionary *)json error:(NSError **)error;
 @end

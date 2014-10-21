@@ -9,12 +9,6 @@
 #import "BUCNetworkEngine.h"
 #import "NSObject+BUCTools.h"
 
-static NSString *serverErrMsg = @"服务器错误，请稍后再试";
-static NSString *timeoutErrMsg = @"服务器连接超时，请检查网络连接";
-static NSString *cancelErrMsg = @"";
-static NSString *connectErrMsg = @"无法连接至服务器，请检查网络连接";
-static NSString *unknownErrMsg = @"未知错误";
-
 @interface BUCNetworkEngine ()
 
 @property (nonatomic) NSURLSession *defaultSession;
@@ -73,34 +67,46 @@ static NSString *unknownErrMsg = @"未知错误";
     return task;
 }
 
-- (NSURLSessionDataTask *)processRequest:(NSURLRequest *)request onResult:(networkResultBlock)resultBlock onError:(networkErrorBlock)errorBlock
+- (NSURLSessionDataTask *)processRequest:(NSURLRequest *)request
+                                onResult:(networkResultBlock)resultBlock
+                                 onError:(networkErrorBlock)errorBlock
 {
     BUCNetworkEngine * __weak weakSelf = self;
-    NSURLSessionDataTask *task = [self.defaultSession dataTaskWithRequest:request
-                                                        completionHandler:^(NSData *data, NSURLResponse *response, NSError *error) {
-                                                            if (error) {
-                                                                errorBlock([weakSelf checkErr:error response:response]);
-                                                                return;
-                                                            }
-                                                            
-                                                            NSDictionary *resultJSON = [NSJSONSerialization JSONObjectWithData:data options:NSJSONReadingMutableContainers error:&error];
-                                                            if (!resultJSON) {
-                                                                errorBlock(unknownErrMsg);
-                                                                return;
-                                                            }
-                                                            
-                                                            resultBlock(resultJSON);
-                                                        }];
+    
+    void (^urlSessionBlock)(NSData *, NSURLResponse *, NSError *);
+    urlSessionBlock = ^(NSData *data, NSURLResponse *response, NSError *error) {
+        if (error) {
+            errorBlock([weakSelf checkErr:error response:response]);
+            return;
+        }
+        
+        NSDictionary *resultJSON = [NSJSONSerialization JSONObjectWithData:data
+                                                                   options:NSJSONReadingMutableContainers
+                                                                     error:&error];
+        if (!resultJSON) {
+            errorBlock(error);
+            return;
+        }
+        
+        resultBlock(resultJSON);
+    };
+    
+    NSURLSessionDataTask *task = [self.defaultSession dataTaskWithRequest:request completionHandler:urlSessionBlock];
     
     [task resume];
+    
     return task;
 }
 
 #pragma mark - private methods
-- (NSString *)checkErr:(NSError *)error response:(NSURLResponse *)response
+- (NSError *)checkErr:(NSError *)error response:(NSURLResponse *)response
 {
     NSString *errMsg;
-    
+    static NSString *serverErrMsg = @"服务器错误，请稍后再试";
+    static NSString *timeoutErrMsg = @"服务器连接超时，请检查网络连接";
+    static NSString *cancelErrMsg = @"";
+    static NSString *connectErrMsg = @"无法连接至服务器，请检查网络连接";
+    static NSString *unknownErrMsg = @"未知错误";
     
     if ([response isKindOfClass:[NSHTTPURLResponse class]]) {
         NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse*)response;
@@ -115,7 +121,7 @@ static NSString *unknownErrMsg = @"未知错误";
         errMsg = unknownErrMsg;
     }
     
-    return errMsg;
+    return [NSError errorWithDomain:error.domain code:error.code userInfo:@{NSLocalizedDescriptionKey: errMsg}];
 }
 @end
 

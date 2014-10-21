@@ -7,9 +7,10 @@
 //
 
 #import "BUCIndexViewController.h"
-#import "BUCMainViewController.h"
+#import "BUCRootViewController.h"
 #import "BUCContentViewController.h"
 #import "BUCUser.h"
+#import "BUCAuthManager.h"
 
 @interface BUCIndexViewController ()
 @property (nonatomic) NSArray *list;
@@ -49,15 +50,15 @@
 #pragma mark - Table view delegate methods
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
 {
-    BUCMainViewController *mainController = (BUCMainViewController *)self.parentViewController;
+    BUCRootViewController *mainController = (BUCRootViewController *)self.parentViewController;
     BUCContentViewController *contentController = mainController.contentController;
     BUCUser *user = [BUCUser sharedInstance];
+    BUCAuthManager *authManager = [BUCAuthManager sharedInstance];
     
     if (indexPath.row == 4) {
-        [contentController removeChildController];
-        [mainController displayLoginWithMessage:nil];
-        [mainController hideIndex];
-        user.isLoggedIn = NO;
+        [mainController displayLogin];
+        [mainController hideMenu];
+        [authManager logout];
         return;
     }
     

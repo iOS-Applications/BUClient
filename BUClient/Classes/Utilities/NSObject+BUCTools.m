@@ -7,21 +7,20 @@
 //
 
 #import "NSObject+BUCTools.h"
-#import "NSString+NSString_Extended.h"
+
 
 @implementation NSObject (BUCTools)
 
-- (NSURLRequest *)requestWithUrl:(NSString *)url json:(NSDictionary *)json
+- (NSURLRequest *)requestWithUrl:(NSString *)url json:(NSDictionary *)json error:(NSError **)error
 {
     NSMutableURLRequest *req = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:url]];
     req.HTTPMethod = @"POST";
     
-    NSError *error = nil;
     NSMutableDictionary *dataJson = [[NSMutableDictionary alloc] init];
     for (NSString *key in json) {
         [dataJson setObject:[[json objectForKey:key] urlencode] forKey:key];
     }
-    NSData *data = [NSJSONSerialization dataWithJSONObject:dataJson options:0 error:&error];
+    NSData *data = [NSJSONSerialization dataWithJSONObject:dataJson options:0 error:error];
     if (!data) {
         return nil;
     }
