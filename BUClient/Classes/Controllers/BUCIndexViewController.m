@@ -8,8 +8,6 @@
 
 #import "BUCIndexViewController.h"
 #import "BUCRootViewController.h"
-#import "BUCContentViewController.h"
-#import "BUCUser.h"
 #import "BUCAuthManager.h"
 
 @interface BUCIndexViewController ()
@@ -50,29 +48,7 @@
 #pragma mark - Table view delegate methods
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
 {
-    BUCRootViewController *mainController = (BUCRootViewController *)self.parentViewController;
-    BUCContentViewController *contentController = mainController.contentController;
-    BUCUser *user = [BUCUser sharedInstance];
-    BUCAuthManager *authManager = [BUCAuthManager sharedInstance];
-    
-    if (indexPath.row == 4) {
-        [mainController displayLogin];
-        [mainController hideMenu];
-        [authManager logout];
-        return;
-    }
-    
-    if (indexPath.row == 2) {
-        BUCPoster *poster = [[BUCPoster alloc] init];
-        poster.username = user.username;
-        contentController.info = poster;
-    }
-    
-    NSString *segueIdentifier = [self.list objectAtIndex:indexPath.row];
-    self.tableView.userInteractionEnabled = NO;
-    [mainController switchContentWith:segueIdentifier completion:^{
-        self.tableView.userInteractionEnabled = YES;
-    }];
+
 }
 
 @end

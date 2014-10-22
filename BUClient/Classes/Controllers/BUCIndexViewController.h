@@ -8,8 +8,6 @@
 
 #import <UIKit/UIKit.h>
 
-#import "BUCPoster.h"
-
 @interface BUCIndexViewController : UITableViewController
-- (void)deselectCurrentRow;
+
 @end

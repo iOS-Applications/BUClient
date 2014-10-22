@@ -6,8 +6,8 @@
 //  Copyright (c) 2014 Jox. All rights reserved.
 //
 
-#import "BUCBaseTableViewController.h"
+#import <UIKit/UIKit.h>
 
-@interface BUCFrontPageViewController : BUCBaseTableViewController
+@interface BUCFrontPageViewController : UIViewController
 
 @end

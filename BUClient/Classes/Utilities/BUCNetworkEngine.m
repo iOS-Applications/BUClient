@@ -24,9 +24,9 @@
 {
     static BUCNetworkEngine *sharedInstance = nil;
     static dispatch_once_t onceSecurePredicate;
-    dispatch_once(&onceSecurePredicate,^{
-                      sharedInstance = [[self alloc] init];
-                  });
+    dispatch_once(&onceSecurePredicate, ^{
+        sharedInstance = [[self alloc] init];
+    });
     
     return sharedInstance;
 }
@@ -36,7 +36,8 @@
 {
     self = [super init];
     
-    if (self) {
+    if (self)
+    {
         _defaultConfigObject = [NSURLSessionConfiguration defaultSessionConfiguration];
         NSString *cachePath = @"/MyCacheDirectory";
 
@@ -53,20 +54,6 @@
 }
 
 #pragma mark - public methods
-- (NSURLSessionDataTask *)processRequest:(NSURLRequest *)request completionHandler:(void (^)(NSData *, NSError *))completionHandler
-{
-    NSURLSessionDataTask *task = [self.defaultSession dataTaskWithRequest:request
-                                                        completionHandler:^(NSData *data, NSURLResponse *response, NSError *error) {
-                                                            if (error) {
-                                                                
-                                                            }
-                                                  
-                                                            completionHandler(data, error);
-                                                        }];
-    [task resume];
-    return task;
-}
-
 - (NSURLSessionDataTask *)processRequest:(NSURLRequest *)request
                                 onResult:(networkResultBlock)resultBlock
                                  onError:(networkErrorBlock)errorBlock
@@ -74,8 +61,10 @@
     BUCNetworkEngine * __weak weakSelf = self;
     
     void (^urlSessionBlock)(NSData *, NSURLResponse *, NSError *);
-    urlSessionBlock = ^(NSData *data, NSURLResponse *response, NSError *error) {
-        if (error) {
+    urlSessionBlock = ^(NSData *data, NSURLResponse *response, NSError *error)
+    {
+        if (error)
+        {
             errorBlock([weakSelf checkErr:error response:response]);
             return;
         }
@@ -83,7 +72,8 @@
         NSDictionary *resultJSON = [NSJSONSerialization JSONObjectWithData:data
                                                                    options:NSJSONReadingMutableContainers
                                                                      error:&error];
-        if (!resultJSON) {
+        if (!resultJSON)
+        {
             errorBlock(error);
             return;
         }
@@ -101,27 +91,57 @@
 #pragma mark - private methods
 - (NSError *)checkErr:(NSError *)error response:(NSURLResponse *)response
 {
-    NSString *errMsg;
-    static NSString *serverErrMsg = @"服务器错误，请稍后再试";
-    static NSString *timeoutErrMsg = @"服务器连接超时，请检查网络连接";
-    static NSString *cancelErrMsg = @"";
-    static NSString *connectErrMsg = @"无法连接至服务器，请检查网络连接";
-    static NSString *unknownErrMsg = @"未知错误";
+    static NSString *serverErrMsg =     @"服务器错误，请稍后再试";
+    static NSString *timeoutErrMsg =    @"服务器连接超时，请检查网络连接";
+    static NSString *cancelErrMsg =     @"";
+    static NSString *connectErrMsg =    @"无法连接至服务器，请检查网络连接";
+    static NSString *unknownErrMsg =    @"未知错误";
     
-    if ([response isKindOfClass:[NSHTTPURLResponse class]]) {
+    static NSString *bucHttpErrorDomain = @"org.bitunion.buc.HttpErrorDomain";
+    static NSString *bucNetworkErrorDomain = @"org.bitunion.buc.NetworkErrorDomain";
+    
+    static NSError *serverError = nil;
+    static NSError *timeoutError = nil;
+    static NSError *cancelError = nil;
+    static NSError *connectError = nil;
+    static NSError *unknownError = nil;
+    
+    static dispatch_once_t onceSecurePredicate;
+    dispatch_once(&onceSecurePredicate, ^{
+        serverError =  [NSError errorWithDomain:bucHttpErrorDomain code:500 userInfo:@{NSLocalizedDescriptionKey: serverErrMsg}];
+        timeoutError = [NSError errorWithDomain:bucNetworkErrorDomain code:NSURLErrorTimedOut userInfo:@{NSLocalizedDescriptionKey:timeoutErrMsg}];
+        cancelError =  [NSError errorWithDomain:bucNetworkErrorDomain code:NSURLErrorCancelled userInfo:@{NSLocalizedDescriptionKey:cancelErrMsg}];
+        connectError = [NSError errorWithDomain:bucNetworkErrorDomain code:NSURLErrorCannotConnectToHost userInfo:@{NSLocalizedDescriptionKey:connectErrMsg}];
+        unknownError = [NSError errorWithDomain:bucNetworkErrorDomain code:NSURLErrorUnknown userInfo:@{NSLocalizedDescriptionKey:unknownErrMsg}];
+    });
+    
+    NSError *resultError = nil;
+    if ([response isKindOfClass:[NSHTTPURLResponse class]])
+    {
         NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse*)response;
-        if (httpResponse.statusCode == 500) errMsg = serverErrMsg;
-    } else if (error.code == NSURLErrorTimedOut) {
-        errMsg = timeoutErrMsg;
-    } else if (error.code == NSURLErrorCancelled) {
-        errMsg = cancelErrMsg;
-    } else if (error.code == NSURLErrorCannotConnectToHost) {
-        errMsg = connectErrMsg;
-    } else {
-        errMsg = unknownErrMsg;
+        if (httpResponse.statusCode == 500)
+        {
+            resultError = serverError;
+        }
+    }
+    else if (error.code == NSURLErrorTimedOut)
+    {
+        resultError = timeoutError;
+    }
+    else if (error.code == NSURLErrorCancelled)
+    {
+        resultError = cancelError;
+    }
+    else if (error.code == NSURLErrorCannotConnectToHost)
+    {
+        resultError = connectError;
+    }
+    else
+    {
+        resultError = unknownError;
     }
     
-    return [NSError errorWithDomain:error.domain code:error.code userInfo:@{NSLocalizedDescriptionKey: errMsg}];
+    return resultError;
 }
 @end
 

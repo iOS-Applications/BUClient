@@ -19,6 +19,8 @@ typedef void(^AuthSessionBlock) (void);
 @property (nonatomic, readonly) NSString *session;
 
 + (BUCAuthManager *)sharedInstance;
+
+- (void)start;
 - (void)loginWithUsername:(NSString *)username
               andPassword:(NSString *)password
                  onSuccess:(AuthSuccessBlock)successBlock
