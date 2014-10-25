@@ -19,7 +19,7 @@
 @property (nonatomic) NSString *user;
 @property (nonatomic) NSString *uid;
 
-@property (nonatomic) NSString *title;
+@property (nonatomic) NSAttributedString *title;
 @property (nonatomic) NSString *content;
 @property (nonatomic) NSString *dateline;
 

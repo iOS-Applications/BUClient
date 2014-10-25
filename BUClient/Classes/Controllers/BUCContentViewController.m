@@ -23,7 +23,9 @@
     self.loadingView.center = self.view.center;
     self.loadingView.layer.cornerRadius = 10.0;
     
-    [self performSegueWithIdentifier:@"segueToFront" sender:nil];
+    static NSString *kUserLoginNotification = @"kUserLoginNotification";
+    
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(bringUpFront) name:kUserLoginNotification object:nil];
 }
 
 - (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender
@@ -76,6 +78,11 @@
         [fromViewController removeFromParentViewController];
         [toViewController didMoveToParentViewController:self];
     }];
+}
+
+- (void)bringUpFront
+{
+    [self performSegueWithIdentifier:@"segueToFront" sender:nil];
 }
 
 @end

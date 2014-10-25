@@ -59,12 +59,14 @@
 }
 
 #pragma mark - IBAction methods
-- (IBAction)login:(id)sender {
+- (IBAction)login:(id)sender
+{
     [self.curTextField resignFirstResponder];
     
     NSString *username = self.username.text;
     NSString *password = self.password.text;
-    if ([username length] == 0 || [password length] == 0) {
+    if ([username length] == 0 || [password length] == 0)
+    {
         [self alertWithMessage:@"请输入用户名与密码"];
         return;
     }
@@ -72,17 +74,23 @@
     BUCAuthManager *authManager = [BUCAuthManager sharedInstance];
     BUCLoginViewController * __weak weakSelf = self;
     
-    [authManager loginWithUsername:username
-                       andPassword:password
-                         onSuccess:^(void) {
-                             [weakSelf hideLoading];
-                             weakSelf.modalTransitionStyle = UIModalTransitionStyleCrossDissolve;
-                             [weakSelf performSegueWithIdentifier:@"unwindToContent" sender:nil];
-                         }
-                            onFail:^(NSError *error) {
-                                [weakSelf hideLoading];
-                                [weakSelf alertWithMessage:error.localizedDescription];
-                            }];
+    [authManager
+     loginWithUsername:username
+     
+     andPassword:password
+     
+     onSuccess:^(void)
+     {
+         [weakSelf hideLoading];
+         weakSelf.modalTransitionStyle = UIModalTransitionStyleCrossDissolve;
+         [weakSelf performSegueWithIdentifier:@"unwindToContent" sender:nil];
+     }
+     
+     onFail:^(NSError *error)
+     {
+         [weakSelf hideLoading];
+         [weakSelf alertWithMessage:error.localizedDescription];
+     }];
     
     [self displaLoading];
 }
@@ -118,13 +126,13 @@
 - (void)displaLoading
 {
     [self.activityView startAnimating];
-    self.loadingView.hidden = NO;
+    [self.view addSubview:self.loadingView];
     self.view.userInteractionEnabled = NO;
 }
 
 - (void)hideLoading
 {
-    self.loadingView.hidden = YES;
+    [self.loadingView removeFromSuperview];
     [self.activityView stopAnimating];
     self.view.userInteractionEnabled = YES;
 }

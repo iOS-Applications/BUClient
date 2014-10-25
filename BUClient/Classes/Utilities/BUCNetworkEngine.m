@@ -7,7 +7,6 @@
 //
 
 #import "BUCNetworkEngine.h"
-#import "NSObject+BUCTools.h"
 
 @interface BUCNetworkEngine ()
 
@@ -54,47 +53,114 @@
 }
 
 #pragma mark - public methods
-- (NSURLSessionDataTask *)processRequest:(NSURLRequest *)request
-                                onResult:(networkResultBlock)resultBlock
-                                 onError:(networkErrorBlock)errorBlock
+- (void)processRequest:(NSMutableURLRequest *)request
+                  json:(NSDictionary *)json
+              onResult:(networkResultBlock)resultBlock
+               onError:(networkErrorBlock)errorBlock
 {
+    NSError *error = nil;
+    request = [self setUpRequest:request json:json error:&error];
+    if (!request)
+    {
+        if (errorBlock)
+        {
+            errorBlock(error);
+        }
+        
+        return;
+    }
+    
     BUCNetworkEngine * __weak weakSelf = self;
     
     void (^urlSessionBlock)(NSData *, NSURLResponse *, NSError *);
     urlSessionBlock = ^(NSData *data, NSURLResponse *response, NSError *error)
     {
+        NSDictionary *resultJSON = nil;
         if (error)
         {
-            errorBlock([weakSelf checkErr:error response:response]);
-            return;
+            goto fail;
         }
         
-        NSDictionary *resultJSON = [NSJSONSerialization JSONObjectWithData:data
-                                                                   options:NSJSONReadingMutableContainers
-                                                                     error:&error];
+        resultJSON = [NSJSONSerialization JSONObjectWithData:data
+                                                     options:NSJSONReadingMutableContainers
+                                                       error:&error];
         if (!resultJSON)
         {
-            errorBlock(error);
-            return;
+            goto fail;
         }
         
-        resultBlock(resultJSON);
+        if (resultBlock)
+        {
+            resultBlock(resultJSON);
+        }
+        
+        return;
+        
+    fail:
+        if (errorBlock)
+        {
+            errorBlock([weakSelf checkErr:error response:response]);
+        }
     };
     
     NSURLSessionDataTask *task = [self.defaultSession dataTaskWithRequest:request completionHandler:urlSessionBlock];
     
     [task resume];
-    
-    return task;
 }
 
 #pragma mark - private methods
+- (NSMutableURLRequest *)setUpRequest:(NSMutableURLRequest *)req json:(NSDictionary *)json error:(NSError **)error
+{
+    NSMutableDictionary *dataJson = [[NSMutableDictionary alloc] init];
+    for (NSString *key in json)
+    {
+        [dataJson setObject:[self urlencode:[json objectForKey:key]] forKey:key];
+    }
+    NSData *data = [NSJSONSerialization dataWithJSONObject:dataJson options:0 error:error];
+    if (!data)
+    {
+        return nil;
+    }
+    
+    req.HTTPBody = data;
+    
+    return req;
+}
+
+- (NSString *)urlencode:(NSString *)string
+{
+    NSMutableString *output = [NSMutableString string];
+    const unsigned char *source = (const unsigned char *)[string UTF8String];
+    unsigned long sourceLen = strlen((const char *)source);
+    for (int i = 0; i < sourceLen; ++i)
+    {
+        const unsigned char thisChar = source[i];
+        if (thisChar == ' ')
+        {
+            [output appendString:@"+"];
+        }
+        else if (thisChar == '.' || thisChar == '-' || thisChar == '_' || thisChar == '~' ||
+                   (thisChar >= 'a' && thisChar <= 'z') ||
+                   (thisChar >= 'A' && thisChar <= 'Z') ||
+                   (thisChar >= '0' && thisChar <= '9'))
+        {
+            [output appendFormat:@"%c", thisChar];
+        }
+        else
+        {
+            [output appendFormat:@"%%%02X", thisChar];
+        }
+    }
+    return output;
+}
+
 - (NSError *)checkErr:(NSError *)error response:(NSURLResponse *)response
 {
     static NSString *serverErrMsg =     @"服务器错误，请稍后再试";
-    static NSString *timeoutErrMsg =    @"服务器连接超时，请检查网络连接";
+    static NSString *timeoutErrMsg =    @"服务器连接超时";
     static NSString *cancelErrMsg =     @"";
-    static NSString *connectErrMsg =    @"无法连接至服务器，请检查网络连接";
+    static NSString *connectErrMsg =    @"无法连接至服务器";
+    static NSString *noInternetErrMsg = @"无网络连接，请检查网络连接";
     static NSString *unknownErrMsg =    @"未知错误";
     
     static NSString *bucHttpErrorDomain = @"org.bitunion.buc.HttpErrorDomain";
@@ -104,6 +170,7 @@
     static NSError *timeoutError = nil;
     static NSError *cancelError = nil;
     static NSError *connectError = nil;
+    static NSError *noInternetError = nil;
     static NSError *unknownError = nil;
     
     static dispatch_once_t onceSecurePredicate;
@@ -112,6 +179,7 @@
         timeoutError = [NSError errorWithDomain:bucNetworkErrorDomain code:NSURLErrorTimedOut userInfo:@{NSLocalizedDescriptionKey:timeoutErrMsg}];
         cancelError =  [NSError errorWithDomain:bucNetworkErrorDomain code:NSURLErrorCancelled userInfo:@{NSLocalizedDescriptionKey:cancelErrMsg}];
         connectError = [NSError errorWithDomain:bucNetworkErrorDomain code:NSURLErrorCannotConnectToHost userInfo:@{NSLocalizedDescriptionKey:connectErrMsg}];
+        noInternetError = [NSError errorWithDomain:bucNetworkErrorDomain code:NSURLErrorNotConnectedToInternet userInfo:@{NSLocalizedDescriptionKey:noInternetErrMsg}];
         unknownError = [NSError errorWithDomain:bucNetworkErrorDomain code:NSURLErrorUnknown userInfo:@{NSLocalizedDescriptionKey:unknownErrMsg}];
     });
     
@@ -135,6 +203,10 @@
     else if (error.code == NSURLErrorCannotConnectToHost)
     {
         resultError = connectError;
+    }
+    else if(error.code == NSURLErrorNotConnectedToInternet)
+    {
+        resultError = noInternetError;
     }
     else
     {

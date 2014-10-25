@@ -18,7 +18,7 @@
 }
 
 - (void)applicationDidBecomeActive:(UIApplication *)application
-{
+{    
     if ([[NSUserDefaults standardUserDefaults] boolForKey:@"isJustLaunched"])
     {
         if (![[NSUserDefaults standardUserDefaults] boolForKey:@"isLoggedIn"])

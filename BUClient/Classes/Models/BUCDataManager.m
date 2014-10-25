@@ -9,7 +9,6 @@
 #import "BUCDataManager.h"
 #import "BUCNetworkEngine.h"
 #import "BUCAuthManager.h"
-#import "NSObject+BUCTools.h"
 
 #import "BUCPost.h"
 
@@ -44,22 +43,27 @@
 - (void)getFrontListOnSuccess:(ArrayBlock)arrayBlock onFail:(FailBlock)failBlock
 {
     BUCDataManager * __weak weakSelf = self;
-    
     BUCAuthManager *authManager = [BUCAuthManager sharedInstance];
+    BUCNetworkEngine *engine = [BUCNetworkEngine sharedInstance];
+    
     if (!authManager.session)
     {
         [authManager
-         updateSessionOnSuccess:^(void)
+         updateSessionOnSuccess:
+         ^(void)
          {
              [weakSelf getFrontListOnSuccess:arrayBlock onFail:failBlock];
          }
-         onFail:^(NSError *error)
+         
+         onFail:
+         ^(NSError *error)
          {
              if (failBlock)
              {
                  failBlock(error);
              }
          }];
+        
         return;
     }
     
@@ -67,22 +71,13 @@
     [queryJSON setObject:authManager.curUser forKey:@"username"];
     [queryJSON setObject:authManager.session forKey:@"session"];
     
-    BUCNetworkEngine *engine = [BUCNetworkEngine sharedInstance];
     NSString *url = [NSString stringWithFormat:engine.baseUrl, @"home"];
-    NSError *error = nil;
-    NSURLRequest *req = [self requestWithUrl:url json:queryJSON error:&error];
-    if (!req)
-    {
-        if (failBlock)
-        {
-            failBlock(error);
-        }
-        return;
-    }
+    NSMutableURLRequest *req = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:url]];
+    req.HTTPMethod = @"POST";
     
     [engine
      processRequest:req
-     
+     json:queryJSON
      onResult:
      ^(NSDictionary *json)
      {
@@ -95,7 +90,9 @@
               {
                   [weakSelf getFrontListOnSuccess:arrayBlock onFail:failBlock];
               }
-              onFail:^(NSError *error)
+              
+              onFail:
+              ^(NSError *error)
               {
                   if (failBlock)
                   {
@@ -113,18 +110,26 @@
              
              post.pid = [rawDic objectForKey:@"tid"];
              post.fid = [rawDic objectForKey:@"fid"];
-             post.fname = [[rawDic objectForKey:@"fname"] urldecode];
+             post.fname = [self urldecode:[rawDic objectForKey:@"fname"]];
              
-             post.user = [[rawDic objectForKey:@"author"] urldecode];
+             post.user = [self urldecode:[rawDic objectForKey:@"author"]];
              
-             post.title = [[[rawDic objectForKey:@"pname"] urldecode] replaceHtmlEntities];
+             post.title = [[NSAttributedString alloc]
+                           initWithData:[[self urldecode:[rawDic objectForKey:@"pname"]] dataUsingEncoding:NSUTF8StringEncoding]
+                           options:@{NSDocumentTypeDocumentAttribute:NSHTMLTextDocumentType,
+                                     NSCharacterEncodingDocumentAttribute:@(NSUTF8StringEncoding)}
+                           documentAttributes:nil
+                           error:nil];
              
              post.childCount = [rawDic objectForKey:@"tid_sum"];
              
              [list addObject:post];
          }
          
-         arrayBlock(list);
+         if (arrayBlock)
+         {
+             arrayBlock(list);
+         }
      }
      
      onError:
@@ -135,6 +140,21 @@
              failBlock(error);
          }
      }];
+}
+
+#pragma mark - private methods
+- (NSString *)urldecode:(NSString *)string
+{
+    return [[string stringByReplacingOccurrencesOfString:@"+" withString:@" "]
+            stringByReplacingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
+}
+
+- (NSString *)replaceHtmlEntities:(NSString *)string
+{
+    return [[[[string stringByReplacingOccurrencesOfString:@"&amp;" withString:@"&"]
+              stringByReplacingOccurrencesOfString:@"&quot;" withString:@"\""]
+             stringByReplacingOccurrencesOfString:@"&lt;" withString:@"<"]
+            stringByReplacingOccurrencesOfString:@"&gt;" withString:@">"];
 }
 @end
 

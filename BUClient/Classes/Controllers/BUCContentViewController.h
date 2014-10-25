@@ -9,9 +9,9 @@
 #import <UIKit/UIKit.h>
 
 @interface BUCContentViewController : UIViewController
-@property (nonatomic) id info;
 
 - (void)removeChildController;
 - (void)displayLoading;
 - (void)hideLoading;
+
 @end

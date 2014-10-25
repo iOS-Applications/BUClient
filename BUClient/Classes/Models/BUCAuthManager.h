@@ -14,7 +14,6 @@ typedef void(^AuthSessionBlock) (void);
 
 @interface BUCAuthManager : NSObject
 
-@property (nonatomic, readonly) BOOL isLoggedIn;
 @property (nonatomic, readonly) NSString *curUser;
 @property (nonatomic, readonly) NSString *session;
 

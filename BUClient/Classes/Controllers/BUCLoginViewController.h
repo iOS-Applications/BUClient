@@ -9,5 +9,5 @@
 #import <UIKit/UIKit.h>
 
 @interface BUCLoginViewController : UIViewController <UITextFieldDelegate>
-- (void)alertWithMessage:(NSString *)message;
+
 @end

@@ -8,18 +8,16 @@
 
 #import "BUCAuthManager.h"
 #import "BUCNetworkEngine.h"
-#import "NSObject+BUCTools.h"
 
 static NSString *kUserLoginNotification = @"kUserLoginNotification";
 
 @interface BUCAuthManager ()
 
-@property (nonatomic, readwrite) BOOL isLoggedIn;
 @property (nonatomic, readwrite) NSString *curUser;
 @property (nonatomic, readwrite) NSString *session;
 
 @property (nonatomic) NSMutableDictionary *json;
-@property (nonatomic) NSURLRequest *req;
+@property (nonatomic) NSMutableURLRequest *req;
 
 @property (nonatomic) NSString *keychainItemIDString;
 @property (nonatomic) NSMutableDictionary *keychainData;
@@ -56,7 +54,6 @@ static NSString *kUserLoginNotification = @"kUserLoginNotification";
     self = [super init];
     
     if (self) {
-        _isLoggedIn = [[NSUserDefaults standardUserDefaults] boolForKey:@"isLoggedIn"];
         _curUser = [[NSUserDefaults standardUserDefaults] stringForKey:@"curUser"];
         
         _json = [[NSMutableDictionary alloc] initWithObjectsAndKeys:@"login", @"action", nil];
@@ -72,38 +69,41 @@ static NSString *kUserLoginNotification = @"kUserLoginNotification";
 
 - (void)loginWithUsername:(NSString *)username andPassword:(NSString *)password onSuccess:(AuthSuccessBlock)successBlock onFail:(AuthFailBlock)failBlock
 {
-    NSError *error = nil;
-    NSURLRequest *req = [self setupRequest:username password:password error:&error];
-    if (!req) {
-        failBlock(error);
-        return;
-    }
-    
     BUCNetworkEngine *engine = [BUCNetworkEngine sharedInstance];
     BUCAuthManager * __weak weakSelf = self;
+    
+    self.req = [self setupRequest];
+    [self.json setObject:username forKey:@"username"];
+    [self.json setObject:password forKey:@"password"];
+    
     [engine
-     processRequest:req
+     processRequest:self.req
+     
+     json:self.json
      
      onResult:^(NSDictionary *resultJSON)
      {
          NSString *result = [resultJSON objectForKey:@"result"];
          if (![result isEqualToString:@"success"])
          {
-             failBlock([weakSelf returnFailError]);
+             if (failBlock)
+             {
+                 failBlock([weakSelf returnFailError]);
+             }
              return;
          }
          
          weakSelf.curUser = username;
          weakSelf.session = [resultJSON objectForKey:@"session"];
-         weakSelf.isLoggedIn = YES;
-         weakSelf.req = req;
          [weakSelf setNewPassword:password account:username];
          NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
          [defaults setObject:username forKey:@"curUser"];
-         [defaults setBool:weakSelf.isLoggedIn forKey:@"isLoggedIn"];
          [defaults synchronize];
          [[NSNotificationCenter defaultCenter] postNotificationName:kUserLoginNotification object:weakSelf];
-         successBlock();
+         if (successBlock)
+         {
+             successBlock();
+         }
      }
      
      onError:^(NSError *error)
@@ -113,30 +113,23 @@ static NSString *kUserLoginNotification = @"kUserLoginNotification";
              failBlock(error);
          }
      }];
-    
 }
 
 - (void)updateSessionOnSuccess:(AuthSessionBlock)sessionBlock onFail:(AuthFailBlock)failBlock
 {
-    NSURLRequest *req;
     if (!self.req)
     {
-        NSError *error = nil;
-        req = [self setupRequest:self.curUser password:[self queryPasswordForAccount:self.curUser] error:&error];
-        if (!req)
-        {
-            if (failBlock)
-            {
-                failBlock(error);
-            }
-            return;
-        }
+        [self.json setObject:self.curUser forKey:@"username"];
+        [self.json setObject:[self queryPasswordForAccount:self.curUser] forKey:@"password"];
+        self.req = [self setupRequest];
     }
     
     BUCNetworkEngine *engine = [BUCNetworkEngine sharedInstance];
     BUCAuthManager * __weak weakSelf = self;
     [engine
-     processRequest:req
+     processRequest:self.req
+     
+     json:self.json
      
      onResult:^(NSDictionary *resultJSON)
      {
@@ -148,7 +141,6 @@ static NSString *kUserLoginNotification = @"kUserLoginNotification";
          }
          
          weakSelf.session = [resultJSON objectForKey:@"session"];
-         weakSelf.req = req;
          [[NSNotificationCenter defaultCenter] postNotificationName:kUserLoginNotification object:weakSelf];
          if (sessionBlock)
          {
@@ -167,7 +159,6 @@ static NSString *kUserLoginNotification = @"kUserLoginNotification";
 
 - (void)logout
 {
-    self.isLoggedIn = NO;
     [[NSUserDefaults standardUserDefaults] setBool:NO forKey:@"isLoggedIn"];
     [[NSUserDefaults standardUserDefaults] synchronize];
 }
@@ -188,20 +179,13 @@ static NSString *kUserLoginNotification = @"kUserLoginNotification";
     return failError;
 }
 
-- (NSURLRequest *)setupRequest:(NSString *)username password:(NSString *)password error:(NSError **)error
+- (NSMutableURLRequest *)setupRequest
 {
-    NSMutableDictionary *queryJSON = self.json;
-    [queryJSON setObject:username forKey:@"username"];
-    [queryJSON setObject:password forKey:@"password"];
-    
     BUCNetworkEngine *engine = [BUCNetworkEngine sharedInstance];
     NSString *url = [NSString stringWithFormat:engine.baseUrl, @"logging"];
     
-    NSURLRequest *req = [self requestWithUrl:url json:queryJSON error:error];
-    if (!req)
-    {
-        return nil;
-    }
+    NSMutableURLRequest *req = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:url]];
+    req.HTTPMethod = @"POST";
     
     return req;
 }

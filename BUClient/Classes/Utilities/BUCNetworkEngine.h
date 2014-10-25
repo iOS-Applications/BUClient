@@ -16,6 +16,8 @@ typedef void(^networkErrorBlock) (NSError *error);
 @property (readonly, nonatomic) NSString *baseUrl;
 
 + (BUCNetworkEngine *)sharedInstance;
-- (NSURLSessionDataTask *)processRequest:(NSURLRequest *)request onResult:(networkResultBlock)resultBlock onError:(networkErrorBlock)errorBlock;
-
+- (void)processRequest:(NSMutableURLRequest *)request
+                  json:(NSDictionary *)json
+              onResult:(networkResultBlock)resultBlock
+               onError:(networkErrorBlock)errorBlock;
 @end
