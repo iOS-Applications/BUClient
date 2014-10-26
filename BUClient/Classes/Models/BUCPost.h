@@ -11,12 +11,13 @@
 @interface BUCPost : NSObject
 
 @property (nonatomic) BUCPost *parent;
+@property (nonatomic) BUCPost *lastReply;
 
 @property (nonatomic) NSString *pid;
 @property (nonatomic) NSString *fid;
-@property (nonatomic) NSString *fname;
+@property (nonatomic) NSAttributedString *fname;
 
-@property (nonatomic) NSString *user;
+@property (nonatomic) NSAttributedString *user;
 @property (nonatomic) NSString *uid;
 
 @property (nonatomic) NSAttributedString *title;

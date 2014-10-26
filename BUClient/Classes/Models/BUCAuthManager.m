@@ -98,6 +98,7 @@ static NSString *kUserLoginNotification = @"kUserLoginNotification";
          [weakSelf setNewPassword:password account:username];
          NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
          [defaults setObject:username forKey:@"curUser"];
+         [defaults setBool:YES forKey:@"isLoggedIn"];
          [defaults synchronize];
          [[NSNotificationCenter defaultCenter] postNotificationName:kUserLoginNotification object:weakSelf];
          if (successBlock)

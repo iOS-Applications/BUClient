@@ -240,21 +240,16 @@
         <scene sceneID="PTU-iE-1Fi">
             <objects>
                 <viewController id="Zuh-sq-0MZ" customClass="BUCFrontPageViewController" sceneMemberID="viewController">
-                    <scrollView key="view" autoresizesSubviews="NO" clearsContextBeforeDrawing="NO" multipleTouchEnabled="YES" contentMode="scaleToFill" showsHorizontalScrollIndicator="NO" id="BkK-Ea-XDg">
+                    <scrollView key="view" autoresizesSubviews="NO" multipleTouchEnabled="YES" contentMode="scaleToFill" showsHorizontalScrollIndicator="NO" id="BkK-Ea-XDg">
                         <rect key="frame" x="0.0" y="0.0" width="320" height="568"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                        <subviews>
-                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" id="F5R-LE-irl">
-                                <rect key="frame" x="125" y="345" width="46" height="30"/>
-                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                                <state key="normal" title="Button">
-                                    <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
-                                </state>
-                            </button>
-                        </subviews>
                     </scrollView>
                     <navigationItem key="navigationItem" title="首页" id="usJ-04-KjQ">
-                        <barButtonItem key="leftBarButtonItem" image="menu.png" id="Hh5-kc-EMI"/>
+                        <barButtonItem key="leftBarButtonItem" image="menu.png" id="Hh5-kc-EMI">
+                            <connections>
+                                <action selector="refresh:" destination="Zuh-sq-0MZ" id="hxS-8w-NfJ"/>
+                            </connections>
+                        </barButtonItem>
                         <barButtonItem key="rightBarButtonItem" systemItem="compose" id="N7Y-sM-2Ej"/>
                     </navigationItem>
                 </viewController>
