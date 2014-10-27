@@ -61,6 +61,16 @@
     [child removeFromParentViewController];
 }
 
+- (void)alertMessage:(NSString *)message
+{
+    [[[UIAlertView alloc]
+      initWithTitle:nil
+      message:message
+      delegate:self
+      cancelButtonTitle:@"OK"
+      otherButtonTitles:nil] show];
+}
+
 #pragma mark - unwind methods
 - (IBAction)unwindToContent:(UIStoryboardSegue *)segue
 {

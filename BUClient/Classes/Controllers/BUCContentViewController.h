@@ -14,4 +14,6 @@
 - (void)displayLoading;
 - (void)hideLoading;
 
+- (void)alertMessage:(NSString *)message;
+
 @end

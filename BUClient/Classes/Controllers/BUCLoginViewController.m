@@ -68,7 +68,7 @@
     NSString *password = self.password.text;
     if ([username length] == 0 || [password length] == 0)
     {
-        [self alertWithMessage:@"请输入用户名与密码"];
+        [self alertMessage:@"请输入用户名与密码"];
         return;
     }
     
@@ -90,7 +90,7 @@
      onFail:^(NSError *error)
      {
          [weakSelf hideLoading];
-         [weakSelf alertWithMessage:error.localizedDescription];
+         [weakSelf alertMessage:error.localizedDescription];
      }];
     
     [self displaLoading];
@@ -115,7 +115,7 @@
 }
 
 #pragma mark - private methods
-- (void)alertWithMessage:(NSString *)message
+- (void)alertMessage:(NSString *)message
 {
     [[[UIAlertView alloc]
      initWithTitle:nil

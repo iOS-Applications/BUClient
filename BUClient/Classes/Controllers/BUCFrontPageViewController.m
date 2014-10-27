@@ -74,7 +74,8 @@
      }
      onFail:^(NSError *error)
      {
-         
+         [weakSelf.contentVC hideLoading];
+         [weakSelf.contentVC alertMessage:error.localizedDescription];
      }];
 }
 
