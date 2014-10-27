@@ -6,9 +6,9 @@
 //  Copyright (c) 2014 Jox. All rights reserved.
 //
 
-#import "BUCListContainerView.h"
+#import "BUCPostListItemView.h"
 
-@implementation BUCListContainerView
+@implementation BUCPostListItemView
 
 /*
 // Only override drawRect: if you perform custom drawing.

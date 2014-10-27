@@ -20,11 +20,14 @@ typedef void(^AuthSessionBlock) (void);
 + (BUCAuthManager *)sharedInstance;
 
 - (void)start;
+
 - (void)loginWithUsername:(NSString *)username
               andPassword:(NSString *)password
-                 onSuccess:(AuthSuccessBlock)successBlock
-                  onFail:(AuthFailBlock)failBlock;
+                onSuccess:(AuthSuccessBlock)successBlock
+                   onFail:(AuthFailBlock)failBlock;
+
 - (void)updateSessionOnSuccess:(AuthSessionBlock)sessionBlock onFail:(AuthFailBlock)failBlock;
+
 - (void)logout;
 
 @end

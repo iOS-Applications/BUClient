@@ -28,8 +28,9 @@
 {
     [super viewDidLoad];
     
-    self.loadingView.layer.cornerRadius = 10.0;
-    
+    self.loadingView.center = self.view.center;
+    self.loadingView.layer.cornerRadius = 10.0f;
+
     self.loginButton.layer.cornerRadius = 3;
     self.loginButton.layer.masksToBounds = YES;
     
@@ -95,7 +96,8 @@
     [self displaLoading];
 }
 
-- (IBAction)dissmissTextfield:(id)sender {
+- (IBAction)dissmissTextfield:(id)sender
+{
     [self.curTextField resignFirstResponder];
 }
 
@@ -115,12 +117,12 @@
 #pragma mark - private methods
 - (void)alertWithMessage:(NSString *)message
 {
-    UIAlertView *theAlert = [[UIAlertView alloc] initWithTitle:nil
-                                                       message:message
-                                                      delegate:self
-                                             cancelButtonTitle:@"OK"
-                                             otherButtonTitles:nil];
-    [theAlert show];
+    [[[UIAlertView alloc]
+     initWithTitle:nil
+     message:message
+     delegate:self
+     cancelButtonTitle:@"OK"
+     otherButtonTitles:nil] show];
 }
 
 - (void)displaLoading

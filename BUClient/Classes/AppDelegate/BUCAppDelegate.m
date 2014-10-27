@@ -7,7 +7,6 @@
 //
 
 #import "BUCAppDelegate.h"
-#import "BUCRootViewController.h"
 #import "BUCAuthManager.h"
 
 @implementation BUCAppDelegate
@@ -21,12 +20,7 @@
 {    
     if ([[NSUserDefaults standardUserDefaults] boolForKey:@"isJustLaunched"])
     {
-        if (![[NSUserDefaults standardUserDefaults] boolForKey:@"isLoggedIn"])
-        {
-            BUCRootViewController *rootVC = (BUCRootViewController *)self.window.rootViewController;
-            [rootVC displayLogin];
-        }
-        else
+        if ([[NSUserDefaults standardUserDefaults] boolForKey:@"isLoggedIn"])
         {
             BUCAuthManager *authManager = [BUCAuthManager sharedInstance];
             [authManager start];

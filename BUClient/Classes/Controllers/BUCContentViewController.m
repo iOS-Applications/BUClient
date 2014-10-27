@@ -21,9 +21,9 @@
     [super viewDidLoad];
     
     self.loadingView.center = self.view.center;
-    self.loadingView.layer.cornerRadius = 10.0;
+    self.loadingView.layer.cornerRadius = 10.0f;
     
-    static NSString *kUserLoginNotification = @"kUserLoginNotification";
+    NSString *kUserLoginNotification = @"kUserLoginNotification";
     
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(bringUpFront) name:kUserLoginNotification object:nil];
 }

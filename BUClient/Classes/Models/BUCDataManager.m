@@ -30,20 +30,9 @@
     return sharedInstance;
 }
 
-- (id)init
-{
-    self = [super init];
-    
-    if (self)
-    {
-        
-    }
-    
-    return self;
-}
-
 - (void)getFrontListOnSuccess:(ArrayBlock)arrayBlock onFail:(FailBlock)failBlock
 {
+    NSString *frontURL = @"home";
     BUCDataManager * __weak weakSelf = self;
     BUCAuthManager *authManager = [BUCAuthManager sharedInstance];
     BUCNetworkEngine *engine = [BUCNetworkEngine sharedInstance];
@@ -69,17 +58,15 @@
         return;
     }
     
-    NSMutableDictionary *queryJSON = [[NSMutableDictionary alloc] init];
-    [queryJSON setObject:authManager.curUser forKey:@"username"];
-    [queryJSON setObject:authManager.session forKey:@"session"];
-    
-    NSString *url = [NSString stringWithFormat:engine.baseUrl, @"home"];
-    NSMutableURLRequest *req = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:url]];
-    req.HTTPMethod = @"POST";
+    NSMutableDictionary *json = [[NSMutableDictionary alloc] init];
+    [json setObject:authManager.curUser forKey:@"username"];
+    [json setObject:authManager.session forKey:@"session"];
     
     [engine
-     processRequest:req
-     json:queryJSON
+     fetchDataFromURL:frontURL
+     
+     json:json
+     
      onResult:
      ^(NSDictionary *json)
      {

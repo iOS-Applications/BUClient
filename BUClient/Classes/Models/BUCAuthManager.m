@@ -9,23 +9,25 @@
 #import "BUCAuthManager.h"
 #import "BUCNetworkEngine.h"
 
-static NSString *kUserLoginNotification = @"kUserLoginNotification";
+// constant string used in this file
+static NSString *kKeychainItemIdentifer = @"org.bitunion.buc.%@.KeychainUI";
 
 @interface BUCAuthManager ()
 
+// public properties
 @property (nonatomic, readwrite) NSString *curUser;
 @property (nonatomic, readwrite) NSString *session;
 
-@property (nonatomic) NSMutableDictionary *json;
-@property (nonatomic) NSMutableURLRequest *req;
-
+// states needed to keep
 @property (nonatomic) NSString *keychainItemIDString;
 @property (nonatomic) NSMutableDictionary *keychainData;
 @property (nonatomic) NSMutableDictionary *genericPasswordQuery;
 
+// private methods
 - (void)setNewPassword:(NSString *)password account:(NSString *)account;
 - (NSString *)queryPasswordForAccount:(NSString *)account;
 
+// key chain stuff
 - (void)setupQueryDicForAccount:(NSString *)account;
 - (void)resetKeychainItem;
 - (NSMutableDictionary *)secItemFormatToDictionary:(NSDictionary *)dictionaryToConvert;
@@ -49,21 +51,9 @@ static NSString *kUserLoginNotification = @"kUserLoginNotification";
     return sharedInstance;
 }
 
-- (id)init
-{
-    self = [super init];
-    
-    if (self) {
-        _curUser = [[NSUserDefaults standardUserDefaults] stringForKey:@"curUser"];
-        
-        _json = [[NSMutableDictionary alloc] initWithObjectsAndKeys:@"login", @"action", nil];
-    }
-    
-    return self;
-}
-
 - (void)start
 {
+    self.curUser = [[NSUserDefaults standardUserDefaults] stringForKey:@"curUser"];
     [self updateSessionOnSuccess:nil onFail:nil];
 }
 
@@ -71,15 +61,17 @@ static NSString *kUserLoginNotification = @"kUserLoginNotification";
 {
     BUCNetworkEngine *engine = [BUCNetworkEngine sharedInstance];
     BUCAuthManager * __weak weakSelf = self;
+    NSString *loginURL = @"logging";
     
-    self.req = [self setupRequest];
-    [self.json setObject:username forKey:@"username"];
-    [self.json setObject:password forKey:@"password"];
+    NSMutableDictionary *json = [[NSMutableDictionary alloc] init];
+    [json setObject:@"login" forKey:@"action"];
+    [json setObject:username forKey:@"username"];
+    [json setObject:password forKey:@"password"];
     
     [engine
-     processRequest:self.req
+     fetchDataFromURL:loginURL
      
-     json:self.json
+     json:json
      
      onResult:^(NSDictionary *resultJSON)
      {
@@ -100,7 +92,11 @@ static NSString *kUserLoginNotification = @"kUserLoginNotification";
          [defaults setObject:username forKey:@"curUser"];
          [defaults setBool:YES forKey:@"isLoggedIn"];
          [defaults synchronize];
+         
+         // login state changed, post login notification
+         NSString *kUserLoginNotification = @"kUserLoginNotification";
          [[NSNotificationCenter defaultCenter] postNotificationName:kUserLoginNotification object:weakSelf];
+         
          if (successBlock)
          {
              successBlock();
@@ -118,19 +114,19 @@ static NSString *kUserLoginNotification = @"kUserLoginNotification";
 
 - (void)updateSessionOnSuccess:(AuthSessionBlock)sessionBlock onFail:(AuthFailBlock)failBlock
 {
-    if (!self.req)
-    {
-        [self.json setObject:self.curUser forKey:@"username"];
-        [self.json setObject:[self queryPasswordForAccount:self.curUser] forKey:@"password"];
-        self.req = [self setupRequest];
-    }
-    
     BUCNetworkEngine *engine = [BUCNetworkEngine sharedInstance];
     BUCAuthManager * __weak weakSelf = self;
+    NSString *loginURL = @"logging";
+    
+    NSMutableDictionary *json = [[NSMutableDictionary alloc] init];
+    [json setObject:@"login" forKey:@"action"];
+    [json setObject:self.curUser forKey:@"username"];
+    [json setObject:[self queryPasswordForAccount:self.curUser] forKey:@"password"];
+    
     [engine
-     processRequest:self.req
+     fetchDataFromURL:loginURL
      
-     json:self.json
+     json:json
      
      onResult:^(NSDictionary *resultJSON)
      {
@@ -142,7 +138,11 @@ static NSString *kUserLoginNotification = @"kUserLoginNotification";
          }
          
          weakSelf.session = [resultJSON objectForKey:@"session"];
+         
+         // login state changed, post login notification
+         NSString *kUserLoginNotification = @"kUserLoginNotification";
          [[NSNotificationCenter defaultCenter] postNotificationName:kUserLoginNotification object:weakSelf];
+
          if (sessionBlock)
          {
              sessionBlock();
@@ -167,28 +167,11 @@ static NSString *kUserLoginNotification = @"kUserLoginNotification";
 #pragma mark - private methods
 - (NSError *)returnFailError
 {
-    static NSString *failErrorMsg = @"帐号与密码不符，请检查帐号状态";
-    static NSString *BUCErrorDomain = @"BUClient.ErrorDomain";
-    
-    static NSError *failError = nil;
-    static dispatch_once_t onceSecurePredicate;
-    
-    dispatch_once(&onceSecurePredicate, ^{
-        failError = [NSError errorWithDomain:BUCErrorDomain code:1 userInfo:@{NSLocalizedDescriptionKey:failErrorMsg}];
-    });
-    
-    return failError;
-}
-
-- (NSMutableURLRequest *)setupRequest
-{
-    BUCNetworkEngine *engine = [BUCNetworkEngine sharedInstance];
-    NSString *url = [NSString stringWithFormat:engine.baseUrl, @"logging"];
-    
-    NSMutableURLRequest *req = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:url]];
-    req.HTTPMethod = @"POST";
-    
-    return req;
+    NSString *failErrorMsg = @"帐号与密码不符，请检查帐号状态";
+    NSString *BUCErrorDomain = @"BUClient.ErrorDomain";
+    NSDictionary *errorInfo = @{NSLocalizedDescriptionKey:failErrorMsg};
+        
+    return [NSError errorWithDomain:BUCErrorDomain code:1 userInfo:errorInfo];;
 }
 
 #pragma mark - key chain stuff
@@ -253,9 +236,9 @@ static NSString *kUserLoginNotification = @"kUserLoginNotification";
 
 - (void)setupQueryDicForAccount:(NSString *)account
 {
-    static NSString *kKeychainItemIdentifer = @"org.bitunion.buc.%@.KeychainUI";
+    NSString *KeychainItemIdentifer = kKeychainItemIdentifer;
     
-    NSString *keychainItemIDString = [NSString stringWithFormat:kKeychainItemIdentifer, account];
+    NSString *keychainItemIDString = [NSString stringWithFormat:KeychainItemIdentifer, account];
     NSData *keychainItemID = [keychainItemIDString dataUsingEncoding:NSUTF8StringEncoding];
     
     NSMutableDictionary *genericPasswordQuery = [[NSMutableDictionary alloc] init];

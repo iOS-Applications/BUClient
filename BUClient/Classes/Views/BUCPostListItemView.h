@@ -8,6 +8,6 @@
 
 #import <UIKit/UIKit.h>
 
-@interface BUCListContainerView : UIControl
+@interface BUCPostListItemView : UIControl
 
 @end

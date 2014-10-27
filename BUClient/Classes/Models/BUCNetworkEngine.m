@@ -12,9 +12,7 @@
 
 @property (nonatomic) NSURLSession *defaultSession;
 @property (nonatomic) NSURLSessionConfiguration *defaultConfigObject;
-@property (nonatomic) NSURLSessionDataTask *currentTask;
 
-@property (readwrite, nonatomic) NSString *baseUrl;
 @end
 
 @implementation BUCNetworkEngine
@@ -45,21 +43,19 @@
         _defaultConfigObject.requestCachePolicy = NSURLRequestUseProtocolCachePolicy;
         _defaultConfigObject.timeoutIntervalForResource = 30;
         _defaultSession = [NSURLSession sessionWithConfiguration: _defaultConfigObject delegate: nil delegateQueue: [NSOperationQueue mainQueue]];
-        
-        _baseUrl = @"http://out.bitunion.org/open_api/bu_%@.php";
     }
     
     return self;
 }
 
 #pragma mark - public methods
-- (void)processRequest:(NSMutableURLRequest *)request
-                  json:(NSDictionary *)json
-              onResult:(networkResultBlock)resultBlock
-               onError:(networkErrorBlock)errorBlock
+- (void)fetchDataFromURL:(NSString *)url
+                    json:(NSDictionary *)json
+                onResult:(networkResultBlock)resultBlock
+                 onError:(networkErrorBlock)errorBlock
 {
     NSError *error = nil;
-    request = [self setUpRequest:request json:json error:&error];
+    NSURLRequest *request = [self requestFromURL:url json:json error:&error];
     if (!request)
     {
         if (errorBlock)
@@ -69,6 +65,7 @@
         
         return;
     }
+    
     
     BUCNetworkEngine * __weak weakSelf = self;
     
@@ -103,25 +100,30 @@
         }
     };
     
-    NSURLSessionDataTask *task = [self.defaultSession dataTaskWithRequest:request completionHandler:urlSessionBlock];
-    
-    [task resume];
+    [[self.defaultSession dataTaskWithRequest:request completionHandler:urlSessionBlock] resume];
 }
 
 #pragma mark - private methods
-- (NSMutableURLRequest *)setUpRequest:(NSMutableURLRequest *)req json:(NSDictionary *)json error:(NSError **)error
+- (NSURLRequest *)requestFromURL:(NSString *)url json:(NSDictionary *)json error:(NSError **)error
 {
-    NSMutableDictionary *dataJson = [[NSMutableDictionary alloc] init];
+    NSString *baseURL = @"http://out.bitunion.org/open_api/bu_%@.php";
+    NSString *HTTPMethod = @"POST";
+    NSMutableURLRequest *req = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:[NSString stringWithFormat:baseURL, url]]];
+    NSMutableDictionary *dataJSON = [[NSMutableDictionary alloc] init];
+    NSData *data = nil;
+    
     for (NSString *key in json)
     {
-        [dataJson setObject:[self urlencode:[json objectForKey:key]] forKey:key];
+        [dataJSON setObject:[self urlencode:[json objectForKey:key]] forKey:key];
     }
-    NSData *data = [NSJSONSerialization dataWithJSONObject:dataJson options:0 error:error];
+    
+    data = [NSJSONSerialization dataWithJSONObject:dataJSON options:0 error:error];
     if (!data)
     {
         return nil;
     }
     
+    req.HTTPMethod = HTTPMethod;
     req.HTTPBody = data;
     
     return req;
@@ -156,64 +158,44 @@
 
 - (NSError *)checkErr:(NSError *)error response:(NSURLResponse *)response
 {
-    static NSString *serverErrMsg =     @"服务器错误，请稍后再试";
-    static NSString *timeoutErrMsg =    @"服务器连接超时";
-    static NSString *cancelErrMsg =     @"";
-    static NSString *connectErrMsg =    @"无法连接至服务器";
-    static NSString *noInternetErrMsg = @"无网络连接，请检查网络连接";
-    static NSString *unknownErrMsg =    @"未知错误";
+    NSString *serverERROR =     @"服务器错误，请稍后再试";
+    NSString *timeoutERROR =    @"服务器连接超时";
+    NSString *connenctionERROR =    @"无法连接至服务器";
+    NSString *noInternetERROR = @"无网络连接，请检查网络连接";
+    NSString *unknownERROR =    @"未知错误";
     
-    static NSString *bucHttpErrorDomain = @"org.bitunion.buc.HttpErrorDomain";
-    static NSString *bucNetworkErrorDomain = @"org.bitunion.buc.NetworkErrorDomain";
+    NSDictionary *errorInfo = nil;
     
-    static NSError *serverError = nil;
-    static NSError *timeoutError = nil;
-    static NSError *cancelError = nil;
-    static NSError *connectError = nil;
-    static NSError *noInternetError = nil;
-    static NSError *unknownError = nil;
-    
-    static dispatch_once_t onceSecurePredicate;
-    dispatch_once(&onceSecurePredicate, ^{
-        serverError =  [NSError errorWithDomain:bucHttpErrorDomain code:500 userInfo:@{NSLocalizedDescriptionKey: serverErrMsg}];
-        timeoutError = [NSError errorWithDomain:bucNetworkErrorDomain code:NSURLErrorTimedOut userInfo:@{NSLocalizedDescriptionKey:timeoutErrMsg}];
-        cancelError =  [NSError errorWithDomain:bucNetworkErrorDomain code:NSURLErrorCancelled userInfo:@{NSLocalizedDescriptionKey:cancelErrMsg}];
-        connectError = [NSError errorWithDomain:bucNetworkErrorDomain code:NSURLErrorCannotConnectToHost userInfo:@{NSLocalizedDescriptionKey:connectErrMsg}];
-        noInternetError = [NSError errorWithDomain:bucNetworkErrorDomain code:NSURLErrorNotConnectedToInternet userInfo:@{NSLocalizedDescriptionKey:noInternetErrMsg}];
-        unknownError = [NSError errorWithDomain:bucNetworkErrorDomain code:NSURLErrorUnknown userInfo:@{NSLocalizedDescriptionKey:unknownErrMsg}];
-    });
-    
-    NSError *resultError = nil;
     if ([response isKindOfClass:[NSHTTPURLResponse class]])
     {
         NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse*)response;
         if (httpResponse.statusCode == 500)
         {
-            resultError = serverError;
+            errorInfo = @{NSLocalizedDescriptionKey:serverERROR};
+        }
+        else
+        {
+            errorInfo = @{NSLocalizedDescriptionKey:unknownERROR};
         }
     }
     else if (error.code == NSURLErrorTimedOut)
     {
-        resultError = timeoutError;
-    }
-    else if (error.code == NSURLErrorCancelled)
-    {
-        resultError = cancelError;
+        errorInfo = @{NSLocalizedDescriptionKey:timeoutERROR};
     }
     else if (error.code == NSURLErrorCannotConnectToHost)
     {
-        resultError = connectError;
+        errorInfo = @{NSLocalizedDescriptionKey:connenctionERROR};
     }
     else if(error.code == NSURLErrorNotConnectedToInternet)
     {
-        resultError = noInternetError;
+        errorInfo = @{NSLocalizedDescriptionKey:noInternetERROR};
     }
     else
     {
-        resultError = unknownError;
+        errorInfo = @{NSLocalizedDescriptionKey:unknownERROR};
     }
     
-    return resultError;
+    return [NSError errorWithDomain:error.domain code:error.code userInfo:errorInfo];
 }
 @end
 

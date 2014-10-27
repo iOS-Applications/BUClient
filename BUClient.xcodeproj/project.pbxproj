@@ -13,7 +13,6 @@
 		D8114CD7189012BC00F0E1A7 /* BUCIndexViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = D8114CB1189012BC00F0E1A7 /* BUCIndexViewController.m */; };
 		D8114CD8189012BC00F0E1A7 /* BUCLoginViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = D8114CB3189012BC00F0E1A7 /* BUCLoginViewController.m */; };
 		D8114CD9189012BC00F0E1A7 /* BUCRootViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = D8114CB5189012BC00F0E1A7 /* BUCRootViewController.m */; };
-		D8114CDB189012BC00F0E1A7 /* BUCEmptySegue.m in Sources */ = {isa = PBXBuildFile; fileRef = D8114CBA189012BC00F0E1A7 /* BUCEmptySegue.m */; };
 		D8114CDF189012BC00F0E1A7 /* BUCRoundButtonView.m in Sources */ = {isa = PBXBuildFile; fileRef = D8114CC3189012BC00F0E1A7 /* BUCRoundButtonView.m */; };
 		D8114CE0189012BC00F0E1A7 /* home.png in Resources */ = {isa = PBXBuildFile; fileRef = D8114CC6189012BC00F0E1A7 /* home.png */; };
 		D8114CE1189012BC00F0E1A7 /* left.png in Resources */ = {isa = PBXBuildFile; fileRef = D8114CC7189012BC00F0E1A7 /* left.png */; };
@@ -33,6 +32,8 @@
 		D854166919FCA0C800013A1B /* XPathQuery.m in Sources */ = {isa = PBXBuildFile; fileRef = D854166619FCA0C800013A1B /* XPathQuery.m */; };
 		D854166D19FCA88200013A1B /* libxml2.2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = D854166C19FCA88200013A1B /* libxml2.2.dylib */; };
 		D878CF2618B2994B0007441A /* default.html in Resources */ = {isa = PBXBuildFile; fileRef = D878CF2518B2994B0007441A /* default.html */; };
+		D8807DF319FE06C6008CB741 /* BUCNetworkEngine.m in Sources */ = {isa = PBXBuildFile; fileRef = D8807DF219FE06C6008CB741 /* BUCNetworkEngine.m */; };
+		D8807DF619FE06EB008CB741 /* BUCEmptySegue.m in Sources */ = {isa = PBXBuildFile; fileRef = D8807DF519FE06EB008CB741 /* BUCEmptySegue.m */; };
 		D8A2461718910A9A00AFD27A /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = D8A2461518910A9A00AFD27A /* Main.storyboard */; };
 		D8A3BF98187C895E006CBF64 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D8A3BF97187C895E006CBF64 /* Foundation.framework */; };
 		D8A3BF9A187C895E006CBF64 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D8A3BF99187C895E006CBF64 /* CoreGraphics.framework */; };
@@ -50,10 +51,9 @@
 		D8B766F519F41A1A00EB63D2 /* BUCAuthManager.m in Sources */ = {isa = PBXBuildFile; fileRef = D8B766F419F41A1A00EB63D2 /* BUCAuthManager.m */; };
 		D8B766F819F4FCA100EB63D2 /* BUCDataManager.m in Sources */ = {isa = PBXBuildFile; fileRef = D8B766F719F4FCA100EB63D2 /* BUCDataManager.m */; };
 		D8B766FB19F50D1C00EB63D2 /* BUCPost.m in Sources */ = {isa = PBXBuildFile; fileRef = D8B766FA19F50D1C00EB63D2 /* BUCPost.m */; };
-		D8BFD97618939FE40059DBDE /* BUCNetworkEngine.m in Sources */ = {isa = PBXBuildFile; fileRef = D8BFD97518939FE40059DBDE /* BUCNetworkEngine.m */; };
 		D8BFD97C18942F9D0059DBDE /* screen1136x1136.png in Resources */ = {isa = PBXBuildFile; fileRef = D8BFD97B18942F9D0059DBDE /* screen1136x1136.png */; };
 		D8CF3DC018ABEAEF009080E4 /* menu.png in Resources */ = {isa = PBXBuildFile; fileRef = D8CF3DBF18ABEAEF009080E4 /* menu.png */; };
-		D8E3A88919FB42940047531E /* BUCListContainerView.m in Sources */ = {isa = PBXBuildFile; fileRef = D8E3A88819FB42940047531E /* BUCListContainerView.m */; };
+		D8E3A88919FB42940047531E /* BUCPostListItemView.m in Sources */ = {isa = PBXBuildFile; fileRef = D8E3A88819FB42940047531E /* BUCPostListItemView.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -79,8 +79,6 @@
 		D8114CB3189012BC00F0E1A7 /* BUCLoginViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BUCLoginViewController.m; sourceTree = "<group>"; };
 		D8114CB4189012BC00F0E1A7 /* BUCRootViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BUCRootViewController.h; sourceTree = "<group>"; };
 		D8114CB5189012BC00F0E1A7 /* BUCRootViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BUCRootViewController.m; sourceTree = "<group>"; };
-		D8114CB9189012BC00F0E1A7 /* BUCEmptySegue.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BUCEmptySegue.h; sourceTree = "<group>"; };
-		D8114CBA189012BC00F0E1A7 /* BUCEmptySegue.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BUCEmptySegue.m; sourceTree = "<group>"; };
 		D8114CC2189012BC00F0E1A7 /* BUCRoundButtonView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BUCRoundButtonView.h; sourceTree = "<group>"; };
 		D8114CC3189012BC00F0E1A7 /* BUCRoundButtonView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BUCRoundButtonView.m; sourceTree = "<group>"; };
 		D8114CC6189012BC00F0E1A7 /* home.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = home.png; sourceTree = "<group>"; };
@@ -105,6 +103,10 @@
 		D854166A19FCA23300013A1B /* libxml2.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libxml2.dylib; path = usr/lib/libxml2.dylib; sourceTree = SDKROOT; };
 		D854166C19FCA88200013A1B /* libxml2.2.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libxml2.2.dylib; path = usr/lib/libxml2.2.dylib; sourceTree = SDKROOT; };
 		D878CF2518B2994B0007441A /* default.html */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.html; path = default.html; sourceTree = "<group>"; };
+		D8807DF119FE06C6008CB741 /* BUCNetworkEngine.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BUCNetworkEngine.h; sourceTree = "<group>"; };
+		D8807DF219FE06C6008CB741 /* BUCNetworkEngine.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BUCNetworkEngine.m; sourceTree = "<group>"; };
+		D8807DF419FE06EB008CB741 /* BUCEmptySegue.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BUCEmptySegue.h; path = BUClient/Classes/Misc/BUCEmptySegue.h; sourceTree = SOURCE_ROOT; };
+		D8807DF519FE06EB008CB741 /* BUCEmptySegue.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = BUCEmptySegue.m; path = BUClient/Classes/Misc/BUCEmptySegue.m; sourceTree = SOURCE_ROOT; };
 		D8A2461518910A9A00AFD27A /* Main.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; path = Main.storyboard; sourceTree = "<group>"; };
 		D8A3BF94187C895E006CBF64 /* BUClient.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BUClient.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D8A3BF97187C895E006CBF64 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
@@ -128,13 +130,11 @@
 		D8B766F719F4FCA100EB63D2 /* BUCDataManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BUCDataManager.m; sourceTree = "<group>"; };
 		D8B766F919F50D1C00EB63D2 /* BUCPost.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BUCPost.h; sourceTree = "<group>"; };
 		D8B766FA19F50D1C00EB63D2 /* BUCPost.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BUCPost.m; sourceTree = "<group>"; };
-		D8BFD97418939FE40059DBDE /* BUCNetworkEngine.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BUCNetworkEngine.h; sourceTree = "<group>"; };
-		D8BFD97518939FE40059DBDE /* BUCNetworkEngine.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BUCNetworkEngine.m; sourceTree = "<group>"; };
 		D8BFD97B18942F9D0059DBDE /* screen1136x1136.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = screen1136x1136.png; sourceTree = "<group>"; };
 		D8CF3DBF18ABEAEF009080E4 /* menu.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = menu.png; sourceTree = "<group>"; };
 		D8E3A88219F937750047531E /* CoreText.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreText.framework; path = System/Library/Frameworks/CoreText.framework; sourceTree = SDKROOT; };
-		D8E3A88719FB42940047531E /* BUCListContainerView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BUCListContainerView.h; sourceTree = "<group>"; };
-		D8E3A88819FB42940047531E /* BUCListContainerView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BUCListContainerView.m; sourceTree = "<group>"; };
+		D8E3A88719FB42940047531E /* BUCPostListItemView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BUCPostListItemView.h; sourceTree = "<group>"; };
+		D8E3A88819FB42940047531E /* BUCPostListItemView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BUCPostListItemView.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -169,7 +169,7 @@
 				D8BFD9701892972A0059DBDE /* Models */,
 				D8114CA8189012BC00F0E1A7 /* AppDelegate */,
 				D8114CAB189012BC00F0E1A7 /* Controllers */,
-				D8114CB8189012BC00F0E1A7 /* Utilities */,
+				D8114CB8189012BC00F0E1A7 /* Misc */,
 				D8114CBD189012BC00F0E1A7 /* Views */,
 			);
 			path = Classes;
@@ -201,14 +201,13 @@
 			path = Controllers;
 			sourceTree = "<group>";
 		};
-		D8114CB8189012BC00F0E1A7 /* Utilities */ = {
+		D8114CB8189012BC00F0E1A7 /* Misc */ = {
 			isa = PBXGroup;
 			children = (
-				D8114CB9189012BC00F0E1A7 /* BUCEmptySegue.h */,
-				D8114CBA189012BC00F0E1A7 /* BUCEmptySegue.m */,
-				D8BFD97418939FE40059DBDE /* BUCNetworkEngine.h */,
-				D8BFD97518939FE40059DBDE /* BUCNetworkEngine.m */,
+				D8807DF419FE06EB008CB741 /* BUCEmptySegue.h */,
+				D8807DF519FE06EB008CB741 /* BUCEmptySegue.m */,
 			);
+			name = Misc;
 			path = Utilities;
 			sourceTree = "<group>";
 		};
@@ -217,8 +216,8 @@
 			children = (
 				D8114CC2189012BC00F0E1A7 /* BUCRoundButtonView.h */,
 				D8114CC3189012BC00F0E1A7 /* BUCRoundButtonView.m */,
-				D8E3A88719FB42940047531E /* BUCListContainerView.h */,
-				D8E3A88819FB42940047531E /* BUCListContainerView.m */,
+				D8E3A88719FB42940047531E /* BUCPostListItemView.h */,
+				D8E3A88819FB42940047531E /* BUCPostListItemView.m */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -378,6 +377,8 @@
 		D8BFD9701892972A0059DBDE /* Models */ = {
 			isa = PBXGroup;
 			children = (
+				D8807DF119FE06C6008CB741 /* BUCNetworkEngine.h */,
+				D8807DF219FE06C6008CB741 /* BUCNetworkEngine.m */,
 				D8B766F319F41A1A00EB63D2 /* BUCAuthManager.h */,
 				D8B766F419F41A1A00EB63D2 /* BUCAuthManager.m */,
 				D8B766F619F4FCA100EB63D2 /* BUCDataManager.h */,
@@ -505,17 +506,17 @@
 			files = (
 				D8B766FB19F50D1C00EB63D2 /* BUCPost.m in Sources */,
 				D8114CD9189012BC00F0E1A7 /* BUCRootViewController.m in Sources */,
-				D8BFD97618939FE40059DBDE /* BUCNetworkEngine.m in Sources */,
 				D8114CD7189012BC00F0E1A7 /* BUCIndexViewController.m in Sources */,
-				D8E3A88919FB42940047531E /* BUCListContainerView.m in Sources */,
+				D8E3A88919FB42940047531E /* BUCPostListItemView.m in Sources */,
 				D8B766F819F4FCA100EB63D2 /* BUCDataManager.m in Sources */,
 				D8A3BFA4187C895E006CBF64 /* main.m in Sources */,
 				D8114CD4189012BC00F0E1A7 /* BUCAppDelegate.m in Sources */,
+				D8807DF319FE06C6008CB741 /* BUCNetworkEngine.m in Sources */,
 				D854166819FCA0C800013A1B /* TFHppleElement.m in Sources */,
+				D8807DF619FE06EB008CB741 /* BUCEmptySegue.m in Sources */,
 				D8114CD6189012BC00F0E1A7 /* BUCFrontPageViewController.m in Sources */,
 				D8B766F519F41A1A00EB63D2 /* BUCAuthManager.m in Sources */,
 				D854166719FCA0C800013A1B /* TFHpple.m in Sources */,
-				D8114CDB189012BC00F0E1A7 /* BUCEmptySegue.m in Sources */,
 				D8114CDF189012BC00F0E1A7 /* BUCRoundButtonView.m in Sources */,
 				D8114CD5189012BC00F0E1A7 /* BUCContentViewController.m in Sources */,
 				D8114CD8189012BC00F0E1A7 /* BUCLoginViewController.m in Sources */,

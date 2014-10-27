@@ -44,6 +44,14 @@
     self.content.layer.shadowPath = [UIBezierPath bezierPathWithRect:self.content.bounds].CGPath;
 }
 
+- (void)viewDidAppear:(BOOL)animated
+{
+    if (![[NSUserDefaults standardUserDefaults] boolForKey:@"isLoggedIn"])
+    {
+        [self displayLogin];
+    }
+}
+
 #pragma mark - public methods
 - (void)showMenu
 {
