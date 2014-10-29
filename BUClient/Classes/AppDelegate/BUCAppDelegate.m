@@ -7,30 +7,12 @@
 //
 
 #import "BUCAppDelegate.h"
-#import "BUCAuthManager.h"
 
 @implementation BUCAppDelegate
-
 - (void)applicationDidFinishLaunching:(UIApplication *)application
 {
     [[NSUserDefaults standardUserDefaults] setBool:YES forKey:@"isJustLaunched"];
 }
-
-- (void)applicationDidBecomeActive:(UIApplication *)application
-{    
-    if ([[NSUserDefaults standardUserDefaults] boolForKey:@"isJustLaunched"])
-    {
-        if ([[NSUserDefaults standardUserDefaults] boolForKey:@"isLoggedIn"])
-        {
-            BUCAuthManager *authManager = [BUCAuthManager sharedInstance];
-            [authManager start];
-        }
-        
-        [[NSUserDefaults standardUserDefaults] setBool:NO forKey:@"isJustLaunched"];
-        [[NSUserDefaults standardUserDefaults] synchronize];
-    }
-}
-
 @end
 
 

@@ -6,10 +6,10 @@
 //  Copyright (c) 2014 Jox. All rights reserved.
 //
 
-#import "BUCLoginViewController.h"
+#import "BUCLoginController.h"
 #import "BUCAuthManager.h"
 
-@interface BUCLoginViewController ()
+@interface BUCLoginController ()
 @property (weak, nonatomic) IBOutlet UITextField *username;
 @property (weak, nonatomic) IBOutlet UITextField *password;
 
@@ -22,7 +22,7 @@
 @property (weak, nonatomic) UITextField *curTextField;
 @end
 
-@implementation BUCLoginViewController
+@implementation BUCLoginController
 
 - (void)viewDidLoad
 {
@@ -73,7 +73,7 @@
     }
     
     BUCAuthManager *authManager = [BUCAuthManager sharedInstance];
-    BUCLoginViewController * __weak weakSelf = self;
+    BUCLoginController * __weak weakSelf = self;
     
     [authManager
      loginWithUsername:username

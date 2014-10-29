@@ -105,6 +105,9 @@ static NSString *kKeychainItemIdentifer = @"org.bitunion.buc.%@.KeychainUI";
      
      onError:^(NSError *error)
      {
+         NSString *kUserLoginNotification = @"kUserLoginNotification";
+         [[NSNotificationCenter defaultCenter] postNotificationName:kUserLoginNotification object:weakSelf];
+         
          if (failBlock)
          {
              failBlock(error);

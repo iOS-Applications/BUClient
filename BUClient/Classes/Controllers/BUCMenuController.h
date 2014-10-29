@@ -8,6 +8,6 @@
 
 #import <UIKit/UIKit.h>
 
-@interface BUCIndexViewController : UITableViewController
+@interface BUCMenuController : UITableViewController
 
 @end

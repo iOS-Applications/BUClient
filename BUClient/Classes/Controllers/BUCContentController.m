@@ -6,15 +6,15 @@
 //  Copyright (c) 2014 Jox. All rights reserved.
 //
 
-#import "BUCContentViewController.h"
+#import "BUCContentController.h"
 
-@interface BUCContentViewController ()
+@interface BUCContentController ()
 @property (strong, nonatomic) IBOutlet UIView *loadingView;
 @property (weak, nonatomic) IBOutlet UIActivityIndicatorView *activityView;
 
 @end
 
-@implementation BUCContentViewController
+@implementation BUCContentController
 #pragma mark - overrided methods
 - (void)viewDidLoad
 {
@@ -96,3 +96,27 @@
 }
 
 @end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

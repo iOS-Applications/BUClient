@@ -6,9 +6,9 @@
 //  Copyright (c) 2014 Jox. All rights reserved.
 //
 
-#import "BUCPostListItemView.h"
+#import "BUCListItemView.h"
 
-@implementation BUCPostListItemView
+@implementation BUCListItemView
 
 /*
 // Only override drawRect: if you perform custom drawing.
@@ -17,6 +17,21 @@
     // Drawing code
 }
 */
+
+- (BUCListItemView *)initWithFrame:(CGRect)aRect
+{
+    self = [super initWithFrame:aRect];
+    
+    if (self)
+    {
+        self.layer.borderWidth = 0.3f;
+        self.layer.borderColor = [UIColor lightGrayColor].CGColor;
+        self.backgroundColor = [UIColor whiteColor];
+        self.layer.cornerRadius = 4.0f;
+    }
+    
+    return self;
+}
 
 - (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event
 {

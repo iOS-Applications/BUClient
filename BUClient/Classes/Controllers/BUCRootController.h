@@ -7,18 +7,13 @@
 //
 
 #import <UIKit/UIKit.h>
-#import "BUCIndexViewController.h"
-#import "BUCContentViewController.h"
 
-@interface BUCRootViewController : UIViewController
-@property (weak, readonly, nonatomic) BUCIndexViewController *indexController;
-@property (weak, readonly, nonatomic) BUCContentViewController *contentController;
+@interface BUCRootController : UIViewController
 
 - (void)switchContentWith:(NSString *)segueIdendifier completion:(void (^)(void))completeHandler;
 - (void)showMenu;
 - (void)hideMenu;
 - (void)disableMenu;
 - (void)enableMenu;
-- (void)displayLogin;
 
 @end

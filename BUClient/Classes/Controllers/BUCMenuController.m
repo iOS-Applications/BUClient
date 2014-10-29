@@ -6,15 +6,15 @@
 //  Copyright (c) 2014 Jox. All rights reserved.
 //
 
-#import "BUCIndexViewController.h"
-#import "BUCRootViewController.h"
+#import "BUCMenuController.h"
+#import "BUCRootController.h"
 #import "BUCAuthManager.h"
 
-@interface BUCIndexViewController ()
+@interface BUCMenuController ()
 @property (nonatomic) NSArray *list;
 @end
 
-@implementation BUCIndexViewController
+@implementation BUCMenuController
 #pragma mark - overrided methods
 - (id)initWithCoder:(NSCoder *)aDecoder
 {

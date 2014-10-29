@@ -73,7 +73,7 @@
     urlSessionBlock = ^(NSData *data, NSURLResponse *response, NSError *error)
     {
         NSDictionary *resultJSON = nil;
-        if (error)
+        if (error || ((NSHTTPURLResponse *)response).statusCode != 200)
         {
             goto fail;
         }
@@ -107,6 +107,7 @@
 - (NSURLRequest *)requestFromURL:(NSString *)url json:(NSDictionary *)json error:(NSError **)error
 {
     NSString *baseURL = @"http://out.bitunion.org/open_api/bu_%@.php";
+    baseURL = @"http://0.0.0.0/open_api/bu_%@.php";
     NSString *HTTPMethod = @"POST";
     NSMutableURLRequest *req = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:[NSString stringWithFormat:baseURL, url]]];
     NSMutableDictionary *dataJSON = [[NSMutableDictionary alloc] init];
@@ -158,7 +159,8 @@
 
 - (NSError *)checkErr:(NSError *)error response:(NSURLResponse *)response
 {
-    NSString *serverERROR =     @"服务器错误，请稍后再试";
+    NSString *serverERROR =     @"服务器错误，请稍候再试";
+    NSString *notFoundERROR = @"服务器404错误，请稍候再试";
     NSString *timeoutERROR =    @"服务器连接超时";
     NSString *connenctionERROR =    @"无法连接至服务器";
     NSString *noInternetERROR = @"无网络连接，请检查网络连接";
@@ -173,10 +175,17 @@
         {
             errorInfo = @{NSLocalizedDescriptionKey:serverERROR};
         }
+        else if (httpResponse.statusCode == 404)
+        {
+            errorInfo = @{NSLocalizedDescriptionKey:notFoundERROR};
+        }
         else
         {
             errorInfo = @{NSLocalizedDescriptionKey:unknownERROR};
         }
+        
+        return [NSError errorWithDomain:@"buc.http.errorDomain" code:0 userInfo:errorInfo];
+
     }
     else if (error.code == NSURLErrorTimedOut)
     {
@@ -194,7 +203,7 @@
     {
         errorInfo = @{NSLocalizedDescriptionKey:unknownERROR};
     }
-    
+        
     return [NSError errorWithDomain:error.domain code:error.code userInfo:errorInfo];
 }
 @end

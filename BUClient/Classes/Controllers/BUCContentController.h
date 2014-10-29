@@ -8,7 +8,7 @@
 
 #import <UIKit/UIKit.h>
 
-@interface BUCContentViewController : UIViewController
+@interface BUCContentController : UIViewController
 
 - (void)removeChildController;
 - (void)displayLoading;
