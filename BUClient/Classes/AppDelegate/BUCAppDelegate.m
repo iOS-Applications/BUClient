@@ -9,10 +9,12 @@
 #import "BUCAppDelegate.h"
 
 @implementation BUCAppDelegate
+
 - (void)applicationDidFinishLaunching:(UIApplication *)application
 {
     [[NSUserDefaults standardUserDefaults] setBool:YES forKey:@"isJustLaunched"];
 }
+
 @end
 
 

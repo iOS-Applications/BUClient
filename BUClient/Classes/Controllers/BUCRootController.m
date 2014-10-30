@@ -12,18 +12,22 @@
 #import "BUCContentController.h"
 #import "BUCAuthManager.h"
 
-#define MINTRANSLATION 130.0
-#define MAXTRANSLATION 250.0
-
 @interface BUCRootController ()
-{
-    CGPoint rightCenter;
-    CGPoint leftCenter;
-    CGPoint farRightCenter;
-    
-    UIPanGestureRecognizer *contentPanRecognizer;
-    UITapGestureRecognizer *contentTapRecognizer;
-}
+// global constants
+@property (nonatomic) CGFloat MINTRANSLATION;
+@property (nonatomic) CGFloat MAXTRANSLATION;
+@property (nonatomic) CGPoint RIGHTCENTER;
+@property (nonatomic) CGPoint LEFTCENTER;
+@property (nonatomic) CGPoint FARRIGHTCENTER;
+
+// properties to keep references of objects frequently used
+@property (nonatomic) UIPanGestureRecognizer *CONTENTPANRECOGNIZER;
+@property (nonatomic) UITapGestureRecognizer *CONTENTTAPRECOGNIZER;
+
+@property (nonatomic, weak) UIView *MENUWRAPPER;
+@property (nonatomic, weak) UIView *CONTENTWRAPPER;
+
+@property (nonatomic, weak) BUCContentController *CONTENTCONTROLLER;
 
 @end
 
@@ -33,51 +37,54 @@
 {
     [super viewDidLoad];
     
-    leftCenter = self.view.center;
-    rightCenter = CGPointMake(leftCenter.x + MAXTRANSLATION, leftCenter.y);
-    farRightCenter = CGPointMake(leftCenter.x + 320, leftCenter.y);
+    // set up global constants
+    self.MINTRANSLATION = 130.0f;
+    self.MAXTRANSLATION = 250.0f;
+    self.LEFTCENTER = self.view.center;
+    self.RIGHTCENTER = CGPointMake(self.LEFTCENTER.x + self.MAXTRANSLATION, self.LEFTCENTER.y);
+    self.FARRIGHTCENTER = CGPointMake(self.LEFTCENTER.x + self.view.frame.size.width, self.LEFTCENTER.y);
     
-    contentPanRecognizer = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(handlePan:)];
-    contentTapRecognizer = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(handleTap:)];
+    self.CONTENTPANRECOGNIZER = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(handleContentPan:)];
+    self.CONTENTTAPRECOGNIZER = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(handleContentTap:)];
 
+    // set up menu and content wrapper
     UIStoryboard *storyboard = [UIStoryboard storyboardWithName:@"Main" bundle:nil];
     
-    UIView *menuWrapper = [self.view viewWithTag:100]; // 100 is tag value set in IB
+    UIView *menuWrapper = [self.view viewWithTag:100]; // 100 is the tag value set in IB
     BUCMenuController *menuController = [storyboard instantiateViewControllerWithIdentifier:@"menuController"];
     menuController.view.frame = menuWrapper.frame;
     [self addChildViewController:menuController];
     [menuWrapper addSubview:menuController.view];
     [menuController didMoveToParentViewController:self];
+    self.MENUWRAPPER = menuWrapper;
     
-    UIView *contentWrapper = [self.view viewWithTag:101]; // 101 is tag value set in IB
+    UIView *contentWrapper = [self.view viewWithTag:101]; // 101 is the tag value set in IB
     contentWrapper.layer.shadowOpacity = 1.0;
     contentWrapper.layer.shadowRadius = 5.0;
     contentWrapper.layer.shadowPath = [UIBezierPath bezierPathWithRect:contentWrapper.bounds].CGPath;
-    [contentWrapper addGestureRecognizer:contentPanRecognizer];
+    [contentWrapper addGestureRecognizer:self.CONTENTPANRECOGNIZER];
+    self.CONTENTWRAPPER = contentWrapper;
 }
 
 - (void)viewDidAppear:(BOOL)animated
 {
     [super viewDidAppear:animated];
     
+    // check if app is just launched
     if ([[NSUserDefaults standardUserDefaults] boolForKey:@"isJustLaunched"])
     {
         [[NSUserDefaults standardUserDefaults] setBool:NO forKey:@"isJustLaunched"];
         [[NSUserDefaults standardUserDefaults] synchronize];
 
+        // check if user is logged in last time
         if ([[NSUserDefaults standardUserDefaults] boolForKey:@"isLoggedIn"])
         {
-            UIStoryboard *storyboard = [UIStoryboard storyboardWithName:@"Main" bundle:nil];
-            
-            UIView *contentWrapper = [self.view viewWithTag:101];
-            BUCContentController *contentController = [storyboard instantiateViewControllerWithIdentifier:@"contentController"];
-            contentController.view.frame = contentWrapper.frame;
-            [self addChildViewController:contentController];
-            [contentWrapper addSubview:contentController.view];
-            [contentController didMoveToParentViewController:self];
+            // if yes, load content directly
+            [self loadContent];
         }
         else
         {
+            // otherwise, bring up the login form
             UIStoryboard *storyboard = [UIStoryboard storyboardWithName:@"Main" bundle:nil];
             BUCLoginController *loginVC = [storyboard instantiateViewControllerWithIdentifier:@"loginController"];
             
@@ -89,7 +96,11 @@
 #pragma mark - public methods
 - (void)showMenu
 {
-    UIView *contentWrapper = [self.view viewWithTag:101];
+    UIView *contentWrapper = self.CONTENTWRAPPER;
+    UITapGestureRecognizer *contentRecognizer = self.CONTENTTAPRECOGNIZER;
+    CGPoint rightCenter = self.RIGHTCENTER;
+    UIView *contentView = self.CONTENTCONTROLLER.view;
+    
     [UIView animateWithDuration:0.75
                           delay:0
                         options:UIViewAnimationOptionCurveEaseInOut
@@ -98,25 +109,25 @@
                      }
                      completion:nil];
     
-    UIView *view = [contentWrapper.subviews lastObject];
-    view.userInteractionEnabled = NO;
-    [contentWrapper addGestureRecognizer:contentTapRecognizer];
+    contentView.userInteractionEnabled = NO;
+    [contentWrapper addGestureRecognizer:contentRecognizer];
 }
 
 - (void)switchContentWith:(NSString *)segueIdendifier completion:(void (^)(void))completeHandler
 {
+//    UIView *contentWrapper = [self.view viewWithTag:101];
 //    [UIView animateWithDuration:0.25
 //                          delay:0
 //                        options:UIViewAnimationOptionCurveEaseInOut
 //                     animations:^{
-//                         self.contentWrapper.center = farRightCenter;
+//                         contentWrapper.center = FARRIGHTCENTER;
 //                     }
 //                     completion:^(BOOL finished) {
 //                         [UIView animateWithDuration:0.5
 //                                               delay:0.05
 //                                             options:UIViewAnimationOptionCurveEaseInOut
 //                                          animations:^{
-//                                              self.contentWrapper.center = leftCenter;
+//                                              contentWrapper.center = LEFTCENTER;
 //                                          }
 //                                          completion:^(BOOL finished) {
 //                                              completeHandler();
@@ -127,65 +138,66 @@
 //    
 //    UIView *view = [self.contentWrapper.subviews lastObject];
 //    view.userInteractionEnabled = YES;
-//    [self.contentWrapper removeGestureRecognizer:self.contentTapRecognizer];
-}
-
-- (void)hideMenu
-{
-//    self.contentWrapper.center = leftCenter;
-}
-
-- (void)disableMenu
-{
-//    [self.contentWrapper removeGestureRecognizer:self.contentPanRecognizer];
-}
-
-- (void)enableMenu
-{
-//    [self.contentWrapper addGestureRecognizer:self.contentPanRecognizer];
+//    [contentWrapper removeGestureRecognizer:self.contentTapRecognizer];
 }
 
 #pragma mark - gesture handler methods
-- (IBAction)handlePan:(UIPanGestureRecognizer *)recognizer
+- (IBAction)handleContentPan:(UIPanGestureRecognizer *)recognizer
 {
+    UIView *context = self.view;
     UIView *contentWrapper = recognizer.view;
-    CGPoint translation = [recognizer translationInView:self.view];
-    CGFloat stopPositionX = contentWrapper.center.x + translation.x;
-    [recognizer setTranslation:CGPointMake(0, 0) inView:self.view];
+    CGPoint leftCenter = self.LEFTCENTER;
+    CGPoint rightCenter = self.RIGHTCENTER;
+    UITapGestureRecognizer *contentTapRecognizer = self.CONTENTTAPRECOGNIZER;
+    CGFloat minTranslation = self.MINTRANSLATION;
+    UIView *contentView = self.CONTENTCONTROLLER.view;
     
-    if (stopPositionX < leftCenter.x) {
+    CGPoint endCenter;
+    CGPoint translation = [recognizer translationInView:context];
+    CGFloat stopPositionX = contentWrapper.center.x + translation.x;
+    [recognizer setTranslation:CGPointMake(0, 0) inView:context];
+    
+    if (stopPositionX < leftCenter.x)
+    {
         return;
     }
     
     contentWrapper.center = CGPointMake(stopPositionX, leftCenter.y);
     
-    if (recognizer.state == UIGestureRecognizerStateEnded) {
-        CGPoint endCenter;
-        UIView *view = [contentWrapper.subviews lastObject];
-        
-        if (stopPositionX > leftCenter.x + MINTRANSLATION) {
+    if (recognizer.state == UIGestureRecognizerStateEnded)
+    {
+        if (stopPositionX > leftCenter.x + minTranslation)
+        {
             endCenter = rightCenter;
-            view.userInteractionEnabled = NO;
+            contentView.userInteractionEnabled = NO;
             [contentWrapper addGestureRecognizer:contentTapRecognizer];
-        } else {
+        }
+        else
+        {
             endCenter = leftCenter;
-            view.userInteractionEnabled = YES;
+            contentView.userInteractionEnabled = YES;
             [contentWrapper removeGestureRecognizer:contentTapRecognizer];
         }
         
-        [UIView animateWithDuration:0.75
-                              delay:0
-                            options:UIViewAnimationOptionCurveEaseInOut
-                         animations:^(void) {
-                             contentWrapper.center = endCenter;
-                         }
-                         completion:nil];
+        [UIView
+         animateWithDuration:0.75
+         delay:0
+         options:UIViewAnimationOptionCurveEaseInOut
+         animations:
+         ^(void)
+         {
+             contentWrapper.center = endCenter;
+         }
+         completion:nil];
     }
 }
 
-- (IBAction)handleTap:(UITapGestureRecognizer *)recognizer
+- (IBAction)handleContentTap:(UITapGestureRecognizer *)recognizer
 {
-    UIView *contentWrapper = [self.view viewWithTag:101];
+    UIView *contentWrapper = self.CONTENTWRAPPER;
+    CGPoint leftCenter = self.LEFTCENTER;
+    UITapGestureRecognizer *contentTapRecognizer = self.CONTENTTAPRECOGNIZER;
+    
     [UIView animateWithDuration:0.5
                           delay:0
                         options:UIViewAnimationOptionCurveEaseInOut
@@ -199,16 +211,27 @@
     [recognizer.view removeGestureRecognizer:contentTapRecognizer];
 }
 
-#pragma mark - segue methods
-- (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender
+#pragma mark - unwind callback
+- (IBAction)unwindToRoot:(UIStoryboardSegue *)segue
 {
-//    if ([segue.identifier isEqualToString:@"segueToContent"]) {
-//        self.contentController = segue.destinationViewController;
-//    } else if ([segue.identifier isEqualToString:@"segueToIndex"]) {
-//        self.indexController = segue.destinationViewController;
-//    }
+    [self loadContent];
 }
 
+#pragma mark - private methods
+- (void)loadContent
+{
+    UIView *contentWrapper = self.CONTENTWRAPPER;
+    UIStoryboard *storyboard = [UIStoryboard storyboardWithName:@"Main" bundle:nil];
+    BUCContentController *contentController = [storyboard instantiateViewControllerWithIdentifier:@"contentController"];
+
+    contentController.view.frame = contentWrapper.frame;
+    [self addChildViewController:contentController];
+    [contentWrapper addSubview:contentController.view];
+    [contentController didMoveToParentViewController:self];
+    
+    self.CONTENTCONTROLLER = contentController;
+    self.view.userInteractionEnabled = YES;
+}
 @end
 
 

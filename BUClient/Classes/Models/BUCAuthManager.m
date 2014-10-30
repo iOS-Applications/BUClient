@@ -51,10 +51,16 @@ static NSString *kKeychainItemIdentifer = @"org.bitunion.buc.%@.KeychainUI";
     return sharedInstance;
 }
 
-- (void)start
+- (id)init
 {
-    self.curUser = [[NSUserDefaults standardUserDefaults] stringForKey:@"curUser"];
-    [self updateSessionOnSuccess:nil onFail:nil];
+    self = [super init];
+    
+    if (self)
+    {
+        _curUser = [[NSUserDefaults standardUserDefaults] stringForKey:@"curUser"];
+    }
+    
+    return self;
 }
 
 - (void)loginWithUsername:(NSString *)username andPassword:(NSString *)password onSuccess:(AuthSuccessBlock)successBlock onFail:(AuthFailBlock)failBlock
@@ -93,10 +99,6 @@ static NSString *kKeychainItemIdentifer = @"org.bitunion.buc.%@.KeychainUI";
          [defaults setBool:YES forKey:@"isLoggedIn"];
          [defaults synchronize];
          
-         // login state changed, post login notification
-         NSString *kUserLoginNotification = @"kUserLoginNotification";
-         [[NSNotificationCenter defaultCenter] postNotificationName:kUserLoginNotification object:weakSelf];
-         
          if (successBlock)
          {
              successBlock();
@@ -105,9 +107,6 @@ static NSString *kKeychainItemIdentifer = @"org.bitunion.buc.%@.KeychainUI";
      
      onError:^(NSError *error)
      {
-         NSString *kUserLoginNotification = @"kUserLoginNotification";
-         [[NSNotificationCenter defaultCenter] postNotificationName:kUserLoginNotification object:weakSelf];
-         
          if (failBlock)
          {
              failBlock(error);
@@ -141,10 +140,6 @@ static NSString *kKeychainItemIdentifer = @"org.bitunion.buc.%@.KeychainUI";
          }
          
          weakSelf.session = [resultJSON objectForKey:@"session"];
-         
-         // login state changed, post login notification
-         NSString *kUserLoginNotification = @"kUserLoginNotification";
-         [[NSNotificationCenter defaultCenter] postNotificationName:kUserLoginNotification object:weakSelf];
 
          if (sessionBlock)
          {

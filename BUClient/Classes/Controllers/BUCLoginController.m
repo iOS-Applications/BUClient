@@ -34,46 +34,40 @@
     self.loginButton.layer.cornerRadius = 3;
     self.loginButton.layer.masksToBounds = YES;
     
-    UIView *borderA = [[UIView alloc]
-                       initWithFrame:CGRectMake(self.username.frame.origin.x,
-                                                self.username.frame.origin.y +
-                                                self.username.frame.size.height + 2.0f - 0.5f,
-                                                self.username.frame.size.width,
-                                                0.5f)];
-    borderA.backgroundColor = [UIColor colorWithRed:160.0f/255.0f
-                                              green:160.0f/255.0f
-                                               blue:160.0f/255.0f
-                                              alpha:1.0f];
+    self.modalTransitionStyle = UIModalTransitionStyleCrossDissolve;
+    
+    CGRect frame = self.username.frame;
+    CGFloat textfieldHeight = frame.size.height;
+    CGFloat borderAOriginY = frame.origin.y + textfieldHeight;
+    UIColor *borderColor = [UIColor colorWithRed:217.0f/255.0f green:217.0f/255.0f blue:217.0f/255.0f alpha:1.0f];
+    
+    UIView *borderA = [[UIView alloc] initWithFrame:CGRectMake(frame.origin.x, borderAOriginY, frame.size.width, 1.0f)];
+    borderA.backgroundColor = borderColor;
     [self.view addSubview:borderA];
     
-    UIView *borderB = [[UIView alloc]
-                       initWithFrame:CGRectMake(self.password.frame.origin.x,
-                                                self.password.frame.origin.y +
-                                                self.password.frame.size.height + 2.0f - 0.5f,
-                                                self.password.frame.size.width,
-                                                0.5f)];
-    borderB.backgroundColor = [UIColor colorWithRed:160.0f/255.0f
-                                              green:160.0f/255.0f
-                                               blue:160.0f/255.0f
-                                              alpha:1.0f];
+    UIView *borderB = [[UIView alloc] initWithFrame:CGRectZero];
+    borderB.frame = CGRectOffset(borderA.frame, 0.0f, textfieldHeight);
+    borderB.backgroundColor = borderColor;
+
     [self.view addSubview:borderB];
 }
 
 #pragma mark - IBAction methods
 - (IBAction)login:(id)sender
 {
-    [self.curTextField resignFirstResponder];
-    
+    BUCAuthManager *authManager = [BUCAuthManager sharedInstance];
+    BUCLoginController * __weak weakSelf = self;
     NSString *username = self.username.text;
     NSString *password = self.password.text;
+    [self.curTextField resignFirstResponder];
+    
     if ([username length] == 0 || [password length] == 0)
     {
         [self alertMessage:@"请输入用户名与密码"];
         return;
     }
     
-    BUCAuthManager *authManager = [BUCAuthManager sharedInstance];
-    BUCLoginController * __weak weakSelf = self;
+
     
     [authManager
      loginWithUsername:username
@@ -83,8 +77,8 @@
      onSuccess:^(void)
      {
          [weakSelf hideLoading];
-         weakSelf.modalTransitionStyle = UIModalTransitionStyleCrossDissolve;
-         [weakSelf performSegueWithIdentifier:@"unwindToContent" sender:nil];
+         
+         [weakSelf performSegueWithIdentifier:@"unwindToRoot" sender:nil];
      }
      
      onFail:^(NSError *error)

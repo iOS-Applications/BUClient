@@ -7,14 +7,18 @@
 //
 
 #import "BUCPostListController.h"
-#import "BUCDataManager.h"
 #import "BUCContentController.h"
-#import "BUCPost.h"
 #import "BUCListItemView.h"
+#import "BUCDataManager.h"
+#import "BUCPost.h"
+
 
 @interface BUCPostListController () <UIScrollViewDelegate>
 
-@property (nonatomic, weak) BUCContentController *contentVC;
+@property (nonatomic, weak) BUCContentController *CONTENTCONTROLLER;
+
+@property (nonatomic, weak) UIView *REFRESHINDICATOR;
+@property (nonatomic, weak) UIView *LISTWRAPPER;
 
 @end
 
@@ -23,8 +27,6 @@
 - (void)viewDidLoad
 {
     [super viewDidLoad];
-    
-    self.contentVC = (BUCContentController *)self.parentViewController.parentViewController;
     
     UIScrollView *context = (UIScrollView *)self.view;
     context.delegate = self;
@@ -35,20 +37,20 @@
     CGFloat navigationBarHeight = self.navigationController.navigationBar.frame.size.height;
     CGFloat refreshIndicatorHeight = statusBarHeight + navigationBarHeight;
     UIView *refreshIndicator = [[UIView alloc] initWithFrame:CGRectMake(0.0f, 0.0f, contextWidth, refreshIndicatorHeight)];
-    refreshIndicator.hidden = YES;
-    refreshIndicator.tag = 100;
     UILabel *refreshPrompt = [self labelFromText:[[NSAttributedString alloc] initWithString:@"pull to refresh"] origin:CGPointZero];
     refreshPrompt.center = refreshIndicator.center;
+    refreshPrompt.frame = CGRectOffset(refreshPrompt.frame, 0.0f, 10.0f);
     [refreshIndicator addSubview:refreshPrompt];
     [context addSubview:refreshIndicator];
     
-    [self.contentVC displayLoading];
-    [self loadList];
+    self.REFRESHINDICATOR = refreshIndicator;
+    self.CONTENTCONTROLLER = (BUCContentController *)self.parentViewController;
 }
 
-- (void)viewWillAppear:(BOOL)animated
+- (void)viewDidAppear:(BOOL)animated
 {
-
+    [self displayLoading];
+    [self loadList];
 }
 
 #pragma mark - IBAction and unwind methods
@@ -62,18 +64,21 @@
 {
     BUCPostListController * __weak weakSelf = self;
     BUCDataManager *dataManager = [BUCDataManager sharedInstance];
+    UIView *listWrapper = self.LISTWRAPPER;
+    BUCContentController *contentController = self.CONTENTCONTROLLER;
+    
     [dataManager
      getFrontListOnSuccess:
      ^(NSArray *list)
      {
-         [[weakSelf.view viewWithTag:101] removeFromSuperview];
+         [listWrapper removeFromSuperview];
          [weakSelf buildList:list];
          [weakSelf hideLoading];
      }
      onFail:^(NSError *error)
      {
          [weakSelf hideLoading];
-         [weakSelf.contentVC alertMessage:error.localizedDescription];
+         [contentController alertMessage:error.localizedDescription];
      }];
 }
 
@@ -113,6 +118,9 @@
 #pragma mark - private methods
 - (void)buildList:(NSArray *)list
 {
+    UIView *refreshIndicator = self.REFRESHINDICATOR;
+    UIScrollView *context = (UIScrollView *)self.view;
+    
     // set up basic geometry
     CGFloat wrapperMarginX = 5.0f;
     CGFloat wrapperMarginY = 5.0f;
@@ -132,7 +140,6 @@
     
     // set up wrapper
     UIView *wrapper = [[UIView alloc] init];
-    wrapper.tag = 101; // use this tag to get wrapper view before refresh happened
     wrapper.opaque = YES;
     
     // accumulation variables
@@ -226,11 +233,13 @@
     }
     
     wrapperHeight = wrapperHeight - listItemBottomMargin;
-    UIView *refreshIndicator = [self.view viewWithTag:100];
+    
+
     CGFloat refreshIndicatorHeight = refreshIndicator.frame.size.height;
     wrapper.frame = CGRectMake(wrapperMarginX, wrapperMarginY + refreshIndicatorHeight, wrapperWidth, wrapperHeight);
-    ((UIScrollView *)self.view).contentSize = CGSizeMake(wrapperWidth + 2 * wrapperMarginX, wrapperHeight + 2 * wrapperMarginY + refreshIndicatorHeight);
-    [self.view addSubview:wrapper];
+    context.contentSize = CGSizeMake(wrapperWidth + 2 * wrapperMarginX, wrapperHeight + 2 * wrapperMarginY + refreshIndicatorHeight);
+    [context addSubview:wrapper];
+    self.LISTWRAPPER = wrapper;
 }
 
 - (UIButton *)buttonFromTitle:(NSAttributedString *)title origin:(CGPoint)origin
@@ -256,15 +265,14 @@
 
 - (void)displayLoading
 {
-    [self.contentVC displayLoading];
+    [self.CONTENTCONTROLLER displayLoading];
+    self.view.userInteractionEnabled = NO;
 }
 
 - (void)hideLoading
 {
-    [self.contentVC hideLoading];
-    UIScrollView *scrollView = (UIScrollView *)self.view;
-    UIView *refreshIndicator = [scrollView viewWithTag:100];
-    refreshIndicator.hidden = NO;
+    [self.CONTENTCONTROLLER hideLoading];
+    self.view.userInteractionEnabled = YES;
 }
 @end
 

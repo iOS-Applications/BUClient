@@ -49,11 +49,7 @@
                         </connections>
                     </view>
                     <navigationItem key="navigationItem" title="增加用户" id="4eK-HK-k8f">
-                        <barButtonItem key="leftBarButtonItem" systemItem="cancel" id="9Uh-gc-6ef">
-                            <connections>
-                                <segue destination="DoJ-CY-lgE" kind="unwind" unwindAction="unwindToUserList:" id="crH-FF-i5r"/>
-                            </connections>
-                        </barButtonItem>
+                        <barButtonItem key="leftBarButtonItem" systemItem="cancel" id="9Uh-gc-6ef"/>
                     </navigationItem>
                     <connections>
                         <outlet property="activityView" destination="UgL-pP-1lI" id="qoa-3V-E53"/>
@@ -62,8 +58,7 @@
                         <outlet property="password" destination="h00-he-ZAh" id="SZH-Zp-Tsr"/>
                         <outlet property="username" destination="Lbi-rk-Gxs" id="FZB-Ha-8eR"/>
                         <outlet property="viewTapRecognizer" destination="lec-qv-vF5" id="x25-Na-Alu"/>
-                        <segue destination="DoJ-CY-lgE" kind="unwind" identifier="unwindToUserList" unwindAction="unwindToUserList:" id="oT3-je-3px"/>
-                        <segue destination="DoJ-CY-lgE" kind="unwind" identifier="unwindToContent" unwindAction="unwindToContent:" id="6ii-vJ-46J"/>
+                        <segue destination="DoJ-CY-lgE" kind="unwind" identifier="unwindToRoot" unwindAction="unwindToRoot:" id="oDW-vL-fQi"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="XAp-PX-rxo" userLabel="First Responder" sceneMemberID="firstResponder"/>
@@ -93,7 +88,7 @@
                     <color key="backgroundColor" white="0.0" alpha="1" colorSpace="calibratedWhite"/>
                 </view>
             </objects>
-            <point key="canvasLocation" x="3784" y="-490"/>
+            <point key="canvasLocation" x="3004" y="-1353"/>
         </scene>
         <!--Menu Controller-->
         <scene sceneID="uR2-VF-BBk">
@@ -239,7 +234,7 @@
         <!--首页-->
         <scene sceneID="PTU-iE-1Fi">
             <objects>
-                <viewController automaticallyAdjustsScrollViewInsets="NO" id="Zuh-sq-0MZ" customClass="BUCPostListController" sceneMemberID="viewController">
+                <viewController storyboardIdentifier="postListController" automaticallyAdjustsScrollViewInsets="NO" id="Zuh-sq-0MZ" customClass="BUCPostListController" sceneMemberID="viewController">
                     <scrollView key="view" autoresizesSubviews="NO" contentMode="scaleToFill" showsHorizontalScrollIndicator="NO" bouncesZoom="NO" id="BkK-Ea-XDg">
                         <rect key="frame" x="0.0" y="44" width="320" height="568"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
@@ -257,13 +252,13 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="pWm-fP-wxY" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="2975" y="172"/>
+            <point key="canvasLocation" x="3004" y="112"/>
         </scene>
         <!--Root Controller-->
         <scene sceneID="xcZ-Ez-eMP">
             <objects>
                 <viewController autoresizesArchivedViewToFullSize="NO" automaticallyAdjustsScrollViewInsets="NO" id="0Gh-hd-DNQ" customClass="BUCRootController" sceneMemberID="viewController">
-                    <view key="view" autoresizesSubviews="NO" clearsContextBeforeDrawing="NO" contentMode="scaleToFill" id="7dO-lY-43F">
+                    <view key="view" autoresizesSubviews="NO" clearsContextBeforeDrawing="NO" userInteractionEnabled="NO" contentMode="scaleToFill" id="7dO-lY-43F">
                         <rect key="frame" x="0.0" y="0.0" width="320" height="568"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                         <subviews>
@@ -283,10 +278,6 @@
                         <gestureRecognizers/>
                     </view>
                     <extendedEdge key="edgesForExtendedLayout"/>
-                    <connections>
-                        <outlet property="activityView" destination="Iea-wy-hvh" id="X5i-8a-IuL"/>
-                        <outlet property="loadingView" destination="SEK-Sc-XG1" id="aDa-bA-ijq"/>
-                    </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="Phv-8Q-72y" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
@@ -295,66 +286,45 @@
         <!--Content Controller-->
         <scene sceneID="fUj-dc-8dL">
             <objects>
-                <viewController storyboardIdentifier="contentController" automaticallyAdjustsScrollViewInsets="NO" id="JuQ-bn-hnw" customClass="BUCContentController" sceneMemberID="viewController">
-                    <view key="view" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" id="GWn-xC-KkG">
+                <viewController automaticallyAdjustsScrollViewInsets="NO" id="JuQ-bn-hnw" customClass="BUCContentController" sceneMemberID="viewController">
+                    <view key="view" autoresizesSubviews="NO" clearsContextBeforeDrawing="NO" contentMode="center" id="GWn-xC-KkG">
                         <rect key="frame" x="0.0" y="0.0" width="320" height="568"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
                     </view>
                     <toolbarItems/>
                     <navigationItem key="navigationItem" id="3aa-tg-B5G">
-                        <barButtonItem key="leftBarButtonItem" title="Item" id="HpA-HF-Krq">
+                        <barButtonItem key="leftBarButtonItem" image="menu.png" id="HpA-HF-Krq">
                             <connections>
-                                <action selector="button:" destination="JuQ-bn-hnw" id="oeL-Dm-3Hn"/>
+                                <action selector="showMenu:" destination="JuQ-bn-hnw" id="k5T-1a-qNh"/>
                             </connections>
                         </barButtonItem>
                     </navigationItem>
                     <connections>
-                        <outlet property="activityView" destination="Iea-wy-hvh" id="czU-i3-Mb5"/>
-                        <outlet property="loadingView" destination="SEK-Sc-XG1" id="Cmk-zh-FAB"/>
-                        <segue destination="mXO-Fl-Wnc" kind="custom" identifier="segueToFront" customClass="BUCEmptySegue" id="rHB-1A-hWT"/>
+                        <segue destination="Zuh-sq-0MZ" kind="custom" identifier="segueToPostList" customClass="BUCEmptySegue" id="1ax-8o-6Ji"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="g5w-GF-xCH" userLabel="First Responder" sceneMemberID="firstResponder"/>
-                <view alpha="0.5" contentMode="scaleToFill" id="SEK-Sc-XG1">
-                    <rect key="frame" x="0.0" y="0.0" width="150" height="150"/>
-                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                    <subviews>
-                        <label opaque="NO" clipsSubviews="YES" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Please wait..." textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" id="Apn-DL-VfP">
-                            <rect key="frame" x="20" y="93" width="110" height="21"/>
-                            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                            <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
-                            <fontDescription key="fontDescription" type="system" pointSize="17"/>
-                            <color key="textColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="calibratedRGB"/>
-                            <nil key="highlightedColor"/>
-                        </label>
-                        <activityIndicatorView opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" style="whiteLarge" id="Iea-wy-hvh">
-                            <rect key="frame" x="57" y="37" width="37" height="37"/>
-                            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                        </activityIndicatorView>
-                    </subviews>
-                    <color key="backgroundColor" white="0.0" alpha="1" colorSpace="calibratedWhite"/>
-                </view>
             </objects>
-            <point key="canvasLocation" x="2723" y="-642"/>
+            <point key="canvasLocation" x="3255" y="-642"/>
         </scene>
         <!--Navigation Controller-->
-        <scene sceneID="A8z-yc-Tyi">
+        <scene sceneID="gga-sZ-tzR">
             <objects>
-                <navigationController automaticallyAdjustsScrollViewInsets="NO" id="mXO-Fl-Wnc" sceneMemberID="viewController">
+                <navigationController storyboardIdentifier="contentController" automaticallyAdjustsScrollViewInsets="NO" id="hro-vh-iez" sceneMemberID="viewController">
                     <toolbarItems/>
-                    <navigationBar key="navigationBar" contentMode="scaleToFill" id="uZN-4Z-cv0">
+                    <navigationBar key="navigationBar" contentMode="scaleToFill" id="20v-l9-FQE">
                         <rect key="frame" x="0.0" y="0.0" width="320" height="44"/>
                         <autoresizingMask key="autoresizingMask"/>
                     </navigationBar>
                     <nil name="viewControllers"/>
                     <connections>
-                        <segue destination="Zuh-sq-0MZ" kind="relationship" relationship="rootViewController" id="5Gg-Xg-xy4"/>
+                        <segue destination="JuQ-bn-hnw" kind="relationship" relationship="rootViewController" id="hxo-e4-bFH"/>
                     </connections>
                 </navigationController>
-                <placeholder placeholderIdentifier="IBFirstResponder" id="e69-t4-doz" userLabel="First Responder" sceneMemberID="firstResponder"/>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="bQc-no-14T" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="2520" y="172"/>
+            <point key="canvasLocation" x="2723" y="-642"/>
         </scene>
     </scenes>
     <resources>

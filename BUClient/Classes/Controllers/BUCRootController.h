@@ -12,8 +12,5 @@
 
 - (void)switchContentWith:(NSString *)segueIdendifier completion:(void (^)(void))completeHandler;
 - (void)showMenu;
-- (void)hideMenu;
-- (void)disableMenu;
-- (void)enableMenu;
 
 @end

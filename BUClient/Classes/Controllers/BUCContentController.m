@@ -7,10 +7,13 @@
 //
 
 #import "BUCContentController.h"
+#import "BUCRootController.h"
 
 @interface BUCContentController ()
-@property (strong, nonatomic) IBOutlet UIView *loadingView;
-@property (weak, nonatomic) IBOutlet UIActivityIndicatorView *activityView;
+
+@property (nonatomic) UIView *LOADINGVIEW;
+@property (nonatomic) UIActivityIndicatorView *ACTIVITYINDICATOR;
+@property (nonatomic, weak) BUCRootController *ROOTCONTROLLER;
 
 @end
 
@@ -20,22 +23,41 @@
 {
     [super viewDidLoad];
     
-    self.loadingView.center = self.view.center;
-    self.loadingView.layer.cornerRadius = 10.0f;
+    self.ROOTCONTROLLER = (BUCRootController *)(self.parentViewController).parentViewController;
     
-    NSString *kUserLoginNotification = @"kUserLoginNotification";
+    // set up loading view
+    UIView *loadingView = [[UIView alloc] initWithFrame:CGRectMake(0.0f, 0.0f, 140.0f, 140.0f)];
+    loadingView.center = self.view.center;
+    loadingView.layer.cornerRadius = 10.0f;
+    loadingView.backgroundColor = [UIColor blackColor];
+    loadingView.alpha = 0.5f;
+    self.LOADINGVIEW = loadingView;
     
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(bringUpFront) name:kUserLoginNotification object:nil];
+    UIActivityIndicatorView *activityIndicator = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhiteLarge];
+    activityIndicator.center = CGPointMake(70.0f, 40.0f);
+    [loadingView addSubview:activityIndicator];
+    self.ACTIVITYINDICATOR = activityIndicator;
+    
+    UILabel *text = [[UILabel alloc] init];
+    text.text = @"Please wait...";
+    [text sizeToFit];
+    text.center = CGPointMake(75.0f, 100.0f);
+    [text setTextColor:[UIColor whiteColor]];
+    [loadingView addSubview:text];
+    
+    [self performSegueWithIdentifier:@"segueToPostList" sender:nil];
 }
 
 - (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender
 {
-    if (![self.childViewControllers count]) {
+    if (![self.childViewControllers count])
+    {
         [self addChildViewController:segue.destinationViewController];
         ((UIViewController *)segue.destinationViewController).view.frame = self.view.frame;
         [self.view addSubview:((UIViewController *)segue.destinationViewController).view];
         [segue.destinationViewController didMoveToParentViewController:self];
-    } else {
+    } else
+    {
         UIViewController *fromVC = [self.childViewControllers lastObject];
         [self swapFromViewController:fromVC toViewController:segue.destinationViewController];
     }
@@ -44,14 +66,20 @@
 #pragma mark - public methods
 - (void)displayLoading
 {
-    [self.activityView startAnimating];
-    [self.view addSubview:self.loadingView];
+    UIView *loadingView = self.LOADINGVIEW;
+    UIActivityIndicatorView *activityIndicator = self.ACTIVITYINDICATOR;
+    
+    [activityIndicator startAnimating];
+    [self.view addSubview:loadingView];
 }
 
 - (void)hideLoading
 {
-    [self.loadingView removeFromSuperview];
-    [self.activityView stopAnimating];
+    UIView *loadingView = self.LOADINGVIEW;
+    UIActivityIndicatorView *activityIndicator = self.ACTIVITYINDICATOR;
+    
+    [loadingView removeFromSuperview];
+    [activityIndicator stopAnimating];
 }
 
 - (void)removeChildController
@@ -71,7 +99,14 @@
       otherButtonTitles:nil] show];
 }
 
-#pragma mark - unwind methods
+#pragma mark - anctions and unwind methods
+- (IBAction)showMenu:(id)sender
+{
+    BUCRootController *rootController = self.ROOTCONTROLLER;
+    
+    [rootController showMenu];
+}
+
 - (IBAction)unwindToContent:(UIStoryboardSegue *)segue
 {
     
@@ -88,11 +123,6 @@
         [fromViewController removeFromParentViewController];
         [toViewController didMoveToParentViewController:self];
     }];
-}
-
-- (void)bringUpFront
-{
-    [self performSegueWithIdentifier:@"segueToFront" sender:nil];
 }
 
 @end
