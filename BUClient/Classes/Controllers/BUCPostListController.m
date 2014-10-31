@@ -7,8 +7,11 @@
 //
 
 #import "BUCPostListController.h"
+#import "BUCRootController.h"
 #import "BUCContentController.h"
-#import "BUCListItemView.h"
+#import "BUCPostDetailController.h"
+#import "BUCListItem.h"
+#import "BUCTextButton.h"
 #import "BUCDataManager.h"
 #import "BUCPost.h"
 
@@ -16,9 +19,13 @@
 @interface BUCPostListController () <UIScrollViewDelegate>
 
 @property (nonatomic, weak) BUCContentController *CONTENTCONTROLLER;
+@property (nonatomic, weak) BUCRootController *ROOTCONTROLLER;
+@property (nonatomic, weak) UINavigationController *NAVCONTROLLER;
 
 @property (nonatomic, weak) UIView *REFRESHINDICATOR;
 @property (nonatomic, weak) UIView *LISTWRAPPER;
+
+@property (nonatomic) NSArray *POSTLIST;
 
 @end
 
@@ -44,13 +51,11 @@
     [context addSubview:refreshIndicator];
     
     self.REFRESHINDICATOR = refreshIndicator;
-    self.CONTENTCONTROLLER = (BUCContentController *)self.parentViewController;
-}
-
-- (void)viewDidAppear:(BOOL)animated
-{
-    [self displayLoading];
-    [self loadList];
+    self.NAVCONTROLLER = (UINavigationController *)self.parentViewController;
+    self.CONTENTCONTROLLER = (BUCContentController *)self.NAVCONTROLLER.parentViewController;
+    self.ROOTCONTROLLER = (BUCRootController *)self.CONTENTCONTROLLER.parentViewController;
+    
+    [self refresh:nil];
 }
 
 #pragma mark - IBAction and unwind methods
@@ -58,6 +63,11 @@
 {
     [self displayLoading];    
     [self loadList];
+}
+
+- (IBAction)showMenu:(id)sender
+{
+    [self.ROOTCONTROLLER showMenu];
 }
 
 - (void)loadList
@@ -71,43 +81,61 @@
      getFrontListOnSuccess:
      ^(NSArray *list)
      {
+         weakSelf.POSTLIST = list;
          [listWrapper removeFromSuperview];
          [weakSelf buildList:list];
          [weakSelf hideLoading];
      }
-     onFail:^(NSError *error)
+     onError:^(NSError *error)
      {
          [weakSelf hideLoading];
          [contentController alertMessage:error.localizedDescription];
      }];
 }
 
-- (IBAction)jumpToForum:(id)sender
-{
-
-}
-
 - (IBAction)jumpToPost:(id)sender
 {
-    BUCListItemView *item = (BUCListItemView *)sender;
-    NSLog(@"%ld", item.tag);
+    UIStoryboard *storyboard = [UIStoryboard storyboardWithName:@"Main" bundle:nil];
+    UINavigationController *navController = self.NAVCONTROLLER;
+    BUCPostDetailController *postDetailController = [storyboard instantiateViewControllerWithIdentifier:@"postDetailController"];
+    BUCListItem *listItem = (BUCListItem *)sender;
+    NSArray *postList = self.POSTLIST;
+    BUCPost *post = [postList objectAtIndex:listItem.tag];
+    
+    [UIView animateWithDuration:0.3 animations:^(void) {
+        listItem.backgroundColor = [UIColor whiteColor];
+    }];
+    
+    postDetailController.postID = post.pid;
+    [navController pushViewController:postDetailController animated:YES];
 }
 
-- (IBAction)unwindToFront:(UIStoryboardSegue *)segue
+- (IBAction)jumpToForum:(id)sender
 {
-
+    BUCTextButton *button = (BUCTextButton *)sender;
+    [UIView animateWithDuration:0.3 animations:^(void) {
+        button.alpha = 1.0f;
+    }];
 }
 
 - (IBAction)jumpToPoster:(id)sender
 {
-    
+    BUCTextButton *button = (BUCTextButton *)sender;
+    [UIView animateWithDuration:0.3 animations:^(void) {
+        button.alpha = 1.0f;
+    }];
+}
+
+- (IBAction)unwindToPostList:(UIStoryboardSegue *)segue
+{
+
 }
 
 #pragma mark - scroll view delegate
 - (void)scrollViewDidEndDragging:(UIScrollView *)scrollView
                   willDecelerate:(BOOL)decelerate
 {
-    CGFloat refreshFireHeight = 50.0f;
+    CGFloat refreshFireHeight = 40.0f;
     if (scrollView.contentOffset.y <= -refreshFireHeight)
     {
         [self displayLoading];
@@ -118,8 +146,15 @@
 #pragma mark - private methods
 - (void)buildList:(NSArray *)list
 {
+    // outside objects
     UIView *refreshIndicator = self.REFRESHINDICATOR;
     UIScrollView *context = (UIScrollView *)self.view;
+
+    // set up wrapper
+    UIView *wrapper = [[UIView alloc] init];
+    wrapper.opaque = YES;
+    self.LISTWRAPPER = wrapper;
+    
     
     // set up basic geometry
     CGFloat wrapperMarginX = 5.0f;
@@ -138,9 +173,6 @@
     
     CGFloat listItemChildSeparatorHeight = 0.6f;
     
-    // set up wrapper
-    UIView *wrapper = [[UIView alloc] init];
-    wrapper.opaque = YES;
     
     // accumulation variables
     NSInteger index = 0; // index of list item
@@ -160,7 +192,7 @@
         CGFloat listItemChildOriginY = listItemPaddingY;
         
         // set up post list item
-        BUCListItemView *listItem = [[BUCListItemView alloc] initWithFrame:CGRectZero];
+        BUCListItem *listItem = [[BUCListItem alloc] initWithFrame:CGRectZero];
         listItem.tag = index++; // use tag to identify post tapped later
         [listItem addTarget:self action:@selector(jumpToPost:) forControlEvents:UIControlEventTouchUpInside];
         
@@ -176,8 +208,9 @@
         listItemChildOriginY = listItemChildOriginY + 20.0f;
         
         // username of original poster
-        UIButton *poster = [self buttonFromTitle:post.user origin:CGPointMake(listItemChildOriginX, listItemChildOriginY)];
+        BUCTextButton *poster = [self buttonFromTitle:post.user origin:CGPointMake(listItemChildOriginX, listItemChildOriginY)];
         [listItem addSubview:poster];
+        [poster addTarget:self action:@selector(jumpToPoster:) forControlEvents:UIControlEventTouchUpInside];
         listItemChildOriginX = listItemChildOriginX + poster.frame.size.width + listItemChildGapX;
         
         // connecting text
@@ -189,10 +222,11 @@
         listItemChildOriginX = listItemChildOriginX + text.frame.size.width + listItemChildGapX;
         
         // forum name
-        UIButton *fname = [self buttonFromTitle:post.fname origin:CGPointMake(listItemChildOriginX, listItemChildOriginY)];
+        BUCTextButton *fname = [self buttonFromTitle:post.fname origin:CGPointMake(listItemChildOriginX, listItemChildOriginY)];
         [listItem addSubview:fname];
+        [fname addTarget:self action:@selector(jumpToForum:) forControlEvents:UIControlEventTouchUpInside];
         listItemChildOriginX = listItemChildOriginX + fname.frame.size.width + listItemChildGapX;
-        
+
         // reply count
         UILabel *replyCount = [self labelFromText:[[NSAttributedString alloc]
                                                    initWithString:[NSString stringWithFormat:@"%@人回复", post.childCount]
@@ -219,8 +253,9 @@
         listItemChildOriginX = listItemChildOriginX + lastReplyWhen.frame.size.width + listItemChildGapX;
         
         // last reply author
-        UIButton *lastReplyWho = [self buttonFromTitle:post.lastReply.user origin:CGPointMake(listItemChildOriginX, listItemChildOriginY)];
+        BUCTextButton *lastReplyWho = [self buttonFromTitle:post.lastReply.user origin:CGPointMake(listItemChildOriginX, listItemChildOriginY)];
         [listItem addSubview:lastReplyWho];
+        [lastReplyWho addTarget:self action:@selector(jumpToPoster:) forControlEvents:UIControlEventTouchUpInside];
         listItemChildOriginY = listItemChildOriginY + lastReplyWho.frame.size.height + listItemChildGapY;
         
         // set up post container's frame and add it to the wrapper
@@ -233,20 +268,24 @@
     }
     
     wrapperHeight = wrapperHeight - listItemBottomMargin;
-    
 
     CGFloat refreshIndicatorHeight = refreshIndicator.frame.size.height;
     wrapper.frame = CGRectMake(wrapperMarginX, wrapperMarginY + refreshIndicatorHeight, wrapperWidth, wrapperHeight);
     context.contentSize = CGSizeMake(wrapperWidth + 2 * wrapperMarginX, wrapperHeight + 2 * wrapperMarginY + refreshIndicatorHeight);
     [context addSubview:wrapper];
-    self.LISTWRAPPER = wrapper;
 }
 
-- (UIButton *)buttonFromTitle:(NSAttributedString *)title origin:(CGPoint)origin
+- (BUCTextButton *)buttonFromTitle:(NSAttributedString *)title origin:(CGPoint)origin
 {
-    UIButton *button = [UIButton buttonWithType:UIButtonTypeSystem];
-    [button setAttributedTitle:title forState:UIControlStateNormal];
-    button.contentEdgeInsets = UIEdgeInsetsMake(0.0f, 1.0f, 0.0f, 1.0f);
+//    UIButton *button = [UIButton buttonWithType:UIButtonTypeSystem];
+//    [button setAttributedTitle:title forState:UIControlStateNormal];
+//    button.contentEdgeInsets = UIEdgeInsetsMake(0.0f, 1.0f, 0.0f, 1.0f);
+//    [button sizeToFit];
+//    button.frame = CGRectOffset(button.frame, origin.x, origin.y);
+//    [button setTitleColor:[UIColor blackColor] forState:UIControlStateSelected];
+    
+    BUCTextButton *button = [[BUCTextButton alloc] init];
+    [button setTitle:title];
     [button sizeToFit];
     button.frame = CGRectOffset(button.frame, origin.x, origin.y);
     
@@ -274,6 +313,7 @@
     [self.CONTENTCONTROLLER hideLoading];
     self.view.userInteractionEnabled = YES;
 }
+
 @end
 
 

@@ -19,6 +19,7 @@
 @end
 
 @implementation BUCDataManager
+#pragma mark - global access
 + (BUCDataManager *)sharedInstance
 {
     static BUCDataManager *sharedInstance = nil;
@@ -30,9 +31,112 @@
     return sharedInstance;
 }
 
-- (void)getFrontListOnSuccess:(ArrayBlock)arrayBlock onFail:(FailBlock)failBlock
+#pragma mark - public methods
+- (void)getFrontListOnSuccess:(ArrayBlock)arrayBlock onError:(ErrorBlock)errorBlock
 {
+    BUCDataManager * __weak weakSelf = self;
+    BUCAuthManager *authManager = [BUCAuthManager sharedInstance];
+    
     NSString *frontURL = @"home";
+    
+    NSMutableDictionary *json = [[NSMutableDictionary alloc] init];
+    [json setObject:authManager.curUser forKey:@"username"];
+    
+    SuccessBlock successBlock = ^(NSDictionary *json)
+    {
+        NSMutableArray *list = [[NSMutableArray alloc] init];
+        NSArray *rawArray = [json objectForKey:@"newlist"];
+        BUCPost *post = nil;
+        NSString *when = nil;
+        NSString *who = nil;
+        
+        NSDictionary *captionAttrs = @{NSFontAttributeName:[UIFont preferredFontForTextStyle:UIFontTextStyleCaption1]};
+        
+        for (NSDictionary *rawDic in rawArray)
+        {
+            post = [[BUCPost alloc] init];
+            
+            post.pid = [rawDic objectForKey:@"tid"];
+            post.fid = [rawDic objectForKey:@"fid"];
+            post.fname = [[NSAttributedString alloc] initWithString:[weakSelf urldecode:[rawDic objectForKey:@"fname"]]
+                                                         attributes:captionAttrs];
+            
+            post.user = [[NSAttributedString alloc] initWithString:[weakSelf urldecode:[rawDic objectForKey:@"author"]]
+                                                        attributes:captionAttrs];
+            
+            post.title = [weakSelf attributedStringFromHTML:[weakSelf urldecode:[rawDic objectForKey:@"pname"]]];
+            
+            post.childCount = [rawDic objectForKey:@"tid_sum"];
+            
+            when = [weakSelf urldecode:[[rawDic objectForKey:@"lastreply"] objectForKey:@"when"]];
+            who = [weakSelf urldecode:[[rawDic objectForKey:@"lastreply"] objectForKey:@"who"]];
+            post.lastReply = [[BUCPost alloc] init];
+            post.lastReply.user = [[NSAttributedString alloc] initWithString:who attributes:captionAttrs];
+            post.lastReply.dateline = when;
+            
+            [list addObject:post];
+        }
+        
+        if (arrayBlock)
+        {
+            arrayBlock(list);
+        }
+    };
+    
+    [self loadListFromURL:frontURL json:json onSuccess:successBlock onError:errorBlock];
+}
+
+- (void)getPost:(NSString *)postID from:(NSString *)from to:(NSString *)to onSuccess:(ArrayBlock)arrayBlock onError:(ErrorBlock)errorBlock
+{
+    BUCDataManager * __weak weakSelf = self;
+    BUCAuthManager *authManager = [BUCAuthManager sharedInstance];
+    
+    NSString *postURL = @"post";
+    
+    NSMutableDictionary *json = [[NSMutableDictionary alloc] init];
+    [json setObject:@"post" forKey:@"action"];
+    [json setObject:authManager.curUser forKey:@"username"];
+    [json setObject:postID forKey:@"tid"];
+    [json setObject:from forKey:@"from"];
+    [json setObject:to forKey:@"to"];
+    
+    SuccessBlock successBlock = ^(NSDictionary *json)
+    {
+        NSMutableArray *list = [[NSMutableArray alloc] init];
+        NSArray *rawArray = [json objectForKey:@"postlist"];
+        BUCPost *post = nil;
+        
+        NSDictionary *captionAttrs = @{NSFontAttributeName:[UIFont preferredFontForTextStyle:UIFontTextStyleCaption1]};
+        
+        for (NSDictionary *rawDic in rawArray)
+        {
+            post = [[BUCPost alloc] init];
+            
+            post.pid = [rawDic objectForKey:@"pid"];
+            post.fid = [rawDic objectForKey:@"fid"];
+            
+            post.user = [[NSAttributedString alloc] initWithString:[weakSelf urldecode:[rawDic objectForKey:@"author"]]
+                                                        attributes:captionAttrs];
+            post.uid = [rawDic objectForKey:@"authorid"];
+            post.title = [weakSelf attributedStringFromHTML:[weakSelf urldecode:[rawDic objectForKey:@"subject"]]];
+            post.content = [weakSelf nodeTreeFromHTML:[weakSelf urldecode:[rawDic objectForKey:@"message"]]];
+            post.dateline = [rawDic objectForKey:@"dateline"];
+            
+            [list addObject:post];
+        }
+        
+        if (arrayBlock)
+        {
+            arrayBlock(list);
+        }
+    };
+    
+    [self loadListFromURL:postURL json:json onSuccess:successBlock onError:errorBlock];
+}
+
+#pragma mark - private methods
+- (void)loadListFromURL:(NSString *)url json:(NSMutableDictionary *)json onSuccess:(SuccessBlock)successBlock onError:(ErrorBlock)errorBlock
+{
     BUCDataManager * __weak weakSelf = self;
     BUCAuthManager *authManager = [BUCAuthManager sharedInstance];
     BUCNetworkEngine *engine = [BUCNetworkEngine sharedInstance];
@@ -43,107 +147,74 @@
          updateSessionOnSuccess:
          ^(void)
          {
-             [weakSelf getFrontListOnSuccess:arrayBlock onFail:failBlock];
+             [weakSelf loadListFromURL:url json:json onSuccess:successBlock onError:errorBlock];
          }
          
          onFail:
          ^(NSError *error)
          {
-             if (failBlock)
+             if (errorBlock)
              {
-                 failBlock(error);
+                 errorBlock(error);
              }
          }];
         
         return;
     }
     
-    NSMutableDictionary *json = [[NSMutableDictionary alloc] init];
-    [json setObject:authManager.curUser forKey:@"username"];
     [json setObject:authManager.session forKey:@"session"];
     
     [engine
-     fetchDataFromURL:frontURL
+     fetchDataFromURL:url
      
      json:json
      
      onResult:
-     ^(NSDictionary *json)
+     ^(NSDictionary *resultJSON)
      {
-         NSString *result = [json objectForKey:@"result"];
+         NSString *result = [resultJSON objectForKey:@"result"];
          if ([result isEqualToString:@"fail"])
          {
              [authManager
               updateSessionOnSuccess:
               ^(void)
               {
-                  [weakSelf getFrontListOnSuccess:arrayBlock onFail:failBlock];
+                  [weakSelf loadListFromURL:url json:json onSuccess:successBlock onError:errorBlock];
               }
               
               onFail:
               ^(NSError *error)
               {
-                  if (failBlock)
+                  if (errorBlock)
                   {
-                      failBlock(error);
+                      errorBlock(error);
                   }
               }];
          }
          
-         NSMutableArray *list = [[NSMutableArray alloc] init];
-         NSArray *rawArray = [json objectForKey:@"newlist"];
-         BUCPost *post = nil;
-         NSString *when = nil;
-         NSString *who = nil;
-         
-         NSDictionary *captionAttrs = @{NSFontAttributeName:[UIFont preferredFontForTextStyle:UIFontTextStyleCaption1]};
-         
-         for (NSDictionary *rawDic in rawArray)
+         if (successBlock)
          {
-             post = [[BUCPost alloc] init];
-             
-             post.pid = [rawDic objectForKey:@"tid"];
-             post.fid = [rawDic objectForKey:@"fid"];
-             post.fname = [[NSAttributedString alloc] initWithString:[self urldecode:[rawDic objectForKey:@"fname"]]
-                                                          attributes:captionAttrs];
-             
-             post.user = [[NSAttributedString alloc] initWithString:[self urldecode:[rawDic objectForKey:@"author"]]
-                                                         attributes:captionAttrs];
-             
-             post.title = [self attributedStringFromHtml:[self urldecode:[rawDic objectForKey:@"pname"]]];
-             
-             post.childCount = [rawDic objectForKey:@"tid_sum"];
-             
-             when = [self urldecode:[[rawDic objectForKey:@"lastreply"] objectForKey:@"when"]];
-             who = [self urldecode:[[rawDic objectForKey:@"lastreply"] objectForKey:@"who"]];
-             post.lastReply = [[BUCPost alloc] init];
-             post.lastReply.user = [[NSAttributedString alloc] initWithString:who attributes:captionAttrs];
-             post.lastReply.dateline = when;
-             
-             [list addObject:post];
-         }
-         
-         if (arrayBlock)
-         {
-             arrayBlock(list);
+             successBlock(resultJSON);
          }
      }
      
-     onError:
-     ^(NSError *error)
-     {
-         if (failBlock)
-         {
-             failBlock(error);
-         }
-     }];
+     onError:errorBlock];
 }
 
-#pragma mark - private methods
-- (NSAttributedString *)attributedStringFromHtml:(NSString *)html
+- (NSArray *)nodeTreeFromHTML:(NSString *)html
 {
+//    NSMutableArray *tree = [[NSMutableArray alloc] init];
     
+    NSData *htmlData = [html dataUsingEncoding:NSUTF8StringEncoding];
+    TFHpple *parser = [TFHpple hppleWithHTMLData:htmlData];
+    NSString *query = @"//body";
+    NSArray *nodes = [[[parser searchWithXPathQuery:query] firstObject] children];
     
+    return nodes;
+}
+
+- (NSAttributedString *)attributedStringFromHTML:(NSString *)html
+{
     NSMutableAttributedString *output = [[NSMutableAttributedString alloc] init];
     NSDictionary *textAttrs = @{NSFontAttributeName: [UIFont preferredFontForTextStyle:UIFontTextStyleBody]};
     NSDictionary *colorAttrs = @{NSFontAttributeName: [UIFont preferredFontForTextStyle:UIFontTextStyleBody],
@@ -196,6 +267,7 @@
              stringByReplacingOccurrencesOfString:@"&lt;" withString:@"<"]
             stringByReplacingOccurrencesOfString:@"&gt;" withString:@">"];
 }
+
 @end
 
 

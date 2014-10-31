@@ -18,7 +18,7 @@ static NSString *kKeychainItemIdentifer = @"org.bitunion.buc.%@.KeychainUI";
 @property (nonatomic, readwrite) NSString *curUser;
 @property (nonatomic, readwrite) NSString *session;
 
-// states needed to keep
+// global variables
 @property (nonatomic) NSString *keychainItemIDString;
 @property (nonatomic) NSMutableDictionary *keychainData;
 @property (nonatomic) NSMutableDictionary *genericPasswordQuery;

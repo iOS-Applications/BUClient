@@ -11,8 +11,8 @@
 
 @interface BUCContentController ()
 
-@property (nonatomic) UIView *LOADINGVIEW;
-@property (nonatomic) UIActivityIndicatorView *ACTIVITYINDICATOR;
+@property (nonatomic, weak) IBOutlet UIView *LOADINGVIEW;
+@property (nonatomic, weak) IBOutlet UIActivityIndicatorView *ACTIVITYINDICATOR;
 @property (nonatomic, weak) BUCRootController *ROOTCONTROLLER;
 
 @end
@@ -22,28 +22,12 @@
 - (void)viewDidLoad
 {
     [super viewDidLoad];
-    
-    self.ROOTCONTROLLER = (BUCRootController *)(self.parentViewController).parentViewController;
+
+    self.ROOTCONTROLLER = (BUCRootController *)self.parentViewController;
     
     // set up loading view
-    UIView *loadingView = [[UIView alloc] initWithFrame:CGRectMake(0.0f, 0.0f, 140.0f, 140.0f)];
-    loadingView.center = self.view.center;
-    loadingView.layer.cornerRadius = 10.0f;
-    loadingView.backgroundColor = [UIColor blackColor];
-    loadingView.alpha = 0.5f;
-    self.LOADINGVIEW = loadingView;
-    
-    UIActivityIndicatorView *activityIndicator = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhiteLarge];
-    activityIndicator.center = CGPointMake(70.0f, 40.0f);
-    [loadingView addSubview:activityIndicator];
-    self.ACTIVITYINDICATOR = activityIndicator;
-    
-    UILabel *text = [[UILabel alloc] init];
-    text.text = @"Please wait...";
-    [text sizeToFit];
-    text.center = CGPointMake(75.0f, 100.0f);
-    [text setTextColor:[UIColor whiteColor]];
-    [loadingView addSubview:text];
+    self.LOADINGVIEW.center = self.view.center;
+    self.LOADINGVIEW.layer.cornerRadius = 10.0f;
     
     [self performSegueWithIdentifier:@"segueToPostList" sender:nil];
 }
@@ -66,20 +50,14 @@
 #pragma mark - public methods
 - (void)displayLoading
 {
-    UIView *loadingView = self.LOADINGVIEW;
-    UIActivityIndicatorView *activityIndicator = self.ACTIVITYINDICATOR;
-    
-    [activityIndicator startAnimating];
-    [self.view addSubview:loadingView];
+    [self.ACTIVITYINDICATOR startAnimating];
+    [self.view bringSubviewToFront:self.LOADINGVIEW];
 }
 
 - (void)hideLoading
 {
-    UIView *loadingView = self.LOADINGVIEW;
-    UIActivityIndicatorView *activityIndicator = self.ACTIVITYINDICATOR;
-    
-    [loadingView removeFromSuperview];
-    [activityIndicator stopAnimating];
+    [self.ACTIVITYINDICATOR stopAnimating];
+    [self.view sendSubviewToBack:self.LOADINGVIEW];
 }
 
 - (void)removeChildController
@@ -100,13 +78,6 @@
 }
 
 #pragma mark - anctions and unwind methods
-- (IBAction)showMenu:(id)sender
-{
-    BUCRootController *rootController = self.ROOTCONTROLLER;
-    
-    [rootController showMenu];
-}
-
 - (IBAction)unwindToContent:(UIStoryboardSegue *)segue
 {
     

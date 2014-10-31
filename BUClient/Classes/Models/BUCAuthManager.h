@@ -9,7 +9,7 @@
 #import <Foundation/Foundation.h>
 
 typedef void(^AuthSuccessBlock) (void);
-typedef void(^AuthFailBlock) (NSError *error);
+typedef void(^AuthFailBlock) (NSError *);
 typedef void(^AuthSessionBlock) (void);
 
 @interface BUCAuthManager : NSObject

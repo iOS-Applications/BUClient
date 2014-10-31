@@ -1,14 +1,14 @@
 //
-//  BUCListContainerView.m
+//  BUCListItem.m
 //  BUClient
 //
 //  Created by Joe Jeong on 10/25/14.
 //  Copyright (c) 2014 Jox. All rights reserved.
 //
 
-#import "BUCListItemView.h"
+#import "BUCListItem.h"
 
-@implementation BUCListItemView
+@implementation BUCListItem
 
 /*
 // Only override drawRect: if you perform custom drawing.
@@ -18,7 +18,7 @@
 }
 */
 
-- (BUCListItemView *)initWithFrame:(CGRect)aRect
+- (BUCListItem *)initWithFrame:(CGRect)aRect
 {
     self = [super initWithFrame:aRect];
     
@@ -26,7 +26,7 @@
     {
         self.layer.borderWidth = 0.3f;
         self.layer.borderColor = [UIColor lightGrayColor].CGColor;
-        self.backgroundColor = [UIColor whiteColor];
+        self.layer.backgroundColor = [UIColor whiteColor].CGColor;
         self.layer.cornerRadius = 4.0f;
     }
     
@@ -35,20 +35,14 @@
 
 - (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event
 {
-    self.backgroundColor = [UIColor lightGrayColor];
     [super touchesBegan:touches withEvent:event];
-}
-
-- (void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event
-{
-    self.backgroundColor = [UIColor whiteColor];
-    [super touchesEnded:touches withEvent:event];
+    self.backgroundColor = [UIColor lightGrayColor];
 }
 
 - (void)touchesCancelled:(NSSet *)touches withEvent:(UIEvent *)event
 {
-    self.backgroundColor = [UIColor whiteColor];
     [super touchesCancelled:touches withEvent:event];
+    self.backgroundColor = [UIColor whiteColor];
 }
 
 @end

@@ -107,7 +107,7 @@
 - (NSURLRequest *)requestFromURL:(NSString *)url json:(NSDictionary *)json error:(NSError **)error
 {
     NSString *baseURL = @"http://out.bitunion.org/open_api/bu_%@.php";
-    baseURL = @"http://0.0.0.0/open_api/bu_%@.php";
+//    baseURL = @"http://0.0.0.0/open_api/bu_%@.php";
     NSString *HTTPMethod = @"POST";
     NSMutableURLRequest *req = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:[NSString stringWithFormat:baseURL, url]]];
     NSMutableDictionary *dataJSON = [[NSMutableDictionary alloc] init];

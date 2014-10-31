@@ -1,5 +1,5 @@
 //
-//  BUCListContainerView.h
+//  BUCListItem.h
 //  BUClient
 //
 //  Created by Joe Jeong on 10/25/14.
@@ -8,6 +8,6 @@
 
 #import <UIKit/UIKit.h>
 
-@interface BUCListItemView : UIControl
+@interface BUCListItem : UIControl
 
 @end

@@ -8,10 +8,16 @@
 
 #import <Foundation/Foundation.h>
 
-typedef void(^ArrayBlock)(NSArray *list);
-typedef void(^FailBlock) (NSError *error);
+typedef void(^ArrayBlock) (NSArray *);
+typedef void(^ErrorBlock) (NSError *);
+typedef void(^SuccessBlock) (NSDictionary *);
 
 @interface BUCDataManager : NSObject
 + (BUCDataManager *)sharedInstance;
-- (void)getFrontListOnSuccess:(ArrayBlock)arrayBlock onFail:(FailBlock)failBlock;
+- (void)getFrontListOnSuccess:(ArrayBlock)arrayBlock onError:(ErrorBlock)errorBlock;
+- (void)getPost:(NSString *)postID
+           from:(NSString *)from
+             to:(NSString *)to
+      onSuccess:(ArrayBlock)arrayBlock
+        onError:(ErrorBlock)errorBlock;
 @end

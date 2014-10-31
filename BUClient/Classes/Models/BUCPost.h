@@ -21,7 +21,7 @@
 @property (nonatomic) NSString *uid;
 
 @property (nonatomic) NSAttributedString *title;
-@property (nonatomic) NSString *content;
+@property (nonatomic) NSArray *content;
 @property (nonatomic) NSString *dateline;
 
 @property (nonatomic) NSString *childCount;

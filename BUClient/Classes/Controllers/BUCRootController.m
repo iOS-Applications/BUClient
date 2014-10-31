@@ -8,7 +8,6 @@
 
 #import "BUCRootController.h"
 #import "BUCLoginController.h"
-#import "BUCMenuController.h"
 #import "BUCContentController.h"
 #import "BUCAuthManager.h"
 
@@ -21,11 +20,9 @@
 @property (nonatomic) CGPoint FARRIGHTCENTER;
 
 // properties to keep references of objects frequently used
-@property (nonatomic) UIPanGestureRecognizer *CONTENTPANRECOGNIZER;
-@property (nonatomic) UITapGestureRecognizer *CONTENTTAPRECOGNIZER;
-
-@property (nonatomic, weak) UIView *MENUWRAPPER;
-@property (nonatomic, weak) UIView *CONTENTWRAPPER;
+@property (nonatomic) IBOutlet UIPanGestureRecognizer *CONTENTPANRECOGNIZER;
+@property (nonatomic) IBOutlet UITapGestureRecognizer *CONTENTTAPRECOGNIZER;
+@property (nonatomic, weak) IBOutlet UIView *CONTENTWRAPPER;
 
 @property (nonatomic, weak) BUCContentController *CONTENTCONTROLLER;
 
@@ -43,27 +40,12 @@
     self.LEFTCENTER = self.view.center;
     self.RIGHTCENTER = CGPointMake(self.LEFTCENTER.x + self.MAXTRANSLATION, self.LEFTCENTER.y);
     self.FARRIGHTCENTER = CGPointMake(self.LEFTCENTER.x + self.view.frame.size.width, self.LEFTCENTER.y);
-    
-    self.CONTENTPANRECOGNIZER = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(handleContentPan:)];
-    self.CONTENTTAPRECOGNIZER = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(handleContentTap:)];
 
-    // set up menu and content wrapper
-    UIStoryboard *storyboard = [UIStoryboard storyboardWithName:@"Main" bundle:nil];
-    
-    UIView *menuWrapper = [self.view viewWithTag:100]; // 100 is the tag value set in IB
-    BUCMenuController *menuController = [storyboard instantiateViewControllerWithIdentifier:@"menuController"];
-    menuController.view.frame = menuWrapper.frame;
-    [self addChildViewController:menuController];
-    [menuWrapper addSubview:menuController.view];
-    [menuController didMoveToParentViewController:self];
-    self.MENUWRAPPER = menuWrapper;
-    
-    UIView *contentWrapper = [self.view viewWithTag:101]; // 101 is the tag value set in IB
+    // set up appearance of content wrapper
+    UIView *contentWrapper = self.CONTENTWRAPPER;
     contentWrapper.layer.shadowOpacity = 1.0;
     contentWrapper.layer.shadowRadius = 5.0;
     contentWrapper.layer.shadowPath = [UIBezierPath bezierPathWithRect:contentWrapper.bounds].CGPath;
-    [contentWrapper addGestureRecognizer:self.CONTENTPANRECOGNIZER];
-    self.CONTENTWRAPPER = contentWrapper;
 }
 
 - (void)viewDidAppear:(BOOL)animated
