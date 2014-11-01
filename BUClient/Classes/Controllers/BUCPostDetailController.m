@@ -11,6 +11,7 @@
 #import "BUCContentController.h"
 #import "BUCDataManager.h"
 #import "BUCPost.h"
+#import "BUCPostFragment.h"
 
 @interface BUCPostDetailController () <UIScrollViewDelegate>
 
@@ -83,9 +84,15 @@
 }
 
 - (void)buildList:(NSArray *)list
-{
-    BUCPost *post = [list lastObject];
-    NSLog(@"user:%@", [post.user string]);
+{    
+//    for (BUCPost *post in list)
+//    {
+//        NSMutableString *s = [[NSMutableString alloc] init];
+//        for (BUCPostFragment *fragment in post.content)
+//        {
+//            
+//        }
+//    }
 }
 
 - (void)displayLoading

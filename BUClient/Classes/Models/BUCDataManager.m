@@ -9,9 +9,8 @@
 #import "BUCDataManager.h"
 #import "BUCNetworkEngine.h"
 #import "BUCAuthManager.h"
-
 #import "BUCPost.h"
-
+#import "BUCPostFragment.h"
 #import "TFHpple.h"
 
 @interface BUCDataManager ()
@@ -119,7 +118,7 @@
                                                         attributes:captionAttrs];
             post.uid = [rawDic objectForKey:@"authorid"];
             post.title = [weakSelf attributedStringFromHTML:[weakSelf urldecode:[rawDic objectForKey:@"subject"]]];
-            post.content = [weakSelf nodeTreeFromHTML:[weakSelf urldecode:[rawDic objectForKey:@"message"]]];
+            post.content = [weakSelf fragmentsFromHTML:[weakSelf urldecode:[rawDic objectForKey:@"message"]]];
             post.dateline = [rawDic objectForKey:@"dateline"];
             
             [list addObject:post];
@@ -201,16 +200,117 @@
      onError:errorBlock];
 }
 
-- (NSArray *)nodeTreeFromHTML:(NSString *)html
+- (NSArray *)fragmentsFromHTML:(NSString *)html
 {
-//    NSMutableArray *tree = [[NSMutableArray alloc] init];
-    
+    NSMutableArray *fragments = [[NSMutableArray alloc] init];
     NSData *htmlData = [html dataUsingEncoding:NSUTF8StringEncoding];
     TFHpple *parser = [TFHpple hppleWithHTMLData:htmlData];
     NSString *query = @"//body";
     NSArray *nodes = [[[parser searchWithXPathQuery:query] firstObject] children];
+    NSString *tagName = nil;
+    BUCPostFragment *fragment = nil;
+    BUCPostFragment *lastFragment = nil;
+    NSString *content = nil;
+    NSString *lastFragType = nil;
     
-    return nodes;
+    NSString *utf8String = [[html stringByReplacingOccurrencesOfString:@"\r" withString:@"\\r"] stringByReplacingOccurrencesOfString:@"\n" withString:@"\\n"];
+    NSLog(@"\nRAW HTML======================================================================\n%@\n", utf8String);
+    
+    for (TFHppleElement *node in nodes)
+    {
+        tagName = node.tagName;
+        fragment = [[BUCPostFragment alloc] init];
+        content = node.content;
+        
+        if ([tagName isEqualToString:@"br"])
+        {
+            continue;
+        }
+        else if ([tagName isEqualToString:@"p"])
+        {
+            fragment.type = @"paragraph";
+            fragment.stringContent = [self attributedStringFromP:node];
+        }
+        else if ([tagName isEqualToString:@"text"])
+        {
+            if ([lastFragType isEqualToString:@"paragraph"])
+            {
+                [lastFragment.stringContent appendAttributedString:[self attributedStringFromP:node]];
+                continue;
+            }
+            else
+            {
+                fragment.type = @"paragraph";
+                fragment.stringContent = [self attributedStringFromP:node];
+                lastFragType = @"paragraph";
+            }
+        }
+        else if ([tagName isEqualToString:@"center"])
+        {
+            lastFragType = @"block";
+            continue;
+        }
+        else
+        {
+            lastFragType = @"unknown";
+            continue;
+        }
+        
+        lastFragment = fragment;
+        [fragments addObject:fragment];
+    }
+    
+    for (BUCPostFragment *fragment in fragments)
+    {
+        NSLog(@"\nPARSE CONTENT===========================================================\n%@\n", [[fragment.stringContent.string stringByReplacingOccurrencesOfString:@"\r" withString:@"\\r"] stringByReplacingOccurrencesOfString:@"\n" withString:@"\\n"]);
+    }
+    
+    return fragments;
+}
+
+- (NSMutableAttributedString *)attributedStringFromP:(TFHppleElement *)p
+{
+    NSMutableAttributedString *output = nil;
+    NSMutableString *plainString = [[NSMutableString alloc] init];
+    NSDictionary *attrs = @{NSFontAttributeName:[UIFont preferredFontForTextStyle:UIFontTextStyleBody]};
+    NSString *tagName = nil;
+    NSString *content = nil;
+                            
+    if (!p.hasChildren)
+    {
+        [plainString appendString:p.content];
+        goto done;
+    }
+    
+    for (TFHppleElement *node in p.children)
+    {
+        tagName = node.tagName;
+        content = node.content;
+        if ([tagName isEqualToString:@"br"])
+        {
+            continue;
+        }
+        else if ([tagName isEqualToString:@"text"])
+        {
+            [plainString appendString:content];
+        }
+        else if ([tagName isEqualToString:@"img"])
+        {
+            
+        }
+        else if ([tagName isEqualToString:@"a"])
+        {
+            
+        }
+        else
+        {
+            
+        }
+    }
+    
+done:
+    output = [[NSMutableAttributedString alloc] initWithString:[self replaceHtmlEntities:plainString] attributes:attrs];
+    return output;
 }
 
 - (NSAttributedString *)attributedStringFromHTML:(NSString *)html
@@ -248,7 +348,6 @@
 
         content = [self replaceHtmlEntities:content];
         [output appendAttributedString:[[NSAttributedString alloc] initWithString:content attributes:attrs]];
-
     }
     
     return output;
@@ -262,7 +361,8 @@
 
 - (NSString *)replaceHtmlEntities:(NSString *)string
 {
-    return [[[[string stringByReplacingOccurrencesOfString:@"&amp;" withString:@"&"]
+    return [[[[[string stringByReplacingOccurrencesOfString:@"&amp;" withString:@"&"]
+               stringByReplacingOccurrencesOfString:@"&nbsp;" withString:@" "]
               stringByReplacingOccurrencesOfString:@"&quot;" withString:@"\""]
              stringByReplacingOccurrencesOfString:@"&lt;" withString:@"<"]
             stringByReplacingOccurrencesOfString:@"&gt;" withString:@">"];

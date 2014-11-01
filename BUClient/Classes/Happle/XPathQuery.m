@@ -193,7 +193,7 @@ NSArray *PerformHTMLXPathQueryWithEncoding(NSData *document, NSString *query,NSS
     
     if (doc == NULL)
     {
-        NSLog(@"Unable to parse.");
+//        NSLog(@"Unable to parse.");
         return nil;
     }
     
@@ -219,7 +219,7 @@ NSArray *PerformXMLXPathQueryWithEncoding(NSData *document, NSString *query,NSSt
     
     if (doc == NULL)
     {
-        NSLog(@"Unable to parse.");
+//        NSLog(@"Unable to parse.");
         return nil;
     }
     

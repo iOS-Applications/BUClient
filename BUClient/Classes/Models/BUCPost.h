@@ -19,6 +19,7 @@
 
 @property (nonatomic) NSAttributedString *user;
 @property (nonatomic) NSString *uid;
+@property (nonatomic) NSString *avatar;
 
 @property (nonatomic) NSAttributedString *title;
 @property (nonatomic) NSArray *content;
