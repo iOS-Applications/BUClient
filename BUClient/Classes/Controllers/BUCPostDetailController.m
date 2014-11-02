@@ -59,6 +59,7 @@
     BUCDataManager *dataManager = [BUCDataManager sharedInstance];
 //    UIView *listWrapper = self.LISTWRAPPER;
     BUCContentController *contentController = self.CONTENTCONTROLLER;
+    self.postID = @"10581123";
     
     [dataManager
      getPost:self.postID

@@ -9,9 +9,9 @@
 #import "BUCDataManager.h"
 #import "BUCNetworkEngine.h"
 #import "BUCAuthManager.h"
+#import "TFHpple.h"
 #import "BUCPost.h"
 #import "BUCPostFragment.h"
-#import "TFHpple.h"
 
 @interface BUCDataManager ()
 
@@ -63,7 +63,7 @@
             post.user = [[NSAttributedString alloc] initWithString:[weakSelf urldecode:[rawDic objectForKey:@"author"]]
                                                         attributes:captionAttrs];
             
-            post.title = [weakSelf attributedStringFromHTML:[weakSelf urldecode:[rawDic objectForKey:@"pname"]]];
+            post.title = [weakSelf titleFromHTML:[weakSelf urldecode:[rawDic objectForKey:@"pname"]]];
             
             post.childCount = [rawDic objectForKey:@"tid_sum"];
             
@@ -117,7 +117,7 @@
             post.user = [[NSAttributedString alloc] initWithString:[weakSelf urldecode:[rawDic objectForKey:@"author"]]
                                                         attributes:captionAttrs];
             post.uid = [rawDic objectForKey:@"authorid"];
-            post.title = [weakSelf attributedStringFromHTML:[weakSelf urldecode:[rawDic objectForKey:@"subject"]]];
+            post.title = [weakSelf titleFromHTML:[weakSelf urldecode:[rawDic objectForKey:@"subject"]]];
             post.content = [weakSelf fragmentsFromHTML:[weakSelf urldecode:[rawDic objectForKey:@"message"]]];
             post.dateline = [rawDic objectForKey:@"dateline"];
             
@@ -200,17 +200,23 @@
      onError:errorBlock];
 }
 
-- (NSArray *)fragmentsFromHTML:(NSString *)html
+- (NSArray *)treeFromHTML:(NSString *)html
 {
-    NSMutableArray *fragments = [[NSMutableArray alloc] init];
     NSData *htmlData = [html dataUsingEncoding:NSUTF8StringEncoding];
     TFHpple *parser = [TFHpple hppleWithHTMLData:htmlData];
     NSString *query = @"//body";
     NSArray *nodes = [[[parser searchWithXPathQuery:query] firstObject] children];
-    NSString *tagName = nil;
+    
+    return nodes;
+}
+
+- (NSArray *)fragmentsFromHTML:(NSString *)html
+{
+    NSArray *nodes = [self treeFromHTML:html];
+    NSMutableArray *fragments = [[NSMutableArray alloc] init];
     BUCPostFragment *fragment = nil;
     BUCPostFragment *lastFragment = nil;
-    NSString *content = nil;
+    NSString *tagName = nil;
     NSString *lastFragType = nil;
     
     NSString *utf8String = [[html stringByReplacingOccurrencesOfString:@"\r" withString:@"\\r"] stringByReplacingOccurrencesOfString:@"\n" withString:@"\\n"];
@@ -219,40 +225,55 @@
     for (TFHppleElement *node in nodes)
     {
         tagName = node.tagName;
-        fragment = [[BUCPostFragment alloc] init];
-        content = node.content;
         
         if ([tagName isEqualToString:@"br"])
         {
             continue;
         }
-        else if ([tagName isEqualToString:@"p"])
+        else if ([node isTextNode] ||
+                 [tagName isEqualToString:@"p"] ||
+                 [tagName isEqualToString:@"span"] ||
+                 [tagName isEqualToString:@"a"] ||
+                 [tagName isEqualToString:@"font"] ||
+                 [tagName isEqualToString:@"b"] ||
+                 [tagName isEqualToString:@"i"] ||
+                 [tagName isEqualToString:@"u"])
         {
-            fragment.type = @"paragraph";
-            fragment.stringContent = [self attributedStringFromP:node];
-        }
-        else if ([tagName isEqualToString:@"text"])
-        {
-            if ([lastFragType isEqualToString:@"paragraph"])
+            if ([lastFragment.type isEqualToString:@"richText"])
             {
-                [lastFragment.stringContent appendAttributedString:[self attributedStringFromP:node]];
+                [lastFragment.stringContent appendAttributedString:[self aStringFromHTML:node]];
                 continue;
             }
             else
             {
-                fragment.type = @"paragraph";
-                fragment.stringContent = [self attributedStringFromP:node];
-                lastFragType = @"paragraph";
+                fragment = [[BUCPostFragment alloc] init];
+                fragment.type = @"richText";
+                fragment.stringContent = [[NSMutableAttributedString alloc] init];
+                [fragment.stringContent appendAttributedString:[self aStringFromHTML:node]];
+                lastFragType = @"richText";
             }
         }
         else if ([tagName isEqualToString:@"center"])
         {
-            lastFragType = @"block";
+            fragment = [[BUCPostFragment alloc] init];
+            fragment.type = @"block";
             continue;
+        }
+        else if ([tagName isEqualToString:@"blockquote"])
+        {
+            
+        }
+        else if ([tagName isEqualToString:@"ol"])
+        {
+            
+        }
+        else if ([tagName isEqualToString:@"ul"])
+        {
+            
         }
         else
         {
-            lastFragType = @"unknown";
+            // unknown tag
             continue;
         }
         
@@ -268,86 +289,203 @@
     return fragments;
 }
 
-- (NSMutableAttributedString *)attributedStringFromP:(TFHppleElement *)p
-{
-    NSMutableAttributedString *output = nil;
-    NSMutableString *plainString = [[NSMutableString alloc] init];
-    NSDictionary *attrs = @{NSFontAttributeName:[UIFont preferredFontForTextStyle:UIFontTextStyleBody]};
-    NSString *tagName = nil;
-    NSString *content = nil;
-                            
-    if (!p.hasChildren)
-    {
-        [plainString appendString:p.content];
-        goto done;
-    }
-    
-    for (TFHppleElement *node in p.children)
-    {
-        tagName = node.tagName;
-        content = node.content;
-        if ([tagName isEqualToString:@"br"])
-        {
-            continue;
-        }
-        else if ([tagName isEqualToString:@"text"])
-        {
-            [plainString appendString:content];
-        }
-        else if ([tagName isEqualToString:@"img"])
-        {
-            
-        }
-        else if ([tagName isEqualToString:@"a"])
-        {
-            
-        }
-        else
-        {
-            
-        }
-    }
-    
-done:
-    output = [[NSMutableAttributedString alloc] initWithString:[self replaceHtmlEntities:plainString] attributes:attrs];
-    return output;
-}
-
-- (NSAttributedString *)attributedStringFromHTML:(NSString *)html
+- (NSAttributedString *)aStringFromHTML:(TFHppleElement *)node
 {
     NSMutableAttributedString *output = [[NSMutableAttributedString alloc] init];
-    NSDictionary *textAttrs = @{NSFontAttributeName: [UIFont preferredFontForTextStyle:UIFontTextStyleBody]};
-    NSDictionary *colorAttrs = @{NSFontAttributeName: [UIFont preferredFontForTextStyle:UIFontTextStyleBody],
-                                    NSForegroundColorAttributeName: [UIColor redColor]};
-    NSData *htmlData = [html dataUsingEncoding:NSUTF8StringEncoding];
-    TFHpple *parser = [TFHpple hppleWithHTMLData:htmlData];
-    NSString *query = @"//body";
-    NSArray *nodes = [[[parser searchWithXPathQuery:query] firstObject] children];
+    NSDictionary *attrs = @{NSFontAttributeName:[UIFont preferredFontForTextStyle:UIFontTextStyleBody]};
+    NSString *tagName = node.tagName;
     
-    NSDictionary *attrs = nil;
-    NSString *content = nil;
-    for (TFHppleElement *node in nodes)
+    if ([tagName isEqualToString:@"text"])
     {
-        if ([node hasChildren])
+        [output appendAttributedString:[[NSAttributedString alloc] initWithString:[self replaceHtmlEntities:node.content] attributes:attrs]];
+    }
+    else if ([tagName isEqualToString:@"p"])
+    {
+        for (TFHppleElement *e in node.children)
         {
-            content = node.firstChild.content;
-            if ([node.tagName isEqualToString:@"font"])
+            if ([e.tagName isEqualToString:@"br"])
             {
-                attrs = colorAttrs;
+                continue;
             }
             else
             {
-                attrs = textAttrs;
+                [output appendAttributedString:[self aStringFromHTML:e]];
             }
         }
-        else
-        {
-            content = node.content;
-            attrs = textAttrs;
-        }
+    }
+    else if ([tagName isEqualToString:@"img"])
+    {
+        
+    }
+    else if ([tagName isEqualToString:@"a"])
+    {
+        [output appendAttributedString:[self aStringFromA:node]];
+    }
+    else if ([tagName isEqualToString:@"font"])
+    {
+        [output appendAttributedString:[self aStringFromFont:node]];
+    }
+    else if ([tagName isEqualToString:@"b"])
+    {
+        [output appendAttributedString:[self aStringFromB:node]];
+    }
+    else if ([tagName isEqualToString:@"i"])
+    {
+        [output appendAttributedString:[self aStringFromI:node]];
+    }
+    else if ([tagName isEqualToString:@"u"])
+    {
+        [output appendAttributedString:[self aStringFromU:node]];
+    }
+    else if ([tagName isEqualToString:@"span"])
+    {
 
-        content = [self replaceHtmlEntities:content];
-        [output appendAttributedString:[[NSAttributedString alloc] initWithString:content attributes:attrs]];
+    }
+    else
+    {
+        NSLog(@"unknown tag type:%@", tagName);
+    }
+    
+    
+    return output;
+}
+
+- (NSAttributedString *)aStringFromU:(TFHppleElement *)u
+{
+    NSAttributedString *output = [[NSAttributedString alloc] initWithString:[self replaceHtmlEntities:u.firstChild.content]
+                                                                 attributes:@{NSFontAttributeName:[UIFont preferredFontForTextStyle:UIFontTextStyleBody],
+                                                                              NSUnderlineStyleAttributeName:@1}];
+    return output;
+}
+
+- (NSAttributedString *)aStringFromI:(TFHppleElement *)i
+{
+    NSAttributedString *output = [[NSAttributedString alloc] initWithString:[self replaceHtmlEntities:i.firstChild.content]
+                                                                 attributes:[self createAttributesForFontStyle:UIFontTextStyleBody
+                                                                                                     withTrait:UIFontDescriptorTraitItalic]];
+    
+    return output;
+}
+
+- (NSAttributedString *)aStringFromB:(TFHppleElement *)b
+{
+    NSAttributedString *output = [[NSAttributedString alloc] initWithString:[self replaceHtmlEntities:b.firstChild.content]
+                                                                 attributes:[self createAttributesForFontStyle:UIFontTextStyleBody
+                                                                                                     withTrait:UIFontDescriptorTraitBold]];
+    
+    return output;
+}
+
+- (NSDictionary*)createAttributesForFontStyle:(NSString*)style withTrait:(uint32_t)trait
+{
+    UIFontDescriptor *fontDescriptor = [UIFontDescriptor preferredFontDescriptorWithTextStyle:style];
+    
+    UIFontDescriptor *descriptorWithTrait = [fontDescriptor fontDescriptorWithSymbolicTraits:trait];
+    
+    UIFont* font =  [UIFont fontWithDescriptor:descriptorWithTrait size: 0.0];
+    
+    return @{NSFontAttributeName:font};
+}
+
+
+- (UIColor *)parseColorAttr:(NSString *)colorString
+{
+    static NSDictionary* colorTable = nil;
+    
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        colorTable = @{
+                         @"white":      [UIColor whiteColor],
+                         @"black":      [UIColor blackColor],
+                         @"red":        [UIColor redColor],
+                         @"green":      [UIColor greenColor],
+                         @"blue":       [UIColor blueColor],
+                         @"yellow":     [UIColor yellowColor],
+                         @"orange":     [UIColor orangeColor],
+                         @"purple":     [UIColor purpleColor],
+                         @"brown":      [UIColor brownColor],
+                         @"pink":       [UIColor colorWithRed:1.0f green:192.0f/255.0f blue:203.0f/255.0f alpha:1.0f],
+                         @"beige":      [UIColor colorWithRed:245.0f/255.0f green:245.0f/255.0f blue:220.0f/255.0f alpha:1.0f],
+                         @"teal":       [UIColor colorWithRed:0 green:128.0f/255.0f blue:128.0f/255.0f alpha:1.0f],
+                         @"navy":       [UIColor colorWithRed:0 green:0 blue:128.0f/255.0f alpha:1.0f],
+                         @"maroon":     [UIColor colorWithRed:128.0f/255.0f green:0 blue:0 alpha:1.0f],
+                         @"limegreen":  [UIColor colorWithRed:50.0f/255.0f green:205.0f/255.0f blue:50.0f/255.0f alpha:1.0f],
+                         @"#CC3333":    [UIColor colorWithRed:204.0f/255.0f green:51.0f/255.0f blue:0 alpha:1.0f]
+                         };
+    });
+    
+    UIColor *output = [colorTable objectForKey:[colorString lowercaseString]];
+    
+    if (output)
+    {
+        return output;
+    }
+    
+    NSError *error = nil;
+    NSRegularExpression *regex = [NSRegularExpression regularExpressionWithPattern:@"^#([a-zA-Z0-9]{3}|[a-zA-Z0-9]{6})$" options:NSRegularExpressionCaseInsensitive error:&error];
+    NSUInteger numberOfMatches = [regex numberOfMatchesInString:colorString
+                                                        options:0
+                                                          range:NSMakeRange(0, [colorString length])];
+    
+    if (numberOfMatches == 0)
+    {
+        output = [UIColor blackColor];
+    }
+    else
+    {
+        NSString *cleanString = [colorString stringByReplacingOccurrencesOfString:@"#" withString:@""];
+        if([cleanString length] == 3) {
+            cleanString = [NSString stringWithFormat:@"%@%@%@%@%@%@",
+                           [cleanString substringWithRange:NSMakeRange(0, 1)],[cleanString substringWithRange:NSMakeRange(0, 1)],
+                           [cleanString substringWithRange:NSMakeRange(1, 1)],[cleanString substringWithRange:NSMakeRange(1, 1)],
+                           [cleanString substringWithRange:NSMakeRange(2, 1)],[cleanString substringWithRange:NSMakeRange(2, 1)]];
+        }
+        
+        unsigned int baseValue;
+        [[NSScanner scannerWithString:cleanString] scanHexInt:&baseValue];
+        
+        output = [UIColor colorWithRed:((baseValue >> 24) & 0xFF)/255.0f green:((baseValue >> 16) & 0xFF)/255.0f blue:((baseValue >> 8) & 0xFF)/255.0f alpha:1.0f];
+    }
+    
+    return output;
+}
+
+- (NSAttributedString *)aStringFromFont:(TFHppleElement *)font
+{
+    NSString *content = font.firstChild.content;
+    NSMutableDictionary *attrs = [[NSMutableDictionary alloc] init];
+    [attrs setObject:[UIFont preferredFontForTextStyle:UIFontTextStyleBody] forKey:NSFontAttributeName];
+    NSString *colorString = [font objectForKey:@"color"];
+    if (colorString != nil)
+    {
+        UIColor *color = [self parseColorAttr:[font objectForKey:@"color"]];
+        [attrs setObject:color forKey:NSForegroundColorAttributeName];
+    }
+
+    NSAttributedString *output = [[NSAttributedString alloc] initWithString:[self replaceHtmlEntities:content] attributes:attrs];
+    
+    return output;
+}
+
+- (NSAttributedString *)aStringFromA:(TFHppleElement *)a
+{
+    NSAttributedString *output = nil;
+    NSString *href = [a objectForKey:@"href"];
+    NSString *content = [[a firstChild] content];
+    NSDictionary *attrs = @{NSFontAttributeName:[UIFont preferredFontForTextStyle:UIFontTextStyleBody] ,NSLinkAttributeName:href};
+    output = [[NSAttributedString alloc] initWithString:[self replaceHtmlEntities:content] attributes:attrs];
+    
+    return output;
+}
+
+- (NSAttributedString *)titleFromHTML:(NSString *)html
+{
+    NSMutableAttributedString *output = [[NSMutableAttributedString alloc] init];
+    NSArray *nodes = [self treeFromHTML:html];
+    
+    for (TFHppleElement *node in nodes)
+    {
+        [output appendAttributedString:[self aStringFromHTML:node]];
     }
     
     return output;
