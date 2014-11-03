@@ -7,6 +7,7 @@
 //
 
 #import <Foundation/Foundation.h>
+#import "BUCPostFragment.h"
 
 @interface BUCPost : NSObject
 
@@ -22,7 +23,7 @@
 @property (nonatomic) NSString *avatar;
 
 @property (nonatomic) NSAttributedString *title;
-@property (nonatomic) NSArray *content;
+@property (nonatomic) NSArray *fragments; // contains array of content fragments
 @property (nonatomic) NSString *dateline;
 
 @property (nonatomic) NSString *childCount;

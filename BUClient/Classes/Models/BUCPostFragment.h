@@ -9,6 +9,14 @@
 #import <Foundation/Foundation.h>
 
 @interface BUCPostFragment : NSObject
-@property (nonatomic) NSString *type;
-@property (nonatomic) NSMutableAttributedString *stringContent;
+
+@property (nonatomic) NSMutableAttributedString *richText;
+@property (nonatomic) NSString *imageURL;
+
+@property (nonatomic) NSArray *children;
+
+@property (nonatomic) BOOL isRichText;
+@property (nonatomic) BOOL isBlock;
+@property (nonatomic) BOOL isImage;
+
 @end
