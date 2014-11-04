@@ -9,23 +9,29 @@
 #import "BUCLoginController.h"
 #import "BUCAuthManager.h"
 
+
 @interface BUCLoginController ()
+
+
 @property (weak, nonatomic) IBOutlet UITextField *username;
 @property (weak, nonatomic) IBOutlet UITextField *password;
 
-@property (strong, nonatomic) IBOutlet UIView *loadingView;
+@property (weak, nonatomic) IBOutlet UIView *loadingView;
 @property (weak, nonatomic) IBOutlet UIActivityIndicatorView *activityView;
 @property (weak, nonatomic) IBOutlet UIButton *loginButton;
 
 @property (strong, nonatomic) IBOutlet UITapGestureRecognizer *viewTapRecognizer;
 
-@property (weak, nonatomic) UITextField *curTextField;
+@property (weak, nonatomic) UITextField *currentTextField;
+
+
 @end
+
 
 @implementation BUCLoginController
 
-- (void)viewDidLoad
-{
+
+- (void)viewDidLoad {
     [super viewDidLoad];
     
     self.loadingView.center = self.view.center;
@@ -37,11 +43,11 @@
     self.modalTransitionStyle = UIModalTransitionStyleCrossDissolve;
     
     CGRect frame = self.username.frame;
-    CGFloat textfieldHeight = frame.size.height;
-    CGFloat borderAOriginY = frame.origin.y + textfieldHeight;
+    CGFloat textfieldHeight = CGRectGetHeight(frame);
+    CGFloat borderAOriginY = CGRectGetMinY(frame) + textfieldHeight;
     UIColor *borderColor = [UIColor colorWithRed:217.0f/255.0f green:217.0f/255.0f blue:217.0f/255.0f alpha:1.0f];
     
-    UIView *borderA = [[UIView alloc] initWithFrame:CGRectMake(frame.origin.x, borderAOriginY, frame.size.width, 1.0f)];
+    UIView *borderA = [[UIView alloc] initWithFrame:CGRectMake(CGRectGetMinX(frame), borderAOriginY, CGRectGetWidth(frame), 1.0f)];
     borderA.backgroundColor = borderColor;
     [self.view addSubview:borderA];
     
@@ -52,65 +58,56 @@
     [self.view addSubview:borderB];
 }
 
+
 #pragma mark - IBAction methods
-- (IBAction)login:(id)sender
-{
-    BUCAuthManager *authManager = [BUCAuthManager sharedInstance];
+- (IBAction)login:(id)sender {
     BUCLoginController * __weak weakSelf = self;
     NSString *username = self.username.text;
     NSString *password = self.password.text;
-    [self.curTextField resignFirstResponder];
+    [self.currentTextField resignFirstResponder];
     
-    if ([username length] == 0 || [password length] == 0)
-    {
+    if ([username length] == 0 || [password length] == 0) {
         [self alertMessage:@"请输入用户名与密码"];
         return;
     }
     
 
-    
-    [authManager
+    [[BUCAuthManager sharedInstance]
+     
      loginWithUsername:username
      
      andPassword:password
      
-     onSuccess:^(void)
-     {
+     onSuccess:^(void) {
          [weakSelf hideLoading];
-         
-         [weakSelf performSegueWithIdentifier:@"unwindToRoot" sender:nil];
+         [weakSelf performSegueWithIdentifier:weakSelf.unwindIdentifier sender:nil];
      }
      
-     onFail:^(NSError *error)
-     {
+     onFail:^(NSError *error) {
          [weakSelf hideLoading];
          [weakSelf alertMessage:error.localizedDescription];
      }];
     
-    [self displaLoading];
+    [self displayLoading];
 }
 
-- (IBAction)dissmissTextfield:(id)sender
-{
-    [self.curTextField resignFirstResponder];
+- (IBAction)dissmissTextfield:(id)sender {
+    [self.currentTextField resignFirstResponder];
 }
 
 #pragma mark - textfield delegate methods
-- (BOOL)textFieldShouldReturn:(UITextField *)textField
-{
+- (BOOL)textFieldShouldReturn:(UITextField *)textField {
     [textField resignFirstResponder];
     
     return YES;
 }
 
-- (void)textFieldDidBeginEditing:(UITextField *)textField
-{
-    self.curTextField = textField;
+- (void)textFieldDidBeginEditing:(UITextField *)textField {
+    self.currentTextField = textField;
 }
 
 #pragma mark - private methods
-- (void)alertMessage:(NSString *)message
-{
+- (void)alertMessage:(NSString *)message {
     [[[UIAlertView alloc]
      initWithTitle:nil
      message:message
@@ -119,16 +116,14 @@
      otherButtonTitles:nil] show];
 }
 
-- (void)displaLoading
-{
+- (void)displayLoading {
     [self.activityView startAnimating];
-    [self.view addSubview:self.loadingView];
+    self.loadingView.hidden = NO;
     self.view.userInteractionEnabled = NO;
 }
 
-- (void)hideLoading
-{
-    [self.loadingView removeFromSuperview];
+- (void)hideLoading {
+    self.loadingView.hidden = YES;
     [self.activityView stopAnimating];
     self.view.userInteractionEnabled = YES;
 }

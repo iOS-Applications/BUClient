@@ -6,16 +6,21 @@
 //  Copyright (c) 2014 Jox. All rights reserved.
 //
 
+
 #import <Foundation/Foundation.h>
+
 
 typedef void(^AuthSuccessBlock) (void);
 typedef void(^AuthFailBlock) (NSError *);
 typedef void(^AuthSessionBlock) (void);
 
+
 @interface BUCAuthManager : NSObject
 
-@property (nonatomic, readonly) NSString *curUser;
+
+@property (nonatomic, readonly) NSString *currentUser;
 @property (nonatomic, readonly) NSString *session;
+
 
 + (BUCAuthManager *)sharedInstance;
 
@@ -26,6 +31,5 @@ typedef void(^AuthSessionBlock) (void);
 
 - (void)updateSessionOnSuccess:(AuthSessionBlock)sessionBlock onFail:(AuthFailBlock)failBlock;
 
-- (void)logout;
 
 @end

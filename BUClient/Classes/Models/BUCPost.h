@@ -6,10 +6,13 @@
 //  Copyright (c) 2014 Jox. All rights reserved.
 //
 
+
 #import <Foundation/Foundation.h>
 #import "BUCPostFragment.h"
 
+
 @interface BUCPost : NSObject
+
 
 @property (nonatomic) BUCPost *parent;
 @property (nonatomic) BUCPost *lastReply;
@@ -29,5 +32,6 @@
 @property (nonatomic) NSString *childCount;
 
 @property (nonatomic) NSInteger index;
+
 
 @end

@@ -8,12 +8,13 @@
 
 #import <UIKit/UIKit.h>
 
-@interface BUCContentController : UIViewController
+@interface BUCContentController : UINavigationController
 
-- (void)removeChildController;
+
 - (void)displayLoading;
 - (void)hideLoading;
 
 - (void)alertMessage:(NSString *)message;
+
 
 @end

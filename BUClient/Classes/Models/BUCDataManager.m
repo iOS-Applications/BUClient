@@ -6,6 +6,7 @@
 //  Copyright (c) 2014 Jox. All rights reserved.
 //
 
+
 #import "BUCDataManager.h"
 #import "BUCNetworkEngine.h"
 #import "BUCAuthManager.h"
@@ -13,10 +14,12 @@
 #import "BUCPost.h"
 #import "BUCPostFragment.h"
 
+
 @implementation BUCDataManager
+
+
 #pragma mark - global access
-+ (BUCDataManager *)sharedInstance
-{
++ (BUCDataManager *)sharedInstance {
     static BUCDataManager *sharedInstance = nil;
     static dispatch_once_t onceSecurePredicate;
     dispatch_once(&onceSecurePredicate, ^{
@@ -26,30 +29,22 @@
     return sharedInstance;
 }
 
+
 #pragma mark - public methods
-- (void)getFrontListOnSuccess:(ArrayBlock)arrayBlock onError:(ErrorBlock)errorBlock
-{
+- (void)getFrontListOnSuccess:(ArrayBlock)arrayBlock onError:(ErrorBlock)errorBlock {
     BUCDataManager * __weak weakSelf = self;
-    BUCAuthManager *authManager = [BUCAuthManager sharedInstance];
-    
-    NSString *frontURL = @"home";
     
     NSMutableDictionary *json = [[NSMutableDictionary alloc] init];
-    [json setObject:authManager.curUser forKey:@"username"];
+    [json setObject:[BUCAuthManager sharedInstance].currentUser forKey:@"username"];
     
-    SuccessBlock successBlock = ^(NSDictionary *json)
-    {
+    SuccessBlock successBlock = ^(NSDictionary *json) {
         NSMutableArray *list = [[NSMutableArray alloc] init];
         NSArray *rawArray = [json objectForKey:@"newlist"];
-        BUCPost *post = nil;
-        NSString *when = nil;
-        NSString *who = nil;
         
         NSDictionary *captionAttrs = @{NSFontAttributeName:[UIFont preferredFontForTextStyle:UIFontTextStyleCaption1]};
         
-        for (NSDictionary *rawDic in rawArray)
-        {
-            post = [[BUCPost alloc] init];
+        for (NSDictionary *rawDic in rawArray) {
+            BUCPost *post = [[BUCPost alloc] init];
             
             post.pid = [rawDic objectForKey:@"tid"];
             post.fid = [rawDic objectForKey:@"fid"];
@@ -63,8 +58,8 @@
             
             post.childCount = [rawDic objectForKey:@"tid_sum"];
             
-            when = [weakSelf urldecode:[[rawDic objectForKey:@"lastreply"] objectForKey:@"when"]];
-            who = [weakSelf urldecode:[[rawDic objectForKey:@"lastreply"] objectForKey:@"who"]];
+            NSString *when = [weakSelf urldecode:[[rawDic objectForKey:@"lastreply"] objectForKey:@"when"]];
+            NSString *who = [weakSelf urldecode:[[rawDic objectForKey:@"lastreply"] objectForKey:@"who"]];
             post.lastReply = [[BUCPost alloc] init];
             post.lastReply.user = [[NSAttributedString alloc] initWithString:who attributes:captionAttrs];
             post.lastReply.dateline = when;
@@ -72,42 +67,33 @@
             [list addObject:post];
         }
         
-        if (arrayBlock)
-        {
+        if (arrayBlock) {
             arrayBlock(list);
         }
     };
     
-    [self loadListFromURL:frontURL json:json onSuccess:successBlock onError:errorBlock];
+    [self loadListFromURL:@"home" json:json onSuccess:successBlock onError:errorBlock];
 }
 
-- (void)getPost:(NSString *)postID from:(NSString *)from to:(NSString *)to onSuccess:(ArrayBlock)arrayBlock onError:(ErrorBlock)errorBlock
-{
-    BUCDataManager * __weak weakSelf = self;
-    BUCAuthManager *authManager = [BUCAuthManager sharedInstance];
+
+- (void)getPost:(NSString *)postID from:(NSString *)from to:(NSString *)to onSuccess:(ArrayBlock)arrayBlock onError:(ErrorBlock)errorBlock {
     
-    NSString *postURL = @"post";
+    BUCDataManager * __weak weakSelf = self;
     
     NSMutableDictionary *json = [[NSMutableDictionary alloc] init];
     [json setObject:@"post" forKey:@"action"];
-    [json setObject:authManager.curUser forKey:@"username"];
+    [json setObject:[BUCAuthManager sharedInstance].currentUser forKey:@"username"];
     [json setObject:postID forKey:@"tid"];
     [json setObject:from forKey:@"from"];
     [json setObject:to forKey:@"to"];
     
-    SuccessBlock successBlock = ^(NSDictionary *json)
-    {
+    SuccessBlock successBlock = ^(NSDictionary *json) {
         NSMutableArray *list = [[NSMutableArray alloc] init];
         NSArray *rawArray = [json objectForKey:@"postlist"];
-        BUCPost *post = nil;
         
         NSDictionary *captionAttrs = @{NSFontAttributeName:[UIFont preferredFontForTextStyle:UIFontTextStyleCaption1]};
-//        int i = 0;
-        for (NSDictionary *rawDic in rawArray)
-        {
-//            NSLog(@"\n%d楼\n", i + 1);
-//            i = i + 1;
-            post = [[BUCPost alloc] init];
+        for (NSDictionary *rawDic in rawArray) {
+            BUCPost *post = [[BUCPost alloc] init];
             
             post.pid = [rawDic objectForKey:@"pid"];
             post.fid = [rawDic objectForKey:@"fid"];
@@ -122,36 +108,30 @@
             [list addObject:post];
         }
         
-        if (arrayBlock)
-        {
+        if (arrayBlock) {
             arrayBlock(list);
         }
     };
     
-    [self loadListFromURL:postURL json:json onSuccess:successBlock onError:errorBlock];
+    [self loadListFromURL:@"post" json:json onSuccess:successBlock onError:errorBlock];
 }
 
+
 #pragma mark - networking
-- (void)loadListFromURL:(NSString *)url json:(NSMutableDictionary *)json onSuccess:(SuccessBlock)successBlock onError:(ErrorBlock)errorBlock
-{
+- (void)loadListFromURL:(NSString *)url json:(NSMutableDictionary *)json onSuccess:(SuccessBlock)successBlock onError:(ErrorBlock)errorBlock {
+    
     BUCDataManager * __weak weakSelf = self;
     BUCAuthManager *authManager = [BUCAuthManager sharedInstance];
     BUCNetworkEngine *engine = [BUCNetworkEngine sharedInstance];
     
-    if (!authManager.session)
-    {
+    if (!authManager.session) {
         [authManager
-         updateSessionOnSuccess:
-         ^(void)
-         {
+         updateSessionOnSuccess:^(void) {
              [weakSelf loadListFromURL:url json:json onSuccess:successBlock onError:errorBlock];
          }
          
-         onFail:
-         ^(NSError *error)
-         {
-             if (errorBlock)
-             {
+         onFail:^(NSError *error) {
+             if (errorBlock) {
                  errorBlock(error);
              }
          }];
@@ -166,31 +146,21 @@
      
      json:json
      
-     onResult:
-     ^(NSDictionary *resultJSON)
-     {
-         NSString *result = [resultJSON objectForKey:@"result"];
-         if ([result isEqualToString:@"fail"])
-         {
+     onResult: ^(NSDictionary *resultJSON) {
+         if ([[resultJSON objectForKey:@"result"] isEqualToString:@"fail"]) {
              [authManager
-              updateSessionOnSuccess:
-              ^(void)
-              {
+              updateSessionOnSuccess:^(void) {
                   [weakSelf loadListFromURL:url json:json onSuccess:successBlock onError:errorBlock];
               }
               
-              onFail:
-              ^(NSError *error)
-              {
-                  if (errorBlock)
-                  {
+              onFail:^(NSError *error) {
+                  if (errorBlock) {
                       errorBlock(error);
                   }
               }];
          }
          
-         if (successBlock)
-         {
+         if (successBlock) {
              successBlock(resultJSON);
          }
      }
@@ -198,50 +168,14 @@
      onError:errorBlock];
 }
 
+
 #pragma mark - parsing
-- (NSArray *)fragmentsFromHTML:(NSString *)html
-{
-//    NSString *utf8String = [[html stringByReplacingOccurrencesOfString:@"\r" withString:@"\\r"] stringByReplacingOccurrencesOfString:@"\n" withString:@"\\n"];
-//    NSLog(@"\nRAW HTML======================================================================\n%@\n", utf8String);
-    
-    NSArray *fragments = [self fragmentsFromTree:[self treeFromHTML:html]];
-    
-//    for (BUCPostFragment *fragment in fragments)
-//    {
-//        [self printOutTree:fragment];
-//    }
-    
-    return fragments;
+- (NSArray *)fragmentsFromHTML:(NSString *)html {
+    return [self fragmentsFromTree:[self treeFromHTML:html]];
 }
 
-- (void)printOutTree:(BUCPostFragment *)tree
-{
-    NSLog(@"=========================entering tree...=========================\n");
-    if (tree.isRichText)
-    {
-        NSLog(@"\n%@\n", tree.richText);
-    }
-    else if (tree.isBlock)
-    {
-        for (BUCPostFragment *fragment in tree.children)
-        {
-            [self printOutTree:fragment];
-        }
-    }
-    else if (tree.isImage)
-    {
-        NSLog(@"\n%@\n", tree.imageURL);
-    }
-    else
-    {
-        NSLog(@"WARNING -- unknown tag!");
-    }
-    
-    NSLog(@"=========================leaving tree...============================\n");
-}
 
-- (NSArray *)treeFromHTML:(NSString *)html
-{
+- (NSArray *)treeFromHTML:(NSString *)html {
     NSData *htmlData = [html dataUsingEncoding:NSUTF8StringEncoding];
     TFHpple *parser = [TFHpple hppleWithHTMLData:htmlData];
     NSString *query = @"//body";
@@ -250,71 +184,53 @@
     return nodes;
 }
 
-- (NSArray *)fragmentsFromTree:(NSArray *)tree
-{
+
+- (NSArray *)fragmentsFromTree:(NSArray *)tree {
     NSMutableArray *fragments = [[NSMutableArray alloc] init];
-    BUCPostFragment *fragment = nil;
-    BUCPostFragment *lastFragment = nil;
-    NSString *tagName = nil;
+    BUCPostFragment *lastFragment;
     
-    for (TFHppleElement *node in tree)
-    {
-        tagName = node.tagName;
+    for (TFHppleElement *node in tree) {
+        BUCPostFragment *fragment;
+        NSString *tagName = node.tagName;
         
-        if ([tagName isEqualToString:@"br"])
-        {
+        if ([tagName isEqualToString:@"br"]) {
             continue;
-        }
-        else if ([node isTextNode] ||
+        } else if ([node isTextNode] ||
                  [tagName isEqualToString:@"p"] ||
                  [tagName isEqualToString:@"span"] ||
                  [tagName isEqualToString:@"a"] ||
                  [tagName isEqualToString:@"font"] ||
                  [tagName isEqualToString:@"b"] ||
                  [tagName isEqualToString:@"i"] ||
-                 [tagName isEqualToString:@"u"])
-        {
-            if (lastFragment.isRichText)
-            {
+                 [tagName isEqualToString:@"u"]) {
+            
+            if (lastFragment.isRichText) {
                 [lastFragment.richText appendAttributedString:[self richTextFromTree:node]];
                 continue;
-            }
-            else
-            {
+            } else {
                 fragment = [[BUCPostFragment alloc] init];
                 fragment.isRichText = YES;
                 fragment.richText = [[NSMutableAttributedString alloc] initWithString:@""];
                 [fragment.richText appendAttributedString:[self richTextFromTree:node]];
             }
-        }
-        else if ([tagName isEqualToString:@"center"])
-        {
+        } else if ([tagName isEqualToString:@"center"]) {
             fragment = [self fragmentFromCenter:node];
             fragment.isBlock = YES;
-        }
-        else if ([tagName isEqualToString:@"img"])
-        {
+        } else if ([tagName isEqualToString:@"img"]) {
             fragment = [self fragmentFromImage:node];
             fragment.isImage = YES;
-        }
-        else if ([tagName isEqualToString:@"blockquote"])
-        {
+        } else if ([tagName isEqualToString:@"blockquote"]) {
             fragment = [self fragmentFromBox:node];
             fragment.isBlock = YES;
-        }
-        else if ([tagName isEqualToString:@"ol"] || [tagName isEqualToString:@"ul"])
-        {
+        } else if ([tagName isEqualToString:@"ol"] || [tagName isEqualToString:@"ul"]) {
             fragment = [self fragmentFromList:node];
             fragment.isBlock = YES;
-        }
-        else
-        {
+        } else {
             // unknown tag
             continue;
         }
         
-        if (fragment != nil)
-        {
+        if (fragment != nil) {
             lastFragment = fragment;
             [fragments addObject:fragment];
         }
@@ -323,60 +239,38 @@
     return fragments;
 }
 
-- (NSAttributedString *)richTextFromTree:(TFHppleElement *)tree
-{
+
+- (NSAttributedString *)richTextFromTree:(TFHppleElement *)tree{
     NSMutableAttributedString *output = [[NSMutableAttributedString alloc] initWithString:@""];
     NSString *tagName = tree.tagName;
     
-    if ([tree isTextNode] == YES)
-    {
+    if ([tree isTextNode] == YES) {
         [output appendAttributedString:[self richTextFromText:tree]];
-    }
-    else if ([tagName isEqualToString:@"p"])
-    {
-        for (TFHppleElement *e in tree.children)
-        {
-            if ([e.tagName isEqualToString:@"br"])
-            {
+    } else if ([tagName isEqualToString:@"p"]) {
+        for (TFHppleElement *e in tree.children) {
+            if ([e.tagName isEqualToString:@"br"]) {
                 continue;
-            }
-            else
-            {
+            } else {
                 [output appendAttributedString:[self richTextFromTree:e]];
             }
         }
-    }
-    else if ([tagName isEqualToString:@"img"])
-    {
+    } else if ([tagName isEqualToString:@"img"]) {
         // img needed to be supported
         [output appendAttributedString:[[NSAttributedString alloc] initWithString:@""]];
-    }
-    else if ([tagName isEqualToString:@"a"])
-    {
+    } else if ([tagName isEqualToString:@"a"]) {
         [output appendAttributedString:[self richTextFromA:tree]];
-    }
-    else if ([tagName isEqualToString:@"font"])
-    {
+    } else if ([tagName isEqualToString:@"font"]) {
         [output appendAttributedString:[self richTextFromFont:tree]];
-    }
-    else if ([tagName isEqualToString:@"b"])
-    {
+    } else if ([tagName isEqualToString:@"b"]) {
         [output appendAttributedString:[self richTextFromB:tree]];
-    }
-    else if ([tagName isEqualToString:@"i"])
+    } else if ([tagName isEqualToString:@"i"])
     {
         [output appendAttributedString:[self richTextFromI:tree]];
-    }
-    else if ([tagName isEqualToString:@"u"])
-    {
+    } else if ([tagName isEqualToString:@"u"]) {
         [output appendAttributedString:[self richTextFromU:tree]];
-    }
-    else if ([tagName isEqualToString:@"span"])
-    {
+    } else if ([tagName isEqualToString:@"span"]) {
         [output appendAttributedString:[self richTextFromSpan:tree]];
-    }
-    else
-    {
+    } else {
         NSLog(@"unknown tag type:%@", tagName);
     }
     
@@ -384,17 +278,17 @@
     return output;
 }
 
+
 #pragma mark - block html element parsing
-- (BUCPostFragment *)fragmentFromImage:(TFHppleElement *)image
-{
+- (BUCPostFragment *)fragmentFromImage:(TFHppleElement *)image {
     BUCPostFragment *fragment = [[BUCPostFragment alloc] init];
     fragment.imageURL = [image objectForKey:@"src"];
     
     return fragment;
 }
 
-- (BUCPostFragment *)fragmentFromCenter:(TFHppleElement *)center
-{
+
+- (BUCPostFragment *)fragmentFromCenter:(TFHppleElement *)center {
     NSString *query = @"//center/table/tr/td";
     NSArray *nodes = [center searchWithXPathQuery:query];
     NSString *typeString = [[[nodes firstObject] firstChild] content];
@@ -402,25 +296,20 @@
     nodes = [center searchWithXPathQuery:query];
     TFHppleElement *content = [nodes firstObject];
     BUCPostFragment *fragment = [[BUCPostFragment alloc] init];
-    if ([typeString rangeOfString:@"引用"].length != 0)
-    {
+    if ([typeString rangeOfString:@"引用"].length != 0) {
         fragment.children = [self fragmentsFromTree:content.children];
         return fragment;
-    }
-    else if ([typeString rangeOfString:@"代码"].length != 0)
-    {
+    } else if ([typeString rangeOfString:@"代码"].length != 0) {
         return [self fragmentFromCode:content];
-    }
-    else
-    {
+    } else {
         // unknown center block
         NSLog(@"unknown center block:%@", center.raw);
         return nil;
     }
 }
 
-- (BUCPostFragment *)fragmentFromCode:(TFHppleElement *)codeBlock
-{
+
+- (BUCPostFragment *)fragmentFromCode:(TFHppleElement *)codeBlock {
     NSString *query = @"//div/ol/li";
     NSArray *codeLines = [codeBlock searchWithXPathQuery:query];
     
@@ -429,8 +318,7 @@
     NSMutableAttributedString *richText = [[NSMutableAttributedString alloc] initWithString:@""];
     NSString *buffer = nil;
     
-    for (TFHppleElement *line in codeLines)
-    {
+    for (TFHppleElement *line in codeLines) {
         buffer = [NSString stringWithFormat:@"%@\n", line.firstChild.content];
         [richText appendAttributedString:[[NSAttributedString alloc] initWithString:buffer attributes:attrs]];
     }
@@ -440,8 +328,8 @@
     return fragment;
 }
 
-- (BUCPostFragment *)fragmentFromBox:(TFHppleElement *)box
-{
+
+- (BUCPostFragment *)fragmentFromBox:(TFHppleElement *)box {
     NSString *query = @"//blockquote/div";
     NSArray *nodes = [box searchWithXPathQuery:query];
     BUCPostFragment *fragment = [[BUCPostFragment alloc] init];
@@ -450,8 +338,8 @@
     return fragment;
 }
 
-- (BUCPostFragment *)fragmentFromList:(TFHppleElement *)list
-{
+
+- (BUCPostFragment *)fragmentFromList:(TFHppleElement *)list {
     NSString *query = @"//li";
     NSArray *nodes = [list searchWithXPathQuery:query];
     NSMutableAttributedString *richText = [[NSMutableAttributedString alloc] initWithString:@""];
@@ -459,8 +347,7 @@
     NSString *buffer = nil;
     BUCPostFragment *fragment = [[BUCPostFragment alloc] init];
     
-    for (TFHppleElement *node in nodes)
-    {
+    for (TFHppleElement *node in nodes) {
         buffer = [NSString stringWithFormat:@"• %@\n", node.firstChild.content];
         [richText appendAttributedString:[[NSAttributedString alloc] initWithString:buffer attributes:attrs]];
     }
@@ -470,31 +357,29 @@
     return fragment;
 }
 
+
 #pragma mark - inline html element parsing
-- (NSAttributedString *)titleFromHTML:(NSString *)html
-{
+- (NSAttributedString *)titleFromHTML:(NSString *)html{
     NSMutableAttributedString *output = [[NSMutableAttributedString alloc] initWithString:@""];
     NSArray *nodes = [self treeFromHTML:html];
     
-    for (TFHppleElement *node in nodes)
-    {
+    for (TFHppleElement *node in nodes) {
         [output appendAttributedString:[self richTextFromTree:node]];
     }
     
     return output;
 }
 
-- (NSAttributedString *)richTextFromText:(TFHppleElement *)text
-{
+
+- (NSAttributedString *)richTextFromText:(TFHppleElement *)text {
     // strike tag and video tag needed to be suppported
     NSDictionary *attrs = @{NSFontAttributeName:[UIFont preferredFontForTextStyle:UIFontTextStyleBody]};
     return [[NSAttributedString alloc] initWithString:[self replaceHtmlEntities:text.content] attributes:attrs];
 }
 
-- (NSAttributedString *)richTextFromSpan:(TFHppleElement *)span
-{
-    if ([[span objectForKey:@"id"] isEqualToString:@"id_open_api_label"])
-    {
+
+- (NSAttributedString *)richTextFromSpan:(TFHppleElement *)span {
+    if ([[span objectForKey:@"id"] isEqualToString:@"id_open_api_label"]) {
         NSString *url = @"http://out.bitunion.org/thread-10471436-1-1.html";
         NSDictionary *attrs = @{NSFontAttributeName:[UIFont preferredFontForTextStyle:UIFontTextStyleBody]};
         NSDictionary *linkAttrs = @{NSFontAttributeName:[UIFont preferredFontForTextStyle:UIFontTextStyleBody], NSLinkAttributeName:url};
@@ -502,40 +387,31 @@
         [output appendAttributedString:[[NSAttributedString alloc] initWithString:@"From BIT-Union Open API Project" attributes:linkAttrs]];
         [output appendAttributedString:[[NSAttributedString alloc] initWithString:@"::.." attributes:attrs]];
         return output;
-    }
-    else
-    {
+    } else {
         NSLog(@"unknown tag:%@", span.raw);
         return [[NSAttributedString alloc] initWithString:@""];
     }
 }
 
-- (NSAttributedString *)richTextFromFont:(TFHppleElement *)font
-{
+
+- (NSAttributedString *)richTextFromFont:(TFHppleElement *)font {
     // ignore custom size text, only process colored text
     NSMutableDictionary *attrs = [[NSMutableDictionary alloc] init];
     [attrs setObject:[UIFont preferredFontForTextStyle:UIFontTextStyleBody] forKey:NSFontAttributeName];
     NSString *colorString = [font objectForKey:@"color"];
-    if (colorString != nil)
-    {
+    if (colorString != nil) {
         UIColor *color = [self parseColorAttr:[font objectForKey:@"color"]];
         [attrs setObject:color forKey:NSForegroundColorAttributeName];
     }
     
     NSMutableAttributedString *output = [[NSMutableAttributedString alloc] initWithString:@""];
     
-    for (TFHppleElement *node in font.children)
-    {
-        if ([node isTextNode])
-        {
+    for (TFHppleElement *node in font.children) {
+        if ([node isTextNode]) {
             [output appendAttributedString:[[NSAttributedString alloc] initWithString:node.content attributes:attrs]];
-        }
-        else if ([node.tagName isEqualToString:@"a"])
-        {
+        } else if ([node.tagName isEqualToString:@"a"]) {
             [output appendAttributedString:[self richTextFromA:node]];
-        }
-        else
-        {
+        } else {
             // unknown tag
             continue;
         }
@@ -544,8 +420,8 @@
     return output;
 }
 
-- (NSAttributedString *)richTextFromA:(TFHppleElement *)a
-{
+
+- (NSAttributedString *)richTextFromA:(TFHppleElement *)a {
     NSAttributedString *output = nil;
     NSString *href = [a objectForKey:@"href"];
     NSString *content = [self replaceHtmlEntities:[[a firstChild] content]];
@@ -561,20 +437,15 @@
                                       options:NSRegularExpressionCaseInsensitive
                                       error:&error];
     
-    if ([summonRegex numberOfMatchesInString:href options:0 range:NSMakeRange(0, [href length])])
-    {
+    if ([summonRegex numberOfMatchesInString:href options:0 range:NSMakeRange(0, [href length])]) {
         output = [[NSAttributedString alloc] initWithString:content
                                                  attributes:@{NSFontAttributeName:[UIFont preferredFontForTextStyle:UIFontTextStyleBody],
                                                               @"BUCSummonLink":content}];
-    }
-    else if ([mailRegex numberOfMatchesInString:href options:0 range:NSMakeRange(0, [href length])])
-    {
+    } else if ([mailRegex numberOfMatchesInString:href options:0 range:NSMakeRange(0, [href length])]) {
         output = [[NSAttributedString alloc] initWithString:content
                                                  attributes:@{NSFontAttributeName:[UIFont preferredFontForTextStyle:UIFontTextStyleBody],
                                                               @"BUCMailLink":[href substringFromIndex:7]}];
-    }
-    else
-    {
+    } else {
         output = [[NSAttributedString alloc] initWithString:content
                                                  attributes:@{NSFontAttributeName:[UIFont preferredFontForTextStyle:UIFontTextStyleBody],
                                                               NSLinkAttributeName:href}];
@@ -583,16 +454,16 @@
     return output;
 }
 
-- (NSAttributedString *)richTextFromU:(TFHppleElement *)u
-{
+
+- (NSAttributedString *)richTextFromU:(TFHppleElement *)u {
     NSAttributedString *output = [[NSAttributedString alloc] initWithString:[self replaceHtmlEntities:u.firstChild.content]
                                                                  attributes:@{NSFontAttributeName:[UIFont preferredFontForTextStyle:UIFontTextStyleBody],
                                                                               NSUnderlineStyleAttributeName:@1}];
     return output;
 }
 
-- (NSAttributedString *)richTextFromI:(TFHppleElement *)i
-{
+
+- (NSAttributedString *)richTextFromI:(TFHppleElement *)i {
     NSAttributedString *output = [[NSAttributedString alloc] initWithString:[self replaceHtmlEntities:i.firstChild.content]
                                                                  attributes:[self createAttributesForFontStyle:UIFontTextStyleBody
                                                                                                      withTrait:UIFontDescriptorTraitItalic]];
@@ -600,8 +471,8 @@
     return output;
 }
 
-- (NSAttributedString *)richTextFromB:(TFHppleElement *)b
-{
+
+- (NSAttributedString *)richTextFromB:(TFHppleElement *)b {
     NSAttributedString *output = [[NSAttributedString alloc] initWithString:[self replaceHtmlEntities:b.firstChild.content]
                                                                  attributes:[self createAttributesForFontStyle:UIFontTextStyleBody
                                                                                                      withTrait:UIFontDescriptorTraitBold]];
@@ -609,15 +480,15 @@
     return output;
 }
 
+
 #pragma mark - utilies
-- (NSString *)urldecode:(NSString *)string
-{
+- (NSString *)urldecode:(NSString *)string {
     return [[string stringByReplacingOccurrencesOfString:@"+" withString:@" "]
             stringByReplacingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
 }
 
-- (NSString *)replaceHtmlEntities:(NSString *)string
-{
+
+- (NSString *)replaceHtmlEntities:(NSString *)string {
     return [[[[[string stringByReplacingOccurrencesOfString:@"&amp;" withString:@"&"]
                stringByReplacingOccurrencesOfString:@"&nbsp;" withString:@" "]
               stringByReplacingOccurrencesOfString:@"&quot;" withString:@"\""]
@@ -625,8 +496,8 @@
             stringByReplacingOccurrencesOfString:@"&gt;" withString:@">"];
 }
 
-- (UIColor *)parseColorAttr:(NSString *)colorString
-{
+
+- (UIColor *)parseColorAttr:(NSString *)colorString {
     static NSDictionary* colorTable = nil;
     
     static dispatch_once_t onceToken;
@@ -653,8 +524,7 @@
     
     UIColor *output = [colorTable objectForKey:[colorString lowercaseString]];
     
-    if (output)
-    {
+    if (output) {
         return output;
     }
     
@@ -664,12 +534,9 @@
                                                         options:0
                                                           range:NSMakeRange(0, [colorString length])];
     
-    if (numberOfMatches == 0)
-    {
+    if (numberOfMatches == 0) {
         output = [UIColor blackColor];
-    }
-    else
-    {
+    } else {
         NSString *cleanString = [colorString stringByReplacingOccurrencesOfString:@"#" withString:@""];
         if([cleanString length] == 3) {
             cleanString = [NSString stringWithFormat:@"%@%@%@%@%@%@",
@@ -687,8 +554,8 @@
     return output;
 }
 
-- (NSDictionary*)createAttributesForFontStyle:(NSString*)style withTrait:(uint32_t)trait
-{
+
+- (NSDictionary*)createAttributesForFontStyle:(NSString*)style withTrait:(uint32_t)trait {
     UIFontDescriptor *fontDescriptor = [UIFontDescriptor preferredFontDescriptorWithTextStyle:style];
     
     UIFontDescriptor *descriptorWithTrait = [fontDescriptor fontDescriptorWithSymbolicTraits:trait];
@@ -697,6 +564,7 @@
     
     return @{NSFontAttributeName:font};
 }
+
 
 @end
 
