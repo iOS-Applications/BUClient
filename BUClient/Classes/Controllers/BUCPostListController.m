@@ -1,19 +1,11 @@
-//
-//  BUCFrontPageViewController.m
-//  BUClient
-//
-//  Created by Joe Jeong on 1/8/14.
-//  Copyright (c) 2014 Jox. All rights reserved.
-//
-
 #import "BUCPostListController.h"
 #import "BUCContentController.h"
 #import "BUCPostDetailController.h"
+#import "BUCConstants.h"
 #import "BUCListItem.h"
 #import "BUCTextButton.h"
 #import "BUCDataManager.h"
 #import "BUCPost.h"
-#import "BUCConstants.h"
 
 
 @interface BUCPostListController () <UIScrollViewDelegate>

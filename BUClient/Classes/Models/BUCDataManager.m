@@ -1,12 +1,3 @@
-//
-//  BUCDataManager.m
-//  BUClient
-//
-//  Created by Joe Jeong on 10/20/14.
-//  Copyright (c) 2014 Jox. All rights reserved.
-//
-
-
 #import "BUCDataManager.h"
 #import "BUCNetworkEngine.h"
 #import "BUCAuthManager.h"

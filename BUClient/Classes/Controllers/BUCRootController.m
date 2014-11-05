@@ -1,11 +1,3 @@
-//
-//  BUCRootViewController.m
-//  BUClient
-//
-//  Created by Joe Jeong on 1/12/14.
-//  Copyright (c) 2014 Jox. All rights reserved.
-//
-
 #import "BUCRootController.h"
 #import "BUCLoginController.h"
 #import "BUCAuthManager.h"

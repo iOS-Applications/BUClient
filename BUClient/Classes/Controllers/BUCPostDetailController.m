@@ -1,11 +1,3 @@
-//
-//  BUCPostDetailController.m
-//  BUClient
-//
-//  Created by Joe Jeong on 10/31/14.
-//  Copyright (c) 2014 Jox. All rights reserved.
-//
-
 #import "BUCPostDetailController.h"
 #import "BUCRootController.h"
 #import "BUCContentController.h"

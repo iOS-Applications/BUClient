@@ -1,11 +1,3 @@
-//
-//  IBULoginViewController.m
-//  iBU
-//
-//  Created by Joe Jeong on 1/8/14.
-//  Copyright (c) 2014 Jox. All rights reserved.
-//
-
 #import "BUCLoginController.h"
 #import "BUCAuthManager.h"
 

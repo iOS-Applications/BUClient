@@ -1,11 +1,3 @@
-//
-//  BUCConstants.m
-//  BUClient
-//
-//  Created by Joe Jeong on 11/3/14.
-//  Copyright (c) 2014 Jox. All rights reserved.
-//
-
 #import <Foundation/Foundation.h>
 
 // user default keys
