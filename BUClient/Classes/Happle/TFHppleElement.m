@@ -220,7 +220,7 @@ static NSString * const TFHppleTextNodeName            = @"text";
     
     NSData *data = [self.raw dataUsingEncoding:NSUTF8StringEncoding];
 
-    NSArray * detailNodes = nil;
+    NSArray * detailNodes;
     if (isXML) {
         detailNodes = PerformXMLXPathQueryWithEncoding(data, xPathOrCSS, encoding);
     } else {

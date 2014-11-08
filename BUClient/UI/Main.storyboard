@@ -57,25 +57,6 @@
                                     <action selector="login:" destination="FHD-W1-3aU" eventType="touchUpInside" id="gfh-m2-pPn"/>
                                 </connections>
                             </button>
-                            <view hidden="YES" autoresizesSubviews="NO" clearsContextBeforeDrawing="NO" userInteractionEnabled="NO" alpha="0.5" contentMode="scaleToFill" id="Abb-vt-dK9" userLabel="Loading View">
-                                <rect key="frame" x="85" y="141" width="150" height="150"/>
-                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                                <subviews>
-                                    <label autoresizesSubviews="NO" clearsContextBeforeDrawing="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Please wait..." textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" id="VZ6-7v-93k">
-                                        <rect key="frame" x="21" y="90" width="109" height="21"/>
-                                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                                        <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
-                                        <fontDescription key="fontDescription" type="system" pointSize="17"/>
-                                        <color key="textColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
-                                        <nil key="highlightedColor"/>
-                                    </label>
-                                    <activityIndicatorView autoresizesSubviews="NO" clearsContextBeforeDrawing="NO" userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" style="whiteLarge" id="gZA-4z-xW2">
-                                        <rect key="frame" x="57" y="30" width="37" height="37"/>
-                                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                                    </activityIndicatorView>
-                                </subviews>
-                                <color key="backgroundColor" white="0.0" alpha="1" colorSpace="calibratedWhite"/>
-                            </view>
                         </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                         <gestureRecognizers/>
@@ -84,8 +65,6 @@
                         </connections>
                     </view>
                     <connections>
-                        <outlet property="activityView" destination="gZA-4z-xW2" id="pU3-q0-80f"/>
-                        <outlet property="loadingView" destination="Abb-vt-dK9" id="Osl-wG-Siu"/>
                         <outlet property="loginButton" destination="p6Q-ty-e5D" id="eIp-jb-F33"/>
                         <outlet property="password" destination="UH4-D8-KLE" id="3fX-A4-te9"/>
                         <outlet property="username" destination="yyq-Ka-8zC" id="2Js-tV-UdC"/>
@@ -148,10 +127,10 @@
             </objects>
             <point key="canvasLocation" x="3285" y="112"/>
         </scene>
-        <!--Content Controller-->
+        <!--Navigation Controller-->
         <scene sceneID="egt-mt-pAH">
             <objects>
-                <navigationController storyboardIdentifier="BUCContentController" autoresizesArchivedViewToFullSize="NO" automaticallyAdjustsScrollViewInsets="NO" id="hFi-ew-Pwi" customClass="BUCContentController" sceneMemberID="viewController">
+                <navigationController storyboardIdentifier="BUCContentController" autoresizesArchivedViewToFullSize="NO" automaticallyAdjustsScrollViewInsets="NO" id="hFi-ew-Pwi" sceneMemberID="viewController">
                     <extendedEdge key="edgesForExtendedLayout" top="YES"/>
                     <toolbarItems/>
                     <navigationBar key="navigationBar" contentMode="scaleToFill" id="hoq-rQ-wUd">
@@ -160,30 +139,10 @@
                     </navigationBar>
                     <nil name="viewControllers"/>
                     <connections>
-                        <outlet property="activityIndicator" destination="Xyh-pj-9k2" id="ZEV-fl-W7r"/>
-                        <outlet property="loadingView" destination="vsk-Bu-jND" id="7IQ-Ca-ICF"/>
                         <segue destination="GL1-z2-a4Z" kind="relationship" relationship="rootViewController" id="5Cc-5L-4r8"/>
                     </connections>
                 </navigationController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="tg6-Va-h0O" userLabel="First Responder" sceneMemberID="firstResponder"/>
-                <view hidden="YES" autoresizesSubviews="NO" clearsContextBeforeDrawing="NO" userInteractionEnabled="NO" alpha="0.5" contentMode="scaleToFill" id="vsk-Bu-jND" userLabel="Loading View">
-                    <rect key="frame" x="0.0" y="0.0" width="140" height="140"/>
-                    <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                    <subviews>
-                        <label autoresizesSubviews="NO" clearsContextBeforeDrawing="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Please wait..." lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" id="xQQ-kt-bdU">
-                            <rect key="frame" x="23" y="89" width="104" height="21"/>
-                            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                            <fontDescription key="fontDescription" type="system" pointSize="17"/>
-                            <color key="textColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
-                            <nil key="highlightedColor"/>
-                        </label>
-                        <activityIndicatorView autoresizesSubviews="NO" opaque="NO" clearsContextBeforeDrawing="NO" userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" style="whiteLarge" id="Xyh-pj-9k2" userLabel="Activity Indicator">
-                            <rect key="frame" x="52" y="37" width="37" height="37"/>
-                            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                        </activityIndicatorView>
-                    </subviews>
-                    <color key="backgroundColor" white="0.0" alpha="1" colorSpace="calibratedWhite"/>
-                </view>
             </objects>
             <point key="canvasLocation" x="2066" y="112"/>
         </scene>

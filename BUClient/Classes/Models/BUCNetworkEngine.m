@@ -14,7 +14,7 @@
 @implementation BUCNetworkEngine
 #pragma mark - singleton class method
 +(BUCNetworkEngine *)sharedInstance {   
-    static BUCNetworkEngine *sharedInstance = nil;
+    static BUCNetworkEngine *sharedInstance;
     static dispatch_once_t onceSecurePredicate;
     dispatch_once(&onceSecurePredicate, ^{
         sharedInstance = [[self alloc] init];
@@ -49,7 +49,7 @@
                 onResult:(networkResultBlock)resultBlock
                  onError:(networkErrorBlock)errorBlock {
     
-    NSError *error = nil;
+    NSError *error;
     NSURLRequest *request = [self requestFromURL:url json:json error:&error];
     if (!request) {
         if (errorBlock) {
@@ -63,7 +63,7 @@
     
     void (^urlSessionBlock)(NSData *, NSURLResponse *, NSError *);
     urlSessionBlock = ^(NSData *data, NSURLResponse *response, NSError *error) {
-        NSDictionary *resultJSON = nil;
+        NSDictionary *resultJSON;
         if (error || ((NSHTTPURLResponse *)response).statusCode != 200) {
             goto fail;
         }
@@ -94,11 +94,11 @@
 #pragma mark - private methods
 - (NSURLRequest *)requestFromURL:(NSString *)url json:(NSDictionary *)json error:(NSError **)error {
     NSString *baseURL = @"http://out.bitunion.org/open_api/bu_%@.php";
-//    baseURL = @"http://0.0.0.0/open_api/bu_%@.php";
+    baseURL = @"http://0.0.0.0/open_api/bu_%@.php";
     NSString *HTTPMethod = @"POST";
     NSMutableURLRequest *req = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:[NSString stringWithFormat:baseURL, url]]];
     NSMutableDictionary *dataJSON = [[NSMutableDictionary alloc] init];
-    NSData *data = nil;
+    NSData *data;
     
     for (NSString *key in json) {
         [dataJSON setObject:[self urlencode:[json objectForKey:key]] forKey:key];
@@ -148,7 +148,7 @@
     NSString *noInternetERROR = @"无网络连接，请检查网络连接";
     NSString *unknownERROR =    @"未知错误";
     
-    NSDictionary *errorInfo = nil;
+    NSDictionary *errorInfo;
     
     if ([response isKindOfClass:[NSHTTPURLResponse class]]) {
         NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse*)response;

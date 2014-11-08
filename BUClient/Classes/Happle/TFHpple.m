@@ -113,7 +113,7 @@
 // Returns all elements at xPath.
 - (NSArray *) searchWithXPathQuery:(NSString *)xPathOrCSS
 {
-  NSArray * detailNodes = nil;
+  NSArray * detailNodes;
   if (isXML) {
     detailNodes = PerformXMLXPathQueryWithEncoding(data, xPathOrCSS, encoding);
   } else {

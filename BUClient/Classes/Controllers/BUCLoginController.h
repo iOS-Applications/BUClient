@@ -1,7 +1,8 @@
 #import <UIKit/UIKit.h>
+#import "BUCBaseController.h"
 
 
-@interface BUCLoginController : UIViewController <UITextFieldDelegate>
+@interface BUCLoginController : BUCBaseController <UITextFieldDelegate>
 
 
 @property (nonatomic) NSString *unwindIdentifier;

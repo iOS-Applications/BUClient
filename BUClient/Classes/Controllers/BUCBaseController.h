@@ -1,11 +1,11 @@
 #import <UIKit/UIKit.h>
 
-@interface BUCContentController : UINavigationController
+
+@interface BUCBaseController : UIViewController
 
 
 - (void)displayLoading;
 - (void)hideLoading;
-
 - (void)alertMessage:(NSString *)message;
 
 

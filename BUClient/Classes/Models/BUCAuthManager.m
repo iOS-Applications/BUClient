@@ -41,7 +41,7 @@ static NSString *kKeychainItemIdentifer = @"org.bitunion.buc.%@.KeychainUI";
 
 #pragma mark - public methods
 + (BUCAuthManager *)sharedInstance {
-    static BUCAuthManager *sharedInstance = nil;
+    static BUCAuthManager *sharedInstance;
     static dispatch_once_t onceSecurePredicate;
     dispatch_once(&onceSecurePredicate,
                   ^{
@@ -250,7 +250,7 @@ static NSString *kKeychainItemIdentifer = @"org.bitunion.buc.%@.KeychainUI";
     keychainError = SecItemCopyMatching((__bridge CFDictionaryRef)returnDictionary, (CFTypeRef *)&passwordDataCF);
     
     NSData *passwordData = (__bridge NSData *)passwordDataCF;
-    NSString *password = nil;
+    NSString *password;
     
     if (keychainError == noErr) {
         [returnDictionary removeObjectForKey:(__bridge id)kSecReturnData];
@@ -271,8 +271,8 @@ static NSString *kKeychainItemIdentifer = @"org.bitunion.buc.%@.KeychainUI";
 
 
 - (void)writeToKeychain {
-    CFDictionaryRef attributesCF = nil;
-    NSMutableDictionary *updateItem = nil;
+    CFDictionaryRef attributesCF;
+    NSMutableDictionary *updateItem;
     
     if (SecItemCopyMatching((__bridge CFDictionaryRef)self.genericPasswordQuery, (CFTypeRef *)&attributesCF) == noErr) {
         NSMutableDictionary *attributes = (__bridge NSMutableDictionary *)attributesCF;

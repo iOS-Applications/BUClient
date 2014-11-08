@@ -1,5 +1,4 @@
 #import "BUCPostListController.h"
-#import "BUCContentController.h"
 #import "BUCPostDetailController.h"
 #import "BUCConstants.h"
 #import "BUCListItem.h"
@@ -10,8 +9,6 @@
 
 @interface BUCPostListController () <UIScrollViewDelegate>
 
-
-@property (nonatomic, weak) BUCContentController *contentController;
 
 @property (nonatomic, weak) UIView *listWrapper;
 
@@ -31,11 +28,16 @@
     UIScrollView *context = (UIScrollView *)self.view;
     context.delegate = self;
 
-    self.contentController = (BUCContentController *)self.parentViewController;
 
     self.navigationItem.backBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"" style:UIBarButtonItemStylePlain target:nil action:nil];
     
     [self refresh:nil];
+}
+
+
+- (void)dealloc
+{
+    [self hideLoading];
 }
 
 
@@ -49,19 +51,16 @@
 - (void)loadList {
     BUCPostListController * __weak weakSelf = self;
     BUCDataManager *dataManager = [BUCDataManager sharedInstance];
-    UIView *listWrapper = self.listWrapper;
-    BUCContentController *contentController = self.contentController;
     
     [dataManager
      getFrontListOnSuccess:^(NSArray *list) {
          weakSelf.postList = list;
-         [listWrapper removeFromSuperview];
          [weakSelf buildList:list];
          [weakSelf hideLoading];
      }
      onError:^(NSError *error) {
          [weakSelf hideLoading];
-         [contentController alertMessage:error.localizedDescription];
+         [weakSelf alertMessage:error.localizedDescription];
      }];
 }
 
@@ -70,15 +69,14 @@
     UIStoryboard *storyboard = [UIStoryboard storyboardWithName:BUCMainStoryboardPath bundle:nil];
     BUCPostDetailController *postDetailController = [storyboard instantiateViewControllerWithIdentifier:BUCPostDetailControllerStoryboardID];
     BUCListItem *listItem = (BUCListItem *)sender;
-    NSArray *postList = self.postList;
-    BUCPost *post = [postList objectAtIndex:listItem.tag];
+    BUCPost *post = [self.postList objectAtIndex:listItem.tag];
     
     [UIView animateWithDuration:0.3 animations:^(void) {
         listItem.backgroundColor = [UIColor whiteColor];
     }];
     
     postDetailController.postID = post.pid;
-    [self.contentController pushViewController:postDetailController animated:YES];
+    [(UINavigationController *)self.parentViewController pushViewController:postDetailController animated:YES];
 }
 
 
@@ -126,7 +124,7 @@
     CGFloat listItemChildGapX = 2.0f;
     CGFloat listItemChildGapY = 5.0f;
     
-    CGFloat wrapperWidth = self.view.bounds.size.width - 2 * wrapperMarginX;
+    CGFloat wrapperWidth = CGRectGetWidth(context.frame) - 2 * wrapperMarginX;
     CGFloat contentWidth = wrapperWidth - 2 * listItemPaddingX;
     
     CGFloat listItemChildSeparatorHeight = 0.6f;
@@ -159,7 +157,7 @@
         title.attributedText = post.title;
         [title sizeToFit];
         [listItem addSubview:title];
-        listItemChildOriginY = listItemChildOriginY + title.frame.size.height;
+        listItemChildOriginY = listItemChildOriginY + CGRectGetHeight(title.frame);
         
         // set gap between title and other items to 20 points
         listItemChildOriginY = listItemChildOriginY + 20.0f;
@@ -168,7 +166,7 @@
         BUCTextButton *poster = [self buttonFromTitle:post.user origin:CGPointMake(listItemChildOriginX, listItemChildOriginY)];
         [listItem addSubview:poster];
         [poster addTarget:self action:@selector(jumpToPoster:) forControlEvents:UIControlEventTouchUpInside];
-        listItemChildOriginX = listItemChildOriginX + poster.frame.size.width + listItemChildGapX;
+        listItemChildOriginX = listItemChildOriginX + CGRectGetWidth(poster.frame) + listItemChildGapX;
         
         // connecting text
         UILabel *text = [self labelFromText:[[NSAttributedString alloc]
@@ -176,13 +174,13 @@
                                              attributes:captionAttrs]
                             origin:CGPointMake(listItemChildOriginX, listItemChildOriginY)];
         [listItem addSubview:text];
-        listItemChildOriginX = listItemChildOriginX + text.frame.size.width + listItemChildGapX;
+        listItemChildOriginX = listItemChildOriginX + CGRectGetWidth(text.frame) + listItemChildGapX;
         
         // forum name
         BUCTextButton *fname = [self buttonFromTitle:post.fname origin:CGPointMake(listItemChildOriginX, listItemChildOriginY)];
         [listItem addSubview:fname];
         [fname addTarget:self action:@selector(jumpToForum:) forControlEvents:UIControlEventTouchUpInside];
-        listItemChildOriginX = listItemChildOriginX + fname.frame.size.width + listItemChildGapX;
+        listItemChildOriginX = listItemChildOriginX + CGRectGetWidth(fname.frame) + listItemChildGapX;
 
         // reply count
         UILabel *replyCount = [self labelFromText:[[NSAttributedString alloc]
@@ -191,7 +189,7 @@
                                            origin:CGPointMake(listItemChildOriginX, listItemChildOriginY)];
         [listItem addSubview:replyCount];
         
-        listItemChildOriginY = listItemChildOriginY + replyCount.frame.size.height + listItemChildGapY;
+        listItemChildOriginY = listItemChildOriginY + CGRectGetHeight(replyCount.frame) + listItemChildGapY;
         
         // add a separator
         UIView *separator = [[UIView alloc] initWithFrame:CGRectMake(listItemPaddingX, listItemChildOriginY, contentWidth, listItemChildSeparatorHeight)];
@@ -207,13 +205,13 @@
                                                       attributes:captionAttrs]
                                               origin:CGPointMake(listItemChildOriginX, listItemChildOriginY)];
         [listItem addSubview:lastReplyWhen];
-        listItemChildOriginX = listItemChildOriginX + lastReplyWhen.frame.size.width + listItemChildGapX;
+        listItemChildOriginX = listItemChildOriginX + CGRectGetWidth(lastReplyWhen.frame) + listItemChildGapX;
         
         // last reply author
         BUCTextButton *lastReplyWho = [self buttonFromTitle:post.lastReply.user origin:CGPointMake(listItemChildOriginX, listItemChildOriginY)];
         [listItem addSubview:lastReplyWho];
         [lastReplyWho addTarget:self action:@selector(jumpToPoster:) forControlEvents:UIControlEventTouchUpInside];
-        listItemChildOriginY = listItemChildOriginY + lastReplyWho.frame.size.height + listItemChildGapY;
+        listItemChildOriginY = listItemChildOriginY + CGRectGetHeight(lastReplyWho.frame) + listItemChildGapY;
         
         // set up post container's frame and add it to the wrapper
         listItem.frame = CGRectMake(listItemOriginX, listItemOriginY, wrapperWidth, listItemChildOriginY);
@@ -256,18 +254,6 @@
     label.frame = CGRectOffset(label.frame, origin.x, origin.y);
     
     return label;
-}
-
-
-- (void)displayLoading {
-    [self.contentController displayLoading];
-    self.view.userInteractionEnabled = NO;
-}
-
-
-- (void)hideLoading {
-    [self.contentController hideLoading];
-    self.view.userInteractionEnabled = YES;
 }
 
 

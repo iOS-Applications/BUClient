@@ -8,8 +8,7 @@
 @property (weak, nonatomic) IBOutlet UITextField *username;
 @property (weak, nonatomic) IBOutlet UITextField *password;
 
-@property (weak, nonatomic) IBOutlet UIView *loadingView;
-@property (weak, nonatomic) IBOutlet UIActivityIndicatorView *activityView;
+
 @property (weak, nonatomic) IBOutlet UIButton *loginButton;
 
 @property (strong, nonatomic) IBOutlet UITapGestureRecognizer *viewTapRecognizer;
@@ -26,8 +25,6 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     
-    self.loadingView.center = self.view.center;
-    self.loadingView.layer.cornerRadius = 10.0f;
 
     self.loginButton.layer.cornerRadius = 3;
     self.loginButton.layer.masksToBounds = YES;
@@ -83,9 +80,11 @@
     [self displayLoading];
 }
 
+
 - (IBAction)dissmissTextfield:(id)sender {
     [self.currentTextField resignFirstResponder];
 }
+
 
 #pragma mark - textfield delegate methods
 - (BOOL)textFieldShouldReturn:(UITextField *)textField {
@@ -94,31 +93,11 @@
     return YES;
 }
 
+
 - (void)textFieldDidBeginEditing:(UITextField *)textField {
     self.currentTextField = textField;
 }
 
-#pragma mark - private methods
-- (void)alertMessage:(NSString *)message {
-    [[[UIAlertView alloc]
-     initWithTitle:nil
-     message:message
-     delegate:self
-     cancelButtonTitle:@"OK"
-     otherButtonTitles:nil] show];
-}
-
-- (void)displayLoading {
-    [self.activityView startAnimating];
-    self.loadingView.hidden = NO;
-    self.view.userInteractionEnabled = NO;
-}
-
-- (void)hideLoading {
-    self.loadingView.hidden = YES;
-    [self.activityView stopAnimating];
-    self.view.userInteractionEnabled = YES;
-}
 
 @end
 
