@@ -25,26 +25,10 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     
-
     self.loginButton.layer.cornerRadius = 3;
     self.loginButton.layer.masksToBounds = YES;
     
     self.modalTransitionStyle = UIModalTransitionStyleCrossDissolve;
-    
-    CGRect frame = self.username.frame;
-    CGFloat textfieldHeight = CGRectGetHeight(frame);
-    CGFloat borderAOriginY = CGRectGetMinY(frame) + textfieldHeight;
-    UIColor *borderColor = [UIColor colorWithRed:217.0f/255.0f green:217.0f/255.0f blue:217.0f/255.0f alpha:1.0f];
-    
-    UIView *borderA = [[UIView alloc] initWithFrame:CGRectMake(CGRectGetMinX(frame), borderAOriginY, CGRectGetWidth(frame), 1.0f)];
-    borderA.backgroundColor = borderColor;
-    [self.view addSubview:borderA];
-    
-    UIView *borderB = [[UIView alloc] initWithFrame:CGRectZero];
-    borderB.frame = CGRectOffset(borderA.frame, 0.0f, textfieldHeight);
-    borderB.backgroundColor = borderColor;
-
-    [self.view addSubview:borderB];
 }
 
 
