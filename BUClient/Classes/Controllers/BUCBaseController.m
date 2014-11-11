@@ -27,6 +27,12 @@
 }
 
 
+- (void)dealloc
+{
+    [self hideLoading];
+}
+
+
 #pragma mark - public methods
 - (void)displayLoading {
     [self.activityIndicator startAnimating];

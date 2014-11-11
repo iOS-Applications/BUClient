@@ -44,7 +44,7 @@
 
 
 #pragma mark - public methods
-- (void)fetchDataFromURL:(NSString *)url
+- (void)fetchDataFromUrl:(NSString *)url
                     json:(NSDictionary *)json
                 onResult:(networkResultBlock)resultBlock
                  onError:(networkErrorBlock)errorBlock {
@@ -52,10 +52,7 @@
     NSError *error;
     NSURLRequest *request = [self requestFromURL:url json:json error:&error];
     if (!request) {
-        if (errorBlock) {
-            errorBlock(error);
-        }
-        
+        errorBlock(error);
         return;
     }
     
@@ -75,15 +72,26 @@
             goto fail;
         }
         
-        if (resultBlock) {
-            resultBlock(resultJSON);
-        }
+        resultBlock(resultJSON);
         
         return;
         
     fail:
-        if (errorBlock) {
-            errorBlock([weakSelf checkErr:error response:response]);
+        errorBlock([weakSelf checkErr:error response:response]);
+    };
+    
+    [[self.defaultSession dataTaskWithRequest:request completionHandler:urlSessionBlock] resume];
+}
+
+
+- (void)fetchDataFromUrl:(NSURL *)url onResult:(networkDataBlock)dataBlock onError:(networkErrorBlock)errorBlock {
+    NSURLRequest *request = [NSURLRequest requestWithURL:url];
+    void(^urlSessionBlock)(NSData *, NSURLResponse *, NSError *);
+    urlSessionBlock = ^(NSData *data, NSURLResponse *response, NSError *error) {
+        if (error || !data) {
+            return;
+        } else {
+            dataBlock(data);
         }
     };
     
@@ -94,7 +102,7 @@
 #pragma mark - private methods
 - (NSURLRequest *)requestFromURL:(NSString *)url json:(NSDictionary *)json error:(NSError **)error {
     NSString *baseURL = @"http://out.bitunion.org/open_api/bu_%@.php";
-    baseURL = @"http://0.0.0.0/open_api/bu_%@.php";
+//    baseURL = @"http://0.0.0.0/open_api/bu_%@.php";
     NSString *HTTPMethod = @"POST";
     NSMutableURLRequest *req = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:[NSString stringWithFormat:baseURL, url]]];
     NSMutableDictionary *dataJSON = [[NSMutableDictionary alloc] init];
@@ -151,7 +159,7 @@
     NSDictionary *errorInfo;
     
     if ([response isKindOfClass:[NSHTTPURLResponse class]]) {
-        NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse*)response;
+        NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse *)response;
         if (httpResponse.statusCode == 500) {
             errorInfo = @{NSLocalizedDescriptionKey:serverERROR};
         } else if (httpResponse.statusCode == 404) {

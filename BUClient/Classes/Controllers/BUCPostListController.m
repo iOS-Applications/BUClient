@@ -28,16 +28,9 @@
     UIScrollView *context = (UIScrollView *)self.view;
     context.delegate = self;
 
-
     self.navigationItem.backBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"" style:UIBarButtonItemStylePlain target:nil action:nil];
     
     [self refresh:nil];
-}
-
-
-- (void)dealloc
-{
-    [self hideLoading];
 }
 
 
@@ -106,154 +99,147 @@
 
 #pragma mark - private methods
 - (void)buildList:(NSArray *)list {
+    CGFloat leftPadding = 5.0f;
+    CGFloat topPadding = 5.0f;
+    CGFloat rightPadding = 5.0f;
+    CGFloat bottomPadding = 5.0f;
+    
     UIScrollView *context = (UIScrollView *)self.view;
 
     // set up wrapper
     UIView *wrapper = [[UIView alloc] init];
-    wrapper.opaque = YES;
-    
-    // set up basic geometry
-    CGFloat wrapperMarginX = 5.0f;
-    CGFloat wrapperMarginY = 5.0f;
     
     CGFloat listItemBottomMargin = 5.0f;
     
-    CGFloat listItemPaddingX = 5.0f;
-    CGFloat listItemPaddingY = 5.0f;
+    CGFloat contextWidth = CGRectGetWidth(context.frame);
+    CGFloat wrapperWidth = contextWidth - leftPadding - rightPadding;
     
-    CGFloat listItemChildGapX = 2.0f;
-    CGFloat listItemChildGapY = 5.0f;
-    
-    CGFloat wrapperWidth = CGRectGetWidth(context.frame) - 2 * wrapperMarginX;
-    CGFloat contentWidth = wrapperWidth - 2 * listItemPaddingX;
-    
-    CGFloat listItemChildSeparatorHeight = 0.6f;
-    
-    
-    // accumulation variables
-    NSInteger index = 0; // index of list item
-    CGFloat wrapperHeight = 0.0f;
+    // index of list item
+    NSInteger index = 0;
     
     // layout position in wrapper's coordinate
-    CGFloat listItemOriginX = 0.0f;
-    CGFloat listItemOriginY = 0.0f;
-    
-    // attributes of attributed string
-    NSDictionary *captionAttrs = @{NSFontAttributeName:[UIFont preferredFontForTextStyle:UIFontTextStyleCaption1]};
+    CGFloat layoutPointY = 0;
     
     for (BUCPost *post in list) {
-        // set up initial layout position in list item's coordinate
-        CGFloat listItemChildOriginX = listItemPaddingX;
-        CGFloat listItemChildOriginY = listItemPaddingY;
-        
-        // set up post list item
-        BUCListItem *listItem = [[BUCListItem alloc] initWithFrame:CGRectZero];
-        listItem.tag = index++; // use tag to identify post tapped later
+        BUCListItem *listItem = [self listItemOfPost:post frame:CGRectMake(0, layoutPointY, wrapperWidth, 0)];
+        listItem.tag = index;
+        index = index + 1;
         [listItem addTarget:self action:@selector(jumpToPost:) forControlEvents:UIControlEventTouchUpInside];
-        
-        // title
-        UILabel *title = [[UILabel alloc] initWithFrame:CGRectMake(listItemChildOriginX, listItemChildOriginY, contentWidth, 0.0f)];
-        title.numberOfLines = 0;
-        title.attributedText = post.title;
-        [title sizeToFit];
-        [listItem addSubview:title];
-        listItemChildOriginY = listItemChildOriginY + CGRectGetHeight(title.frame);
-        
-        // set gap between title and other items to 20 points
-        listItemChildOriginY = listItemChildOriginY + 20.0f;
-        
-        // username of original poster
-        BUCTextButton *poster = [self buttonFromTitle:post.user origin:CGPointMake(listItemChildOriginX, listItemChildOriginY)];
-        [listItem addSubview:poster];
-        [poster addTarget:self action:@selector(jumpToPoster:) forControlEvents:UIControlEventTouchUpInside];
-        listItemChildOriginX = listItemChildOriginX + CGRectGetWidth(poster.frame) + listItemChildGapX;
-        
-        // connecting text
-        UILabel *text = [self labelFromText:[[NSAttributedString alloc]
-                                             initWithString:@"发表于"
-                                             attributes:captionAttrs]
-                            origin:CGPointMake(listItemChildOriginX, listItemChildOriginY)];
-        [listItem addSubview:text];
-        listItemChildOriginX = listItemChildOriginX + CGRectGetWidth(text.frame) + listItemChildGapX;
-        
-        // forum name
-        BUCTextButton *fname = [self buttonFromTitle:post.fname origin:CGPointMake(listItemChildOriginX, listItemChildOriginY)];
-        [listItem addSubview:fname];
-        [fname addTarget:self action:@selector(jumpToForum:) forControlEvents:UIControlEventTouchUpInside];
-        listItemChildOriginX = listItemChildOriginX + CGRectGetWidth(fname.frame) + listItemChildGapX;
-
-        // reply count
-        UILabel *replyCount = [self labelFromText:[[NSAttributedString alloc]
-                                                   initWithString:[NSString stringWithFormat:@"%@人回复", post.childCount]
-                                                   attributes:captionAttrs]
-                                           origin:CGPointMake(listItemChildOriginX, listItemChildOriginY)];
-        [listItem addSubview:replyCount];
-        
-        listItemChildOriginY = listItemChildOriginY + CGRectGetHeight(replyCount.frame) + listItemChildGapY;
-        
-        // add a separator
-        UIView *separator = [[UIView alloc] initWithFrame:CGRectMake(listItemPaddingX, listItemChildOriginY, contentWidth, listItemChildSeparatorHeight)];
-        separator.backgroundColor = [UIColor lightGrayColor];
-        [listItem addSubview:separator];
-
-        listItemChildOriginX = listItemPaddingX;
-        listItemChildOriginY = listItemChildOriginY + listItemChildSeparatorHeight + listItemChildGapY;
-        
-        // last reply dateline
-        UILabel *lastReplyWhen = [self labelFromText:[[NSAttributedString alloc]
-                                                      initWithString:[NSString stringWithFormat:@"最后回复：%@ by", post.lastReply.dateline]
-                                                      attributes:captionAttrs]
-                                              origin:CGPointMake(listItemChildOriginX, listItemChildOriginY)];
-        [listItem addSubview:lastReplyWhen];
-        listItemChildOriginX = listItemChildOriginX + CGRectGetWidth(lastReplyWhen.frame) + listItemChildGapX;
-        
-        // last reply author
-        BUCTextButton *lastReplyWho = [self buttonFromTitle:post.lastReply.user origin:CGPointMake(listItemChildOriginX, listItemChildOriginY)];
-        [listItem addSubview:lastReplyWho];
-        [lastReplyWho addTarget:self action:@selector(jumpToPoster:) forControlEvents:UIControlEventTouchUpInside];
-        listItemChildOriginY = listItemChildOriginY + CGRectGetHeight(lastReplyWho.frame) + listItemChildGapY;
-        
-        // set up post container's frame and add it to the wrapper
-        listItem.frame = CGRectMake(listItemOriginX, listItemOriginY, wrapperWidth, listItemChildOriginY);
         [wrapper addSubview:listItem];
-        
-        // accumulatation
-        wrapperHeight = wrapperHeight + listItemChildOriginY + listItemBottomMargin;
-        listItemOriginY = wrapperHeight;
+        layoutPointY = layoutPointY + CGRectGetHeight(listItem.frame) + listItemBottomMargin;
     }
-    
-    wrapperHeight = wrapperHeight - listItemBottomMargin;
 
     CGFloat topBarHeight = 64.0f;
-    wrapper.frame = CGRectMake(wrapperMarginX, wrapperMarginY + topBarHeight, wrapperWidth, wrapperHeight);
-    context.contentSize = CGSizeMake(wrapperWidth + 2 * wrapperMarginX, wrapperHeight + 2 * wrapperMarginY + topBarHeight);
-    
+    wrapper.frame = CGRectMake(leftPadding, topPadding + topBarHeight, wrapperWidth, layoutPointY - listItemBottomMargin);
+    context.contentSize = CGSizeMake(contextWidth, layoutPointY + topBarHeight + bottomPadding);
+
     if (self.listWrapper) {
         [self.listWrapper removeFromSuperview];
     }
     
     [context addSubview:wrapper];
     self.listWrapper = wrapper;
+    [context setNeedsLayout];
 }
 
 
-- (BUCTextButton *)buttonFromTitle:(NSAttributedString *)title origin:(CGPoint)origin {
-    BUCTextButton *button = [[BUCTextButton alloc] init];
-    [button setTitle:title];
-    [button sizeToFit];
-    button.frame = CGRectOffset(button.frame, origin.x, origin.y);
+- (BUCListItem *)listItemOfPost:(BUCPost *)post frame:(CGRect)aRect {
+    CGFloat leftPadding = 5.0f;
+    CGFloat topPadding = 5.0f;
+    CGFloat rightPadding = 5.0f;
+    CGFloat bottomPadding = 5.0f;
     
-    return button;
+    CGFloat x = CGRectGetMinX(aRect);
+    CGFloat y = CGRectGetMinY(aRect);
+    CGFloat contextWidth = CGRectGetWidth(aRect);
+    
+    CGFloat contentWidth = contextWidth - leftPadding - rightPadding;
+    
+    CGFloat titleBottomMargin = 20.0f;
+    
+    CGFloat metaRightMargin = 2.0f;
+    CGFloat metaBottomMargin = 5.0f;
+    
+    CGFloat separatorHeight = 0.5f;
+    
+    CGFloat layoutPointX = leftPadding;
+    CGFloat layoutPointY = topPadding;
+    
+    BUCListItem *listItem = [[BUCListItem alloc] initWithFrame:CGRectZero];
+    
+    // title
+    UILabel *title = [[UILabel alloc] initWithFrame:CGRectMake(layoutPointX, layoutPointY, contentWidth, 0.0f)];
+    title.numberOfLines = 0;
+    title.attributedText = post.title;
+    [title sizeToFit];
+    [listItem addSubview:title];
+    layoutPointY = layoutPointY + CGRectGetHeight(title.frame) + titleBottomMargin;
+    
+    // username of original poster
+    BUCTextButton *poster = [[BUCTextButton alloc] init];
+    [poster setTitle:post.user];
+    poster.frame = CGRectOffset(poster.frame, layoutPointX, layoutPointY);
+    [listItem addSubview:poster];
+    [poster addTarget:self action:@selector(jumpToPoster:) forControlEvents:UIControlEventTouchUpInside];
+    layoutPointX = layoutPointX + CGRectGetWidth(poster.frame) + metaRightMargin;
+    
+    // forum name
+    NSDictionary *metaAttributes = @{NSFontAttributeName:[UIFont preferredFontForTextStyle:UIFontTextStyleCaption1]};
+    NSAttributedString *snippetRichText = [[NSAttributedString alloc] initWithString:@"发表于" attributes:metaAttributes];
+    UILabel *snippet = [self labelFromRichText:snippetRichText];
+    snippet.frame = CGRectOffset(snippet.frame, layoutPointX, layoutPointY);
+    [listItem addSubview:snippet];
+    layoutPointX = layoutPointX + CGRectGetWidth(snippet.frame) + metaRightMargin;
+    
+    BUCTextButton *forumName = [[BUCTextButton alloc] init];
+    [forumName setTitle:post.fname];
+    forumName.frame = CGRectOffset(forumName.frame, layoutPointX, layoutPointY);
+    [listItem addSubview:forumName];
+    layoutPointX = layoutPointX + CGRectGetWidth(forumName.frame) + metaRightMargin;
+    
+    // reply count
+    NSString *replyCountString = [NSString stringWithFormat:@"%@人回复", post.childCount];
+    NSAttributedString *replyCountRichText = [[NSAttributedString alloc] initWithString:replyCountString attributes:metaAttributes];
+    UILabel *replyCount = [self labelFromRichText:replyCountRichText];
+    replyCount.frame = CGRectOffset(replyCount.frame, layoutPointX, layoutPointY);
+    [listItem addSubview:replyCount];
+    layoutPointX = leftPadding;
+    layoutPointY = layoutPointY + CGRectGetHeight(replyCount.frame) + metaBottomMargin;
+    
+    // separator
+    UIView *separator = [[UIView alloc] initWithFrame:CGRectMake(layoutPointX, layoutPointY, contentWidth, separatorHeight)];
+    separator.backgroundColor = [UIColor lightGrayColor];
+    [listItem addSubview:separator];
+    layoutPointY = layoutPointY + separatorHeight + metaBottomMargin;
+    
+    // last reply
+    NSString *lastReplyString = [NSString stringWithFormat:@"最后回复：%@ by", post.lastReply.dateline];
+    NSAttributedString *lastReplyRichText = [[NSAttributedString alloc] initWithString:lastReplyString attributes:metaAttributes];
+    UILabel *lastReply = [self labelFromRichText:lastReplyRichText];
+    lastReply.frame = CGRectOffset(lastReply.frame, layoutPointX, layoutPointY);
+    [listItem addSubview:lastReply];
+    layoutPointX = layoutPointX + CGRectGetWidth(lastReply.frame) + metaRightMargin;
+    
+    BUCTextButton *lastReplyPoster = [[BUCTextButton alloc] init];
+    [lastReplyPoster setTitle:post.lastReply.user];
+    lastReplyPoster.frame = CGRectOffset(lastReplyPoster.frame, layoutPointX, layoutPointY);
+    [listItem addSubview:lastReplyPoster];
+    
+    layoutPointY = layoutPointY + CGRectGetHeight(lastReplyPoster.frame) + bottomPadding;
+    
+    // reset frame
+    listItem.frame = CGRectMake(x, y, contextWidth, layoutPointY);
+
+    return listItem;
 }
 
 
-- (UILabel *)labelFromText:(NSAttributedString *)text origin:(CGPoint)origin {
-    UILabel *label = [[UILabel alloc] init];
-    label.attributedText = text;
-    [label sizeToFit];
-    label.frame = CGRectOffset(label.frame, origin.x, origin.y);
+- (UILabel *)labelFromRichText:(NSAttributedString *)richText {
+    UILabel *snippet = [[UILabel alloc] init];
+    snippet.attributedText = richText;
+    [snippet sizeToFit];
     
-    return label;
+    return snippet;
 }
 
 

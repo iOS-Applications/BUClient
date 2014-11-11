@@ -8,7 +8,7 @@
 
 - (NSAttributedString *)titleFromHTML:(NSString *)html;
 
-- (NSString *)imageURLFromHTML:(NSString *)html;
+- (NSString *)avatarURLFromHTML:(NSString *)html;
 
 
 @end

@@ -40,7 +40,7 @@ NSDictionary *DictionaryForNode(xmlNodePtr currentNode, NSMutableDictionary *par
                 [parentResult setObject:[currentNodeContent stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]] forKey:@"nodeContent"];
                 return nil;
             }
-            if (currentNodeContent != nil)
+            if (currentNodeContent)
             {
                 [resultForNode setObject:currentNodeContent forKey:@"nodeContent"];
             }
@@ -112,7 +112,7 @@ NSDictionary *DictionaryForNode(xmlNodePtr currentNode, NSMutableDictionary *par
     xmlNodeDump(buffer, currentNode->doc, currentNode, 0, 0);
     
     NSString *rawContent = [NSString stringWithCString:(const char *)buffer->content encoding:NSUTF8StringEncoding];
-    if (rawContent != nil)
+    if (rawContent)
     {
         [resultForNode setObject:rawContent forKey:@"raw"];
     }

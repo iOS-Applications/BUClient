@@ -2,8 +2,6 @@
 
 
 @implementation BUCTextButton
-
-
 - (void)setTitle:(NSAttributedString *)title {
     UILabel *titleLabel = [[UILabel alloc] init];
     titleLabel.attributedText = title;

@@ -4,6 +4,7 @@
 @implementation BUCListItem
 
 
+#pragma mark - overrided methods
 - (BUCListItem *)initWithFrame:(CGRect)aRect {
     self = [super initWithFrame:aRect];
     
@@ -26,6 +27,12 @@
 
 - (void)touchesCancelled:(NSSet *)touches withEvent:(UIEvent *)event {
     [super touchesCancelled:touches withEvent:event];
+    self.backgroundColor = [UIColor whiteColor];
+}
+
+
+- (void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event {
+    [super touchesEnded:touches withEvent:event];
     self.backgroundColor = [UIColor whiteColor];
 }
 

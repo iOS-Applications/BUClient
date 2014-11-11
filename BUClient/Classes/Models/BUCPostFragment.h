@@ -11,7 +11,9 @@
 
 @property (nonatomic) BOOL isRichText;
 @property (nonatomic) BOOL isBlock;
-@property (nonatomic) BOOL isCode;
+
+
+- (void)addImage:(id)image;
 
 
 @end

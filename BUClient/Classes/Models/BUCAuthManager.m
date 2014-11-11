@@ -78,36 +78,31 @@ static NSString *kKeychainItemIdentifer = @"org.bitunion.buc.%@.KeychainUI";
     [json setObject:password forKey:@"password"];
     
     [engine
-     fetchDataFromURL:loginURL
+     fetchDataFromUrl:loginURL
      
      json:json
      
      onResult:^(NSDictionary *resultJSON) {
          NSString *result = [resultJSON objectForKey:@"result"];
          if (![result isEqualToString:@"success"]) {
-             if (failBlock) {
-                 failBlock([weakSelf returnFailError]);
-             }
+             failBlock([weakSelf returnFailError]);
              return;
          }
          
-         weakSelf.currentUser = username;
-         weakSelf.session = [resultJSON objectForKey:@"session"];
-         [weakSelf setNewPassword:password account:username];
          NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
          [defaults setObject:username forKey:BUCCurrentUserDefaultKey];
          [defaults setBool:YES forKey:BUCUserLoginStateDefaultKey];
          [defaults synchronize];
          
-         if (successBlock) {
-             successBlock();
-         }
+         weakSelf.currentUser = username;
+         weakSelf.session = [resultJSON objectForKey:@"session"];
+         [weakSelf setNewPassword:password account:username];
+         
+         successBlock();
      }
      
      onError:^(NSError *error) {
-         if (failBlock) {
-             failBlock(error);
-         }
+         failBlock(error);
      }];
 }
 
@@ -122,7 +117,7 @@ static NSString *kKeychainItemIdentifer = @"org.bitunion.buc.%@.KeychainUI";
     
     [[BUCNetworkEngine sharedInstance]
      
-     fetchDataFromURL:@"logging"
+     fetchDataFromUrl:@"logging"
      
      json:json
      
@@ -134,16 +129,12 @@ static NSString *kKeychainItemIdentifer = @"org.bitunion.buc.%@.KeychainUI";
          }
          
          weakSelf.session = [resultJSON objectForKey:@"session"];
-
-         if (sessionBlock) {
-             sessionBlock();
-         }
+         
+         sessionBlock();
      }
      
      onError:^(NSError *error) {
-         if (failBlock) {
-             failBlock(error);
-         }
+         failBlock(error);
      }];
 }
 
