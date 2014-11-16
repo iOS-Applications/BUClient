@@ -4,7 +4,7 @@
 #import "BUCListItem.h"
 #import "BUCTextButton.h"
 #import "BUCDataManager.h"
-#import "BUCPost.h"
+#import "BUCModels.h"
 
 
 @interface BUCPostListController () <UIScrollViewDelegate>
@@ -131,6 +131,7 @@
 
     CGFloat topBarHeight = 64.0f;
     wrapper.frame = CGRectMake(leftPadding, topPadding + topBarHeight, wrapperWidth, layoutPointY - listItemBottomMargin);
+
     context.contentSize = CGSizeMake(contextWidth, layoutPointY + topBarHeight + bottomPadding);
 
     if (self.listWrapper) {
@@ -139,7 +140,6 @@
     
     [context addSubview:wrapper];
     self.listWrapper = wrapper;
-    [context setNeedsLayout];
 }
 
 

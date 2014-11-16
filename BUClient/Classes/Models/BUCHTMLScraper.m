@@ -1,8 +1,10 @@
 #import "BUCHTMLScraper.h"
-#import "BUCPostFragment.h"
 #import "TFHpple.h"
-#import "BUCImage.h"
 #import "UIImage+animatedGIF.h"
+#import "BUCConstants.h"
+#import "BUCModels.h"
+
+
 
 
 @implementation BUCHTMLScraper
@@ -10,7 +12,7 @@
 
 #pragma mark - public interface
 - (NSAttributedString *)titleFromHTML:(NSString *)html{
-    BUCPostFragment *title = [[self fragmentsFromHTML:html] lastObject];
+    BUCRenderNode *title = [[self fragmentsFromHTML:html] lastObject];
     
     return title.richText;
 }
@@ -21,46 +23,78 @@
 }
 
 
-- (NSString *)avatarURLFromHTML:(NSString *)html
+- (NSAttributedString *)richTextFromHtml:(NSString *)html {
+    return [self richTextFromTree:[self treeFromHtml:html]];
+}
+
+
+- (TFHppleElement *)treeFromHtml:(NSString *)html {
+    return  nil;
+}
+
+
+- (NSURL *)avatarUrlFromHtml:(NSString *)html
 {
-    if (html.length == 0) {
-        return @"";
+    if (!html || html.length == 0) {
+        return nil;
     }
     
     NSData *htmlData = [html dataUsingEncoding:NSUTF8StringEncoding];
     TFHpple *parser = [TFHpple hppleWithHTMLData:htmlData];
     NSString *query = @"//body";
     NSArray *nodes = [[[parser searchWithXPathQuery:query] firstObject] children];
-    NSString *url = [[nodes firstObject] objectForKey:@"src"];
-    NSRegularExpression *regex = [self regexFromPattern:@"^http://www\\.bitunion\\.org/.+$"];
+    
+    NSString *urlString = [[nodes firstObject] objectForKey:@"src"];
+    NSString *buBaseUrl = @"http://out.bitunion.org";
+    NSURL *url = [NSURL URLWithString:urlString];
+    
+    NSRegularExpression *lanRegex = [self regexFromPattern:@"^http://www\\.bitunion\\.org/.+$"];
     NSRegularExpression *relativeRegex = [self regexFromPattern:@"^images/.+$"];
-    if ([self matchString:url withRegex:regex]) {
-        url = [url stringByReplacingOccurrencesOfString:@"www.bitunion.org" withString:@"out.bitunion.org"];
-    } else if ([self matchString:url withRegex:relativeRegex]) {
-        url = [NSString stringWithFormat:@"%@/%@", @"http://out.bitunion.org", url];
+    NSRegularExpression *attachmentRegex = [self regexFromPattern:@"^/attachments/.+$"];
+    
+    if ([url.host isEqualToString:@"bitunion.org"]) {
+        urlString = [NSString stringWithFormat:@"%@%@", buBaseUrl, url.path];
+    } else if ([self matchString:urlString withRegex:lanRegex]) {
+        urlString = [urlString stringByReplacingOccurrencesOfString:@"www.bitunion.org" withString:@"out.bitunion.org"];
+    } else if ([self matchString:urlString withRegex:relativeRegex]) {
+        urlString = [NSString stringWithFormat:@"%@/%@", @"http://out.bitunion.org", urlString];
+    } else if ([self matchString:urlString withRegex:attachmentRegex]) {
+        urlString = [NSString stringWithFormat:@"%@%@", @"http://out.bitunion.org", urlString];
     }
     
-    return url;
+    return [NSURL URLWithString:urlString];
 }
 
 
 #pragma mark - top level tree
 - (NSArray *)treeFromHTML:(NSString *)html {
+    if (html.length == 0) {
+        return nil;
+    }
+
     NSData *htmlData = [html dataUsingEncoding:NSUTF8StringEncoding];
     TFHpple *parser = [TFHpple hppleWithHTMLData:htmlData];
     NSString *query = @"//body";
     NSArray *nodes = [[[parser searchWithXPathQuery:query] firstObject] children];
+    
+    if (nodes.count == 0) {
+        return nil;
+    }
     
     return nodes;
 }
 
 
 - (NSArray *)fragmentsFromTree:(NSArray *)tree {
+    if (!tree) {
+        return nil;
+    }
+    
     NSMutableArray *fragments = [[NSMutableArray alloc] init];
-    BUCPostFragment *lastFragment;
+    BUCRenderNode *lastFragment;
     
     for (TFHppleElement *node in tree) {
-        BUCPostFragment *fragment;
+        BUCRenderNode *fragment;
         NSString *tagName = node.tagName;
         
         if ([tagName isEqualToString:@"br"]) {
@@ -70,42 +104,60 @@
             
         } else if ([node isTextNode] ||
                    [tagName isEqualToString:@"span"] ||
-                   [tagName isEqualToString:@"a"] ||
                    [tagName isEqualToString:@"font"] ||
                    [tagName isEqualToString:@"b"] ||
                    [tagName isEqualToString:@"i"] ||
                    [tagName isEqualToString:@"u"]) {
             
+            NSMutableAttributedString *richText = [self richTextFromTree:node];
+            
+            if (!richText) {
+                continue;
+            }
+            
             if (lastFragment.isRichText) {
-                [lastFragment.richText appendAttributedString:[self richTextFromTree:node]];
+                [lastFragment.richText appendAttributedString:richText];
                 continue;
             } else {
-                fragment = [[BUCPostFragment alloc] init];
-                fragment.isRichText = YES;
-                fragment.richText = [[NSMutableAttributedString alloc] initWithString:@""];
-                [fragment.richText appendAttributedString:[self richTextFromTree:node]];
+                fragment = [[BUCRenderNode alloc] initWithRichText:richText];
+            }
+            
+        } else if ([tagName isEqualToString:@"a"]) {
+            
+            NSMutableAttributedString *richText = [self richTextFromTree:node];
+            if (!richText) {
+                continue;
+            }
+            
+            BUCLinkAttribute *linkAttribute = [richText attribute:BUCLinkAttributeName atIndex:0 effectiveRange:NULL];
+            if (lastFragment.isRichText) {
+                [lastFragment.richText appendAttributedString:richText];
+                linkAttribute.range = NSMakeRange(lastFragment.richText.length, richText.length);
+                continue;
+            } else {
+                fragment = [[BUCRenderNode alloc] initWithRichText:richText];
+                linkAttribute.range = NSMakeRange(0, richText.length);
             }
             
         } else if ([tagName isEqualToString:@"img"]) {
-            BUCImage *image = [self imageFromImageNode:node];
+            BUCImageAttachment *image = [self imageFromImageNode:node];
+            
+            if (!image) {
+                continue;
+            }
+            
             NSTextAttachment *attachment = [[NSTextAttachment alloc] init];
-            UIImage *foo = image.image;
-            attachment.bounds = CGRectMake(2.0f, 2.0f, foo.size.width, foo.size.height);
-            attachment.bounds = (CGRect){(CGPoint){0,0}, image.image.size};
-            attachment.image = image.image;
-            NSAttributedString *richText = [NSAttributedString attributedStringWithAttachment:attachment];
+            attachment.bounds = image.bounds;
+            NSMutableAttributedString *richText = [[NSMutableAttributedString alloc] initWithAttributedString:[NSAttributedString  attributedStringWithAttachment:attachment]];
             if (lastFragment.isRichText) {
                 image.glyphIndex = lastFragment.richText.length;
                 [lastFragment.richText appendAttributedString:richText];
-                [lastFragment addImage:image];
+                [lastFragment addAttachment:image];
                 continue;
             } else {                
-                fragment = [[BUCPostFragment alloc] init];
-                fragment.isRichText = YES;
-                fragment.richText = [[NSMutableAttributedString alloc] initWithString:@""];
-                [fragment.richText appendAttributedString:richText];
+                fragment = [[BUCRenderNode alloc] initWithRichText:richText];
                 image.glyphIndex = 0;
-                [fragment addImage:image];
+                [fragment addAttachment:image];
             }
             
         } else if ([tagName isEqualToString:@"center"]) {
@@ -131,15 +183,14 @@
 
 
 - (NSMutableAttributedString *)richTextFromTree:(TFHppleElement *)tree {
-    NSMutableAttributedString *output = [[NSMutableAttributedString alloc] initWithString:@""];
+    NSMutableAttributedString *output;
     NSDictionary *attributes;
     NSString *tagName = tree.tagName;
     
     if ([tree isTextNode] == YES) {
-        [output appendAttributedString:[self richTextFromText:tree]];
-        return output;
+        return [self richTextFromText:tree parent:nil];
     } else if ([tagName isEqualToString:@"a"]) {
-        attributes = [self attributesFromA:tree];
+        attributes = [self attributeFromA:tree];
     } else if ([tagName isEqualToString:@"font"]) {
         attributes = [self attributesFromFont:tree];
     } else if ([tagName isEqualToString:@"b"]) {
@@ -149,8 +200,7 @@
     } else if ([tagName isEqualToString:@"u"]) {
         attributes = @{NSUnderlineStyleAttributeName:@1};
     } else if ([tagName isEqualToString:@"span"]) {
-        [output appendAttributedString:[self richTextFromSpan:tree]];
-        return output;
+        return [self richTextFromSpan:tree parent:nil];
     } else {
         NSLog(@"unknown tag type:%@", tagName);
     }
@@ -171,9 +221,183 @@
 }
 
 
+- (BUCRenderNode *)rootRenderNode:(TFHppleElement *)bodyElement {
+    if (!bodyElement) {
+        return nil;
+    }
+    
+    BUCRenderNode *body = [[BUCRenderNode alloc] init];
+    body.attributes = [self attributesForFontStyle:UIFontTextStyleBody];
+    
+    for (TFHppleElement *child in body.children) {
+        if ([child.tagName isEqualToString:@"br"]) {
+            continue;
+        } else {
+            [body addChildNode:[self renderNode:child parent:body]];
+        }
+    }
+//    if ([body isTextNode] == YES) {
+//        renderNode = [self textNode:body];
+//    } else if ([tagName isEqualToString:@"img"]) {
+//        renderNode = [self imageNode:body];
+//    } else if ([tagName isEqualToString:@"a"]) {
+//        renderNode = [self linkNode:body parent:parent];
+//    } else if ([tagName isEqualToString:@"font"]) {
+//        attributes = [self attributesFromFont:body];
+//    } else if ([tagName isEqualToString:@"b"]) {
+//        attributes = [self attributesForFontStyle:UIFontTextStyleBody withTrait:UIFontDescriptorTraitBold];
+//    } else if ([tagName isEqualToString:@"i"]) {
+//        attributes = [self attributesForFontStyle:UIFontTextStyleBody withTrait:UIFontDescriptorTraitItalic];
+//    } else if ([tagName isEqualToString:@"u"]) {
+//        attributes = @{NSUnderlineStyleAttributeName:@1};
+//    } else if ([tagName isEqualToString:@"span"]) {
+//        richText = [self richTextFromSpan:body parent:parent];
+//    } else if ([tagName isEqualToString:@"center"]) {
+//        
+//    } else if ([tagName isEqualToString:@"blockquote"]) {
+//        
+//    } else if ([tagName isEqualToString:@"ol"] || [tagName isEqualToString:@"url"]) {
+//        
+//    } else {
+//        NSLog(@"unknown inline element type:%@", tagName);
+//    }
+    
+    return body;
+}
+
+
+- (BUCRenderNode *)renderNode:(TFHppleElement *)htmlElement parent:(BUCRenderNode *)parent {
+    
+    return nil;
+}
+
+
+- (BUCRenderNode *)textNode:(TFHppleElement *)htmlElement {
+    // strike and video support are needed
+    NSString *content = htmlElement.content;
+    if (content && content.length > 0) {
+        return [[BUCRenderNode alloc] initWithString:content];
+    } else {
+        return nil;
+    }
+}
+
+
+- (BUCRenderNode *)imageNode:(TFHppleElement *)htmlElement {
+    NSString *src = [htmlElement objectForKey:@"src"];
+    if (!src || src.length == 0) {
+        return nil;
+    }
+    
+    BUCImageAttachment *attachment = [[BUCImageAttachment alloc] init];
+    attachment.glyphIndex = 0;
+    NSRegularExpression *regex = [self regexFromPattern:@"^\\.\\./images/.+$"];
+    
+    if ([self matchString:src withRegex:regex]) {
+        NSString *resourcePath = [[NSBundle mainBundle] resourcePath];
+        NSString *path = [NSString stringWithFormat:@"%@/%@", resourcePath, [src substringFromIndex:3]];
+        UIImage *image = [UIImage animatedImageWithAnimatedGIFData:[NSData dataWithContentsOfFile:path]];
+        attachment.image = image;
+        attachment.bounds = CGRectMake(0, 0, image.size.width, image.size.height);
+    } else {
+        attachment.url = [NSURL URLWithString:src];
+        attachment.bounds = CGRectMake(0, 0, BUCImageThumbnailWidth, BUCImageThumbnailHeight);
+    }
+    
+    return [[BUCRenderNode alloc] initWithAttachment:attachment];
+}
+
+
+- (BUCRenderNode *)linkNode:(TFHppleElement *)htmlElement parent:(BUCRenderNode *)parent {
+    BUCRenderNode *node = [[BUCRenderNode alloc] init];
+    node.attributes = [self linkAttribute:htmlElement];
+    
+    for (TFHppleElement *child in htmlElement.children) {
+        BUCRenderNode *childNode = [self rootRenderNode:child parent:node];
+        
+        if (node.lastChild) {
+            
+            if (!node.lastChild.isBlock && !childNode.isBlock) {
+
+                if (childNode.attachmentList) {
+                    
+                }
+                [node.lastChild.richText appendAttributedString:childNode.richText];
+            }
+            
+        } else {
+            
+        }
+    }
+    
+    return node;
+}
+
+
+- (NSDictionary *)linkAttribute:(TFHppleElement *)htmlElement {
+    NSString *href = [htmlElement objectForKey:@"href"];
+    if (!href) {
+        return nil;
+    }
+    
+    NSRegularExpression *usernameRegex = [self regexFromPattern:@"^/profile-username-.+\\.html$"];
+    NSRegularExpression *mailRegex = [self regexFromPattern:@"^mailto:.+$"];
+    NSRegularExpression *buRegex  = [self regexFromPattern:@"^(http://)?(((www)|(out)|(us))\\.)?bitunion\\.org(/.*)?$"];
+    NSRegularExpression *threadRegex = [self regexFromPattern:@"^/thread-([1-9][0-9]+)-[1-9]-[1-9].html$"];
+    NSRegularExpression *forumRegex = [self regexFromPattern:@"^/forum-([1-9]{1,3})-[1-9].html$"];
+    NSString *buDomanName = @"bitunion.org";
+    
+    BUCLinkAttribute *linkAttribute = [[BUCLinkAttribute alloc] init];
+    UIColor *linkColor;
+    
+    if ([self matchString:href withRegex:usernameRegex]) {
+        linkAttribute.linkType = BUCUserLink;
+        linkAttribute.linkUrl = htmlElement.firstChild.content;
+        linkColor = [self parseColorAttr:@"summon"];
+    } else if ([self matchString:href withRegex:buRegex]) {
+        linkColor = [self parseColorAttr:@"url"];
+        NSRange hostRange = [href rangeOfString:buDomanName];
+        NSUInteger pathIndex = hostRange.location + hostRange.length;
+        NSString *path;
+        if (pathIndex < href.length) {
+            path = [href substringFromIndex:pathIndex];
+        }
+        
+        if (!path || [path isEqualToString:@"/"] || [path isEqualToString:@"/home.php"]) {
+            linkAttribute.linkType = BUCHomeLink;
+        } else if ([path isEqualToString:@"/index.php"]) {
+            linkAttribute.linkType = BUCForumListLink;
+        } else if ([self matchString:path withRegex:threadRegex]) {
+            NSArray *matches = [threadRegex matchesInString:path options:0 range:NSMakeRange(0, path.length)];
+            NSTextCheckingResult *match = [matches lastObject];
+            linkAttribute.linkType = BUCPostLink;
+            linkAttribute.linkUrl = [path substringWithRange:match.range];
+        } else if ([self matchString:path withRegex:forumRegex]) {
+            NSArray *matches = [forumRegex matchesInString:path options:0 range:NSMakeRange(0, path.length)];
+            NSTextCheckingResult *match = [matches lastObject];
+            linkAttribute.linkType = BUCForumLink;
+            linkAttribute.linkUrl = [path substringWithRange:match.range];
+        } else {
+            linkAttribute.linkType = BUCUrlLink;
+            linkAttribute.linkUrl = href;
+        }
+    } else if ([self matchString:href withRegex:mailRegex]) {
+        linkAttribute.linkType = BUCMailLink;
+        linkAttribute.linkUrl = [href substringFromIndex:7];
+        linkColor = [self parseColorAttr:@"mail"];
+    } else {
+        linkAttribute.linkType = BUCUrlLink;
+        linkAttribute.linkUrl = href;
+        linkColor = [self parseColorAttr:@"url"];
+    }
+    
+    return @{BUCLinkAttributeName:linkAttribute, NSForegroundColorAttributeName:linkColor};
+}
+
+
 #pragma mark - block element
-- (BUCPostFragment *)fragmentFromP:(TFHppleElement *)p {
-    BUCPostFragment *fragment = [[BUCPostFragment alloc] init];
+- (BUCRenderNode *)fragmentFromP:(TFHppleElement *)p {
+    BUCRenderNode *fragment = [[BUCRenderNode alloc] init];
     fragment.isRichText = YES;
     fragment.richText = [[NSMutableAttributedString alloc] initWithString:@""];
     
@@ -181,16 +405,19 @@
         if ([node.tagName isEqualToString:@"br"]) {
             continue;
         } else if ([node.tagName isEqualToString:@"img"]) {
-            BUCImage *image = [self imageFromImageNode:node];
+            BUCImageAttachment *image = [self imageFromImageNode:node];
             NSTextAttachment *attachment = [[NSTextAttachment alloc] init];
-//            attachment.bounds = image.bounds;
-            attachment.image = image.image;
+            attachment.bounds = image.bounds;
             NSAttributedString *richText = [NSAttributedString attributedStringWithAttachment:attachment];
             image.glyphIndex = fragment.richText.length;
             [fragment.richText appendAttributedString:richText];
-            [fragment addImage:image];
+            [fragment addAttachment:image];
         } else {
-            [fragment.richText appendAttributedString:[self richTextFromTree:node]];
+            NSAttributedString *richText = [self richTextFromTree:node];
+            if (!richText) {
+                continue;
+            }
+            [fragment.richText appendAttributedString:richText];
         }
     }
     
@@ -198,14 +425,14 @@
 }
 
 
-- (BUCPostFragment *)fragmentFromCenter:(TFHppleElement *)center {
+- (BUCRenderNode *)fragmentFromCenter:(TFHppleElement *)center {
     NSString *query = @"//center/table/tr/td";
     NSArray *nodes = [center searchWithXPathQuery:query];
     NSString *typeString = [[[nodes firstObject] firstChild] content];
     query = @"//table/tr/td/table/tr/td";
     nodes = [center searchWithXPathQuery:query];
     TFHppleElement *content = [nodes firstObject];
-    BUCPostFragment *fragment = [[BUCPostFragment alloc] init];
+    BUCRenderNode *fragment = [[BUCRenderNode alloc] init];
 
     if ([typeString rangeOfString:@"引用"].length != 0) {
         fragment.children = [self fragmentsFromTree:content.children];
@@ -221,11 +448,11 @@
 }
 
 
-- (BUCPostFragment *)fragmentFromCode:(TFHppleElement *)codeBlock {
+- (BUCRenderNode *)fragmentFromCode:(TFHppleElement *)codeBlock {
     NSString *query = @"//div/ol/li";
     NSArray *codeLines = [codeBlock searchWithXPathQuery:query];
     
-    BUCPostFragment *fragment = [[BUCPostFragment alloc] init];
+    BUCRenderNode *fragment = [[BUCRenderNode alloc] init];
     NSDictionary *attrs = [self attributesForFontStyle:UIFontTextStyleBody];
     NSMutableAttributedString *richText = [[NSMutableAttributedString alloc] initWithString:@""];
     
@@ -235,7 +462,7 @@
     }
     
     fragment.isBlock = YES;
-    BUCPostFragment *child = [[BUCPostFragment alloc] init];
+    BUCRenderNode *child = [[BUCRenderNode alloc] init];
     child.richText = richText;
     child.isRichText = YES;
     fragment.children = [NSArray arrayWithObjects:child, nil];
@@ -244,10 +471,11 @@
 }
 
 
-- (BUCPostFragment *)fragmentFromBox:(TFHppleElement *)box {
+- (BUCRenderNode *)fragmentFromBox:(TFHppleElement *)box {
     NSString *query = @"//blockquote/div";
     NSArray *nodes = [box searchWithXPathQuery:query];
-    BUCPostFragment *fragment = [[BUCPostFragment alloc] init];
+    // background color support needed
+    BUCRenderNode *fragment = [[BUCRenderNode alloc] init];
     fragment.isBlock = YES;
     fragment.children = [self fragmentsFromTree:[[nodes lastObject] children]];
     
@@ -255,7 +483,7 @@
 }
 
 
-- (BUCPostFragment *)fragmentFromList:(TFHppleElement *)list {
+- (BUCRenderNode *)fragmentFromList:(TFHppleElement *)list {
     NSString *query = @"//li";
     NSArray *nodes = [list searchWithXPathQuery:query];
     NSMutableAttributedString *richText = [[NSMutableAttributedString alloc] initWithString:@""];
@@ -271,7 +499,7 @@
         [richText appendAttributedString:[[NSAttributedString alloc] initWithString:buffer attributes:attrs]];
     }
     
-    BUCPostFragment *fragment = [[BUCPostFragment alloc] init];
+    BUCRenderNode *fragment = [[BUCRenderNode alloc] init];
     fragment.isBlock = YES;
     fragment.richText = richText;
     
@@ -280,7 +508,7 @@
 
 
 #pragma mark - inline element
-- (NSMutableAttributedString *)richTextFromText:(TFHppleElement *)text {
+- (NSMutableAttributedString *)richTextFromText:(TFHppleElement *)text parent:(BUCRenderNode *)parent {
     // strike and video tag needed to be suppported
     NSMutableAttributedString *output = [[NSMutableAttributedString alloc] initWithString:[self replaceHtmlEntities:text.content] attributes:[self attributesForFontStyle:UIFontTextStyleBody]];
     
@@ -288,46 +516,41 @@
 }
 
 
-- (BUCImage *)imageFromImageNode:(TFHppleElement *)imageNode {
-    NSError *error;
-    NSRegularExpression *regex = [NSRegularExpression regularExpressionWithPattern:@"^\\.\\./images/.+$" options:NSRegularExpressionCaseInsensitive error:&error];
+- (BUCImageAttachment *)imageFromImageNode:(TFHppleElement *)imageNode {
+    NSRegularExpression *regex = [self regexFromPattern:@"^\\.\\./images/.+$"];
     NSString *imageSrc = [imageNode objectForKey:@"src"];
-    NSUInteger numberOfMatches = [regex numberOfMatchesInString:imageSrc options:0 range:(NSRange){0, imageSrc.length}];
-    BUCImage *image = [[BUCImage alloc] init];
+    NSURL *url = [NSURL URLWithString:imageSrc];
+    BUCImageAttachment *image = [[BUCImageAttachment alloc] init];
 
-    if (numberOfMatches == 1) {
+    if ([self matchString:imageSrc withRegex:regex]) {
         NSString *resourcePath = [[NSBundle mainBundle] resourcePath];
         NSData *imageData = [NSData dataWithContentsOfFile:[NSString stringWithFormat:@"%@/%@", resourcePath, [imageSrc substringFromIndex:3]]];
         image.image = [UIImage animatedImageWithAnimatedGIFData:imageData];
         image.bounds = (CGRect){(CGPoint){0, 0}, image.image.size};
     } else {
         image.url = [NSURL URLWithString:imageSrc];
-        image.bounds = CGRectMake(0, 0, 150.0f, 200.0f);
-        if ([image.url.pathExtension isEqualToString:@"gif"]) {
-            image.isGif = YES;
-        } else {
-            image.isGif = NO;
-        }
+        image.bounds = CGRectMake(0, 0, BUCImageThumbnailWidth, BUCImageThumbnailHeight);
     }
     
     return image;
 }
 
 
-- (NSAttributedString *)richTextFromSpan:(TFHppleElement *)span {
-    if ([[span objectForKey:@"id"] isEqualToString:@"id_open_api_label"]) {
-        NSString *url = @"http://out.bitunion.org/thread-10471436-1-1.html";
-        NSDictionary *attributes = [self attributesForFontStyle:UIFontTextStyleBody];
-        NSMutableAttributedString *output = [[NSMutableAttributedString alloc] initWithString:@"\n\n..::" attributes:attributes];
-        NSMutableAttributedString *link = [[NSMutableAttributedString alloc] initWithString:@"From BIT-Union Open API Project" attributes:attributes];
-        [link addAttribute:NSLinkAttributeName value:url range:NSMakeRange(0, link.length)];
-        [output appendAttributedString:link];
-        [output appendAttributedString:[[NSAttributedString alloc] initWithString:@"::.." attributes:attributes]];
-        return output;
-    } else {
-        NSLog(@"unknown tag:%@", span.raw);
-        return [[NSAttributedString alloc] initWithString:@""];
+- (NSMutableAttributedString *)richTextFromSpan:(TFHppleElement *)span parent:(BUCRenderNode *)parent {
+    if (![[span objectForKey:@"id"] isEqualToString:@"id_open_api_label"]) {
+        NSLog(@"unknown span tag:%@", span.raw);
+        return nil;
     }
+    
+    NSMutableAttributedString *output = [[NSMutableAttributedString alloc] initWithString:@"北理FTP联盟API"];
+    [output addAttribute:NSForegroundColorAttributeName value:[self parseColorAttr:@"buUrl"] range:NSMakeRange(0, output.length)];
+
+    BUCLinkAttribute *linkAttribute = [[BUCLinkAttribute alloc] init];
+    linkAttribute.linkType = BUCPostLink;
+    linkAttribute.linkUrl = @"10471436"; // 联盟API帖子的tid
+    [output addAttribute:BUCLinkAttributeName value:linkAttribute range:NSMakeRange(0, output.length)];
+
+    return output;
 }
 
 
@@ -345,32 +568,34 @@
 }
 
 
-- (NSDictionary *)attributesFromA:(TFHppleElement *)a {
-    NSString *linkAttributeKey;
-    NSString *linkAttributeValue;
-    
-    NSRegularExpression *summonRegex = [self regexFromPattern:@"^/profile-username-.+\\.html$"];
-    NSRegularExpression *mailRegex = [self regexFromPattern:@"^mailto:.+$"];
+- (NSDictionary *)attributeFromA:(TFHppleElement *)a {
     NSString *href = [a objectForKey:@"href"];
-    
     if (!href) {
         return nil;
     }
     
+    NSRegularExpression *summonRegex = [self regexFromPattern:@"^/profile-username-.+\\.html$"];
+    NSRegularExpression *mailRegex = [self regexFromPattern:@"^mailto:.+$"];
+
+    
+    BUCLinkAttribute *linkAttribute = [[BUCLinkAttribute alloc] init];
+    UIColor *linkColor;
+    
     if ([self matchString:href withRegex:summonRegex]) {
-        linkAttributeKey = @"BUCSummonLink";
-        linkAttributeValue = a.firstChild.content;
+        linkAttribute.linkType = BUCUserLink;
+        linkAttribute.linkUrl = a.firstChild.content;
+        linkColor = [self parseColorAttr:@"summon"];
     } else if ([self matchString:href withRegex:mailRegex]) {
-        linkAttributeKey = @"BUCMailLink";
-        linkAttributeValue = [href substringFromIndex:7];
+        linkAttribute.linkType = BUCMailLink;
+        linkAttribute.linkUrl = [href substringFromIndex:7];
+        linkColor = [self parseColorAttr:@"mail"];
     } else {
-        linkAttributeKey = NSLinkAttributeName;
-        linkAttributeValue = href;
+        linkAttribute.linkType = BUCUrlLink;
+        linkAttribute.linkUrl = href;
+        linkColor = [self parseColorAttr:@"url"];
     }
     
-    NSDictionary *linkAttribute = @{linkAttributeKey:linkAttributeValue};
-    
-    return linkAttribute;
+    return @{BUCLinkAttributeName:linkAttribute, NSForegroundColorAttributeName:linkColor};
 }
 
 
@@ -405,7 +630,10 @@
                        @"navy":       [UIColor colorWithRed:0 green:0 blue:128.0f/255.0f alpha:1.0f],
                        @"maroon":     [UIColor colorWithRed:128.0f/255.0f green:0 blue:0 alpha:1.0f],
                        @"limegreen":  [UIColor colorWithRed:50.0f/255.0f green:205.0f/255.0f blue:50.0f/255.0f alpha:1.0f],
-                       @"#cc3333":    [UIColor colorWithRed:204.0f/255.0f green:51.0f/255.0f blue:51.0f/255.0f alpha:1.0f]
+                       @"#cc3333":    [UIColor colorWithRed:204.0f/255.0f green:51.0f/255.0f blue:51.0f/255.0f alpha:1.0f],
+                       @"summon":     [UIColor colorWithRed:0 green:102.0f/255.0f blue:153.0f/255.0f alpha:1.0f],
+                       @"mail":       [UIColor colorWithRed:0 green:128.0f/255.0f blue:1.0f alpha:1.0f],
+                       @"url":        [UIColor colorWithRed:0 green:122.0f/255.0f blue:1.0f alpha:1.0f]
                        };
     });
     
@@ -492,9 +720,7 @@
 
 - (NSRegularExpression *)regexFromPattern:(NSString *)pattern
 {
-    NSError *error;
-    
-    return [NSRegularExpression regularExpressionWithPattern:pattern options:NSRegularExpressionCaseInsensitive error:&error];
+    return [NSRegularExpression regularExpressionWithPattern:pattern options:NSRegularExpressionCaseInsensitive error:NULL];
 }
 
 

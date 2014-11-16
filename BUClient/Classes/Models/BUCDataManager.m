@@ -1,15 +1,20 @@
 #import "BUCDataManager.h"
 #import "BUCNetworkEngine.h"
 #import "BUCAuthManager.h"
-#import "BUCPost.h"
 #import "BUCHTMLScraper.h"
 #import "UIImage+animatedGIF.h"
+#import "UIImage+SimpleResize.h"
+#import "BUCModels.h"
 
 
 @interface BUCDataManager ()
 
 
 @property (nonatomic) BUCHTMLScraper *htmlScraper;
+
+@property (nonatomic) NSURLCache *imageCache;
+
+@property (nonatomic) NSMutableSet *cachedImageUrlSet;
 
 
 @end
@@ -29,12 +34,13 @@
     return sharedInstance;
 }
 
-- (id)init
+- (instancetype)init
 {
     self = [super init];
     
     if (self) {
         _htmlScraper = [[BUCHTMLScraper alloc] init];
+        _imageCache = [[NSURLCache alloc] initWithMemoryCapacity:16384 diskCapacity:268435456 diskPath:@"/imageCache"];
     }
     
     return self;
@@ -110,7 +116,7 @@
             
             post.user = [[NSAttributedString alloc] initWithString:[weakSelf urldecode:[rawDic objectForKey:@"author"]]
                                                         attributes:captionAttrs];
-            post.avatar = [weakSelf.htmlScraper avatarURLFromHTML:[weakSelf urldecode:[rawDic objectForKey:@"avatar"]]];
+            post.avatar = [weakSelf.htmlScraper avatarUrlFromHtml:[weakSelf urldecode:[rawDic objectForKey:@"avatar"]]];
 
             post.uid = [rawDic objectForKey:@"authorid"];
             post.title = [[NSAttributedString alloc] initWithString:[weakSelf urldecode:[rawDic objectForKey:@"subject"]] attributes:headlineAttrs];
@@ -127,26 +133,50 @@
 }
 
 
-- (void)getImageFromUrl:(NSString *)url onSuccess:(ImageBlock)imageBlock {
-    NSURL *dataUrl = [NSURL URLWithString:url];
-    [[BUCNetworkEngine sharedInstance]
-     fetchDataFromUrl:dataUrl
-     
-     onResult:^(NSData *data) {
-         if ([[dataUrl pathExtension] isEqualToString:@"gif"]) {
-             UIImage *image = [UIImage animatedImageWithAnimatedGIFData:data];
-             if (image) {
-                 imageBlock(image);
-             }
-         } else {
-             UIImage *image = [UIImage imageWithData:data];
-             if (image) {
-                 imageBlock(image);
-             }
-         }
-     }
-     
-     onError:nil];
+- (void)getImageFromUrl:(NSURL *)url onSuccess:(ImageBlock)imageBlock {
+    NSURLRequest *request = [NSURLRequest requestWithURL:url];
+    NSURLCache *imageCache = self.imageCache;
+    BUCDataManager * __weak weakSelf = self;
+    
+    void (^methodBlock)(NSData *, NSURLResponse *) = ^(NSData *data, NSURLResponse *response) {
+        NSCachedURLResponse *cachedImageResponse = [[NSCachedURLResponse alloc] initWithResponse:response data:data];
+        [imageCache storeCachedResponse:cachedImageResponse forRequest:request];
+
+        UIImage *image = [weakSelf imageFromData:data url:url];
+        
+        if (image) {
+            imageBlock(image);
+        }
+    };
+    
+    NSCachedURLResponse *cachedResponse = [self.imageCache cachedResponseForRequest:request];
+    if (cachedResponse) {
+        NSData *imageData = cachedResponse.data;
+        UIImage *image = [self imageFromData:imageData url:url];
+        if (image) {
+            imageBlock(image);
+        }
+    } else {
+        [[BUCNetworkEngine sharedInstance]
+         fetchImageFromUrl:request
+         
+         onResult:methodBlock
+         
+         onError:nil];
+    }
+}
+
+
+- (UIImage *)imageFromData:(NSData *)data url:(NSURL *)url {
+    UIImage *image;
+    
+    if ([[url pathExtension] isEqualToString:@"gif"]) {
+        image = [UIImage animatedImageWithAnimatedGIFData:data];
+    } else {
+        image = [UIImage imageWithData:data];
+    }
+    
+    return image;
 }
 
 

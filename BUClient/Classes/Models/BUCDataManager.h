@@ -20,6 +20,6 @@ typedef void(^ImageBlock) (UIImage *);
       onSuccess:(ArrayBlock)arrayBlock
         onError:(ErrorBlock)errorBlock;
 
-- (void)getImageFromUrl:(NSString *)url onSuccess:(ImageBlock)imageBlock;
+- (void)getImageFromUrl:(NSURL *)url onSuccess:(ImageBlock)imageBlock;
 
 @end

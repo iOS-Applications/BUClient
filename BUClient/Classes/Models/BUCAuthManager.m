@@ -52,7 +52,7 @@ static NSString *kKeychainItemIdentifer = @"org.bitunion.buc.%@.KeychainUI";
 }
 
 
-- (id)init {
+- (instancetype)init {
     self = [super init];
     
     if (self) {
@@ -178,6 +178,7 @@ static NSString *kKeychainItemIdentifer = @"org.bitunion.buc.%@.KeychainUI";
     
     if (keychainErr == noErr) {
         keychainData = [self secItemFormatToDictionary:outDictionary];
+        CFRelease(outDictionaryCF);
         return [keychainData objectForKey:(__bridge id)kSecValueData];
     } else if (keychainErr == errSecItemNotFound) {
         [self resetKeychainItem];
@@ -185,6 +186,7 @@ static NSString *kKeychainItemIdentifer = @"org.bitunion.buc.%@.KeychainUI";
         NSAssert(NO, @"Serious error.\n");
     }
     
+    CFRelease(outDictionaryCF);
     return nil;
 }
 
@@ -257,6 +259,8 @@ static NSString *kKeychainItemIdentifer = @"org.bitunion.buc.%@.KeychainUI";
         NSAssert(NO, @"Serious error.\n");
     }
     
+    CFRelease(passwordDataCF);
+    
     return returnDictionary;
 }
 
@@ -280,6 +284,10 @@ static NSString *kKeychainItemIdentifer = @"org.bitunion.buc.%@.KeychainUI";
     } else {
         NSAssert(SecItemAdd((__bridge CFDictionaryRef)[self dictionaryToSecItemFormat:self.keychainData], NULL) == noErr,
                  @"Couldn't add the Keychain Item." );
+    }
+    
+    if (attributesCF) {
+        CFRelease(attributesCF);
     }
 }
 

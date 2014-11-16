@@ -5,7 +5,6 @@
 
 
 @property (nonatomic) NSURLSession *defaultSession;
-@property (nonatomic) NSURLSessionConfiguration *defaultConfigObject;
 
 
 @end
@@ -25,18 +24,18 @@
 
 
 #pragma mark - init
-- (id)init {
+- (instancetype)init {
     self = [super init];
     
     if (self) {
-        _defaultConfigObject = [NSURLSessionConfiguration defaultSessionConfiguration];
+        NSURLSessionConfiguration *config = [NSURLSessionConfiguration defaultSessionConfiguration];
         NSString *cachePath = @"/MyCacheDirectory";
 
         NSURLCache *myCache = [[NSURLCache alloc] initWithMemoryCapacity: 16384 diskCapacity: 268435456 diskPath: cachePath];
-        _defaultConfigObject.URLCache = myCache;
-        _defaultConfigObject.requestCachePolicy = NSURLRequestUseProtocolCachePolicy;
-        _defaultConfigObject.timeoutIntervalForResource = 30;
-        _defaultSession = [NSURLSession sessionWithConfiguration: _defaultConfigObject delegate: nil delegateQueue: [NSOperationQueue mainQueue]];
+        config.URLCache = myCache;
+        config.requestCachePolicy = NSURLRequestUseProtocolCachePolicy;
+        config.timeoutIntervalForResource = 30;
+        _defaultSession = [NSURLSession sessionWithConfiguration: config delegate: nil delegateQueue: [NSOperationQueue mainQueue]];
     }
     
     return self;
@@ -84,14 +83,13 @@
 }
 
 
-- (void)fetchDataFromUrl:(NSURL *)url onResult:(networkDataBlock)dataBlock onError:(networkErrorBlock)errorBlock {
-    NSURLRequest *request = [NSURLRequest requestWithURL:url];
+- (void)fetchImageFromUrl:(NSURLRequest *)request onResult:(networkImageBlock)imageBlock onError:(networkErrorBlock)errorBlock {
     void(^urlSessionBlock)(NSData *, NSURLResponse *, NSError *);
     urlSessionBlock = ^(NSData *data, NSURLResponse *response, NSError *error) {
         if (error || !data) {
             return;
         } else {
-            dataBlock(data);
+            imageBlock(data, response);
         }
     };
     

@@ -3,7 +3,7 @@
 
 typedef void(^networkResultBlock) (NSDictionary *);
 typedef void(^networkErrorBlock) (NSError *);
-typedef void(^networkDataBlock) (NSData *);
+typedef void(^networkImageBlock) (NSData *, NSURLResponse *);
 
 
 @interface BUCNetworkEngine : NSObject
@@ -16,7 +16,7 @@ typedef void(^networkDataBlock) (NSData *);
                 onResult:(networkResultBlock)resultBlock
                  onError:(networkErrorBlock)errorBlock;
 
-- (void)fetchDataFromUrl:(NSURL *)url onResult:(networkDataBlock)dataBlock onError:(networkErrorBlock)errorBlock;
+- (void)fetchImageFromUrl:(NSURLRequest *)request onResult:(networkImageBlock)imageBlock onError:(networkErrorBlock)errorBlock;
 
 
 @end

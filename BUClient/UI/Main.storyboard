@@ -135,6 +135,39 @@
             </objects>
             <point key="canvasLocation" x="3285" y="112"/>
         </scene>
+        <!--Image Controller-->
+        <scene sceneID="Kww-WG-IpO">
+            <objects>
+                <viewController storyboardIdentifier="BUCImageController" autoresizesArchivedViewToFullSize="NO" automaticallyAdjustsScrollViewInsets="NO" id="nDG-91-Iyh" customClass="BUCImageController" sceneMemberID="viewController">
+                    <scrollView key="view" autoresizesSubviews="NO" clearsContextBeforeDrawing="NO" contentMode="scaleToFill" showsHorizontalScrollIndicator="NO" bouncesZoom="NO" id="UPn-oD-mxG">
+                        <rect key="frame" x="0.0" y="0.0" width="320" height="568"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <imageView autoresizesSubviews="NO" clearsContextBeforeDrawing="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" id="QzZ-nD-Hpc">
+                                <rect key="frame" x="0.0" y="0.0" width="320" height="568"/>
+                                <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                <gestureRecognizers/>
+                                <connections>
+                                    <outletCollection property="gestureRecognizers" destination="acf-04-XSZ" appends="YES" id="Zlb-Ad-dBo"/>
+                                </connections>
+                            </imageView>
+                        </subviews>
+                        <color key="backgroundColor" red="0.0" green="0.50196081399917603" blue="1" alpha="1" colorSpace="calibratedRGB"/>
+                    </scrollView>
+                    <extendedEdge key="edgesForExtendedLayout"/>
+                    <connections>
+                        <outlet property="imageView" destination="QzZ-nD-Hpc" id="o0S-56-mxt"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="uNj-oe-loQ" userLabel="First Responder" sceneMemberID="firstResponder"/>
+                <tapGestureRecognizer id="acf-04-XSZ">
+                    <connections>
+                        <action selector="tapImage:" destination="nDG-91-Iyh" id="kRZ-T3-d20"/>
+                    </connections>
+                </tapGestureRecognizer>
+            </objects>
+            <point key="canvasLocation" x="3687" y="112"/>
+        </scene>
         <!--Navigation Controller-->
         <scene sceneID="egt-mt-pAH">
             <objects>
