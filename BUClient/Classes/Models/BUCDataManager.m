@@ -7,6 +7,11 @@
 #import "BUCModels.h"
 
 
+static NSString * const BUCNewListKey = @"newlist";
+static NSString * const BUCDetailListKey = @"postlist";
+static NSString * const BUCForumListKey = @"threadlist";
+
+
 @interface BUCDataManager ()
 
 
@@ -48,51 +53,14 @@
 
 #pragma mark - public methods
 - (void)getFrontListOnSuccess:(ArrayBlock)arrayBlock onError:(ErrorBlock)errorBlock {
-    BUCDataManager * __weak weakSelf = self;
-    
     NSMutableDictionary *json = [[NSMutableDictionary alloc] init];
     [json setObject:[BUCAuthManager sharedInstance].currentUser forKey:@"username"];
     
-    SuccessBlock successBlock = ^(NSDictionary *json) {
-        NSMutableArray *list = [[NSMutableArray alloc] init];
-        NSArray *rawArray = [json objectForKey:@"newlist"];
-        
-        NSDictionary *captionAttrs = @{NSFontAttributeName:[UIFont preferredFontForTextStyle:UIFontTextStyleCaption1]};
-        
-        for (NSDictionary *rawDic in rawArray) {
-            BUCPost *post = [[BUCPost alloc] init];
-            
-            post.pid = [rawDic objectForKey:@"tid"];
-            post.fid = [rawDic objectForKey:@"fid"];
-            post.fname = [[NSAttributedString alloc] initWithString:[weakSelf urldecode:[rawDic objectForKey:@"fname"]]
-                                                         attributes:captionAttrs];
-            
-            post.user = [[NSAttributedString alloc] initWithString:[weakSelf urldecode:[rawDic objectForKey:@"author"]]
-                                                        attributes:captionAttrs];
-            
-            post.title = [weakSelf.htmlScraper titleFromHTML:[weakSelf urldecode:[rawDic objectForKey:@"pname"]]];
-            
-            post.childCount = [rawDic objectForKey:@"tid_sum"];
-            
-            NSString *when = [weakSelf urldecode:[[rawDic objectForKey:@"lastreply"] objectForKey:@"when"]];
-            NSString *who = [weakSelf urldecode:[[rawDic objectForKey:@"lastreply"] objectForKey:@"who"]];
-            post.lastReply = [[BUCPost alloc] init];
-            post.lastReply.user = [[NSAttributedString alloc] initWithString:who attributes:captionAttrs];
-            post.lastReply.dateline = when;
-            
-            [list addObject:post];
-        }
-        
-        arrayBlock(list);
-    };
-    
-    [self loadListFromURL:@"home" json:json onSuccess:successBlock onError:errorBlock];
+    [self loadListFromUrl:@"home" json:json listKey:BUCNewListKey onSuccess:arrayBlock onError:errorBlock];
 }
 
 
 - (void)getPost:(NSString *)postID from:(NSString *)from to:(NSString *)to onSuccess:(ArrayBlock)arrayBlock onError:(ErrorBlock)errorBlock {
-    
-    BUCDataManager * __weak weakSelf = self;
     
     NSMutableDictionary *json = [[NSMutableDictionary alloc] init];
     [json setObject:@"post" forKey:@"action"];
@@ -101,35 +69,7 @@
     [json setObject:from forKey:@"from"];
     [json setObject:to forKey:@"to"];
     
-    SuccessBlock successBlock = ^(NSDictionary *json) {
-        NSMutableArray *list = [[NSMutableArray alloc] init];
-        NSArray *rawArray = [json objectForKey:@"postlist"];
-        
-        NSDictionary *captionAttrs = @{NSFontAttributeName:[UIFont preferredFontForTextStyle:UIFontTextStyleCaption1]};
-        NSDictionary *headlineAttrs = @{NSFontAttributeName:[UIFont preferredFontForTextStyle:UIFontTextStyleHeadline]};
-        
-        for (NSDictionary *rawDic in rawArray) {
-            BUCPost *post = [[BUCPost alloc] init];
-            
-            post.pid = [rawDic objectForKey:@"pid"];
-            post.fid = [rawDic objectForKey:@"fid"];
-            
-            post.user = [[NSAttributedString alloc] initWithString:[weakSelf urldecode:[rawDic objectForKey:@"author"]]
-                                                        attributes:captionAttrs];
-            post.avatar = [weakSelf.htmlScraper avatarUrlFromHtml:[weakSelf urldecode:[rawDic objectForKey:@"avatar"]]];
-
-            post.uid = [rawDic objectForKey:@"authorid"];
-            post.title = [[NSAttributedString alloc] initWithString:[weakSelf urldecode:[rawDic objectForKey:@"subject"]] attributes:headlineAttrs];
-            post.fragments = [weakSelf.htmlScraper fragmentsFromHTML:[weakSelf urldecode:[rawDic objectForKey:@"message"]]];
-            post.dateline = [rawDic objectForKey:@"dateline"];
-            
-            [list addObject:post];
-        }
-        
-        arrayBlock(list);
-    };
-    
-    [self loadListFromURL:@"post" json:json onSuccess:successBlock onError:errorBlock];
+    [self loadListFromUrl:@"post" json:json listKey:BUCDetailListKey onSuccess:arrayBlock onError:errorBlock];
 }
 
 
@@ -181,7 +121,11 @@
 
 
 #pragma mark - networking
-- (void)loadListFromURL:(NSString *)url json:(NSMutableDictionary *)json onSuccess:(SuccessBlock)successBlock onError:(ErrorBlock)errorBlock {
+- (void)loadListFromUrl:(NSString *)url
+                   json:(NSMutableDictionary *)json
+                listKey:(NSString *)listKey
+              onSuccess:(ArrayBlock)arrayBlock
+                onError:(ErrorBlock)errorBlock {
     
     BUCDataManager * __weak weakSelf = self;
     BUCAuthManager *authManager = [BUCAuthManager sharedInstance];
@@ -190,7 +134,7 @@
     if (!authManager.session) {
         [authManager
          updateSessionOnSuccess:^(void) {
-             [weakSelf loadListFromURL:url json:json onSuccess:successBlock onError:errorBlock];
+             [weakSelf loadListFromUrl:url json:json listKey:listKey onSuccess:arrayBlock onError:errorBlock];
          }
          
          onFail:^(NSError *error) {
@@ -199,6 +143,59 @@
         
         return;
     }
+    
+    
+    SuccessBlock successBlock = ^(NSDictionary *json) {
+        NSMutableArray *list = [[NSMutableArray alloc] init];
+        NSArray *rawArray = [json objectForKey:listKey];
+        
+        NSDictionary *metaAttribute = @{NSFontAttributeName:[UIFont preferredFontForTextStyle:UIFontTextStyleCaption1]};
+        NSDictionary *headlineAttribute = @{NSFontAttributeName:[UIFont preferredFontForTextStyle:UIFontTextStyleHeadline]};
+        
+        for (NSDictionary *rawDic in rawArray) {
+            BUCPost *post = [[BUCPost alloc] init];
+            
+            post.pid = [rawDic objectForKey:@"tid"];
+            post.fid = [rawDic objectForKey:@"fid"];
+            
+            NSString *fname = [weakSelf urldecode:[rawDic objectForKey:@"fname"]];
+            if (fname) {
+                post.fname = [[NSAttributedString alloc] initWithString:fname attributes:metaAttribute];
+            }
+            
+            post.user = [[NSAttributedString alloc] initWithString:[weakSelf urldecode:[rawDic objectForKey:@"author"]]
+                                                        attributes:metaAttribute];
+            post.uid = [rawDic objectForKey:@"authorid"];
+            
+            post.avatar = [weakSelf.htmlScraper avatarUrlFromHtml:[weakSelf urldecode:[rawDic objectForKey:@"avatar"]]];
+            
+            if ([listKey isEqualToString:BUCNewListKey]) {
+                post.title = [weakSelf.htmlScraper richTextFromHtml:[weakSelf urldecode:[rawDic objectForKey:@"pname"]]];
+            } else if ([listKey isEqualToString:BUCDetailListKey]) {
+                post.title = [[NSAttributedString alloc] initWithString:[weakSelf urldecode:[rawDic objectForKey:@"subject"]] attributes:headlineAttribute];
+            } else {
+                // thread list
+            }
+
+            post.content = [weakSelf.htmlScraper richTextFromHtml:[weakSelf urldecode:[rawDic objectForKey:@"message"]]];
+            post.dateline = [rawDic objectForKey:@"dateline"];
+            
+            post.childCount = [rawDic objectForKey:@"tid_sum"];
+            
+            NSString *when = [weakSelf urldecode:[[rawDic objectForKey:@"lastreply"] objectForKey:@"when"]];
+            NSString *who = [weakSelf urldecode:[[rawDic objectForKey:@"lastreply"] objectForKey:@"who"]];
+            if (when && who) {
+                post.lastReply = [[BUCPost alloc] init];
+                post.lastReply.user = [[NSAttributedString alloc] initWithString:who attributes:metaAttribute];
+                post.lastReply.dateline = when;
+            }
+            
+            [list addObject:post];
+        }
+        
+        arrayBlock(list);
+    };
+    
     
     [json setObject:authManager.session forKey:@"session"];
     
@@ -216,7 +213,7 @@
              
              [authManager
               updateSessionOnSuccess:^(void) {
-                  [weakSelf loadListFromURL:url json:json onSuccess:successBlock onError:errorBlock];
+                  [weakSelf loadListFromUrl:url json:json listKey:listKey onSuccess:arrayBlock onError:errorBlock];
               }
               
               onFail:^(NSError *error) {
@@ -233,6 +230,10 @@
 
 #pragma mark - utilies
 - (NSString *)urldecode:(NSString *)string {
+    if (!string) {
+        return nil;
+    }
+    
     return [[string stringByReplacingOccurrencesOfString:@"+" withString:@" "]
             stringByReplacingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
 }

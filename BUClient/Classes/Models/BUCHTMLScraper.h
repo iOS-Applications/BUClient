@@ -4,9 +4,7 @@
 @interface BUCHTMLScraper : NSObject
 
 
-- (NSArray *)fragmentsFromHTML:(NSString *)html;
-
-- (NSAttributedString *)titleFromHTML:(NSString *)html;
+- (NSAttributedString *)richTextFromHtml:(NSString *)html;
 
 - (NSURL *)avatarUrlFromHtml:(NSString *)html;
 

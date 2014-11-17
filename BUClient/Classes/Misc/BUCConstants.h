@@ -29,6 +29,7 @@ extern CGFloat const BUCImageThumbnailHeight;
 extern NSString * const BUCLinkAttributeName;
 extern NSString * const BUCTextBlockAttributeName;
 extern NSString * const BUCAttachmentListAttributeName;
+extern NSString * const BUCTextBlockListAttributeName;
 
 // link types
 typedef NS_OPTIONS(uint32_t, BUCLinkType) {
@@ -42,14 +43,6 @@ typedef NS_OPTIONS(uint32_t, BUCLinkType) {
     BUCUrlLink = 1 << 6
 };
 
-// render node type
-typedef NS_OPTIONS(uint32_t, BUCRenderNodeType) {
-    BUCRootNode = 1 << 0,
-    BUCRichTextNode = 1 << 1,
-    BUCAttachmentNode = 1 << 2,
-    BUCLinkNode = 1 << 3,
-    BUCBlockNode = 1 << 4,
-};
 
 #endif
 

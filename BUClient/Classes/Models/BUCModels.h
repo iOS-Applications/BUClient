@@ -4,43 +4,6 @@
 #ifndef BUClient_BUCModels_h
 #define BUClient_BUCModels_h
 
-@interface BUCImageAttachment : NSTextAttachment
-
-@property (nonatomic) NSUInteger glyphIndex;
-@property (nonatomic) NSURL *url;
-
-@end
-
-
-@interface BUCRenderNode : NSObject
-
-@property (nonatomic) NSTextStorage *textStorage;
-@property (nonatomic) NSMutableAttributedString *richText;
-@property (nonatomic) NSMutableArray *attachmentList;
-
-@property (nonatomic) NSDictionary *attributes;
-
-@property (nonatomic) NSMutableArray *children;
-@property (nonatomic) BUCRenderNode *lastChild;
-@property (nonatomic) BUCRenderNode *parent;
-
-@property (nonatomic) BOOL isRichText;
-@property (nonatomic) BOOL isBlock;
-
-@property (nonatomic) BUCRenderNodeType nodeType;
-
-
-- (instancetype)initWithRichText:(NSMutableAttributedString *)richText;
-- (instancetype)initWithString:(NSString *)string;
-- (instancetype)initWithAttachment:(BUCImageAttachment *)attachment;
-- (void)addAttachment:(BUCImageAttachment *)attachment;
-- (void)addChildNode:(BUCRenderNode *)child;
-
-
-@end
-
-
-
 @interface BUCPost : NSObject
 
 @property (nonatomic) BUCPost *parent;
@@ -56,7 +19,6 @@
 
 @property (nonatomic) NSAttributedString *title;
 @property (nonatomic) NSAttributedString *content;
-@property (nonatomic) NSArray *fragments; // contains array of content fragments
 @property (nonatomic) NSString *dateline;
 
 @property (nonatomic) NSString *childCount;
@@ -65,6 +27,14 @@
 
 @end
 
+
+@interface BUCImageAttachment : NSTextAttachment
+
+@property (nonatomic) NSUInteger glyphIndex;
+@property (nonatomic) NSURL *url;
+@property (nonatomic) UIImage *gif;
+
+@end
 
 
 @interface BUCLinkAttribute : NSObject
@@ -87,7 +57,7 @@
 @property (nonatomic) CGFloat borderWidth;
 @property (nonatomic) UIColor *borderColor;
 
-@property (nonatomic) BOOL hasParent;
+@property (nonatomic) NSRange range;
 
 @end
 

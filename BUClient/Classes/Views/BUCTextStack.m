@@ -31,10 +31,9 @@
                                   atIndex:(NSUInteger)characterIndex
                          writingDirection:(NSWritingDirection)baseWritingDirection
                             remainingRect:(CGRect *)remainingRect {
-    
     CGRect output = [super lineFragmentRectForProposedRect:proposedRect atIndex:characterIndex writingDirection:baseWritingDirection remainingRect:remainingRect];;
     NSUInteger length = self.layoutManager.textStorage.length;
-    
+    NSLog(@"shit happened");
     BUCTextBlockAttribute *blockAttribute;
     if (characterIndex < length) {
         blockAttribute = [self.layoutManager.textStorage attribute:BUCTextBlockAttributeName atIndex:characterIndex effectiveRange:NULL];
@@ -50,16 +49,17 @@
     CGFloat topMargin = 0;
     CGFloat topPadding = 0;
     
-    
     if (blockAttribute) {
         leftMargin = blockAttribute.leftMargin;
         leftPadding = blockAttribute.leftPadding;
         borderWidth = blockAttribute.borderWidth;
         
-        x = x + leftPadding + borderWidth + leftPadding;
+        x = x + leftMargin + borderWidth + leftPadding;
         width = width - (leftPadding + leftMargin) * 2;
         if (!self.isBlock) {
             self.isBlock = YES;
+            topMargin = blockAttribute.topMargin;
+            topPadding = blockAttribute.topPadding;
             y = y + topMargin + borderWidth + topPadding;
             self.blockAttribute = blockAttribute;
         }
@@ -72,6 +72,7 @@
         self.isBlock = NO;
     }
     
+    
     return CGRectMake(x, y, width, height);
 }
 
@@ -81,36 +82,29 @@
 
 @implementation BUCLayoutManager
 
-
-- (void)fillBackgroundRectArray:(const CGRect *)rectArray
-                          count:(NSUInteger)rectCount
-              forCharacterRange:(NSRange)charRange
-                          color:(UIColor *)color {
-    
-    BUCLinkAttribute *linkAttribute = [self.textStorage attribute:BUCLinkAttributeName atIndex:charRange.location effectiveRange:NULL];
-    
+- (void)drawBackgroundForGlyphRange:(NSRange)glyphsToShow atPoint:(CGPoint)origin {
+    BUCLinkAttribute *linkAttribute = [self.textStorage attribute:BUCLinkAttributeName atIndex:glyphsToShow.location effectiveRange:NULL];
     if (linkAttribute) {
-        for (NSUInteger i = 0; i < rectCount; i = i + 1) {
-            CGRect frame = rectArray[i];
-            frame = CGRectInset(frame, -2.0f, -2.0f);
-            UIBezierPath *path = [UIBezierPath bezierPathWithRoundedRect:frame cornerRadius:2.0f];
-            [path fill];
-        }
-
+        CGRect frame = [self boundingRectForGlyphRange:linkAttribute.range inTextContainer:[self.textContainers lastObject]];
+        frame = CGRectInset(frame, -2.0f, -2.0f);
+        UIBezierPath *path = [UIBezierPath bezierPathWithRoundedRect:frame cornerRadius:2.0f];
+        [[UIColor colorWithWhite:0.95f alpha:1.0f] setFill];
+        [path fill];
+        
         return;
     }
-    
-    BUCTextBlockAttribute *blockAttribute = [self.textStorage attribute:BUCTextBlockAttributeName atIndex:charRange.location effectiveRange:NULL];
-    
+
+    NSArray *blockList = [self.textStorage attribute:BUCTextBlockListAttributeName atIndex:0 effectiveRange:NULL];
     CGContextRef context = UIGraphicsGetCurrentContext();
-    CGContextSetLineWidth(context, blockAttribute.borderWidth);
-    [blockAttribute.borderColor setStroke];
+    CGContextSetLineWidth(context, 0.5f);
+    [[UIColor lightGrayColor] setStroke];
+    [[UIColor colorWithWhite:0.95f alpha:1.0f] setFill];
     
-    for (NSUInteger i = 0; i < rectCount; i = i + 1) {
-        CGRect frame = rectArray[i];
-        frame = CGRectInset(frame, -blockAttribute.leftPadding, -blockAttribute.topPadding);
+    for (BUCTextBlockAttribute *blockAttribute in blockList) {
+        CGRect frame = [self boundingRectForGlyphRange:blockAttribute.range inTextContainer:[self.textContainers lastObject]];
+        frame = CGRectInset(frame, -blockAttribute.leftPadding - blockAttribute.borderWidth, -blockAttribute.topPadding - blockAttribute.borderWidth);
         CGContextFillRect(context, frame);
-        frame = CGRectInset(frame, -blockAttribute.borderWidth, -blockAttribute.borderWidth);
+        frame = CGRectInset(frame, -0.5f, -0.5f);
         CGContextStrokeRect(context, frame);
     }
 }

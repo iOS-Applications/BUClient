@@ -20,12 +20,13 @@ NSString * const BUCUnwindToRootStoryboardID = @"BUCUnwindToRoot";
 
 // geometry constants
 CGFloat const BUCImageThumbnailWidth = 310.0f;
-CGFloat const BUCImageThumbnailHeight = 200.0f;
+CGFloat const BUCImageThumbnailHeight = 100.0f;
 
 
 // BUC rich text attributes
 NSString * const BUCLinkAttributeName = @"BUCLinkAttribute";
 NSString * const BUCTextBlockAttributeName = @"BUCTextBlockAttribute";
-
+NSString * const BUCAttachmentListAttributeName = @"BUCAttachmentListAttribute";
+NSString * const BUCTextBlockListAttributeName = @"BUCTextBlockListAttribute";
 
 

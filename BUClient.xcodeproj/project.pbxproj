@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		D803C6911A1782DB00D26604 /* BUCTextStack.m in Sources */ = {isa = PBXBuildFile; fileRef = D803C6901A1782DB00D26604 /* BUCTextStack.m */; };
+		D80A71891A19E08000A3AD6E /* BUCTextView.m in Sources */ = {isa = PBXBuildFile; fileRef = D80A71861A19DF1D00A3AD6E /* BUCTextView.m */; };
 		D8114CD4189012BC00F0E1A7 /* BUCAppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = D8114CAA189012BC00F0E1A7 /* BUCAppDelegate.m */; };
 		D8114CD6189012BC00F0E1A7 /* BUCPostListController.m in Sources */ = {isa = PBXBuildFile; fileRef = D8114CAF189012BC00F0E1A7 /* BUCPostListController.m */; };
 		D8114CD8189012BC00F0E1A7 /* BUCLoginController.m in Sources */ = {isa = PBXBuildFile; fileRef = D8114CB3189012BC00F0E1A7 /* BUCLoginController.m */; };
@@ -42,7 +43,6 @@
 		D8B792ED1A07A4950028D645 /* BUCConstants.m in Sources */ = {isa = PBXBuildFile; fileRef = D8B792EC1A07A4950028D645 /* BUCConstants.m */; };
 		D8C0BEC01A108D0300FBBE5A /* ImageIO.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D8C0BEBF1A108D0300FBBE5A /* ImageIO.framework */; };
 		D8C8ECC41A0C81EC00D7759F /* BUCHTMLScraper.m in Sources */ = {isa = PBXBuildFile; fileRef = D8C8ECC31A0C81EC00D7759F /* BUCHTMLScraper.m */; };
-		D8CA4DB71A15DFD80043DEAD /* BUCTextView.m in Sources */ = {isa = PBXBuildFile; fileRef = D8CA4DB61A15DFD80043DEAD /* BUCTextView.m */; };
 		D8CA4DBD1A16051E0043DEAD /* BUCModels.m in Sources */ = {isa = PBXBuildFile; fileRef = D8CA4DBC1A16051E0043DEAD /* BUCModels.m */; };
 		D8DDF7EB1A08C60000CEFBA9 /* BUCMenuController.m in Sources */ = {isa = PBXBuildFile; fileRef = D8DDF7EA1A08C60000CEFBA9 /* BUCMenuController.m */; };
 		D8E3A88919FB42940047531E /* BUCListItem.m in Sources */ = {isa = PBXBuildFile; fileRef = D8E3A88819FB42940047531E /* BUCListItem.m */; };
@@ -62,6 +62,8 @@
 /* Begin PBXFileReference section */
 		D803C68F1A1782DB00D26604 /* BUCTextStack.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BUCTextStack.h; sourceTree = "<group>"; };
 		D803C6901A1782DB00D26604 /* BUCTextStack.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BUCTextStack.m; sourceTree = "<group>"; };
+		D80A71851A19DF1D00A3AD6E /* BUCTextView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BUCTextView.h; sourceTree = "<group>"; };
+		D80A71861A19DF1D00A3AD6E /* BUCTextView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BUCTextView.m; sourceTree = "<group>"; };
 		D8114CA9189012BC00F0E1A7 /* BUCAppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BUCAppDelegate.h; sourceTree = "<group>"; };
 		D8114CAA189012BC00F0E1A7 /* BUCAppDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BUCAppDelegate.m; sourceTree = "<group>"; };
 		D8114CAE189012BC00F0E1A7 /* BUCPostListController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BUCPostListController.h; sourceTree = "<group>"; };
@@ -118,8 +120,6 @@
 		D8C0BEBF1A108D0300FBBE5A /* ImageIO.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ImageIO.framework; path = System/Library/Frameworks/ImageIO.framework; sourceTree = SDKROOT; };
 		D8C8ECC21A0C81EC00D7759F /* BUCHTMLScraper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BUCHTMLScraper.h; sourceTree = "<group>"; };
 		D8C8ECC31A0C81EC00D7759F /* BUCHTMLScraper.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BUCHTMLScraper.m; sourceTree = "<group>"; };
-		D8CA4DB51A15DFD80043DEAD /* BUCTextView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BUCTextView.h; sourceTree = "<group>"; };
-		D8CA4DB61A15DFD80043DEAD /* BUCTextView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BUCTextView.m; sourceTree = "<group>"; };
 		D8CA4DBB1A1604990043DEAD /* BUCModels.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BUCModels.h; sourceTree = "<group>"; };
 		D8CA4DBC1A16051E0043DEAD /* BUCModels.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BUCModels.m; sourceTree = "<group>"; };
 		D8DDF7E91A08C60000CEFBA9 /* BUCMenuController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BUCMenuController.h; sourceTree = "<group>"; };
@@ -214,10 +214,10 @@
 				D8E3A88819FB42940047531E /* BUCListItem.m */,
 				D8850A101A03BB1E00ADDE67 /* BUCTextButton.h */,
 				D8850A111A03BB1E00ADDE67 /* BUCTextButton.m */,
-				D8CA4DB51A15DFD80043DEAD /* BUCTextView.h */,
-				D8CA4DB61A15DFD80043DEAD /* BUCTextView.m */,
 				D803C68F1A1782DB00D26604 /* BUCTextStack.h */,
 				D803C6901A1782DB00D26604 /* BUCTextStack.m */,
+				D80A71851A19DF1D00A3AD6E /* BUCTextView.h */,
+				D80A71861A19DF1D00A3AD6E /* BUCTextView.m */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -484,8 +484,8 @@
 				D8B766F519F41A1A00EB63D2 /* BUCAuthManager.m in Sources */,
 				D803C6911A1782DB00D26604 /* BUCTextStack.m in Sources */,
 				D85EA9511A0DA943000BE12A /* BUCBaseController.m in Sources */,
-				D8CA4DB71A15DFD80043DEAD /* BUCTextView.m in Sources */,
 				D853E7EC1A1594490003C284 /* TFHppleElement.m in Sources */,
+				D80A71891A19E08000A3AD6E /* BUCTextView.m in Sources */,
 				D853E7EB1A1594490003C284 /* TFHpple.m in Sources */,
 				D8850A121A03BB1E00ADDE67 /* BUCTextButton.m in Sources */,
 				D8114CD8189012BC00F0E1A7 /* BUCLoginController.m in Sources */,

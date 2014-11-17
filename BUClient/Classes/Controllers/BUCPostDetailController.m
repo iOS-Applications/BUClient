@@ -3,10 +3,11 @@
 #import "BUCTextButton.h"
 #import "BUCImageController.h"
 #import "BUCModels.h"
+#import "BUCTextStack.h"
 #import "BUCTextView.h"
 
 
-@interface BUCPostDetailController () <UIScrollViewDelegate>
+@interface BUCPostDetailController () <UIScrollViewDelegate, UITextViewDelegate>
 
 
 @property (nonatomic) NSArray *postList;
@@ -34,9 +35,7 @@
     
     self.from = @"0";
     self.to = @"20";
-//    self.postID = @"10581932";
-    self.postID = @"10582028";
-    
+//    self.postID = @"10578633";
     
     [self refresh:nil];
 }
@@ -72,7 +71,7 @@
      to:self.to
      
      onSuccess:^(NSArray *list) {
-         weakSelf.postList = list;
+//         weakSelf.postList = list;
          [weakSelf buildList:list];
          [weakSelf hideLoading];
      }
@@ -109,6 +108,8 @@
     
     CGFloat headingMarginBottom = 10.0f;
     
+    CGFloat postBottomMargin = 5.0f;
+    
     CGFloat layoutPointX = leftPadding;
     CGFloat layoutPointY = topPadding;
     
@@ -143,7 +144,7 @@
         
         // post title
         if (post.title.length) {
-            UILabel *title = [[UILabel alloc] initWithFrame:CGRectMake(layoutPointX, layoutPointY, contentWidth, 0.0f)];
+            UILabel *title = [[UILabel alloc] initWithFrame:CGRectMake(layoutPointX, layoutPointY, contentWidth, 0)];
             title.numberOfLines = 0;
             title.attributedText = post.title;
             [title sizeToFit];
@@ -152,12 +153,12 @@
         }
         
         // post body
-        BUCTextView *textBlock = [[BUCTextView alloc] initWithFrame:CGRectMake(layoutPointX, layoutPointY, contentWidth, 0)];
-        // set event handlers here...
-        textBlock.richText = post.content;
-        [textBlock sizeToFit];
-        [wrapper addSubview:textBlock];
-        layoutPointY = layoutPointY + CGRectGetHeight(textBlock.frame);
+        if (post.content) {
+            UITextView *textBlock = [self textStackWithRichText:post.content frame:CGRectMake(layoutPointX, layoutPointY, contentWidth, 1.0f)];
+            [wrapper addSubview:textBlock];
+            
+            layoutPointY = layoutPointY + CGRectGetHeight(textBlock.frame) + postBottomMargin;
+        }
     }
     
     wrapper.frame = CGRectMake(0, 0, CGRectGetWidth(context.frame), layoutPointY);
@@ -179,6 +180,43 @@
     button.frame = CGRectOffset(button.frame, origin.x, origin.y);
     
     return button;
+}
+
+
+- (BUCTextView *)textStackWithRichText:(NSAttributedString *)richText frame:(CGRect)frame {
+    NSTextStorage* textStorage = [[NSTextStorage alloc] initWithAttributedString:richText];
+    BUCLayoutManager *layoutManager = [[BUCLayoutManager alloc] init];
+    BUCTextContainer *textContainer = [[BUCTextContainer alloc] initWithSize:CGSizeMake(CGRectGetWidth(frame), FLT_MAX)];
+    [layoutManager addTextContainer:textContainer];
+    [textStorage addLayoutManager:layoutManager];
+    
+    
+    [layoutManager ensureLayoutForTextContainer:textContainer];
+    CGRect shit = [layoutManager usedRectForTextContainer:textContainer];
+    BUCTextView *textView = [[BUCTextView alloc] initWithFrame:shit textContainer:textContainer];
+    textView.frame = CGRectMake(frame.origin.x, frame.origin.y, frame.size.width, shit.size.height);
+    textView.contentSize = CGSizeMake(frame.size.width, shit.size.height);
+    textView.delegate = self;
+    
+    NSArray *attachmentList = [richText attribute:BUCAttachmentListAttributeName atIndex:0 effectiveRange:NULL];
+    if (attachmentList) {
+        [layoutManager ensureLayoutForTextContainer:textContainer];
+        for (BUCImageAttachment *attachment in attachmentList) {
+            CGRect frame = [layoutManager boundingRectForGlyphRange:NSMakeRange(attachment.glyphIndex, 1) inTextContainer:textContainer];
+            UIImageView *imageView = [[UIImageView alloc] initWithFrame:frame];
+            if (attachment.gif) {
+                imageView.image = attachment.gif;
+            } else {
+                [[BUCDataManager sharedInstance] getImageFromUrl:attachment.url onSuccess:^(UIImage *image) {
+                    imageView.image = image;
+                }];
+            }
+            
+            [textView addSubview:imageView];
+        }
+    }
+
+    return textView;
 }
 
 

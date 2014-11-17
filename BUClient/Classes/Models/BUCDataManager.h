@@ -1,10 +1,10 @@
 #import <Foundation/Foundation.h>
 
 
-typedef void(^ArrayBlock) (NSArray *);
-typedef void(^ErrorBlock) (NSError *);
-typedef void(^SuccessBlock) (NSDictionary *);
-typedef void(^ImageBlock) (UIImage *);
+typedef void(^ArrayBlock) (NSArray *list);
+typedef void(^ErrorBlock) (NSError *error);
+typedef void(^SuccessBlock) (NSDictionary *json);
+typedef void(^ImageBlock) (UIImage *image);
 
 
 @interface BUCDataManager : NSObject
