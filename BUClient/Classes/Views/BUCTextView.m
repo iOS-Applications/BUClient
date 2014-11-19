@@ -1,7 +1,5 @@
 #import "BUCTextView.h"
-#import "BUCModels.h"
 #import "BUCDataManager.h"
-#import "BUCConstants.h"
 #import "BUCTextStack.h"
 
 
@@ -12,7 +10,7 @@
 @property (nonatomic) BUCTextContainer *textContainer;
 @property (nonatomic) BUCLayoutManager *layoutManager;
 
-@property (nonatomic, assign) NSRange selectedRange;
+@property (nonatomic) NSRange selectedRange;
 
 @property (nonatomic) UIColor *linkBackgroundColor;
 
@@ -61,14 +59,16 @@
     if (self.selectedRange.length > 0) {
         UIBezierPath *path = [UIBezierPath bezierPathWithRoundedRect:[self.layoutManager boundingRectForGlyphRange:self.selectedRange inTextContainer:self.textContainer] cornerRadius:5.0f];
         UIColor *backgroundColor = [self.textStorage attribute:NSBackgroundColorAttributeName atIndex:self.selectedRange.location effectiveRange:NULL];
+        NSRange savedRange = NSMakeRange(self.selectedRange.location, self.selectedRange.length);
         if (backgroundColor) {
             [backgroundColor setFill];
         } else {
             [[UIColor whiteColor] setFill];
+            self.selectedRange = NSMakeRange(0, 0);
         }
         
         [path fill];
-        [self.layoutManager drawGlyphsForGlyphRange:self.selectedRange atPoint:origin];
+        [self.layoutManager drawGlyphsForGlyphRange:savedRange atPoint:origin];
         
         return;
     }
@@ -134,6 +134,15 @@
     if (self.selectedRange.length > 0) {
         [self.textStorage removeAttribute:NSBackgroundColorAttributeName range:self.selectedRange];
         [self setNeedsDisplayInRect:[self.layoutManager boundingRectForGlyphRange:self.selectedRange inTextContainer:self.textContainer]];
+        BUCLinkAttribute *linkattribute = [self.textStorage attribute:BUCLinkAttributeName atIndex:self.selectedRange.location effectiveRange:NULL];
+        self.linkTapHandler(linkattribute);
+    } else {
+        CGPoint location = [[touches anyObject] locationInView:self];
+        NSUInteger index = [self.layoutManager glyphIndexForPoint:location inTextContainer:self.textContainer];
+        BUCImageAttachment *attachment = [self.textStorage attribute:NSAttachmentAttributeName atIndex:index effectiveRange:NULL];
+        if (attachment) {
+            self.imageTapHandler(attachment);
+        }
     }
 }
 

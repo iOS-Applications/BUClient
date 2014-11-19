@@ -42,10 +42,6 @@
 }
 
 
-- (void)didReceiveMemoryWarning {
-    NSLog(@"memory waring!");
-}
-
 - (void)imageTapHandler:(BUCImageAttachment *)attachment {
     BUCImageController *imageController = [[UIStoryboard storyboardWithName:@"Main" bundle:nil] instantiateViewControllerWithIdentifier:@"BUCImageController"];
     imageController.url = attachment.url;
@@ -109,6 +105,8 @@
     
     NSDictionary *metaAttribute = @{NSFontAttributeName:[UIFont preferredFontForTextStyle:UIFontTextStyleCaption1]};
     
+    BUCPostDetailController * __weak weakSelf = self;
+    
     for (BUCPost *post in list) {
         post.index = index;
         CGFloat newLayoutPointY = layoutPointY;
@@ -171,6 +169,13 @@
         if (post.content) {
             BUCTextView *textBlock = [[BUCTextView alloc] initWithFrame:CGRectMake(layoutPointX, layoutPointY, contentWidth, 0) richText:post.content];
             [textBlock sizeToFit];
+            textBlock.linkTapHandler = ^(BUCLinkAttribute *linkAttribute) {
+                [weakSelf handleLinkTap];
+            };
+            
+            textBlock.imageTapHandler = ^(BUCImageAttachment *attachment) {
+                [weakSelf handleImageTap];
+            };
             [wrapper addSubview:textBlock];
             
             layoutPointY = layoutPointY + CGRectGetHeight(textBlock.frame) + BUCDefaultPadding;
@@ -192,6 +197,15 @@
     }
 
     context.contentSize = CGSizeMake(CGRectGetWidth(context.frame), layoutPointY);
+}
+
+- (void)handleLinkTap {
+    NSLog(@"link tapped");
+}
+
+
+- (void)handleImageTap {
+    NSLog(@"image tapped");
 }
 
 
