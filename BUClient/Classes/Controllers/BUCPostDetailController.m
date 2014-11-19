@@ -137,7 +137,7 @@
             CGFloat savedLayoutX = layoutPointX;
             layoutPointX = layoutPointX + CGRectGetWidth(poster.frame) + BUCDefaultMargin;
             UILabel *op = [[UILabel alloc] initWithFrame:CGRectMake(layoutPointX, layoutPointY, 0, 0)];
-            op.attributedText = [[NSAttributedString alloc] initWithString:@"楼主" attributes:metaAttribute];
+            op.attributedText = [[NSAttributedString alloc] initWithString:@"OP" attributes:metaAttribute];
             op.textAlignment = NSTextAlignmentCenter;
             [op sizeToFit];
             op.frame = CGRectInset(op.frame, -2.0f, -2.0f);

@@ -40,7 +40,7 @@
 @interface BUCLinkAttribute : NSObject
 
 @property (nonatomic) BUCLinkType linkType;
-@property (nonatomic) NSString *linkUrl;
+@property (nonatomic) NSString *linkValue;
 @property (nonatomic) NSRange range;
 
 @end

@@ -131,8 +131,7 @@
         if ([tagName isEqualToString:@"p"]) {
             // do nothing
         } else if([tagName isEqualToString:@"span"] && [[tree objectForKey:@"id"] isEqualToString:@"id_open_api_label"]) {
-            [self.output appendAttributedString:[[NSAttributedString alloc] initWithString:@"\n\n" attributes:superAttributes]];
-            [thisAttributes setObject:[UIFont preferredFontForTextStyle:UIFontTextStyleCaption1] forKey:NSFontAttributeName];
+            return;
         } else if ([tagName isEqualToString:@"a"]) {
             attributes = [self linkAttributes:tree];
         } else if ([tagName isEqualToString:@"font"]) {
@@ -176,9 +175,11 @@
     if (!tree.content || tree.content.length == 0) {
         return;
     }
+    
     NSMutableDictionary *attributes = [NSMutableDictionary dictionaryWithDictionary:superAttributes];
-    NSRegularExpression *regex = [self regexFromPattern:@"\\s*\\[ Last edited by .+ on [0-9]{4}-[0-9]{1,2}-[0-9]{1,2} at [0-9]{2}:[0-9]{2} \\]"];
-    if ([self matchString:tree.content withRegex:regex]) {
+    NSString *pattern = @"\\s*\\[ Last edited by .+ on [0-9]{4}-[0-9]{1,2}-[0-9]{1,2} at [0-9]{2}:[0-9]{2} \\]";
+    
+    if ([self matchString:tree.content withPattern:pattern match:NULL]) {
         [attributes setObject:[UIFont preferredFontForTextStyle:UIFontTextStyleCaption1] forKeyedSubscript:NSFontAttributeName];
     }
     
@@ -193,9 +194,9 @@
     }
 
     BUCImageAttachment *attachment = [[BUCImageAttachment alloc] init];
-    NSRegularExpression *regex = [self regexFromPattern:@"^\\.\\./images/.+$"];
+    NSString *pattern = @"^\\.\\./images/.+$";
     
-    if ([self matchString:source withRegex:regex]) {
+    if ([self matchString:source withPattern:pattern match:NULL]) {
         NSString *resourcePath = [[NSBundle mainBundle] resourcePath];
         NSString *path = [NSString stringWithFormat:@"%@/%@", resourcePath, [source substringFromIndex:3]];
         UIImage *image = [UIImage animatedImageWithAnimatedGIFData:[NSData dataWithContentsOfFile:path]];
@@ -379,10 +380,9 @@
         return output;
     }
     
-    NSRegularExpression *regex = [self regexFromPattern:@"^#\\s*([a-z0-9]{3}|[a-z0-9]{6})$"];
-    NSUInteger numberOfMatches = [self matchString:color withRegex:regex];
+    NSString *pattern = @"^#\\s*([a-z0-9]{3}|[a-z0-9]{6})$";
     
-    if (numberOfMatches == 0) {
+    if ([self matchString:color withPattern:pattern match:NULL]) {
         output = [UIColor blackColor];
     } else {
         NSString *cleanString = [color stringByReplacingOccurrencesOfString:@"#" withString:@""];
@@ -409,21 +409,23 @@
         return nil;
     }
     
-    NSRegularExpression *usernameRegex = [self regexFromPattern:@"^/profile-username-.+\\.html$"];
-    NSRegularExpression *mailRegex = [self regexFromPattern:@"^mailto:.+$"];
-    NSRegularExpression *buRegex  = [self regexFromPattern:@"^(http://)?(((www)|(out)|(us))\\.)?bitunion\\.org(/.*)?$"];
-    NSRegularExpression *threadRegex = [self regexFromPattern:@"^/thread-([1-9][0-9]+)-[1-9]-[1-9].html$"];
-    NSRegularExpression *forumRegex = [self regexFromPattern:@"^/forum-([1-9]{1,3})-[1-9].html$"];
+    NSString *usernamePattern = @"^/profile-username-.+\\.html$";
+    NSString *mailPattern = @"^mailto:.+$";
+    NSString *buPattern  = @"^(http://)?(((www)|(out)|(us))\\.)?bitunion\\.org(/.*)?$";
+    NSString *threadPattern = @"^/thread-([1-9][0-9]+)-[1-9]-[1-9]\\.html$";
+    NSString *viewThreadPattern = @"^/viewthread\\.php\\?tid=([1-9][0-9]+).*$";
+    NSString *forumPattern = @"^/forum-([1-9]{1,3})-[1-9]\\.html$";
     NSString *buDomanName = @"bitunion.org";
     
     BUCLinkAttribute *linkAttribute = [[BUCLinkAttribute alloc] init];
     UIColor *linkColor;
+    NSTextCheckingResult *match;
     
-    if ([self matchString:href withRegex:usernameRegex]) {
+    if ([self matchString:href withPattern:usernamePattern match:&match]) {
         linkAttribute.linkType = BUCUserLink;
-        linkAttribute.linkUrl = htmlElement.firstChild.content;
+        linkAttribute.linkValue = htmlElement.firstChild.content;
         linkColor = [self colorAttribute:@"summon"];
-    } else if ([self matchString:href withRegex:buRegex]) {
+    } else if ([self matchString:href withPattern:buPattern match:&match]) {
         linkColor = [self colorAttribute:@"url"];
         NSRange hostRange = [href rangeOfString:buDomanName];
         NSUInteger pathIndex = hostRange.location + hostRange.length;
@@ -432,31 +434,38 @@
             path = [href substringFromIndex:pathIndex];
         }
         
+        NSString *pattern;
+        NSTextCheckingResult *match;
+        
         if (!path || [path isEqualToString:@"/"] || [path isEqualToString:@"/home.php"]) {
             linkAttribute.linkType = BUCHomeLink;
         } else if ([path isEqualToString:@"/index.php"]) {
             linkAttribute.linkType = BUCForumListLink;
-        } else if ([self matchString:path withRegex:threadRegex]) {
-            NSArray *matches = [threadRegex matchesInString:path options:0 range:NSMakeRange(0, path.length)];
-            NSTextCheckingResult *match = [matches lastObject];
+        } else if ([self matchString:path withPattern:threadPattern match:&match]) {
+            pattern = threadPattern;
             linkAttribute.linkType = BUCPostLink;
-            linkAttribute.linkUrl = [path substringWithRange:[match rangeAtIndex:1]];
-        } else if ([self matchString:path withRegex:forumRegex]) {
-            NSArray *matches = [forumRegex matchesInString:path options:0 range:NSMakeRange(0, path.length)];
-            NSTextCheckingResult *match = [matches lastObject];
+        } else if ([self matchString:path withPattern:viewThreadPattern match:&match]) {
+            pattern = viewThreadPattern;
+            linkAttribute.linkType = BUCPostLink;
+        } else if ([self matchString:path withPattern:forumPattern match:&match]) {
+            pattern = forumPattern;
             linkAttribute.linkType = BUCForumLink;
-            linkAttribute.linkUrl = [path substringWithRange:[match rangeAtIndex:1]];
         } else {
             linkAttribute.linkType = BUCUrlLink;
-            linkAttribute.linkUrl = href;
+            linkAttribute.linkValue = href;
         }
-    } else if ([self matchString:href withRegex:mailRegex]) {
+        
+        if (match) {
+            linkAttribute.linkValue = [path substringWithRange:[match rangeAtIndex:1]];
+        }
+        
+    } else if ([self matchString:href withPattern:mailPattern match:&match]) {
         linkAttribute.linkType = BUCMailLink;
-        linkAttribute.linkUrl = [href substringFromIndex:7];
+        linkAttribute.linkValue = [href substringFromIndex:7];
         linkColor = [self colorAttribute:@"mail"];
     } else {
         linkAttribute.linkType = BUCUrlLink;
-        linkAttribute.linkUrl = href;
+        linkAttribute.linkValue = href;
         linkColor = [self colorAttribute:@"url"];
     }
     
@@ -471,10 +480,9 @@
         return [UIColor whiteColor];
     }
     
-    NSRegularExpression *regex = [self regexFromPattern:@"background-color:[\\s]*(#[0-9a-f]{6}|[0-9a-f]{3})"];
-    if ([self matchString:styleString withRegex:regex]) {
-        NSArray *matches = [regex matchesInString:styleString options:0 range:NSMakeRange(0, styleString.length)];
-        NSTextCheckingResult *match = [matches lastObject];
+    NSString *pattern = @"background-color:[\\s]*(#[0-9a-f]{6}|[0-9a-f]{3})";
+    NSTextCheckingResult *match;
+    if ([self matchString:styleString withPattern:pattern match:&match]) {
         return [self colorAttribute:[styleString substringWithRange:[match rangeAtIndex:1]]];
     }
     
@@ -503,19 +511,20 @@
 }
 
 
-- (BOOL)matchString:(NSString *)string withRegex:(NSRegularExpression *)regex {
-    NSUInteger numberOfMatches = [regex numberOfMatchesInString:string options:0 range:(NSRange){0, string.length}];
+- (BOOL)matchString:(NSString *)string withPattern:(NSString *)pattern match:(NSTextCheckingResult **)match {
+    NSRegularExpression *regex = [NSRegularExpression regularExpressionWithPattern:pattern options:NSRegularExpressionCaseInsensitive error:NULL];
     
-    if (numberOfMatches > 0) {
+    NSTextCheckingResult *output = [regex firstMatchInString:string options:0 range:NSMakeRange(0, string.length)];
+    
+    if (output.numberOfRanges > 0) {
+        if (match) {
+            *match = output;
+        }
+        
         return YES;
-    } else {
-        return NO;
     }
-}
-
-
-- (NSRegularExpression *)regexFromPattern:(NSString *)pattern {
-    return [NSRegularExpression regularExpressionWithPattern:pattern options:NSRegularExpressionCaseInsensitive error:NULL];
+    
+    return NO;
 }
 
 
@@ -567,21 +576,21 @@
 
 
 - (NSURL *)parseImageUrl:(NSString *)source {
-    NSString *buBaseUrl = @"http://out.bitunion.org";
+    NSString *baseUrl = @"http://out.bitunion.org";
     NSURL *url = [NSURL URLWithString:source];
     
-    NSRegularExpression *lanRegex = [self regexFromPattern:@"^http://www\\.bitunion\\.org/.+$"];
-    NSRegularExpression *relativeRegex = [self regexFromPattern:@"^images/.+$"];
-    NSRegularExpression *attachmentRegex = [self regexFromPattern:@"^/attachments/.+$"];
+    NSString *lanPattern = @"^http://www\\.bitunion\\.org/.+$";
+    NSString *relativePattern = @"^images/.+$";
+    NSString *attachmentPattern = @"^/attachments/.+$";
     
     if ([url.host isEqualToString:@"bitunion.org"]) {
-        source = [NSString stringWithFormat:@"%@%@", buBaseUrl, url.path];
-    } else if ([self matchString:source withRegex:lanRegex]) {
+        source = [NSString stringWithFormat:@"%@%@", baseUrl, url.path];
+    } else if ([self matchString:source withPattern:lanPattern match:NULL]) {
         source = [source stringByReplacingOccurrencesOfString:@"www.bitunion.org" withString:@"out.bitunion.org"];
-    } else if ([self matchString:source withRegex:relativeRegex]) {
-        source = [NSString stringWithFormat:@"%@/%@", @"http://out.bitunion.org", source];
-    } else if ([self matchString:source withRegex:attachmentRegex]) {
-        source = [NSString stringWithFormat:@"%@%@", @"http://out.bitunion.org", source];
+    } else if ([self matchString:source withPattern:relativePattern match:NULL]) {
+        source = [NSString stringWithFormat:@"%@/%@", baseUrl, source];
+    } else if ([self matchString:source withPattern:attachmentPattern match:NULL]) {
+        source = [NSString stringWithFormat:@"%@%@", baseUrl, source];
     }
     
     return [NSURL URLWithString:source];
