@@ -5,4 +5,7 @@
 @interface BUCPostListController : BUCBaseController
 
 
+@property (nonatomic) NSString *fid;
+
+
 @end

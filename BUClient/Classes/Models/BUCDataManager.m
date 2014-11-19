@@ -150,7 +150,6 @@ static NSString * const BUCForumListKey = @"threadlist";
         NSArray *rawArray = [json objectForKey:listKey];
         
         NSDictionary *metaAttribute = @{NSFontAttributeName:[UIFont preferredFontForTextStyle:UIFontTextStyleCaption1]};
-        NSDictionary *headlineAttribute = @{NSFontAttributeName:[UIFont preferredFontForTextStyle:UIFontTextStyleHeadline]};
         
         for (NSDictionary *rawDic in rawArray) {
             BUCPost *post = [[BUCPost alloc] init];
@@ -172,22 +171,45 @@ static NSString * const BUCForumListKey = @"threadlist";
             if ([listKey isEqualToString:BUCNewListKey]) {
                 post.title = [weakSelf.htmlScraper richTextFromHtml:[weakSelf urldecode:[rawDic objectForKey:@"pname"]]];
             } else if ([listKey isEqualToString:BUCDetailListKey]) {
-                post.title = [[NSAttributedString alloc] initWithString:[weakSelf urldecode:[rawDic objectForKey:@"subject"]] attributes:headlineAttribute];
+                NSMutableString *content = [[NSMutableString alloc] init];
+                NSString *title = [weakSelf urldecode:[rawDic objectForKey:@"subject"]];
+                if (title) {
+                    title = [NSString stringWithFormat:@"<b>%@</b>\n\n", title];
+                    [content appendString:title];
+                }
+                
+                NSString *body = [weakSelf urldecode:[rawDic objectForKey:@"message"]];
+                if (body) {
+                    [content appendString:body];
+                }
+                
+                NSString *attachment = [weakSelf urldecode:[rawDic objectForKey:@"attachment"]];
+                if (attachment) {
+                    NSString *filetype = [weakSelf urldecode:[rawDic objectForKey:@"filetype"]];
+                    if (filetype && [filetype rangeOfString:@"image/"].length > 0) {
+                        attachment = [NSString stringWithFormat:@"\n\n本帖包含图片附件:\n\n<img src='http://out.bitunion.org/%@'>", attachment];
+                        [content appendString:attachment];
+                    }
+                }
+                
+                post.content = [weakSelf.htmlScraper richTextFromHtml:content];
             } else {
                 // thread list
             }
-
-            post.content = [weakSelf.htmlScraper richTextFromHtml:[weakSelf urldecode:[rawDic objectForKey:@"message"]]];
-            post.dateline = [rawDic objectForKey:@"dateline"];
+            
+            NSString *dateline = [weakSelf parseDateline:[rawDic objectForKey:@"dateline"]];
+            if (dateline) {
+                post.dateline = [[NSAttributedString alloc] initWithString:dateline attributes:metaAttribute];
+            }
             
             post.childCount = [rawDic objectForKey:@"tid_sum"];
             
-            NSString *when = [weakSelf urldecode:[[rawDic objectForKey:@"lastreply"] objectForKey:@"when"]];
+            NSString *when = [weakSelf parseDateline:[weakSelf urldecode:[[rawDic objectForKey:@"lastreply"] objectForKey:@"when"]]];
             NSString *who = [weakSelf urldecode:[[rawDic objectForKey:@"lastreply"] objectForKey:@"who"]];
             if (when && who) {
                 post.lastReply = [[BUCPost alloc] init];
                 post.lastReply.user = [[NSAttributedString alloc] initWithString:who attributes:metaAttribute];
-                post.lastReply.dateline = when;
+                post.lastReply.dateline = [[NSAttributedString alloc] initWithString:when attributes:metaAttribute];
             }
             
             [list addObject:post];
@@ -230,7 +252,7 @@ static NSString * const BUCForumListKey = @"threadlist";
 
 #pragma mark - utilies
 - (NSString *)urldecode:(NSString *)string {
-    if (!string) {
+    if (!string || (id)string == [NSNull null] || string.length == 0) {
         return nil;
     }
     
@@ -245,6 +267,47 @@ static NSString * const BUCForumListKey = @"threadlist";
     NSDictionary *errorInfo = @{NSLocalizedDescriptionKey:failErrorMsg};
     
     return [NSError errorWithDomain:BUCErrorDomain code:1 userInfo:errorInfo];;
+}
+
+
+- (NSString *)parseDateline:(NSString *)dateline {
+    if (!dateline || (id)dateline == [NSNull null] || dateline.length == 0) {
+        return nil;
+    }
+    
+    static NSDateFormatter *dateFormatter;
+    static dispatch_once_t onceEnsure;
+    dispatch_once(&onceEnsure, ^{
+        dateFormatter = [[NSDateFormatter alloc] init];
+        [dateFormatter setDateFormat:@"yyyy-MM-dd HH:mm"];
+    });
+    
+    NSString *output;
+    NSDate *date;
+    
+    NSRegularExpression *regex = [NSRegularExpression regularExpressionWithPattern:@"^[0-9]+$" options:NSRegularExpressionCaseInsensitive error:NULL];
+    if ([regex numberOfMatchesInString:dateline options:0 range:NSMakeRange(0, dateline.length)] == 0) {
+        date = [dateFormatter dateFromString:dateline];
+    } else {
+        date = [NSDate dateWithTimeIntervalSince1970:dateline.doubleValue];
+    }
+    
+    NSTimeInterval timeInterval = abs(date.timeIntervalSinceNow);
+    if (timeInterval <= 60) {
+        output = @"刚刚";
+    } else if (timeInterval <= 60 * 60) {
+        output = [NSString stringWithFormat:@"%d分钟前", (int)timeInterval / 60];
+    } else if (timeInterval <= 60 * 60 * 24) {
+        output = [NSString stringWithFormat:@"%d小时前", (int)timeInterval / (60 * 60)];
+    } else if (timeInterval <= 60 * 60 * 24 * 30) {
+        output = [NSString stringWithFormat:@"%d天前", (int)timeInterval / (60 * 60 * 24)];
+    } else if (timeInterval <= 60 * 60 * 24 * 30 * 12) {
+        output = [NSString stringWithFormat:@"%d个月前", (int)timeInterval / (60 * 60 * 24 * 30)];
+    } else {
+        output = [dateFormatter stringFromDate:date];
+    }
+    
+    return output;
 }
 
 

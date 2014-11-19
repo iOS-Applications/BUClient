@@ -28,25 +28,8 @@
     NSString *query = @"//body";
     NSArray *nodes = [[[parser searchWithXPathQuery:query] firstObject] children];
     
-    NSString *urlString = [[nodes firstObject] objectForKey:@"src"];
-    NSString *buBaseUrl = @"http://out.bitunion.org";
-    NSURL *url = [NSURL URLWithString:urlString];
-    
-    NSRegularExpression *lanRegex = [self regexFromPattern:@"^http://www\\.bitunion\\.org/.+$"];
-    NSRegularExpression *relativeRegex = [self regexFromPattern:@"^images/.+$"];
-    NSRegularExpression *attachmentRegex = [self regexFromPattern:@"^/attachments/.+$"];
-    
-    if ([url.host isEqualToString:@"bitunion.org"]) {
-        urlString = [NSString stringWithFormat:@"%@%@", buBaseUrl, url.path];
-    } else if ([self matchString:urlString withRegex:lanRegex]) {
-        urlString = [urlString stringByReplacingOccurrencesOfString:@"www.bitunion.org" withString:@"out.bitunion.org"];
-    } else if ([self matchString:urlString withRegex:relativeRegex]) {
-        urlString = [NSString stringWithFormat:@"%@/%@", @"http://out.bitunion.org", urlString];
-    } else if ([self matchString:urlString withRegex:attachmentRegex]) {
-        urlString = [NSString stringWithFormat:@"%@%@", @"http://out.bitunion.org", urlString];
-    }
-    
-    return [NSURL URLWithString:urlString];
+    NSString *source = [[nodes firstObject] objectForKey:@"src"];
+    return [self parseImageUrl:source];
 }
 
 
@@ -119,8 +102,8 @@
         NSMutableDictionary *thisAttributes = [NSMutableDictionary dictionaryWithDictionary:superAttributes];
         BUCTextBlockAttribute *blockAttribute = [self setUpBlockAttribute:thisAttributes];
         [thisAttributes setObject:blockAttribute forKey:BUCTextBlockAttributeName];
-        [self ensureNewLineWithAttributes:superAttributes];
-        [self.output appendAttributedString:[[NSAttributedString alloc] initWithString:@"\n" attributes:superAttributes]];
+        [self beginBlock:superAttributes];
+        [self insertNewLine:superAttributes];
         NSUInteger location = self.output.length;
         
         if ([tagName isEqualToString:@"center"]) {
@@ -129,17 +112,17 @@
             NSString *query = @"//blockquote/div";
             NSArray *nodes = [tree searchWithXPathQuery:query];
             TFHppleElement *box = [nodes lastObject];
-            [thisAttributes setObject:[self parseBoxColor:box] forKey:NSBackgroundColorAttributeName];
+            blockAttribute.backgroundColor = [self parseBoxColor:box];
             [self appendBox:box superAttributes:thisAttributes];
         } else {
             [self appendList:tree superAttributes:thisAttributes];
         }
         
-        [self ensureNewLineWithAttributes:thisAttributes];
+        [self finishBlock:thisAttributes];
         NSUInteger length = self.output.length - location;
         blockAttribute.range = NSMakeRange(location, length);
         [self.blockList addObject:blockAttribute];
-        
+        [self insertNewLine:superAttributes];
     } else {
         NSDictionary *attributes;
         NSMutableDictionary *thisAttributes = [NSMutableDictionary dictionaryWithDictionary:superAttributes];
@@ -193,23 +176,28 @@
     if (!tree.content || tree.content.length == 0) {
         return;
     }
+    NSMutableDictionary *attributes = [NSMutableDictionary dictionaryWithDictionary:superAttributes];
+    NSRegularExpression *regex = [self regexFromPattern:@"\\s*\\[ Last edited by .+ on [0-9]{4}-[0-9]{1,2}-[0-9]{1,2} at [0-9]{2}:[0-9]{2} \\]"];
+    if ([self matchString:tree.content withRegex:regex]) {
+        [attributes setObject:[UIFont preferredFontForTextStyle:UIFontTextStyleCaption1] forKeyedSubscript:NSFontAttributeName];
+    }
     
-    [self.output appendAttributedString:[[NSAttributedString alloc] initWithString:tree.content attributes:superAttributes]];
+    [self.output appendAttributedString:[[NSAttributedString alloc] initWithString:[self replaceHtmlEntities:tree.content] attributes:attributes]];
 }
 
 
 - (void)appendImage:(TFHppleElement *)tree superAttributes:(NSDictionary *)superAttributes {
-    NSString *src = [tree objectForKey:@"src"];
-    if (!src || src.length == 0) {
+    NSString *source = [tree objectForKey:@"src"];
+    if (!source || source.length == 0) {
         return;
     }
-    
+
     BUCImageAttachment *attachment = [[BUCImageAttachment alloc] init];
     NSRegularExpression *regex = [self regexFromPattern:@"^\\.\\./images/.+$"];
     
-    if ([self matchString:src withRegex:regex]) {
+    if ([self matchString:source withRegex:regex]) {
         NSString *resourcePath = [[NSBundle mainBundle] resourcePath];
-        NSString *path = [NSString stringWithFormat:@"%@/%@", resourcePath, [src substringFromIndex:3]];
+        NSString *path = [NSString stringWithFormat:@"%@/%@", resourcePath, [source substringFromIndex:3]];
         UIImage *image = [UIImage animatedImageWithAnimatedGIFData:[NSData dataWithContentsOfFile:path]];
         if (!image) {
             return;
@@ -218,7 +206,7 @@
             attachment.bounds = CGRectMake(0, 0, image.size.width, image.size.height);
         }
     } else {
-        attachment.url = [NSURL URLWithString:src];
+        attachment.url = [self parseImageUrl:source];
         if (!attachment.url) {
             return;
         } else {
@@ -316,20 +304,48 @@
 
 #pragma mark - attributes parsing
 - (NSDictionary *)fontAttributes:(TFHppleElement *)font {
-    NSDictionary *colorAttribute;
+    NSMutableDictionary *fontAttributes = [[NSMutableDictionary alloc] init];
     
     // size attribute support is needed..
-    NSString *colorString = [font objectForKey:@"color"];
-    if (colorString) {
-        UIColor *color = [self parseColorAttr:colorString];
-        colorAttribute = @{NSForegroundColorAttributeName:color};
+    NSString *color = [font objectForKey:@"color"];
+    if (color) {
+        [fontAttributes setObject:[self colorAttribute:color] forKey:NSForegroundColorAttributeName];
     }
     
-    return colorAttribute;
+    NSString *size = [font objectForKey:@"size"];
+    
+    if (size && size.length > 0) {
+        [fontAttributes setObject:[self fontWithSize:size] forKey:NSFontAttributeName];
+    }
+    
+    return fontAttributes;
 }
 
 
-- (UIColor *)parseColorAttr:(NSString *)colorString {
+- (UIFont *)fontWithSize:(NSString *)size {
+    int sizeNumber = size.intValue;
+    CGFloat fontSize;
+    if (sizeNumber < 0) {
+        fontSize = 11.0f;
+    } else if (sizeNumber <= 3) {
+        fontSize = 17.0f;
+    } else if (sizeNumber <= 6) {
+        fontSize = 24.0f;
+    } else {
+        fontSize = 36.0f;
+    }
+    
+    UIFontDescriptor *fontDescriptor = [UIFontDescriptor preferredFontDescriptorWithTextStyle:UIFontTextStyleBody];
+    
+    UIFontDescriptor *descriptorWithSize = [fontDescriptor fontDescriptorWithSize:fontSize];
+    
+    UIFont *font = [UIFont fontWithDescriptor:descriptorWithSize size: fontSize];
+    
+    return font;
+}
+
+
+- (UIColor *)colorAttribute:(NSString *)color {
     static NSDictionary* colorTable;
     
     static dispatch_once_t onceToken;
@@ -357,19 +373,19 @@
                        };
     });
     
-    UIColor *output = [colorTable objectForKey:[colorString lowercaseString]];
+    UIColor *output = [colorTable objectForKey:[color lowercaseString]];
     
     if (output) {
         return output;
     }
     
     NSRegularExpression *regex = [self regexFromPattern:@"^#\\s*([a-z0-9]{3}|[a-z0-9]{6})$"];
-    NSUInteger numberOfMatches = [self matchString:colorString withRegex:regex];
+    NSUInteger numberOfMatches = [self matchString:color withRegex:regex];
     
     if (numberOfMatches == 0) {
         output = [UIColor blackColor];
     } else {
-        NSString *cleanString = [colorString stringByReplacingOccurrencesOfString:@"#" withString:@""];
+        NSString *cleanString = [color stringByReplacingOccurrencesOfString:@"#" withString:@""];
         if([cleanString length] == 3) {
             cleanString = [NSString stringWithFormat:@"%@%@%@%@%@%@",
                            [cleanString substringWithRange:NSMakeRange(0, 1)],[cleanString substringWithRange:NSMakeRange(0, 1)],
@@ -406,9 +422,9 @@
     if ([self matchString:href withRegex:usernameRegex]) {
         linkAttribute.linkType = BUCUserLink;
         linkAttribute.linkUrl = htmlElement.firstChild.content;
-        linkColor = [self parseColorAttr:@"summon"];
+        linkColor = [self colorAttribute:@"summon"];
     } else if ([self matchString:href withRegex:buRegex]) {
-        linkColor = [self parseColorAttr:@"url"];
+        linkColor = [self colorAttribute:@"url"];
         NSRange hostRange = [href rangeOfString:buDomanName];
         NSUInteger pathIndex = hostRange.location + hostRange.length;
         NSString *path;
@@ -437,11 +453,11 @@
     } else if ([self matchString:href withRegex:mailRegex]) {
         linkAttribute.linkType = BUCMailLink;
         linkAttribute.linkUrl = [href substringFromIndex:7];
-        linkColor = [self parseColorAttr:@"mail"];
+        linkColor = [self colorAttribute:@"mail"];
     } else {
         linkAttribute.linkType = BUCUrlLink;
         linkAttribute.linkUrl = href;
-        linkColor = [self parseColorAttr:@"url"];
+        linkColor = [self colorAttribute:@"url"];
     }
     
     return @{BUCLinkAttributeName:linkAttribute, NSForegroundColorAttributeName:linkColor};
@@ -459,7 +475,7 @@
     if ([self matchString:styleString withRegex:regex]) {
         NSArray *matches = [regex matchesInString:styleString options:0 range:NSMakeRange(0, styleString.length)];
         NSTextCheckingResult *match = [matches lastObject];
-        return [self parseColorAttr:[styleString substringWithRange:[match rangeAtIndex:1]]];
+        return [self colorAttribute:[styleString substringWithRange:[match rangeAtIndex:1]]];
     }
     
     return [UIColor whiteColor];
@@ -504,44 +520,71 @@
 
 
 - (BUCTextBlockAttribute *)setUpBlockAttribute:(NSDictionary *)attributes {
-    BUCTextBlockAttribute *blockAttribute = [attributes objectForKey:BUCTextBlockAttributeName];
+    BUCTextBlockAttribute *parentBlockAttribute = [attributes objectForKey:BUCTextBlockAttributeName];
+    BUCTextBlockAttribute *blockAttribute = [[BUCTextBlockAttribute alloc] init];
     
-    static CGFloat const blockMargin = 5.0f;
-    static CGFloat const blockPadding = 5.0f;
-    static CGFloat const blockBorderWidth = 0.5f;
-    static UIColor *blockBorderColor;
-    static UIColor *blockBackgroundColor;
-    static dispatch_once_t onceSecurePredicate;
-    dispatch_once(&onceSecurePredicate, ^{
-        blockBorderColor = [UIColor lightGrayColor];
-        blockBackgroundColor = [UIColor colorWithWhite:0.95f alpha:1.0f];
-    });
-    
-    if (blockAttribute) {
-        blockAttribute.topMargin = blockAttribute.topMargin + blockMargin;
-        blockAttribute.leftMargin = blockAttribute.leftMargin + blockMargin;
-        blockAttribute.topPadding = blockAttribute.topPadding + blockPadding;
-        blockAttribute.leftPadding = blockAttribute.leftPadding + blockPadding;
+    if (parentBlockAttribute) {
+        blockAttribute.padding = parentBlockAttribute.padding + BUCDefaultPadding;
     } else {
-        blockAttribute = [[BUCTextBlockAttribute alloc] init];
-        blockAttribute.topMargin = blockMargin;
-        blockAttribute.leftMargin = blockPadding;
-        blockAttribute.topPadding = blockPadding;
-        blockAttribute.leftPadding = blockPadding;
-        blockAttribute.borderWidth = blockBorderWidth;
-        blockAttribute.borderColor = blockBorderColor;
+        blockAttribute.padding = BUCDefaultPadding;
     }
     
     return blockAttribute;
 }
 
 
-- (void)ensureNewLineWithAttributes:(NSDictionary *)attributes {
-    if (self.output.length > 0 && ([self.output.string characterAtIndex:self.output.length - 1] != '\n')) {
-        [self.output appendAttributedString:[[NSAttributedString alloc] initWithString:@"\n" attributes:attributes]];
-    } else if (self.output.length > 0 && [self.output attribute:BUCTextBlockAttributeName atIndex:self.output.length - 1 effectiveRange:NULL]) {
+- (void)beginBlock:(NSDictionary *)attributes {
+    if (self.output.length == 0) {
+        return;
+    }
+    
+    if ([self.output.string characterAtIndex:self.output.length - 1] != '\n') {
         [self.output appendAttributedString:[[NSAttributedString alloc] initWithString:@"\n" attributes:attributes]];
     }
+}
+
+
+- (void)insertNewLine:(NSDictionary *)attributes {
+    if (self.output.length == 0) {
+        return;
+    }
+    
+    NSMutableDictionary *newLineAttributes = [NSMutableDictionary dictionaryWithDictionary:attributes];
+    [newLineAttributes setObject:[UIFont preferredFontForTextStyle:UIFontTextStyleCaption1] forKeyedSubscript:NSFontAttributeName];
+    [self.output appendAttributedString:[[NSAttributedString alloc] initWithString:@"\n" attributes:newLineAttributes]];
+}
+
+
+- (void)finishBlock:(NSDictionary *)attributes {
+    if (self.output.length == 0) {
+        return;
+    }
+    
+    if ([self.output.string characterAtIndex:self.output.length - 1] != '\n') {
+        [self.output appendAttributedString:[[NSAttributedString alloc] initWithString:@"\n" attributes:attributes]];
+    }
+}
+
+
+- (NSURL *)parseImageUrl:(NSString *)source {
+    NSString *buBaseUrl = @"http://out.bitunion.org";
+    NSURL *url = [NSURL URLWithString:source];
+    
+    NSRegularExpression *lanRegex = [self regexFromPattern:@"^http://www\\.bitunion\\.org/.+$"];
+    NSRegularExpression *relativeRegex = [self regexFromPattern:@"^images/.+$"];
+    NSRegularExpression *attachmentRegex = [self regexFromPattern:@"^/attachments/.+$"];
+    
+    if ([url.host isEqualToString:@"bitunion.org"]) {
+        source = [NSString stringWithFormat:@"%@%@", buBaseUrl, url.path];
+    } else if ([self matchString:source withRegex:lanRegex]) {
+        source = [source stringByReplacingOccurrencesOfString:@"www.bitunion.org" withString:@"out.bitunion.org"];
+    } else if ([self matchString:source withRegex:relativeRegex]) {
+        source = [NSString stringWithFormat:@"%@/%@", @"http://out.bitunion.org", source];
+    } else if ([self matchString:source withRegex:attachmentRegex]) {
+        source = [NSString stringWithFormat:@"%@%@", @"http://out.bitunion.org", source];
+    }
+    
+    return [NSURL URLWithString:source];
 }
 
 

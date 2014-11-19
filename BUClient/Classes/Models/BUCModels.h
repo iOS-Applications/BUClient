@@ -19,7 +19,7 @@
 
 @property (nonatomic) NSAttributedString *title;
 @property (nonatomic) NSAttributedString *content;
-@property (nonatomic) NSString *dateline;
+@property (nonatomic) NSAttributedString *dateline;
 
 @property (nonatomic) NSString *childCount;
 
@@ -48,16 +48,10 @@
 
 @interface BUCTextBlockAttribute : NSObject
 
-@property (nonatomic) CGFloat topMargin;
-@property (nonatomic) CGFloat leftMargin;
-
-@property (nonatomic) CGFloat topPadding;
-@property (nonatomic) CGFloat leftPadding;
-
-@property (nonatomic) CGFloat borderWidth;
-@property (nonatomic) UIColor *borderColor;
-
+@property (nonatomic) CGFloat padding;
 @property (nonatomic) NSRange range;
+
+@property (nonatomic) UIColor *backgroundColor;
 
 @end
 

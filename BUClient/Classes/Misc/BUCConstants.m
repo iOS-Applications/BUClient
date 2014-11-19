@@ -22,6 +22,10 @@ NSString * const BUCUnwindToRootStoryboardID = @"BUCUnwindToRoot";
 CGFloat const BUCImageThumbnailWidth = 310.0f;
 CGFloat const BUCImageThumbnailHeight = 100.0f;
 
+CGFloat const BUCDefaultPadding = 5.0f;
+CGFloat const BUCDefaultMargin = 5.0f;
+
+CGFloat const BUCBorderWidth = 0.5f;
 
 // BUC rich text attributes
 NSString * const BUCLinkAttributeName = @"BUCLinkAttribute";

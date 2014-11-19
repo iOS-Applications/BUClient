@@ -20,20 +20,29 @@
 
 
 - (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
-    [super touchesBegan:touches withEvent:event];
     self.backgroundColor = [UIColor lightGrayColor];
+    [super touchesBegan:touches withEvent:event];
 }
 
 
 - (void)touchesCancelled:(NSSet *)touches withEvent:(UIEvent *)event {
-    [super touchesCancelled:touches withEvent:event];
     self.backgroundColor = [UIColor whiteColor];
+    [super touchesCancelled:touches withEvent:event];
+}
+
+
+- (void)touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event {
+    [super touchesMoved:touches withEvent:event];
 }
 
 
 - (void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event {
+    BUCListItem * __weak weakSelf = self;
+    [UIView animateWithDuration:0.3 animations:^{
+        weakSelf.backgroundColor = [UIColor whiteColor];
+    }];
+    
     [super touchesEnded:touches withEvent:event];
-    self.backgroundColor = [UIColor whiteColor];
 }
 
 

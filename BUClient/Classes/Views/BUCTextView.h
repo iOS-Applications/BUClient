@@ -1,9 +1,10 @@
 #import <UIKit/UIKit.h>
-#import "BUCModels.h"
 
 
-@interface BUCTextView : UITextView
+@interface BUCTextView : UIView
 
-- (void)foo;
+
+- (instancetype)initWithFrame:(CGRect)frame richText:(NSAttributedString *)richText;
+
 
 @end

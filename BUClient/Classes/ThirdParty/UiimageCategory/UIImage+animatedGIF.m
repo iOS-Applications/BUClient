@@ -96,7 +96,11 @@ static UIImage *animatedImageWithAnimatedGIFImageSource(CGImageSourceRef const s
     createImagesAndDelays(source, count, images, delayCentiseconds);
     int const totalDurationCentiseconds = sum(count, delayCentiseconds);
     NSArray *const frames = frameArray(count, images, delayCentiseconds, totalDurationCentiseconds);
-    UIImage *const animation = [UIImage animatedImageWithImages:frames duration:(NSTimeInterval)totalDurationCentiseconds / 100.0];
+    NSTimeInterval duration = (NSTimeInterval)totalDurationCentiseconds / 100.0;
+    if (count <= 10 && duration <= 0.01) {
+        duration = duration * 8;
+    }
+    UIImage *const animation = [UIImage animatedImageWithImages:frames duration:duration];
     releaseImages(count, images);
     return animation;
 }

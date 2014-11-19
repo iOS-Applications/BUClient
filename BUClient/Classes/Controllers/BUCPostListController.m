@@ -63,28 +63,17 @@
     BUCPostDetailController *postDetailController = [storyboard instantiateViewControllerWithIdentifier:BUCPostDetailControllerStoryboardID];
     BUCListItem *listItem = (BUCListItem *)sender;
     BUCPost *post = [self.postList objectAtIndex:listItem.tag];
-    
-    [UIView animateWithDuration:0.3 animations:^(void) {
-        listItem.backgroundColor = [UIColor whiteColor];
-    }];
-    
-    postDetailController.postID = post.pid;
+    postDetailController.post = post;
     [(UINavigationController *)self.parentViewController pushViewController:postDetailController animated:YES];
 }
 
 
 - (IBAction)jumpToForum:(id)sender {
-    BUCTextButton *button = (BUCTextButton *)sender;
-    [UIView animateWithDuration:0.3 animations:^(void) {
-        button.alpha = 1.0f;
-    }];
+    
 }
 
 - (IBAction)jumpToPoster:(id)sender {
-    BUCTextButton *button = (BUCTextButton *)sender;
-    [UIView animateWithDuration:0.3 animations:^(void) {
-        button.alpha = 1.0f;
-    }];
+
 }
 
 
@@ -99,20 +88,13 @@
 
 #pragma mark - private methods
 - (void)buildList:(NSArray *)list {
-    CGFloat leftPadding = 5.0f;
-    CGFloat topPadding = 5.0f;
-    CGFloat rightPadding = 5.0f;
-    CGFloat bottomPadding = 5.0f;
-    
     UIScrollView *context = (UIScrollView *)self.view;
 
     // set up wrapper
     UIView *wrapper = [[UIView alloc] init];
     
-    CGFloat listItemBottomMargin = 5.0f;
-    
     CGFloat contextWidth = CGRectGetWidth(context.frame);
-    CGFloat wrapperWidth = contextWidth - leftPadding - rightPadding;
+    CGFloat wrapperWidth = contextWidth - 2 * BUCDefaultPadding;
     
     // index of list item
     NSInteger index = 0;
@@ -126,13 +108,13 @@
         index = index + 1;
         [listItem addTarget:self action:@selector(jumpToPost:) forControlEvents:UIControlEventTouchUpInside];
         [wrapper addSubview:listItem];
-        layoutPointY = layoutPointY + CGRectGetHeight(listItem.frame) + listItemBottomMargin;
+        layoutPointY = layoutPointY + CGRectGetHeight(listItem.frame) + BUCDefaultMargin;
     }
 
     CGFloat topBarHeight = 64.0f;
-    wrapper.frame = CGRectMake(leftPadding, topPadding + topBarHeight, wrapperWidth, layoutPointY - listItemBottomMargin);
+    wrapper.frame = CGRectMake(BUCDefaultPadding, BUCDefaultPadding + topBarHeight, wrapperWidth, layoutPointY - BUCDefaultMargin);
 
-    context.contentSize = CGSizeMake(contextWidth, layoutPointY + topBarHeight + bottomPadding);
+    context.contentSize = CGSizeMake(contextWidth, layoutPointY + topBarHeight + BUCDefaultPadding);
 
     if (self.listWrapper) {
         [self.listWrapper removeFromSuperview];
@@ -144,26 +126,18 @@
 
 
 - (BUCListItem *)listItemOfPost:(BUCPost *)post frame:(CGRect)aRect {
-    CGFloat leftPadding = 5.0f;
-    CGFloat topPadding = 5.0f;
-    CGFloat rightPadding = 5.0f;
-    CGFloat bottomPadding = 5.0f;
-    
     CGFloat x = CGRectGetMinX(aRect);
     CGFloat y = CGRectGetMinY(aRect);
     CGFloat contextWidth = CGRectGetWidth(aRect);
     
-    CGFloat contentWidth = contextWidth - leftPadding - rightPadding;
+    CGFloat contentWidth = contextWidth - 2 * BUCDefaultPadding;
     
     CGFloat titleBottomMargin = 20.0f;
     
     CGFloat metaRightMargin = 2.0f;
-    CGFloat metaBottomMargin = 5.0f;
     
-    CGFloat separatorHeight = 0.5f;
-    
-    CGFloat layoutPointX = leftPadding;
-    CGFloat layoutPointY = topPadding;
+    CGFloat layoutPointX = BUCDefaultPadding;
+    CGFloat layoutPointY = BUCDefaultPadding;
     
     BUCListItem *listItem = [[BUCListItem alloc] initWithFrame:CGRectZero];
     
@@ -178,6 +152,7 @@
     // username of original poster
     BUCTextButton *poster = [[BUCTextButton alloc] init];
     [poster setTitle:post.user];
+    [poster sizeToFit];
     poster.frame = CGRectOffset(poster.frame, layoutPointX, layoutPointY);
     [listItem addSubview:poster];
     [poster addTarget:self action:@selector(jumpToPoster:) forControlEvents:UIControlEventTouchUpInside];
@@ -203,17 +178,17 @@
     UILabel *replyCount = [self labelFromRichText:replyCountRichText];
     replyCount.frame = CGRectOffset(replyCount.frame, layoutPointX, layoutPointY);
     [listItem addSubview:replyCount];
-    layoutPointX = leftPadding;
-    layoutPointY = layoutPointY + CGRectGetHeight(replyCount.frame) + metaBottomMargin;
+    layoutPointX = BUCDefaultPadding;
+    layoutPointY = layoutPointY + CGRectGetHeight(replyCount.frame) + BUCDefaultMargin;
     
     // separator
-    UIView *separator = [[UIView alloc] initWithFrame:CGRectMake(layoutPointX, layoutPointY, contentWidth, separatorHeight)];
+    UIView *separator = [[UIView alloc] initWithFrame:CGRectMake(layoutPointX, layoutPointY, contentWidth, BUCBorderWidth)];
     separator.backgroundColor = [UIColor lightGrayColor];
     [listItem addSubview:separator];
-    layoutPointY = layoutPointY + separatorHeight + metaBottomMargin;
+    layoutPointY = layoutPointY + BUCBorderWidth + BUCDefaultMargin;
     
     // last reply
-    NSString *lastReplyString = [NSString stringWithFormat:@"最后回复：%@ by", post.lastReply.dateline];
+    NSString *lastReplyString = [NSString stringWithFormat:@"最后回复：%@ by", post.lastReply.dateline.string];
     NSAttributedString *lastReplyRichText = [[NSAttributedString alloc] initWithString:lastReplyString attributes:metaAttributes];
     UILabel *lastReply = [self labelFromRichText:lastReplyRichText];
     lastReply.frame = CGRectOffset(lastReply.frame, layoutPointX, layoutPointY);
@@ -225,7 +200,7 @@
     lastReplyPoster.frame = CGRectOffset(lastReplyPoster.frame, layoutPointX, layoutPointY);
     [listItem addSubview:lastReplyPoster];
     
-    layoutPointY = layoutPointY + CGRectGetHeight(lastReplyPoster.frame) + bottomPadding;
+    layoutPointY = layoutPointY + CGRectGetHeight(lastReplyPoster.frame) + BUCDefaultPadding;
     
     // reset frame
     listItem.frame = CGRectMake(x, y, contextWidth, layoutPointY);

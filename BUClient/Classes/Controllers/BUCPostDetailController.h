@@ -2,10 +2,13 @@
 #import "BUCBaseController.h"
 
 
+@class BUCPost;
+
+
 @interface BUCPostDetailController : BUCBaseController
 
 
-@property (nonatomic) NSString *postID;
+@property (nonatomic) BUCPost *post;
 
 
 @end

@@ -24,6 +24,11 @@ extern NSString * const BUCUnwindToRootStoryboardID;
 extern CGFloat const BUCImageThumbnailWidth;
 extern CGFloat const BUCImageThumbnailHeight;
 
+extern CGFloat const BUCDefaultPadding;
+extern CGFloat const BUCDefaultMargin;
+
+extern CGFloat const BUCBorderWidth;
+
 
 // rich text attirbute keys
 extern NSString * const BUCLinkAttributeName;
