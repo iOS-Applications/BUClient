@@ -9,11 +9,14 @@
 
 @interface BUCPostListController () <UIScrollViewDelegate>
 
+@property (weak, nonatomic) IBOutlet UILabel *topLoadIndicator;
 
 @property (nonatomic, weak) UIView *listWrapper;
 
-@property (nonatomic) NSArray *postList;
+@property (nonatomic) NSMutableArray *postList;
 
+@property (nonatomic) NSString *from;
+@property (nonatomic) NSString *to;
 
 @end
 
@@ -30,6 +33,14 @@
 
     self.navigationItem.backBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"" style:UIBarButtonItemStylePlain target:nil action:nil];
     
+    if (self.fname) {
+        self.navigationItem.title = self.fname;
+        self.from = @"0";
+        self.to = @"20";
+    } else {
+        self.navigationItem.title = @"最新主题";
+    }
+    
     [self refresh:nil];
 }
 
@@ -45,16 +56,21 @@
     BUCPostListController * __weak weakSelf = self;
     BUCDataManager *dataManager = [BUCDataManager sharedInstance];
     
-    [dataManager
-     getFrontListOnSuccess:^(NSArray *list) {
-         weakSelf.postList = list;
-         [weakSelf buildList:list];
-         [weakSelf hideLoading];
-     }
-     onError:^(NSError *error) {
-         [weakSelf hideLoading];
-         [weakSelf alertMessage:error.localizedDescription];
-     }];
+    void (^listBlock)(NSArray *) = ^(NSArray *list) {
+        [weakSelf buildList:list];
+        [weakSelf hideLoading];
+    };
+    
+    void (^errorBlock)(NSError *) = ^(NSError *error) {
+        [weakSelf hideLoading];
+        [weakSelf alertMessage:error.localizedDescription];
+    };
+
+    if (self.fid) {
+        [dataManager getForumList:self.fid from:self.from to:self.to OnSuccess:listBlock onError:errorBlock];
+    } else {
+        [dataManager getFrontListOnSuccess:listBlock onError:errorBlock];
+    }
 }
 
 
@@ -69,8 +85,16 @@
 
 
 - (IBAction)jumpToForum:(id)sender {
-    
+    UIStoryboard *storyboard = [UIStoryboard storyboardWithName:BUCMainStoryboardPath bundle:nil];
+    BUCPostListController *postListController = [storyboard instantiateViewControllerWithIdentifier:BUCPostListControllerStoryboardID];
+    BUCTextButton *forumName = (BUCTextButton *)sender;
+    BUCListItem *listItem = (BUCListItem *)forumName.superview;
+    BUCPost *post = [self.postList objectAtIndex:listItem.tag];
+    postListController.fid = post.fid;
+    postListController.fname = post.fname.string;
+    [(UINavigationController *)self.parentViewController pushViewController:postListController animated:YES];
 }
+
 
 - (IBAction)jumpToPoster:(id)sender {
 
@@ -89,18 +113,26 @@
 #pragma mark - private methods
 - (void)buildList:(NSArray *)list {
     UIScrollView *context = (UIScrollView *)self.view;
+    UIView *wrapper;
+    CGFloat layoutPointY;
+    
+    // index of list item
+    NSInteger index = self.postList.count;
 
     // set up wrapper
-    UIView *wrapper = [[UIView alloc] init];
+    if (index == 0) {
+        wrapper = [[UIView alloc] init];
+        self.listWrapper = wrapper;
+        layoutPointY = 0;
+        self.postList = [NSMutableArray arrayWithArray:list];
+    } else {
+        wrapper = self.listWrapper;
+        layoutPointY = CGRectGetHeight(wrapper.frame) + BUCDefaultMargin;
+        [self.postList addObjectsFromArray:list];
+    }
     
     CGFloat contextWidth = CGRectGetWidth(context.frame);
     CGFloat wrapperWidth = contextWidth - 2 * BUCDefaultPadding;
-    
-    // index of list item
-    NSInteger index = 0;
-    
-    // layout position in wrapper's coordinate
-    CGFloat layoutPointY = 0;
     
     for (BUCPost *post in list) {
         BUCListItem *listItem = [self listItemOfPost:post frame:CGRectMake(0, layoutPointY, wrapperWidth, 0)];
@@ -134,8 +166,6 @@
     
     CGFloat titleBottomMargin = 20.0f;
     
-    CGFloat metaRightMargin = 2.0f;
-    
     CGFloat layoutPointX = BUCDefaultPadding;
     CGFloat layoutPointY = BUCDefaultPadding;
     
@@ -150,26 +180,44 @@
     BUCTextButton *poster = [[BUCTextButton alloc] initWithTitle:post.user location:CGPointMake(layoutPointX, layoutPointY)];
     [listItem addSubview:poster];
     [poster addTarget:self action:@selector(jumpToPoster:) forControlEvents:UIControlEventTouchUpInside];
-    layoutPointX = layoutPointX + CGRectGetWidth(poster.frame) + metaRightMargin;
+    layoutPointX = layoutPointX + CGRectGetWidth(poster.frame) + BUCDefaultMargin;
     
-    // forum name
     NSDictionary *metaAttributes = @{NSFontAttributeName:[UIFont preferredFontForTextStyle:UIFontTextStyleCaption1]};
+    
     NSAttributedString *snippetRichText = [[NSAttributedString alloc] initWithString:@"发表于" attributes:metaAttributes];
     UILabel *snippet = [self labelWithRichText:snippetRichText frame:CGRectMake(layoutPointX, layoutPointY, 0, 0)];
     [listItem addSubview:snippet];
-    layoutPointX = layoutPointX + CGRectGetWidth(snippet.frame) + metaRightMargin;
+    layoutPointX = layoutPointX + CGRectGetWidth(snippet.frame) + BUCDefaultMargin;
     
-    BUCTextButton *forumName = [[BUCTextButton alloc] initWithTitle:post.fname location:CGPointMake(layoutPointX, layoutPointY)];
-    [listItem addSubview:forumName];
-    layoutPointX = layoutPointX + CGRectGetWidth(forumName.frame) + metaRightMargin;
+    // forum name
+    if (!self.fid) {    
+        BUCTextButton *forumName = [[BUCTextButton alloc] initWithTitle:post.fname location:CGPointMake(layoutPointX, layoutPointY)];
+        [listItem addSubview:forumName];
+        [forumName addTarget:self action:@selector(jumpToForum:) forControlEvents:UIControlEventTouchUpInside];
+        layoutPointX = layoutPointX + CGRectGetWidth(forumName.frame) + BUCDefaultMargin;
+    } else {
+        UILabel *dateline = [self labelWithRichText:post.dateline frame:CGRectMake(layoutPointX, layoutPointY, 0, 0)];
+        [listItem addSubview:dateline];
+        layoutPointX = layoutPointX + CGRectGetWidth(dateline.frame) + BUCDefaultMargin;
+    }
     
     // reply count
-    NSString *replyCountString = [NSString stringWithFormat:@"%@人回复", post.childCount];
-    NSAttributedString *replyCountRichText = [[NSAttributedString alloc] initWithString:replyCountString attributes:metaAttributes];
-    UILabel *replyCount = [self labelWithRichText:replyCountRichText frame:CGRectMake(layoutPointX, layoutPointY, 0, 0)];
-    [listItem addSubview:replyCount];
+    NSString *childCountString = [NSString stringWithFormat:@"• %@人回复", post.childCount];
+    NSAttributedString *replyCountRichText = [[NSAttributedString alloc] initWithString:childCountString attributes:metaAttributes];
+    UILabel *childCount = [self labelWithRichText:replyCountRichText frame:CGRectMake(layoutPointX, layoutPointY, 0, 0)];
+    [listItem addSubview:childCount];
+    
+    // view count
+    if (self.fid) {
+        layoutPointX = layoutPointX + CGRectGetWidth(childCount.frame) + BUCDefaultMargin;
+        NSString *viewCountString = [NSString stringWithFormat:@"• %@次点击", post.viewCount];
+        NSAttributedString *viewCountRichText = [[NSAttributedString alloc] initWithString:viewCountString attributes:metaAttributes];
+        UILabel *viewCount = [self labelWithRichText:viewCountRichText frame:CGRectMake(layoutPointX, layoutPointY, 0, 0)];
+        [listItem addSubview:viewCount];
+    }
+    
     layoutPointX = BUCDefaultPadding;
-    layoutPointY = layoutPointY + CGRectGetHeight(replyCount.frame) + BUCDefaultMargin;
+    layoutPointY = layoutPointY + CGRectGetHeight(childCount.frame) + BUCDefaultMargin;
     
     // separator
     UIView *separator = [[UIView alloc] initWithFrame:CGRectMake(layoutPointX, layoutPointY, contentWidth, BUCBorderWidth)];
@@ -178,13 +226,13 @@
     layoutPointY = layoutPointY + BUCBorderWidth + BUCDefaultMargin;
     
     // last reply
-    NSString *lastReplyString = [NSString stringWithFormat:@"最后回复：%@ by", post.lastReply.dateline.string];
+    NSString *lastReplyString = [NSString stringWithFormat:@"最后回复：%@ by", post.lastPostDateline.string];
     NSAttributedString *lastReplyRichText = [[NSAttributedString alloc] initWithString:lastReplyString attributes:metaAttributes];
     UILabel *lastReply = [self labelWithRichText:lastReplyRichText frame:CGRectMake(layoutPointX, layoutPointY, 0, 0)];
     [listItem addSubview:lastReply];
-    layoutPointX = layoutPointX + CGRectGetWidth(lastReply.frame) + metaRightMargin;
+    layoutPointX = layoutPointX + CGRectGetWidth(lastReply.frame) + BUCDefaultMargin;
     
-    BUCTextButton *lastReplyPoster = [[BUCTextButton alloc] initWithTitle:post.lastReply.user location:CGPointMake(layoutPointX, layoutPointY)];
+    BUCTextButton *lastReplyPoster = [[BUCTextButton alloc] initWithTitle:post.lastPoster location:CGPointMake(layoutPointX, layoutPointY)];
     [listItem addSubview:lastReplyPoster];
     
     layoutPointY = layoutPointY + CGRectGetHeight(lastReplyPoster.frame) + BUCDefaultPadding;

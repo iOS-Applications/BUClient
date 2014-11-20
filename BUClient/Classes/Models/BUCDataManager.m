@@ -60,6 +60,19 @@ static NSString * const BUCForumListKey = @"threadlist";
 }
 
 
+- (void)getForumList:(NSString *)fid from:(NSString *)from to:(NSString *)to OnSuccess:(ArrayBlock)arrayBlock onError:(ErrorBlock)errorBlock {
+    
+    NSMutableDictionary *json = [[NSMutableDictionary alloc] init];
+    [json setObject:@"thread" forKey:@"action"];
+    [json setObject:[BUCAuthManager sharedInstance].currentUser forKey:@"username"];
+    [json setObject:fid forKey:@"fid"];
+    [json setObject:from forKey:@"from"];
+    [json setObject:to forKey:@"to"];
+    
+    [self loadListFromUrl:@"thread" json:json listKey:BUCForumListKey onSuccess:arrayBlock onError:errorBlock];
+}
+
+
 - (void)getPost:(NSString *)postID from:(NSString *)from to:(NSString *)to onSuccess:(ArrayBlock)arrayBlock onError:(ErrorBlock)errorBlock {
     
     NSMutableDictionary *json = [[NSMutableDictionary alloc] init];
@@ -170,6 +183,11 @@ static NSString * const BUCForumListKey = @"threadlist";
             
             if ([listKey isEqualToString:BUCNewListKey]) {
                 post.title = [weakSelf.htmlScraper richTextFromHtml:[weakSelf urldecode:[rawDic objectForKey:@"pname"]]];
+                NSString *lastPostDateline = [weakSelf parseDateline:[weakSelf urldecode:[[rawDic objectForKey:@"lastreply"] objectForKey:@"when"]]];
+                NSString *lastPoster = [weakSelf urldecode:[[rawDic objectForKey:@"lastreply"] objectForKey:@"who"]];
+                post.lastPoster = [[NSAttributedString alloc] initWithString:lastPoster attributes:metaAttribute];
+                post.lastPostDateline = [[NSAttributedString alloc] initWithString:lastPostDateline attributes:metaAttribute];
+                post.childCount = [rawDic objectForKey:@"tid_sum"];
             } else if ([listKey isEqualToString:BUCDetailListKey]) {
                 NSMutableString *content = [[NSMutableString alloc] init];
                 NSString *title = [weakSelf urldecode:[rawDic objectForKey:@"subject"]];
@@ -194,22 +212,18 @@ static NSString * const BUCForumListKey = @"threadlist";
                 
                 post.content = [weakSelf.htmlScraper richTextFromHtml:content];
             } else {
-                // thread list
+                post.title = [weakSelf.htmlScraper richTextFromHtml:[weakSelf urldecode:[rawDic objectForKey:@"subject"]]];
+                post.viewCount = [rawDic objectForKey:@"views"];
+                post.childCount = [rawDic objectForKey:@"replies"];
+                NSString *lastPostDateline = [weakSelf parseDateline:[rawDic objectForKey:@"lastpost"]];
+                NSString *lastPoster = [weakSelf urldecode:[rawDic objectForKey:@"lastposter"]];
+                post.lastPostDateline = [[NSAttributedString alloc] initWithString:lastPostDateline attributes:metaAttribute];
+                post.lastPoster = [[NSAttributedString alloc] initWithString:lastPoster attributes:metaAttribute];
             }
             
             NSString *dateline = [weakSelf parseDateline:[rawDic objectForKey:@"dateline"]];
             if (dateline) {
                 post.dateline = [[NSAttributedString alloc] initWithString:dateline attributes:metaAttribute];
-            }
-            
-            post.childCount = [rawDic objectForKey:@"tid_sum"];
-            
-            NSString *when = [weakSelf parseDateline:[weakSelf urldecode:[[rawDic objectForKey:@"lastreply"] objectForKey:@"when"]]];
-            NSString *who = [weakSelf urldecode:[[rawDic objectForKey:@"lastreply"] objectForKey:@"who"]];
-            if (when && who) {
-                post.lastReply = [[BUCPost alloc] init];
-                post.lastReply.user = [[NSAttributedString alloc] initWithString:who attributes:metaAttribute];
-                post.lastReply.dateline = [[NSAttributedString alloc] initWithString:when attributes:metaAttribute];
             }
             
             [list addObject:post];
@@ -279,7 +293,9 @@ static NSString * const BUCForumListKey = @"threadlist";
     static dispatch_once_t onceEnsure;
     dispatch_once(&onceEnsure, ^{
         dateFormatter = [[NSDateFormatter alloc] init];
-        [dateFormatter setDateFormat:@"yyyy-MM-dd HH:mm"];
+        dateFormatter.timeStyle = NSDateFormatterNoStyle;
+        dateFormatter.dateStyle = NSDateFormatterShortStyle;
+        
     });
     
     NSString *output;
@@ -287,6 +303,7 @@ static NSString * const BUCForumListKey = @"threadlist";
     
     NSRegularExpression *regex = [NSRegularExpression regularExpressionWithPattern:@"^[0-9]+$" options:NSRegularExpressionCaseInsensitive error:NULL];
     if ([regex numberOfMatchesInString:dateline options:0 range:NSMakeRange(0, dateline.length)] == 0) {
+        [dateFormatter setDateFormat:@"yyyy-MM-dd HH:mm"];
         date = [dateFormatter dateFromString:dateline];
     } else {
         date = [NSDate dateWithTimeIntervalSince1970:dateline.doubleValue];
@@ -304,6 +321,7 @@ static NSString * const BUCForumListKey = @"threadlist";
     } else if (timeInterval <= 60 * 60 * 24 * 30 * 12) {
         output = [NSString stringWithFormat:@"%d个月前", (int)timeInterval / (60 * 60 * 24 * 30)];
     } else {
+        [dateFormatter setDateFormat:@"yyyy/MM/	dd"];
         output = [dateFormatter stringFromDate:date];
     }
     

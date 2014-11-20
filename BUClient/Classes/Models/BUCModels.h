@@ -6,9 +6,6 @@
 
 @interface BUCPost : NSObject
 
-@property (nonatomic) BUCPost *parent;
-@property (nonatomic) BUCPost *lastReply;
-
 @property (nonatomic) NSString *pid;
 @property (nonatomic) NSString *fid;
 @property (nonatomic) NSAttributedString *fname;
@@ -21,9 +18,13 @@
 @property (nonatomic) NSAttributedString *content;
 @property (nonatomic) NSAttributedString *dateline;
 
+@property (nonatomic) NSString *viewCount;
 @property (nonatomic) NSString *childCount;
 
 @property (nonatomic) NSInteger index;
+
+@property (nonatomic) NSAttributedString *lastPostDateline;
+@property (nonatomic) NSAttributedString *lastPoster;
 
 @end
 

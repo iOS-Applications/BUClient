@@ -14,6 +14,12 @@ typedef void(^ImageBlock) (UIImage *image);
 
 - (void)getFrontListOnSuccess:(ArrayBlock)arrayBlock onError:(ErrorBlock)errorBlock;
 
+- (void)getForumList:(NSString *)fid
+                from:(NSString *)from
+                  to:(NSString *)to
+           OnSuccess:(ArrayBlock)arrayBlock
+             onError:(ErrorBlock)errorBlock;
+
 - (void)getPost:(NSString *)postID
            from:(NSString *)from
              to:(NSString *)to
