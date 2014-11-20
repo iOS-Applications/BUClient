@@ -1,6 +1,7 @@
 #import <Foundation/Foundation.h>
 
 
+typedef void(^CountBlock) (NSUInteger count);
 typedef void(^ArrayBlock) (NSArray *list);
 typedef void(^ErrorBlock) (NSError *error);
 typedef void(^SuccessBlock) (NSDictionary *json);
@@ -17,7 +18,7 @@ typedef void(^ImageBlock) (UIImage *image);
 - (void)getForumList:(NSString *)fid
                 from:(NSString *)from
                   to:(NSString *)to
-           OnSuccess:(ArrayBlock)arrayBlock
+           onSuccess:(ArrayBlock)arrayBlock
              onError:(ErrorBlock)errorBlock;
 
 - (void)getPost:(NSString *)postID
@@ -25,6 +26,8 @@ typedef void(^ImageBlock) (UIImage *image);
              to:(NSString *)to
       onSuccess:(ArrayBlock)arrayBlock
         onError:(ErrorBlock)errorBlock;
+
+- (void)getPostCountOfForum:(NSString *)fid post:(NSString *)pid onSuccess:(CountBlock)countBlock onError:(ErrorBlock)errorBlock;
 
 - (void)getImageFromUrl:(NSURL *)url onSuccess:(ImageBlock)imageBlock;
 
