@@ -2,14 +2,21 @@
 
 
 @implementation BUCTextButton
-- (void)setTitle:(NSAttributedString *)title {
-    UILabel *titleLabel = [[UILabel alloc] init];
-    titleLabel.attributedText = title;
-    titleLabel.textColor = titleLabel.tintColor;
+- (instancetype)initWithTitle:(NSAttributedString *)title location:(CGPoint)location {
+    self = [super init];
     
-    [titleLabel sizeToFit];
-    self.frame = titleLabel.frame;
-    [self addSubview:titleLabel];
+    if (self) {
+        UILabel *titleLabel = [[UILabel alloc] init];
+        titleLabel.attributedText = title;
+        titleLabel.textColor = titleLabel.tintColor;
+        
+        [titleLabel sizeToFit];
+        self.frame = titleLabel.frame;
+        [self addSubview:titleLabel];
+        self.frame = CGRectOffset(self.frame, location.x, location.y);
+    }
+    
+    return self;
 }
 
 

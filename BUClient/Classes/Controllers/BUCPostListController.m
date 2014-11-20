@@ -142,18 +142,12 @@
     BUCListItem *listItem = [[BUCListItem alloc] initWithFrame:CGRectZero];
     
     // title
-    UILabel *title = [[UILabel alloc] initWithFrame:CGRectMake(layoutPointX, layoutPointY, contentWidth, 0.0f)];
-    title.numberOfLines = 0;
-    title.attributedText = post.title;
-    [title sizeToFit];
+    UILabel *title = [self labelWithRichText:post.title frame:CGRectMake(layoutPointX, layoutPointY, contentWidth, 0)];
     [listItem addSubview:title];
     layoutPointY = layoutPointY + CGRectGetHeight(title.frame) + titleBottomMargin;
     
     // username of original poster
-    BUCTextButton *poster = [[BUCTextButton alloc] init];
-    [poster setTitle:post.user];
-    [poster sizeToFit];
-    poster.frame = CGRectOffset(poster.frame, layoutPointX, layoutPointY);
+    BUCTextButton *poster = [[BUCTextButton alloc] initWithTitle:post.user location:CGPointMake(layoutPointX, layoutPointY)];
     [listItem addSubview:poster];
     [poster addTarget:self action:@selector(jumpToPoster:) forControlEvents:UIControlEventTouchUpInside];
     layoutPointX = layoutPointX + CGRectGetWidth(poster.frame) + metaRightMargin;
@@ -161,22 +155,18 @@
     // forum name
     NSDictionary *metaAttributes = @{NSFontAttributeName:[UIFont preferredFontForTextStyle:UIFontTextStyleCaption1]};
     NSAttributedString *snippetRichText = [[NSAttributedString alloc] initWithString:@"发表于" attributes:metaAttributes];
-    UILabel *snippet = [self labelFromRichText:snippetRichText];
-    snippet.frame = CGRectOffset(snippet.frame, layoutPointX, layoutPointY);
+    UILabel *snippet = [self labelWithRichText:snippetRichText frame:CGRectMake(layoutPointX, layoutPointY, 0, 0)];
     [listItem addSubview:snippet];
     layoutPointX = layoutPointX + CGRectGetWidth(snippet.frame) + metaRightMargin;
     
-    BUCTextButton *forumName = [[BUCTextButton alloc] init];
-    [forumName setTitle:post.fname];
-    forumName.frame = CGRectOffset(forumName.frame, layoutPointX, layoutPointY);
+    BUCTextButton *forumName = [[BUCTextButton alloc] initWithTitle:post.fname location:CGPointMake(layoutPointX, layoutPointY)];
     [listItem addSubview:forumName];
     layoutPointX = layoutPointX + CGRectGetWidth(forumName.frame) + metaRightMargin;
     
     // reply count
     NSString *replyCountString = [NSString stringWithFormat:@"%@人回复", post.childCount];
     NSAttributedString *replyCountRichText = [[NSAttributedString alloc] initWithString:replyCountString attributes:metaAttributes];
-    UILabel *replyCount = [self labelFromRichText:replyCountRichText];
-    replyCount.frame = CGRectOffset(replyCount.frame, layoutPointX, layoutPointY);
+    UILabel *replyCount = [self labelWithRichText:replyCountRichText frame:CGRectMake(layoutPointX, layoutPointY, 0, 0)];
     [listItem addSubview:replyCount];
     layoutPointX = BUCDefaultPadding;
     layoutPointY = layoutPointY + CGRectGetHeight(replyCount.frame) + BUCDefaultMargin;
@@ -190,14 +180,11 @@
     // last reply
     NSString *lastReplyString = [NSString stringWithFormat:@"最后回复：%@ by", post.lastReply.dateline.string];
     NSAttributedString *lastReplyRichText = [[NSAttributedString alloc] initWithString:lastReplyString attributes:metaAttributes];
-    UILabel *lastReply = [self labelFromRichText:lastReplyRichText];
-    lastReply.frame = CGRectOffset(lastReply.frame, layoutPointX, layoutPointY);
+    UILabel *lastReply = [self labelWithRichText:lastReplyRichText frame:CGRectMake(layoutPointX, layoutPointY, 0, 0)];
     [listItem addSubview:lastReply];
     layoutPointX = layoutPointX + CGRectGetWidth(lastReply.frame) + metaRightMargin;
     
-    BUCTextButton *lastReplyPoster = [[BUCTextButton alloc] init];
-    [lastReplyPoster setTitle:post.lastReply.user];
-    lastReplyPoster.frame = CGRectOffset(lastReplyPoster.frame, layoutPointX, layoutPointY);
+    BUCTextButton *lastReplyPoster = [[BUCTextButton alloc] initWithTitle:post.lastReply.user location:CGPointMake(layoutPointX, layoutPointY)];
     [listItem addSubview:lastReplyPoster];
     
     layoutPointY = layoutPointY + CGRectGetHeight(lastReplyPoster.frame) + BUCDefaultPadding;
@@ -209,12 +196,13 @@
 }
 
 
-- (UILabel *)labelFromRichText:(NSAttributedString *)richText {
-    UILabel *snippet = [[UILabel alloc] init];
-    snippet.attributedText = richText;
-    [snippet sizeToFit];
+- (UILabel *)labelWithRichText:(NSAttributedString *)richText frame:(CGRect)frame {
+    UILabel *label = [[UILabel alloc] initWithFrame:frame];
+    label.numberOfLines = 0;
+    label.attributedText = richText;
+    [label sizeToFit];
     
-    return snippet;
+    return label;
 }
 
 

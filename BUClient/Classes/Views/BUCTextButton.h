@@ -4,7 +4,6 @@
 @interface BUCTextButton : UIControl
 
 
-- (void)setTitle:(NSAttributedString *)title;
-
+- (instancetype)initWithTitle:(NSAttributedString *)title location:(CGPoint)location;
 
 @end

@@ -19,6 +19,7 @@
 
 @property (weak, nonatomic) UIView *listWrapper;
 
+@property (nonatomic) NSDictionary *metaAttribute;
 
 @end
 
@@ -32,6 +33,8 @@
     self.modalTransitionStyle = UIModalTransitionStyleCrossDissolve;
     
     self.defaultAvatar = [UIImage imageNamed:@"etc/avatar.gif"];
+    
+    self.metaAttribute = @{NSFontAttributeName:[UIFont preferredFontForTextStyle:UIFontTextStyleCaption1]};
     
     self.from = @"0";
     self.to = @"20";
@@ -103,13 +106,11 @@
     
     NSInteger index = self.postList.count;
     
-    NSDictionary *metaAttribute = @{NSFontAttributeName:[UIFont preferredFontForTextStyle:UIFontTextStyleCaption1]};
-    
     BUCPostDetailController * __weak weakSelf = self;
     
     for (BUCPost *post in list) {
         post.index = index;
-        CGFloat newLayoutPointY = layoutPointY;
+        CGFloat savedLayoutPointY = layoutPointY;
         
         // avatar
         UIImageView *avatar = [[UIImageView alloc] initWithFrame:CGRectMake(layoutPointX, layoutPointY, avatarWidth, avatarHeight)];
@@ -125,45 +126,32 @@
         layoutPointX = layoutPointX + avatarWidth + BUCDefaultMargin;
         
         // username
-        BUCTextButton *poster = [[BUCTextButton alloc] init];
-        [poster setTitle:post.user];
+        BUCTextButton *poster = [[BUCTextButton alloc] initWithTitle:post.user location:CGPointMake(layoutPointX, layoutPointY)];
         poster.tag = index;
-        poster.frame = CGRectOffset(poster.frame, layoutPointX, layoutPointY);
         [wrapper addSubview:poster];
         
         if ([post.user isEqualToAttributedString:self.post.user]) {
-            CGFloat savedLayoutX = layoutPointX;
-            layoutPointX = layoutPointX + CGRectGetWidth(poster.frame) + BUCDefaultMargin;
-            UILabel *op = [[UILabel alloc] initWithFrame:CGRectMake(layoutPointX, layoutPointY, 0, 0)];
-            op.attributedText = [[NSAttributedString alloc] initWithString:@"OP" attributes:metaAttribute];
-            op.textAlignment = NSTextAlignmentCenter;
-            [op sizeToFit];
-            op.frame = CGRectInset(op.frame, -2.0f, -2.0f);
-            op.backgroundColor = op.tintColor;
-            op.textColor = [UIColor whiteColor];
+            UILabel *op = [self opLabelAtLocation:CGPointMake(layoutPointX + CGRectGetWidth(poster.frame) + BUCDefaultMargin, layoutPointY)];
             [wrapper addSubview:op];
-            layoutPointX = savedLayoutX;
         }
         
         layoutPointY = layoutPointY + CGRectGetHeight(poster.frame) + BUCDefaultMargin;
         
         // post index
         UILabel *postIndex = [[UILabel alloc] initWithFrame:CGRectMake(layoutPointX, layoutPointY, 0, 0)];
-        postIndex.attributedText = [[NSAttributedString alloc] initWithString:[NSString stringWithFormat:@"%ld楼", index + 1] attributes:metaAttribute];
+        postIndex.attributedText = [[NSAttributedString alloc] initWithString:[NSString stringWithFormat:@"%ld楼", index + 1] attributes:self.metaAttribute];
         index = index + 1;
         [postIndex sizeToFit];
         [wrapper addSubview:postIndex];
         
-        layoutPointX = layoutPointX + CGRectGetWidth(postIndex.frame) + BUCDefaultMargin;
-        
         // dateline
-        UILabel *dateline = [[UILabel alloc] initWithFrame:CGRectMake(layoutPointX, layoutPointY, 0, 0)];
+        UILabel *dateline = [[UILabel alloc] initWithFrame:CGRectMake(layoutPointX + CGRectGetWidth(postIndex.frame) + BUCDefaultMargin, layoutPointY, 0, 0)];
         dateline.attributedText = post.dateline;
         [dateline sizeToFit];
         [wrapper addSubview:dateline];
         
         layoutPointX = BUCDefaultPadding;
-        layoutPointY = newLayoutPointY + avatarHeight + BUCDefaultMargin;
+        layoutPointY = savedLayoutPointY + avatarHeight + BUCDefaultMargin;
         
         // post body
         if (post.content) {
@@ -206,6 +194,20 @@
 
 - (void)handleImageTap {
     NSLog(@"image tapped");
+}
+
+
+- (UILabel *)opLabelAtLocation:(CGPoint)location {
+    UILabel *op = [[UILabel alloc] init];
+    op.attributedText = [[NSAttributedString alloc] initWithString:@"OP" attributes:self.metaAttribute];
+    op.textAlignment = NSTextAlignmentCenter;
+    [op sizeToFit];
+    op.frame = CGRectOffset(op.frame, location.x, location.y);
+    op.frame = CGRectInset(op.frame, -2.0f, -2.0f);
+    op.backgroundColor = op.tintColor;
+    op.textColor = [UIColor whiteColor];
+    
+    return op;
 }
 
 
