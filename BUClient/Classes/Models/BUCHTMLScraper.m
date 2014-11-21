@@ -382,7 +382,7 @@
     
     NSString *pattern = @"^#\\s*([a-z0-9]{3}|[a-z0-9]{6})$";
     
-    if ([self matchString:color withPattern:pattern match:NULL]) {
+    if (![self matchString:color withPattern:pattern match:NULL]) {
         output = [UIColor blackColor];
     } else {
         NSString *cleanString = [color stringByReplacingOccurrencesOfString:@"#" withString:@""];
@@ -480,7 +480,7 @@
         return [UIColor whiteColor];
     }
     
-    NSString *pattern = @"background-color:[\\s]*(#[0-9a-f]{6}|[0-9a-f]{3})";
+    NSString *pattern = @"background-color:\\s*(#[0-9a-f]{6}|[0-9a-f]{3})";
     NSTextCheckingResult *match;
     if ([self matchString:styleString withPattern:pattern match:&match]) {
         return [self colorAttribute:[styleString substringWithRange:[match rangeAtIndex:1]]];

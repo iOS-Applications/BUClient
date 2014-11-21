@@ -87,7 +87,6 @@
 
 
 - (void)drawBackgroundForGlyphRange:(NSRange)glyphsToShow atPoint:(CGPoint)origin {
-    [self.backgroundColor setFill];
     [self.borderColor setStroke];
     
     NSArray *blockList = [self.textStorage attribute:BUCTextBlockListAttributeName atIndex:0 effectiveRange:NULL];
@@ -96,7 +95,12 @@
     BUCTextContainer *textContainer = [self.textContainers lastObject];
     
     for (BUCTextBlockAttribute *blockAttribute in [blockList reverseObjectEnumerator]) {
-        [blockAttribute.backgroundColor setFill];
+        if (blockAttribute.backgroundColor) {
+            [blockAttribute.backgroundColor setFill];
+        } else {
+            [self.backgroundColor setFill];
+        }
+        
         CGRect frame = [self boundingRectForGlyphRange:blockAttribute.range inTextContainer:textContainer];
         frame = CGRectInset(frame, -BUCDefaultPadding, -BUCDefaultPadding);
         CGContextFillRect(context, frame);

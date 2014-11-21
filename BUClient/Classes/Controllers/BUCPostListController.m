@@ -9,14 +9,23 @@
 
 @interface BUCPostListController () <UIScrollViewDelegate>
 
-@property (weak, nonatomic) IBOutlet UILabel *topLoadIndicator;
+@property (weak, nonatomic) IBOutlet BUCListItem *previousHolder;
+@property (weak, nonatomic) IBOutlet UILabel *previous;
+@property (weak, nonatomic) IBOutlet BUCListItem *nextHolder;
+@property (weak, nonatomic) IBOutlet UILabel *moreOrNext;
+@property (weak, nonatomic) IBOutlet UIActivityIndicatorView *moreIndicator;
 
 @property (nonatomic, weak) UIView *listWrapper;
 
 @property (nonatomic) NSMutableArray *postList;
+@property (nonatomic) NSMutableArray *backUp;
 
 @property (nonatomic) NSString *from;
 @property (nonatomic) NSString *to;
+
+@property (nonatomic) NSUInteger postCount;
+@property (nonatomic) NSUInteger location;
+@property (nonatomic) NSUInteger length;
 
 @end
 
@@ -30,25 +39,54 @@
     
     UIScrollView *context = (UIScrollView *)self.view;
     context.delegate = self;
+    context.scrollIndicatorInsets = UIEdgeInsetsMake(64.0f, 0, 0, 0);
 
     self.navigationItem.backBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"" style:UIBarButtonItemStylePlain target:nil action:nil];
+    self.previousHolder.frame = CGRectMake(0, 0, CGRectGetWidth(self.view.frame), 40.0f);
+    self.previousHolder.frame = CGRectInset(self.previousHolder.frame, BUCDefaultPadding, 0);
+    [self.previousHolder addTarget:self action:@selector(loadPrevious) forControlEvents:UIControlEventTouchUpInside];
+    self.previous.frame = CGRectOffset(self.previous.frame, -BUCDefaultPadding, 0);
+    self.moreOrNext.frame = CGRectOffset(self.moreOrNext.frame, -BUCDefaultPadding, 0);
+    self.nextHolder.frame = self.previousHolder.frame;
+    self.previousHolder.frame = CGRectOffset(self.previousHolder.frame, 0, 64.0f + BUCDefaultPadding);
     
     if (self.fname) {
-        self.navigationItem.title = self.fname;
+        self.navigationItem.title = [NSString stringWithFormat:@"%@[1]", self.fname];
         self.from = @"0";
         self.to = @"20";
+        self.location = 0;
+        self.length = 0;
     } else {
         self.navigationItem.title = @"最新主题";
     }
     
-    [self refresh:nil];
+    [self refresh];
 }
 
 
-#pragma mark - IBAction and unwind methods
-- (IBAction)refresh:(id)sender {
-    [self displayLoading];    
-    [self loadList];
+#pragma mark - actions and unwind methods
+- (void)refresh {
+    [(UIScrollView *)self.view setContentOffset:CGPointMake(0, 0) animated:NO];
+    [self displayLoading];
+    self.backUp = self.postList;
+    self.postList = nil;
+    self.view.userInteractionEnabled = NO;
+    if (self.fid) {
+        BUCPostListController * __weak weakSelf = self;
+        [[BUCDataManager sharedInstance]
+         getPostCountOfForum:self.fid
+         post:nil
+         onSuccess:^(NSUInteger count) {
+             weakSelf.postCount = count;
+             [weakSelf loadList];
+         } onError:^(NSError *error) {
+             [weakSelf hideLoading];
+             [weakSelf alertMessage:error.localizedDescription];
+         }];
+        
+    } else {
+        [self loadList];
+    }
 }
 
 
@@ -57,24 +95,40 @@
     BUCDataManager *dataManager = [BUCDataManager sharedInstance];
     
     void (^listBlock)(NSArray *) = ^(NSArray *list) {
+        if (weakSelf.fid) {
+            NSUInteger location = weakSelf.location;
+            NSUInteger from = weakSelf.from.integerValue;
+            if (abs((int)(location - from)) == 40) {
+                weakSelf.location = from;
+                weakSelf.length = 20;
+            } else{
+                weakSelf.length = weakSelf.length + 20;
+            }
+        }
+        weakSelf.view.userInteractionEnabled = YES;
+        weakSelf.backUp = nil;
         [weakSelf buildList:list];
         [weakSelf hideLoading];
+        [weakSelf.moreIndicator stopAnimating];
     };
     
     void (^errorBlock)(NSError *) = ^(NSError *error) {
+        weakSelf.view.userInteractionEnabled = YES;
+        weakSelf.postList = weakSelf.backUp;
         [weakSelf hideLoading];
+        [weakSelf.moreIndicator stopAnimating];
         [weakSelf alertMessage:error.localizedDescription];
     };
 
     if (self.fid) {
-        [dataManager getForumList:self.fid from:self.from to:self.to OnSuccess:listBlock onError:errorBlock];
+        [dataManager getForumList:self.fid from:self.from to:self.to onSuccess:listBlock onError:errorBlock];
     } else {
         [dataManager getFrontListOnSuccess:listBlock onError:errorBlock];
     }
 }
 
 
-- (IBAction)jumpToPost:(id)sender {
+- (void)jumpToPost:(id)sender {
     UIStoryboard *storyboard = [UIStoryboard storyboardWithName:BUCMainStoryboardPath bundle:nil];
     BUCPostDetailController *postDetailController = [storyboard instantiateViewControllerWithIdentifier:BUCPostDetailControllerStoryboardID];
     BUCListItem *listItem = (BUCListItem *)sender;
@@ -84,7 +138,7 @@
 }
 
 
-- (IBAction)jumpToForum:(id)sender {
+- (void)jumpToForum:(id)sender {
     UIStoryboard *storyboard = [UIStoryboard storyboardWithName:BUCMainStoryboardPath bundle:nil];
     BUCPostListController *postListController = [storyboard instantiateViewControllerWithIdentifier:BUCPostListControllerStoryboardID];
     BUCTextButton *forumName = (BUCTextButton *)sender;
@@ -96,8 +150,30 @@
 }
 
 
-- (IBAction)jumpToPoster:(id)sender {
+- (void)jumpToPoster:(id)sender {
 
+}
+
+
+- (void)loadPrevious {
+    self.from = [NSString stringWithFormat:@"%ld", self.location - 40];
+    self.to = [NSString stringWithFormat:@"%ld", self.location - 20];
+    [self refresh];
+}
+
+
+- (void)loadNext {
+    self.from = [NSString stringWithFormat:@"%ld", self.location + 40];
+    self.to = [NSString stringWithFormat:@"%ld", self.location + 60];
+    [self refresh];
+}
+
+
+- (void)loadMore {
+    self.from = [NSString stringWithFormat:@"%ld", self.location + 20];
+    self.to = [NSString stringWithFormat:@"%ld", self.location + 40];
+    [self.moreIndicator startAnimating];
+    [self loadList];
 }
 
 
@@ -105,10 +181,15 @@
 - (void)scrollViewDidEndDragging:(UIScrollView *)scrollView willDecelerate:(BOOL)decelerate {
     CGFloat refreshFireHeight = 40.0f;
     if (scrollView.contentOffset.y <= -refreshFireHeight) {
-        [self displayLoading];
-        [self loadList];
+        [self refresh];
+    } else if (self.fid && self.postList.count < 40 && self.postCount >= self.location + 20) {
+        CGFloat loadMoreHeight = ceilf(CGRectGetHeight(self.listWrapper.frame) / 2);
+        if (scrollView.contentOffset.y >= loadMoreHeight) {
+            [self loadMore];
+        }
     }
 }
+
 
 #pragma mark - private methods
 - (void)buildList:(NSArray *)list {
@@ -116,44 +197,81 @@
     UIView *wrapper;
     CGFloat layoutPointY;
     
+    CGFloat contextWidth = CGRectGetWidth(context.frame);
+    CGFloat wrapperWidth = contextWidth - 2 * BUCDefaultPadding;
+    CGFloat topBarHeight = 64.0f;
+    
     // index of list item
     NSInteger index = self.postList.count;
 
     // set up wrapper
+    CGFloat contextLayoutPointY = topBarHeight + BUCDefaultPadding;
     if (index == 0) {
+        self.previousHolder.hidden = YES;
+        [self.listWrapper removeFromSuperview];
         wrapper = [[UIView alloc] init];
+        wrapper.backgroundColor = context.backgroundColor;
         self.listWrapper = wrapper;
         layoutPointY = 0;
-        self.postList = [NSMutableArray arrayWithArray:list];
+        self.postList = [[NSMutableArray alloc] init];
     } else {
         wrapper = self.listWrapper;
         layoutPointY = CGRectGetHeight(wrapper.frame) + BUCDefaultMargin;
-        [self.postList addObjectsFromArray:list];
     }
     
-    CGFloat contextWidth = CGRectGetWidth(context.frame);
-    CGFloat wrapperWidth = contextWidth - 2 * BUCDefaultPadding;
+    if (self.location >= 40) {
+        self.previousHolder.hidden = NO;
+        contextLayoutPointY = contextLayoutPointY + CGRectGetHeight(self.previousHolder.frame) + BUCDefaultPadding;
+    } else {
+        self.previousHolder.hidden = YES;
+    }
+    
+    if (self.fid) {
+        self.navigationItem.title = [NSString stringWithFormat:@"%@[%ld]", self.fname, self.location / 40 + 1];
+    }
     
     for (BUCPost *post in list) {
+        if ([self isLoadedBefore:post]) {
+            continue;
+        }
+        
         BUCListItem *listItem = [self listItemOfPost:post frame:CGRectMake(0, layoutPointY, wrapperWidth, 0)];
         listItem.tag = index;
         index = index + 1;
         [listItem addTarget:self action:@selector(jumpToPost:) forControlEvents:UIControlEventTouchUpInside];
         [wrapper addSubview:listItem];
         layoutPointY = layoutPointY + CGRectGetHeight(listItem.frame) + BUCDefaultMargin;
+        
+        [self.postList addObject:post];
     }
 
-    CGFloat topBarHeight = 64.0f;
-    wrapper.frame = CGRectMake(BUCDefaultPadding, BUCDefaultPadding + topBarHeight, wrapperWidth, layoutPointY - BUCDefaultMargin);
-
-    context.contentSize = CGSizeMake(contextWidth, layoutPointY + topBarHeight + BUCDefaultPadding);
-
-    if (self.listWrapper) {
-        [self.listWrapper removeFromSuperview];
+    wrapper.frame = CGRectMake(BUCDefaultPadding, contextLayoutPointY, wrapperWidth, layoutPointY - BUCDefaultMargin);
+    
+    contextLayoutPointY = contextLayoutPointY + layoutPointY;
+    
+    if (self.postCount > 0 && self.postCount >= self.location + self.length) {
+        self.nextHolder.hidden = NO;
+        self.nextHolder.frame = CGRectMake(BUCDefaultPadding, contextLayoutPointY, CGRectGetWidth(self.nextHolder.frame), CGRectGetHeight(self.nextHolder.frame));
+        contextLayoutPointY = contextLayoutPointY + CGRectGetHeight(self.nextHolder.frame) + BUCDefaultMargin;
+        if (self.length == 20) {
+            self.moreOrNext.text = @"More...";
+            [self.nextHolder removeTarget:self action:NULL forControlEvents:UIControlEventTouchUpInside];
+            [self.nextHolder addTarget:self action:@selector(loadMore) forControlEvents:UIControlEventTouchUpInside];
+        } else if (self.length == 40) {
+            self.moreOrNext.text = @"下一页";
+            [self.nextHolder removeTarget:self action:NULL forControlEvents:UIControlEventTouchUpInside];
+            [self.nextHolder addTarget:self action:@selector(loadNext) forControlEvents:UIControlEventTouchUpInside];
+        }
+    } else {
+        self.nextHolder.hidden = YES;
     }
     
+    if (contextLayoutPointY < CGRectGetHeight(context.frame)) {
+        contextLayoutPointY = CGRectGetHeight(context.frame) + 1.0f;
+    }
+    
+    context.contentSize = CGSizeMake(contextWidth, contextLayoutPointY);
     [context addSubview:wrapper];
-    self.listWrapper = wrapper;
 }
 
 
@@ -251,6 +369,17 @@
     [label sizeToFit];
     
     return label;
+}
+
+
+- (BOOL)isLoadedBefore:(BUCPost *)newpost {
+    for (BUCPost *post in self.postList) {
+        if ([post.pid isEqualToString:newpost.pid]) {
+            return YES;
+        }
+    }
+    
+    return NO;
 }
 
 

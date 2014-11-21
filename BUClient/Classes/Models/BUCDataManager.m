@@ -74,13 +74,13 @@ static NSString * const BUCForumListKey = @"threadlist";
      loadJsonFromUrl:@"fid_tid"
      json:json
      onSuccess:^(NSDictionary *resultJson) {
+         NSString *count;
          if (fid) {
-             NSString *count = [resultJson objectForKey:@"fid_sum"];
-             countBlock(count.integerValue);
+             count = [resultJson objectForKey:@"fid_sum"];
          } else {
-             NSString *count = [resultJson objectForKey:@"tid_sum"];
-             countBlock(count.integerValue);
+             count = [resultJson objectForKey:@"tid_sum"];
          }
+         countBlock(count.integerValue);
      }
      onError:errorBlock];
 }

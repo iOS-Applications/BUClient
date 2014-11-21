@@ -109,7 +109,6 @@
     BUCPostDetailController * __weak weakSelf = self;
     
     for (BUCPost *post in list) {
-        post.index = index;
         CGFloat savedLayoutPointY = layoutPointY;
         
         // avatar

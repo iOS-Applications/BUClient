@@ -5,17 +5,33 @@
 
 
 #pragma mark - overrided methods
-- (BUCListItem *)initWithFrame:(CGRect)aRect {
+- (instancetype)initWithFrame:(CGRect)aRect {
     self = [super initWithFrame:aRect];
     
     if (self) {
-        self.layer.borderWidth = 0.3f;
-        self.layer.borderColor = [UIColor lightGrayColor].CGColor;
-        self.layer.backgroundColor = [UIColor whiteColor].CGColor;
-        self.layer.cornerRadius = 4.0f;
+        [self setUpAppearance];
     }
     
     return self;
+}
+
+
+- (instancetype)initWithCoder:(NSCoder *)aDecoder {
+    self = [super initWithCoder:aDecoder];
+    
+    if (self) {
+        [self setUpAppearance];
+    }
+    
+    return self;
+}
+
+
+- (void)setUpAppearance {
+    self.layer.borderWidth = 0.3f;
+    self.layer.borderColor = [UIColor lightGrayColor].CGColor;
+    self.layer.backgroundColor = [UIColor whiteColor].CGColor;
+    self.layer.cornerRadius = 4.0f;
 }
 
 

@@ -21,8 +21,6 @@
 @property (nonatomic) NSString *viewCount;
 @property (nonatomic) NSString *childCount;
 
-@property (nonatomic) NSInteger index;
-
 @property (nonatomic) NSAttributedString *lastPostDateline;
 @property (nonatomic) NSAttributedString *lastPoster;
 
