@@ -107,7 +107,21 @@
         NSUInteger location = self.output.length;
         
         if ([tagName isEqualToString:@"center"]) {
-            [self appendCenter:tree superAttributes:thisAttributes];
+            TFHppleElement *table = tree.firstChild;
+            NSString *header = table.firstChild.firstChild.firstChild.content;
+            TFHppleElement *content = [table.children objectAtIndex:1];
+            content = content.firstChild.firstChild.firstChild.firstChild;
+            
+            if ([header rangeOfString:@"引用"].length > 0) {
+                [self.output appendAttributedString:[[NSAttributedString alloc] initWithString:@"引用:\n" attributes:superAttributes]];
+                location = self.output.length;
+                [self appendQuote:content superAttributes:thisAttributes];
+            } else if ([header rangeOfString:@"代码"].length > 0) {
+                [self.output appendAttributedString:[[NSAttributedString alloc] initWithString:@"代码:\n" attributes:superAttributes]];
+                location = self.output.length;
+                [self appendCode:content superAttributes:thisAttributes];
+            }
+
         } else if ([tagName isEqualToString:@"blockquote"]) {
             TFHppleElement *box = [tree.children objectAtIndex:1];
             blockAttribute.backgroundColor = [self parseBoxColor:box];
@@ -214,22 +228,6 @@
 
 
 #pragma mark - block elements
-- (void)appendCenter:(TFHppleElement *)tree superAttributes:(NSDictionary *)superAttributes {
-    TFHppleElement *table = tree.firstChild;
-    NSString *header = table.firstChild.firstChild.firstChild.content;
-    TFHppleElement *content = [table.children objectAtIndex:1];
-    content = content.firstChild.firstChild.firstChild.firstChild;
-    
-    if ([header rangeOfString:@"引用"].length > 0) {
-        [self appendQuote:content superAttributes:superAttributes];
-    } else if ([header rangeOfString:@"代码"].length > 0) {
-        [self appendCode:content superAttributes:superAttributes];
-    } else {
-        NSLog(@"unknown center block:%@", tree.raw);
-    }
-}
-
-
 - (void)appendQuote:(TFHppleElement *)tree superAttributes:(NSDictionary *)superAttributes {
     if (!tree || !tree.children || tree.children.count == 0) {
         return;
