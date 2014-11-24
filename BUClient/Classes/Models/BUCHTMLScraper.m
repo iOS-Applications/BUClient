@@ -357,10 +357,7 @@
                        @"navy":       [UIColor colorWithRed:0 green:0 blue:128.0f/255.0f alpha:1.0f],
                        @"maroon":     [UIColor colorWithRed:128.0f/255.0f green:0 blue:0 alpha:1.0f],
                        @"limegreen":  [UIColor colorWithRed:50.0f/255.0f green:205.0f/255.0f blue:50.0f/255.0f alpha:1.0f],
-                       @"#cc3333":    [UIColor colorWithRed:204.0f/255.0f green:51.0f/255.0f blue:51.0f/255.0f alpha:1.0f],
-                       @"summon":     [UIColor colorWithRed:0 green:102.0f/255.0f blue:153.0f/255.0f alpha:1.0f],
-                       @"mail":       [UIColor colorWithRed:0 green:128.0f/255.0f blue:1.0f alpha:1.0f],
-                       @"url":        [UIColor colorWithRed:0 green:122.0f/255.0f blue:1.0f alpha:1.0f]
+                       @"#cc3333":    [UIColor colorWithRed:204.0f/255.0f green:51.0f/255.0f blue:51.0f/255.0f alpha:1.0f]
                        };
     });
     
@@ -408,15 +405,12 @@
     NSString *buDomanName = @"bitunion.org";
     
     BUCLinkAttribute *linkAttribute = [[BUCLinkAttribute alloc] init];
-    UIColor *linkColor;
     NSTextCheckingResult *match;
     
     if ([self matchString:href withPattern:usernamePattern match:&match]) {
         linkAttribute.linkType = BUCUserLink;
         linkAttribute.linkValue = htmlElement.firstChild.content;
-        linkColor = [self colorAttribute:@"summon"];
     } else if ([self matchString:href withPattern:buPattern match:&match]) {
-        linkColor = [self colorAttribute:@"url"];
         NSRange hostRange = [href rangeOfString:buDomanName];
         NSUInteger pathIndex = hostRange.location + hostRange.length;
         NSString *path;
@@ -448,14 +442,12 @@
     } else if ([self matchString:href withPattern:mailPattern match:&match]) {
         linkAttribute.linkType = BUCMailLink;
         linkAttribute.linkValue = [href substringFromIndex:7];
-        linkColor = [self colorAttribute:@"mail"];
     } else {
         linkAttribute.linkType = BUCUrlLink;
         linkAttribute.linkValue = href;
-        linkColor = [self colorAttribute:@"url"];
     }
     
-    return @{BUCLinkAttributeName:linkAttribute, NSForegroundColorAttributeName:linkColor};
+    return @{BUCLinkAttributeName:linkAttribute, NSLinkAttributeName:@""};
 }
 
 
