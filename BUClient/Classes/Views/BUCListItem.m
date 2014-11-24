@@ -58,7 +58,10 @@
         weakSelf.backgroundColor = [UIColor whiteColor];
     }];
     
-    [super touchesEnded:touches withEvent:event];
+    CGPoint location = [[touches anyObject] locationInView:self];
+    if ([self pointInside:location withEvent:event]) {
+        [super touchesEnded:touches withEvent:event];
+    }
 }
 
 

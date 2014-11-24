@@ -2,7 +2,6 @@
 #import "BUCPostDetailController.h"
 #import "BUCConstants.h"
 #import "BUCListItem.h"
-#import "BUCTextButton.h"
 #import "BUCDataManager.h"
 #import "BUCModels.h"
 
@@ -66,7 +65,6 @@
 
 #pragma mark - actions and unwind methods
 - (void)refresh {
-    [(UIScrollView *)self.view setContentOffset:CGPointMake(0, 0) animated:NO];
     [self displayLoading];
     self.backUp = self.postList;
     self.postList = nil;
@@ -141,7 +139,7 @@
 - (void)jumpToForum:(id)sender {
     UIStoryboard *storyboard = [UIStoryboard storyboardWithName:BUCMainStoryboardPath bundle:nil];
     BUCPostListController *postListController = [storyboard instantiateViewControllerWithIdentifier:BUCPostListControllerStoryboardID];
-    BUCTextButton *forumName = (BUCTextButton *)sender;
+    UIButton *forumName = (UIButton *)sender;
     BUCListItem *listItem = (BUCListItem *)forumName.superview;
     BUCPost *post = [self.postList objectAtIndex:listItem.tag];
     postListController.fid = post.fid;
@@ -156,22 +154,22 @@
 
 
 - (void)loadPrevious {
-    self.from = [NSString stringWithFormat:@"%ld", self.location - 40];
-    self.to = [NSString stringWithFormat:@"%ld", self.location - 20];
+    self.from = [NSString stringWithFormat:@"%lu", (unsigned long)(self.location - 40)];
+    self.to = [NSString stringWithFormat:@"%lu", (unsigned long)(self.location - 20)];
     [self refresh];
 }
 
 
 - (void)loadNext {
-    self.from = [NSString stringWithFormat:@"%ld", self.location + 40];
-    self.to = [NSString stringWithFormat:@"%ld", self.location + 60];
+    self.from = [NSString stringWithFormat:@"%lu", (unsigned long)(self.location + 40)];
+    self.to = [NSString stringWithFormat:@"%lu", (unsigned long)(self.location + 60)];
     [self refresh];
 }
 
 
 - (void)loadMore {
-    self.from = [NSString stringWithFormat:@"%ld", self.location + 20];
-    self.to = [NSString stringWithFormat:@"%ld", self.location + 40];
+    self.from = [NSString stringWithFormat:@"%lu", (unsigned long)(self.location + 20)];
+    self.to = [NSString stringWithFormat:@"%lu", (unsigned long)(self.location + 40)];
     [self.moreIndicator startAnimating];
     [self loadList];
 }
@@ -182,7 +180,17 @@
     CGFloat refreshFireHeight = 40.0f;
     if (scrollView.contentOffset.y <= -refreshFireHeight) {
         [self refresh];
-    } else if (self.fid && self.postList.count < 40 && self.postCount >= self.location + 20) {
+    } else if (self.fid && !decelerate && self.postList.count < 40 && self.postCount >= self.location + 20) {
+        CGFloat loadMoreHeight = ceilf(CGRectGetHeight(self.listWrapper.frame) / 2);
+        if (scrollView.contentOffset.y >= loadMoreHeight) {
+            [self loadMore];
+        }
+    }
+}
+
+
+- (void)scrollViewDidEndDecelerating:(UIScrollView *)scrollView {
+    if (self.fid && self.postList.count < 40 && self.postCount >= self.location + 20) {
         CGFloat loadMoreHeight = ceilf(CGRectGetHeight(self.listWrapper.frame) / 2);
         if (scrollView.contentOffset.y >= loadMoreHeight) {
             [self loadMore];
@@ -207,6 +215,7 @@
     // set up wrapper
     CGFloat contextLayoutPointY = topBarHeight + BUCDefaultPadding;
     if (index == 0) {
+        [(UIScrollView *)self.view setContentOffset:CGPointMake(0, 0) animated:NO];
         self.previousHolder.hidden = YES;
         [self.listWrapper removeFromSuperview];
         wrapper = [[UIView alloc] init];
@@ -227,7 +236,7 @@
     }
     
     if (self.fid) {
-        self.navigationItem.title = [NSString stringWithFormat:@"%@[%ld]", self.fname, self.location / 40 + 1];
+        self.navigationItem.title = [NSString stringWithFormat:@"%@[%lu]", self.fname, (unsigned long)(self.location / 40 + 1)];
     }
     
     for (BUCPost *post in list) {
@@ -295,7 +304,8 @@
     layoutPointY = layoutPointY + CGRectGetHeight(title.frame) + titleBottomMargin;
     
     // username of original poster
-    BUCTextButton *poster = [[BUCTextButton alloc] initWithTitle:post.user location:CGPointMake(layoutPointX, layoutPointY)];
+//    BUCTextButton *poster = [[BUCTextButton alloc] initWithTitle:post.user location:CGPointMake(layoutPointX, layoutPointY)];
+    UIButton *poster = [self buttonWithRichText:post.user location:CGPointMake(layoutPointX, layoutPointY)];
     [listItem addSubview:poster];
     [poster addTarget:self action:@selector(jumpToPoster:) forControlEvents:UIControlEventTouchUpInside];
     layoutPointX = layoutPointX + CGRectGetWidth(poster.frame) + BUCDefaultMargin;
@@ -309,7 +319,8 @@
     
     // forum name
     if (!self.fid) {    
-        BUCTextButton *forumName = [[BUCTextButton alloc] initWithTitle:post.fname location:CGPointMake(layoutPointX, layoutPointY)];
+//        BUCTextButton *forumName = [[BUCTextButton alloc] initWithTitle:post.fname location:CGPointMake(layoutPointX, layoutPointY)];
+        UIButton *forumName = [self buttonWithRichText:post.fname location:CGPointMake(layoutPointX, layoutPointY)];
         [listItem addSubview:forumName];
         [forumName addTarget:self action:@selector(jumpToForum:) forControlEvents:UIControlEventTouchUpInside];
         layoutPointX = layoutPointX + CGRectGetWidth(forumName.frame) + BUCDefaultMargin;
@@ -350,7 +361,8 @@
     [listItem addSubview:lastReply];
     layoutPointX = layoutPointX + CGRectGetWidth(lastReply.frame) + BUCDefaultMargin;
     
-    BUCTextButton *lastReplyPoster = [[BUCTextButton alloc] initWithTitle:post.lastPoster location:CGPointMake(layoutPointX, layoutPointY)];
+//    BUCTextButton *lastReplyPoster = [[BUCTextButton alloc] initWithTitle:post.lastPoster location:CGPointMake(layoutPointX, layoutPointY)];
+    UIButton *lastReplyPoster = [self buttonWithRichText:post.lastPoster location:CGPointMake(layoutPointX, layoutPointY)];
     [listItem addSubview:lastReplyPoster];
     
     layoutPointY = layoutPointY + CGRectGetHeight(lastReplyPoster.frame) + BUCDefaultPadding;
@@ -380,6 +392,19 @@
     }
     
     return NO;
+}
+
+
+- (UIButton *)buttonWithRichText:(NSAttributedString *)richText location:(CGPoint)location {
+    UIButton *button = [UIButton buttonWithType:UIButtonTypeSystem];
+    [button setAttributedTitle:richText forState:UIControlStateNormal];
+    [button sizeToFit];
+    CGRect frame = button.frame;
+    frame.size = button.titleLabel.frame.size;
+    frame.origin = location;
+    button.frame = frame;
+    
+    return button;
 }
 
 

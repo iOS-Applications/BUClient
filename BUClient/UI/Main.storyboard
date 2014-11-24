@@ -96,7 +96,7 @@
         <scene sceneID="SCp-Pa-nRK">
             <objects>
                 <viewController storyboardIdentifier="BUCPostListController" autoresizesArchivedViewToFullSize="NO" automaticallyAdjustsScrollViewInsets="NO" id="JvU-S9-777" customClass="BUCPostListController" sceneMemberID="viewController">
-                    <scrollView key="view" autoresizesSubviews="NO" contentMode="scaleToFill" showsHorizontalScrollIndicator="NO" bouncesZoom="NO" id="UTn-g0-AuQ">
+                    <scrollView key="view" autoresizesSubviews="NO" contentMode="scaleToFill" showsHorizontalScrollIndicator="NO" canCancelContentTouches="NO" bouncesZoom="NO" id="UTn-g0-AuQ">
                         <rect key="frame" x="0.0" y="44" width="320" height="568"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
@@ -161,7 +161,7 @@
         <scene sceneID="PEe-cG-dxn">
             <objects>
                 <viewController storyboardIdentifier="BUCPostDetailController" autoresizesArchivedViewToFullSize="NO" automaticallyAdjustsScrollViewInsets="NO" id="oiG-Nc-ZDP" customClass="BUCPostDetailController" sceneMemberID="viewController">
-                    <scrollView key="view" autoresizesSubviews="NO" contentMode="scaleToFill" showsHorizontalScrollIndicator="NO" bouncesZoom="NO" id="oUt-c3-GOX">
+                    <scrollView key="view" autoresizesSubviews="NO" contentMode="scaleToFill" showsHorizontalScrollIndicator="NO" canCancelContentTouches="NO" bouncesZoom="NO" id="oUt-c3-GOX">
                         <rect key="frame" x="0.0" y="64" width="320" height="568"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <color key="backgroundColor" cocoaTouchSystemColor="groupTableViewBackgroundColor"/>
@@ -234,7 +234,7 @@
                         <rect key="frame" x="0.0" y="0.0" width="320" height="568"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" id="5tm-Nk-vec">
+                            <button contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" id="5tm-Nk-vec">
                                 <rect key="frame" x="137" y="253" width="46" height="30"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                 <state key="normal" title="Button">

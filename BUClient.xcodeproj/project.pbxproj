@@ -26,7 +26,6 @@
 		D85EA9571A0DAF26000BE12A /* BUCLoadingView.xib in Resources */ = {isa = PBXBuildFile; fileRef = D85EA9561A0DAF26000BE12A /* BUCLoadingView.xib */; };
 		D872DE601A0FB46A00450E0B /* images in Resources */ = {isa = PBXBuildFile; fileRef = D872DE5F1A0FB46A00450E0B /* images */; };
 		D8807DF319FE06C6008CB741 /* BUCNetworkEngine.m in Sources */ = {isa = PBXBuildFile; fileRef = D8807DF219FE06C6008CB741 /* BUCNetworkEngine.m */; };
-		D8850A121A03BB1E00ADDE67 /* BUCTextButton.m in Sources */ = {isa = PBXBuildFile; fileRef = D8850A111A03BB1E00ADDE67 /* BUCTextButton.m */; };
 		D8A2461718910A9A00AFD27A /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = D8A2461518910A9A00AFD27A /* Main.storyboard */; };
 		D8A3BF98187C895E006CBF64 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D8A3BF97187C895E006CBF64 /* Foundation.framework */; };
 		D8A3BF9C187C895E006CBF64 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D8A3BF9B187C895E006CBF64 /* UIKit.framework */; };
@@ -93,8 +92,6 @@
 		D872DE5F1A0FB46A00450E0B /* images */ = {isa = PBXFileReference; lastKnownFileType = folder; path = images; sourceTree = "<group>"; };
 		D8807DF119FE06C6008CB741 /* BUCNetworkEngine.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BUCNetworkEngine.h; sourceTree = "<group>"; };
 		D8807DF219FE06C6008CB741 /* BUCNetworkEngine.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BUCNetworkEngine.m; sourceTree = "<group>"; };
-		D8850A101A03BB1E00ADDE67 /* BUCTextButton.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BUCTextButton.h; sourceTree = "<group>"; };
-		D8850A111A03BB1E00ADDE67 /* BUCTextButton.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BUCTextButton.m; sourceTree = "<group>"; };
 		D8A2461518910A9A00AFD27A /* Main.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; path = Main.storyboard; sourceTree = "<group>"; };
 		D8A3BF94187C895E006CBF64 /* BUClient.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BUClient.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D8A3BF97187C895E006CBF64 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
@@ -211,8 +208,6 @@
 			children = (
 				D8E3A88719FB42940047531E /* BUCListItem.h */,
 				D8E3A88819FB42940047531E /* BUCListItem.m */,
-				D8850A101A03BB1E00ADDE67 /* BUCTextButton.h */,
-				D8850A111A03BB1E00ADDE67 /* BUCTextButton.m */,
 				D803C68F1A1782DB00D26604 /* BUCTextStack.h */,
 				D803C6901A1782DB00D26604 /* BUCTextStack.m */,
 				D80A71851A19DF1D00A3AD6E /* BUCTextView.h */,
@@ -485,7 +480,6 @@
 				D853E7EC1A1594490003C284 /* TFHppleElement.m in Sources */,
 				D80A71891A19E08000A3AD6E /* BUCTextView.m in Sources */,
 				D853E7EB1A1594490003C284 /* TFHpple.m in Sources */,
-				D8850A121A03BB1E00ADDE67 /* BUCTextButton.m in Sources */,
 				D8114CD8189012BC00F0E1A7 /* BUCLoginController.m in Sources */,
 				D848C0481A13BA8D0037F429 /* BUCImageController.m in Sources */,
 				D8C8ECC41A0C81EC00D7759F /* BUCHTMLScraper.m in Sources */,
