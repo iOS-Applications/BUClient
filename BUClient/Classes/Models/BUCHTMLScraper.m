@@ -434,7 +434,6 @@
             path = [href substringFromIndex:pathIndex];
         }
         
-        NSString *pattern;
         NSTextCheckingResult *match;
         
         if (!path || [path isEqualToString:@"/"] || [path isEqualToString:@"/home.php"]) {
@@ -442,13 +441,10 @@
         } else if ([path isEqualToString:@"/index.php"]) {
             linkAttribute.linkType = BUCForumListLink;
         } else if ([self matchString:path withPattern:threadPattern match:&match]) {
-            pattern = threadPattern;
             linkAttribute.linkType = BUCPostLink;
         } else if ([self matchString:path withPattern:viewThreadPattern match:&match]) {
-            pattern = viewThreadPattern;
             linkAttribute.linkType = BUCPostLink;
         } else if ([self matchString:path withPattern:forumPattern match:&match]) {
-            pattern = forumPattern;
             linkAttribute.linkType = BUCForumLink;
         } else {
             linkAttribute.linkType = BUCUrlLink;

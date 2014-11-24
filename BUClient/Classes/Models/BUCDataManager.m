@@ -6,10 +6,77 @@
 #import "UIImage+SimpleResize.h"
 #import "BUCModels.h"
 
+// bu api response json key-value pairs
+static NSString * const BUCResponseMessageKey = @"msg";
+static NSString * const BUCResponseNoPermission = @"thread_nopermission";
+static NSString * const BUCResponseResultKey = @"result";
+static NSString * const BUCResponseResultSuccess = @"success";
+static NSString * const BUCResponseResultFail = @"fail";
 
-static NSString * const BUCNewListKey = @"newlist";
-static NSString * const BUCDetailListKey = @"postlist";
-static NSString * const BUCForumListKey = @"threadlist";
+static NSString * const BUCResponseNewListKey = @"newlist";
+static NSString * const BUCResponseDetailListKey = @"postlist";
+static NSString * const BUCResponseForumListKey = @"threadlist";
+static NSString * const BUCResponsePostCountKey = @"fid_sum";
+static NSString * const BUCResponsePostChildCountKey = @"tid_sum";
+static NSString * const BUCResponseForumNameKey = @"fname";
+static NSString * const BUCResponseFidKey = @"fid";
+static NSString * const BUCResponsePidKey = @"tid";
+static NSString * const BUCResponseChildPidKey = @"pid";
+static NSString * const BUCResponseFrontPostTitleKey = @"pname";
+static NSString * const BUCResponsePostTitleKey = @"subject";
+static NSString * const BUCResponseUidKey = @"authorid";
+static NSString * const BUCResponseUsernameKey = @"author";
+static NSString * const BUCResponseAvatarKey = @"avatar";
+static NSString * const BUCResponseLastReplyKey = @"lastreply";
+static NSString * const BUCResponseLastReplyDateKey = @"when";
+static NSString * const BUCResponseLastReplyUserKey = @"who";
+static NSString * const BUCResponseContentKey = @"message";
+static NSString * const BUCResponseAttachmentKey = @"attachment";
+static NSString * const BUCResponseAttachmentTypeKey = @"filetype";
+static NSString * const BUCResponseViewCountKey = @"views";
+static NSString * const BUCResponseChildCountKey = @"replies";
+static NSString * const BUCResponseFrontChildCountKey = @"tid_sum";
+static NSString * const BUCResponseLastPostDateKey = @"lastpost";
+static NSString * const BUCResponseLastPostUserKey = @"lastposter";
+static NSString * const BUCResponseDateKey = @"dateline";
+
+// bu api url
+static NSString * const BUCLoginUrl = @"logging";
+static NSString * const BUCFrontUrl = @"home";
+static NSString * const BUCPostCountUrl = @"fid_tid";
+static NSString * const BUCPostListUrl = @"thread";
+static NSString * const BUCPostDetailUrl = @"post";
+static NSString * const BUCProfileUrl = @"profile";
+static NSString * const BUCNewPostUrl = @"newpost";
+static NSString * const BUCNewReplyUrl = @"newpost";
+
+
+// bu api post json key-value pairs
+static NSString * const BUCJsonActionKey = @"action";
+static NSString * const BUCJsonLoginAction = @"login";
+static NSString * const BUCJsonPostListAction = @"thread";
+static NSString * const BUCJsonPostDetailAction = @"post";
+static NSString * const BUCJsonProfileAction = @"profile";
+static NSString * const BUCJsonNewPostAction = @"newthread";
+static NSString * const BUCJsonNewReplyAction = @"newreply";
+
+static NSString * const BUCJsonUsernameKey = @"username";
+static NSString * const BUCJsonPasswordKey = @"password";
+static NSString * const BUCJsonSessionKey = @"session";
+static NSString * const BUCJsonFidKey = @"fid";
+static NSString * const BUCJsonPidKey = @"tid";
+static NSString * const BUCJsonListFromKey = @"from";
+static NSString * const BUCJsonListToKey = @"to";
+static NSString * const BUCJsonProfileUidKey = @"uid";
+static NSString * const BUCJsonProfileUsernameKey = @"queryusername";
+static NSString * const BUCJsonNewSubjectKey = @"subject";
+static NSString * const BUCJsonNewContentKey = @"message";
+static NSString * const BUCJsonNewAttachmentKey = @"attachment";
+
+// handy string patterns
+static NSString * const BUCPostTitleTemplate = @"<b>%@</b>\n\n";
+static NSString * const BUCPostAttachmentTemplate = @"\n\n本帖包含图片附件:\n\n<img src='http://out.bitunion.org/%@'>";
+static NSString * const BUCImageFileTypePrefix = @"image/";
 
 
 @interface BUCDataManager ()
@@ -55,7 +122,7 @@ static NSString * const BUCForumListKey = @"threadlist";
 - (void)getFrontListOnSuccess:(ArrayBlock)arrayBlock onError:(ErrorBlock)errorBlock {
     NSMutableDictionary *json = [[NSMutableDictionary alloc] init];
     
-    [self loadListFromUrl:@"home" json:json listKey:BUCNewListKey onSuccess:arrayBlock onError:errorBlock];
+    [self loadListFromUrl:BUCFrontUrl json:json listKey:BUCResponseNewListKey onSuccess:arrayBlock onError:errorBlock];
 }
 
 
@@ -63,22 +130,22 @@ static NSString * const BUCForumListKey = @"threadlist";
     NSMutableDictionary *json = [[NSMutableDictionary alloc] init];
     
     if (fid) {
-        [json setObject:fid forKey:@"fid"];
+        [json setObject:fid forKey:BUCJsonFidKey];
     }
     
     if (pid) {
-        [json setObject:pid forKey:@"tid"];
+        [json setObject:pid forKey:BUCJsonPidKey];
     }
     
     [self
-     loadJsonFromUrl:@"fid_tid"
+     loadJsonFromUrl:BUCPostCountUrl
      json:json
      onSuccess:^(NSDictionary *resultJson) {
          NSString *count;
          if (fid) {
-             count = [resultJson objectForKey:@"fid_sum"];
+             count = [resultJson objectForKey:BUCResponsePostCountKey];
          } else {
-             count = [resultJson objectForKey:@"tid_sum"];
+             count = [resultJson objectForKey:BUCResponsePostChildCountKey];
          }
          countBlock(count.integerValue);
      }
@@ -89,24 +156,24 @@ static NSString * const BUCForumListKey = @"threadlist";
 - (void)getForumList:(NSString *)fid from:(NSString *)from to:(NSString *)to onSuccess:(ArrayBlock)arrayBlock onError:(ErrorBlock)errorBlock {
     
     NSMutableDictionary *json = [[NSMutableDictionary alloc] init];
-    [json setObject:@"thread" forKey:@"action"];
-    [json setObject:fid forKey:@"fid"];
-    [json setObject:from forKey:@"from"];
-    [json setObject:to forKey:@"to"];
+    [json setObject:BUCJsonPostListAction forKey:BUCJsonActionKey];
+    [json setObject:fid forKey:BUCJsonFidKey];
+    [json setObject:from forKey:BUCJsonListFromKey];
+    [json setObject:to forKey:BUCJsonListToKey];
     
-    [self loadListFromUrl:@"thread" json:json listKey:BUCForumListKey onSuccess:arrayBlock onError:errorBlock];
+    [self loadListFromUrl:BUCPostListUrl json:json listKey:BUCResponseForumListKey onSuccess:arrayBlock onError:errorBlock];
 }
 
 
 - (void)getPost:(NSString *)postID from:(NSString *)from to:(NSString *)to onSuccess:(ArrayBlock)arrayBlock onError:(ErrorBlock)errorBlock {
     
     NSMutableDictionary *json = [[NSMutableDictionary alloc] init];
-    [json setObject:@"post" forKey:@"action"];
-    [json setObject:postID forKey:@"tid"];
-    [json setObject:from forKey:@"from"];
-    [json setObject:to forKey:@"to"];
+    [json setObject:BUCJsonPostDetailAction forKey:BUCJsonActionKey];
+    [json setObject:postID forKey:BUCJsonPidKey];
+    [json setObject:from forKey:BUCJsonListFromKey];
+    [json setObject:to forKey:BUCJsonListToKey];
     
-    [self loadListFromUrl:@"post" json:json listKey:BUCDetailListKey onSuccess:arrayBlock onError:errorBlock];
+    [self loadListFromUrl:BUCPostDetailUrl json:json listKey:BUCResponseDetailListKey onSuccess:arrayBlock onError:errorBlock];
 }
 
 
@@ -144,9 +211,6 @@ static NSString * const BUCForumListKey = @"threadlist";
 }
 
 
-
-
-
 #pragma mark - networking
 - (void)loadJsonFromUrl:(NSString *)url json:(NSMutableDictionary *)json onSuccess:(SuccessBlock)successBlock onError:(ErrorBlock)errorBlock {
     BUCDataManager * __weak weakSelf = self;
@@ -165,17 +229,17 @@ static NSString * const BUCForumListKey = @"threadlist";
         return;
     }
     
-    [json setObject:authManager.currentUser forKey:@"username"];
-    [json setObject:authManager.session forKey:@"session"];
+    [json setObject:authManager.currentUser forKey:BUCJsonUsernameKey];
+    [json setObject:authManager.session forKey:BUCJsonSessionKey];
     
     [engine
      fetchDataFromUrl:url
      json:json
      
      onResult:^(NSDictionary *resultJson) {
-         if ([[resultJson objectForKey:@"result"] isEqualToString:@"fail"]) {
-             if ([[resultJson objectForKey:@"msg"] isEqualToString:@"thread_nopermission"]) {
-                 errorBlock([self returnFailError]);
+         if ([[resultJson objectForKey:BUCResponseResultKey] isEqualToString:BUCResponseResultFail]) {
+             if ([[resultJson objectForKey:BUCResponseMessageKey] isEqualToString:BUCResponseNoPermission]) {
+                 errorBlock([self noPermissionError]);
                  return;
              }
              
@@ -224,61 +288,62 @@ static NSString * const BUCForumListKey = @"threadlist";
     for (NSDictionary *rawDic in rawArray) {
         BUCPost *post = [[BUCPost alloc] init];
         
-        post.pid = [rawDic objectForKey:@"tid"];
-        post.fid = [rawDic objectForKey:@"fid"];
+        post.pid = [rawDic objectForKey:BUCJsonPidKey];
+        post.fid = [rawDic objectForKey:BUCJsonFidKey];
         
-        NSString *fname = [self urldecode:[rawDic objectForKey:@"fname"]];
+        NSString *fname = [self urldecode:[rawDic objectForKey:BUCResponseForumNameKey]];
         if (fname) {
             post.fname = [[NSAttributedString alloc] initWithString:fname attributes:metaAttribute];
         }
         
-        post.user = [[NSAttributedString alloc] initWithString:[self urldecode:[rawDic objectForKey:@"author"]]
+        post.user = [[NSAttributedString alloc] initWithString:[self urldecode:[rawDic objectForKey:BUCResponseUsernameKey]]
                                                     attributes:metaAttribute];
-        post.uid = [rawDic objectForKey:@"authorid"];
+        post.uid = [rawDic objectForKey:BUCResponseUidKey];
         
-        post.avatar = [self.htmlScraper avatarUrlFromHtml:[self urldecode:[rawDic objectForKey:@"avatar"]]];
+        post.avatar = [self.htmlScraper avatarUrlFromHtml:[self urldecode:[rawDic objectForKey:BUCResponseAvatarKey]]];
         
-        if ([listKey isEqualToString:BUCNewListKey]) {
-            post.title = [self.htmlScraper richTextFromHtml:[self urldecode:[rawDic objectForKey:@"pname"]]];
-            NSString *lastPostDateline = [self parseDateline:[self urldecode:[[rawDic objectForKey:@"lastreply"] objectForKey:@"when"]]];
-            NSString *lastPoster = [self urldecode:[[rawDic objectForKey:@"lastreply"] objectForKey:@"who"]];
+
+        if ([listKey isEqualToString:BUCResponseNewListKey]) {
+            post.title = [self.htmlScraper richTextFromHtml:[self urldecode:[rawDic objectForKey:BUCResponseFrontPostTitleKey]]];
+            NSString *lastPostDateline = [self parseDateline:[self urldecode:[[rawDic objectForKey:BUCResponseLastReplyKey] objectForKey:BUCResponseLastReplyDateKey]]];
+            NSString *lastPoster = [self urldecode:[[rawDic objectForKey:BUCResponseLastReplyKey] objectForKey:BUCResponseLastReplyUserKey]];
             post.lastPoster = [[NSAttributedString alloc] initWithString:lastPoster attributes:metaAttribute];
             post.lastPostDateline = [[NSAttributedString alloc] initWithString:lastPostDateline attributes:metaAttribute];
-            post.childCount = [rawDic objectForKey:@"tid_sum"];
-        } else if ([listKey isEqualToString:BUCDetailListKey]) {
+            post.childCount = [rawDic objectForKey:BUCResponseFrontChildCountKey];
+        } else if ([listKey isEqualToString:BUCResponseDetailListKey]) {
             NSMutableString *content = [[NSMutableString alloc] init];
-            NSString *title = [self urldecode:[rawDic objectForKey:@"subject"]];
+            NSString *title = [self urldecode:[rawDic objectForKey:BUCResponsePostTitleKey]];
             if (title) {
-                title = [NSString stringWithFormat:@"<b>%@</b>\n\n", title];
+                title = [NSString stringWithFormat:BUCPostTitleTemplate, title];
                 [content appendString:title];
             }
             
-            NSString *body = [self urldecode:[rawDic objectForKey:@"message"]];
+            NSString *body = [self urldecode:[rawDic objectForKey:BUCResponseContentKey]];
             if (body) {
                 [content appendString:body];
             }
             
-            NSString *attachment = [self urldecode:[rawDic objectForKey:@"attachment"]];
+            NSString *attachment = [self urldecode:[rawDic objectForKey:BUCResponseAttachmentKey]];
             if (attachment) {
-                NSString *filetype = [self urldecode:[rawDic objectForKey:@"filetype"]];
-                if (filetype && [filetype rangeOfString:@"image/"].length > 0) {
-                    attachment = [NSString stringWithFormat:@"\n\n本帖包含图片附件:\n\n<img src='http://out.bitunion.org/%@'>", attachment];
+                NSString *filetype = [self urldecode:[rawDic objectForKey:BUCResponseAttachmentTypeKey]];
+                if (filetype && [filetype rangeOfString:BUCImageFileTypePrefix].length > 0) {
+                    attachment = [NSString stringWithFormat:BUCPostAttachmentTemplate, attachment];
                     [content appendString:attachment];
                 }
             }
             
             post.content = [self.htmlScraper richTextFromHtml:content];
         } else {
-            post.title = [self.htmlScraper richTextFromHtml:[self urldecode:[rawDic objectForKey:@"subject"]]];
-            post.viewCount = [rawDic objectForKey:@"views"];
-            post.childCount = [rawDic objectForKey:@"replies"];
-            NSString *lastPostDateline = [self parseDateline:[rawDic objectForKey:@"lastpost"]];
-            NSString *lastPoster = [self urldecode:[rawDic objectForKey:@"lastposter"]];
+            post.title = [self.htmlScraper richTextFromHtml:[self urldecode:[rawDic objectForKey:BUCResponsePostTitleKey]]];
+            post.viewCount = [rawDic objectForKey:BUCResponseViewCountKey];
+            post.childCount = [rawDic objectForKey:BUCResponseChildCountKey];
+            NSString *lastPostDateline = [self parseDateline:[rawDic objectForKey:BUCResponseLastPostDateKey]];
+            NSString *lastPoster = [self urldecode:[rawDic objectForKey:BUCResponseLastPostUserKey]];
             post.lastPostDateline = [[NSAttributedString alloc] initWithString:lastPostDateline attributes:metaAttribute];
             post.lastPoster = [[NSAttributedString alloc] initWithString:lastPoster attributes:metaAttribute];
         }
         
-        NSString *dateline = [self parseDateline:[rawDic objectForKey:@"dateline"]];
+        NSString *dateline = [self parseDateline:[rawDic objectForKey:BUCResponseDateKey]];
         if (dateline) {
             post.dateline = [[NSAttributedString alloc] initWithString:dateline attributes:metaAttribute];
         }
@@ -301,7 +366,7 @@ static NSString * const BUCForumListKey = @"threadlist";
 }
 
 
-- (NSError *)returnFailError {
+- (NSError *)noPermissionError {
     NSString *failErrorMsg = @"该帖设置了访问权限，无法访问";
     NSString *BUCErrorDomain = @"BUClient.ErrorDomain";
     NSDictionary *errorInfo = @{NSLocalizedDescriptionKey:failErrorMsg};
