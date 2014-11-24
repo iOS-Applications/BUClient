@@ -105,8 +105,6 @@
     
     NSInteger index = self.postList.count;
     
-//    BUCPostDetailController * __weak weakSelf = self;
-    
     for (BUCPost *post in list) {
         CGFloat savedLayoutPointY = layoutPointY;
         
@@ -153,16 +151,6 @@
         
         // post body
         if (post.content) {
-//            BUCTextView *textBlock = [[BUCTextView alloc] initWithFrame:CGRectMake(layoutPointX, layoutPointY, contentWidth, 0) richText:post.content];
-//            [textBlock sizeToFit];
-//            textBlock.linkTapHandler = ^(BUCLinkAttribute *linkAttribute) {
-//                [weakSelf handleLinkTap];
-//            };
-//            
-//            textBlock.imageTapHandler = ^(BUCImageAttachment *attachment) {
-//                [weakSelf handleImageTap];
-//            };
-
             UITextView *textBlock = [self shit:post.content frame:CGRectMake(layoutPointX, layoutPointY, contentWidth, 0)];
             [wrapper addSubview:textBlock];
             layoutPointY = layoutPointY + CGRectGetHeight(textBlock.frame) + BUCDefaultPadding;
@@ -186,19 +174,10 @@
     context.contentSize = CGSizeMake(CGRectGetWidth(context.frame), layoutPointY);
 }
 
-- (void)handleLinkTap {
-    NSLog(@"link tapped");
-}
-
-
-- (void)handleImageTap {
-    NSLog(@"image tapped");
-}
-
 
 - (UILabel *)opLabelAtLocation:(CGPoint)location {
     UILabel *op = [[UILabel alloc] init];
-    op.attributedText = [[NSAttributedString alloc] initWithString:@"OP" attributes:self.metaAttribute];
+    op.attributedText = [[NSAttributedString alloc] initWithString:@"LZ" attributes:self.metaAttribute];
     op.textAlignment = NSTextAlignmentCenter;
     [op sizeToFit];
     op.frame = CGRectOffset(op.frame, location.x, location.y);
