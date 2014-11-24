@@ -66,7 +66,7 @@
     self.blockList = [[NSMutableArray alloc] init];
     
     for (TFHppleElement *node in tree.children) {
-        if ([node.tagName isEqualToString:@"br"]) {
+        if ([node.tagName isEqualToString:@"br"] || [node.tagName isEqualToString:@"span"]) {
             continue;
         }
         
@@ -109,9 +109,7 @@
         if ([tagName isEqualToString:@"center"]) {
             [self appendCenter:tree superAttributes:thisAttributes];
         } else if ([tagName isEqualToString:@"blockquote"]) {
-            NSString *query = @"//blockquote/div";
-            NSArray *nodes = [tree searchWithXPathQuery:query];
-            TFHppleElement *box = [nodes lastObject];
+            TFHppleElement *box = [tree.children objectAtIndex:1];
             blockAttribute.backgroundColor = [self parseBoxColor:box];
             [self appendBox:box superAttributes:thisAttributes];
         } else {
@@ -128,11 +126,7 @@
         NSMutableDictionary *thisAttributes = [NSMutableDictionary dictionaryWithDictionary:superAttributes];
         NSUInteger location = self.output.length;
         
-        if ([tagName isEqualToString:@"p"]) {
-            // do nothing
-        } else if([tagName isEqualToString:@"span"] && [[tree objectForKey:@"id"] isEqualToString:@"id_open_api_label"]) {
-            return;
-        } else if ([tagName isEqualToString:@"a"]) {
+        if ([tagName isEqualToString:@"a"]) {
             attributes = [self linkAttributes:tree];
         } else if ([tagName isEqualToString:@"font"]) {
             attributes = [self fontAttributes:tree];
@@ -142,9 +136,6 @@
             attributes = [self attributesForFontStyle:UIFontTextStyleBody withTrait:UIFontDescriptorTraitItalic];
         } else if ([tagName isEqualToString:@"u"]) {
             attributes = @{NSUnderlineStyleAttributeName:@1};
-        } else {
-            NSLog(@"unknown tag type:%@", tagName);
-            return;
         }
         
         for (NSString *key in attributes) {
@@ -152,7 +143,7 @@
         }
         
         for (TFHppleElement *node in tree.children) {
-            if ([node.tagName isEqualToString:@"br"]) {
+            if ([node.tagName isEqualToString:@"br"] || [node.tagName isEqualToString:@"span"]) {
                 continue;
             }
             
@@ -224,16 +215,14 @@
 
 #pragma mark - block elements
 - (void)appendCenter:(TFHppleElement *)tree superAttributes:(NSDictionary *)superAttributes {
-    NSString *query = @"//center/table/tr/td";
-    NSArray *nodes = [tree searchWithXPathQuery:query];
-    NSString *typeString = [[[nodes firstObject] firstChild] content];
-    query = @"//table/tr/td/table/tr/td";
-    nodes = [tree searchWithXPathQuery:query];
-    TFHppleElement *content = [nodes firstObject];
+    TFHppleElement *table = tree.firstChild;
+    NSString *header = table.firstChild.firstChild.firstChild.content;
+    TFHppleElement *content = [table.children objectAtIndex:1];
+    content = content.firstChild.firstChild.firstChild.firstChild;
     
-    if ([typeString rangeOfString:@"引用"].length > 0) {
+    if ([header rangeOfString:@"引用"].length > 0) {
         [self appendQuote:content superAttributes:superAttributes];
-    } else if ([typeString rangeOfString:@"代码"].length > 0) {
+    } else if ([header rangeOfString:@"代码"].length > 0) {
         [self appendCode:content superAttributes:superAttributes];
     } else {
         NSLog(@"unknown center block:%@", tree.raw);
@@ -247,7 +236,7 @@
     }
     
     for (TFHppleElement *node in tree.children) {
-        if ([node.tagName isEqualToString:@"br"]) {
+        if ([node.tagName isEqualToString:@"br"] || [node.tagName isEqualToString:@"span"]) {
             continue;
         }
         
@@ -258,7 +247,7 @@
 
 - (void)appendBox:(TFHppleElement *)tree superAttributes:(NSDictionary *)superAttributes {
     for (TFHppleElement *node in tree.children) {
-        if ([node.tagName isEqualToString:@"br"]) {
+        if ([node.tagName isEqualToString:@"br"] || [node.tagName isEqualToString:@"span"]) {
             continue;
         }
         
@@ -287,18 +276,21 @@
 
 
 - (void)appendList:(TFHppleElement *)tree superAttributes:(NSDictionary *)superAttributes {
-    NSString *query = @"//li";
-    NSArray *nodes = [tree searchWithXPathQuery:query];
-    
-    for (TFHppleElement *node in nodes) {
-        if ([node.tagName isEqualToString:@"br"]) {
+    for (TFHppleElement *node in tree.children) {
+        if ([node.tagName isEqualToString:@"br"] || [node.tagName isEqualToString:@"span"]) {
             continue;
-        } else if ([node.firstChild isTextNode] && node.firstChild.content) {
-            NSString *buffer = [NSString stringWithFormat:@"• %@\n", node.firstChild.content];
+        }
+        
+        [self.output appendAttributedString:[[NSAttributedString alloc] initWithString:@"• " attributes:superAttributes]];
+        
+        if ([node.firstChild isTextNode] && node.firstChild.content) {
+            NSString *buffer = [NSString stringWithFormat:@"%@", node.firstChild.content];
             [self.output appendAttributedString:[[NSAttributedString alloc] initWithString:buffer attributes:superAttributes]];
         } else {
             [self appendRichText:node superAttributes:superAttributes];
         }
+        
+        [self.output appendAttributedString:[[NSAttributedString alloc] initWithString:@"\n" attributes:superAttributes]];
     }
 }
 
