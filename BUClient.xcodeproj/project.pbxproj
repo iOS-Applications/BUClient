@@ -74,7 +74,6 @@
 		D8114CB5189012BC00F0E1A7 /* BUCRootController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BUCRootController.m; sourceTree = "<group>"; };
 		D81ED3651A122FBD00D10243 /* icons */ = {isa = PBXFileReference; lastKnownFileType = folder; path = icons; sourceTree = "<group>"; };
 		D81ED3671A122FE300D10243 /* etc */ = {isa = PBXFileReference; lastKnownFileType = folder; path = etc; sourceTree = "<group>"; };
-		D81ED3691A12459A00D10243 /* libz.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libz.dylib; path = usr/lib/libz.dylib; sourceTree = SDKROOT; };
 		D848C0461A13BA8D0037F429 /* BUCImageController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BUCImageController.h; sourceTree = "<group>"; };
 		D848C0471A13BA8D0037F429 /* BUCImageController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BUCImageController.m; sourceTree = "<group>"; };
 		D853E7E21A1594490003C284 /* TFHpple.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TFHpple.h; sourceTree = "<group>"; };
@@ -296,7 +295,6 @@
 		D8A3BF96187C895E006CBF64 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				D81ED3691A12459A00D10243 /* libz.dylib */,
 				D8C0BEBF1A108D0300FBBE5A /* ImageIO.framework */,
 				D854166C19FCA88200013A1B /* libxml2.2.dylib */,
 				D8A3BF97187C895E006CBF64 /* Foundation.framework */,
