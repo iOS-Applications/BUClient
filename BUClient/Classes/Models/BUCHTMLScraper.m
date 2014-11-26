@@ -62,8 +62,6 @@
     
     NSDictionary *baseAttribute = @{NSFontAttributeName:[UIFont preferredFontForTextStyle:UIFontTextStyleBody]};
     self.output = [[NSMutableAttributedString alloc] init];
-    self.attachmentList = [[NSMutableArray alloc] init];
-    self.blockList = [[NSMutableArray alloc] init];
     
     for (TFHppleElement *node in tree.children) {
         if ([node.tagName isEqualToString:@"br"] || [node.tagName isEqualToString:@"span"]) {
@@ -77,12 +75,14 @@
         return nil;
     }
     
-    if (self.attachmentList.count > 0) {
+    if (self.attachmentList) {
         [self.output addAttribute:BUCAttachmentListAttributeName value:self.attachmentList range:NSMakeRange(0, 1)];
+        self.attachmentList = nil;
     }
     
-    if (self.blockList.count > 0) {
+    if (self.blockList) {
         [self.output addAttribute:BUCTextBlockListAttributeName value:self.blockList range:NSMakeRange(0, 1)];
+        self.blockList = nil;
     }
     
     return self.output;
