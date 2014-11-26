@@ -1,37 +1,22 @@
-#import "BUCListItem.h"
+#import "BUCPostListCell.h"
 
 
-@implementation BUCListItem
+@implementation BUCPostListCell
 
 
 #pragma mark - overrided methods
-- (instancetype)initWithFrame:(CGRect)aRect {
-    self = [super initWithFrame:aRect];
-    
-    if (self) {
-        [self setUpAppearance];
-    }
-    
-    return self;
-}
-
 
 - (instancetype)initWithCoder:(NSCoder *)aDecoder {
     self = [super initWithCoder:aDecoder];
     
     if (self) {
-        [self setUpAppearance];
+        self.layer.borderWidth = 0.3f;
+        self.layer.borderColor = [UIColor lightGrayColor].CGColor;
+        self.layer.backgroundColor = [UIColor whiteColor].CGColor;
+        self.layer.cornerRadius = 4.0f;
     }
     
     return self;
-}
-
-
-- (void)setUpAppearance {
-    self.layer.borderWidth = 0.3f;
-    self.layer.borderColor = [UIColor lightGrayColor].CGColor;
-    self.layer.backgroundColor = [UIColor whiteColor].CGColor;
-    self.layer.cornerRadius = 4.0f;
 }
 
 
@@ -53,7 +38,7 @@
 
 
 - (void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event {
-    BUCListItem * __weak weakSelf = self;
+    BUCPostListCell * __weak weakSelf = self;
     [UIView animateWithDuration:0.3 animations:^{
         weakSelf.backgroundColor = [UIColor whiteColor];
     }];

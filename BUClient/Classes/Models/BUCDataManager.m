@@ -283,21 +283,15 @@ static NSString * const BUCImageFileTypePrefix = @"image/";
     NSMutableArray *list = [[NSMutableArray alloc] init];
     NSArray *rawArray = [resultJson objectForKey:listKey];
     
-    NSDictionary *metaAttribute = @{NSFontAttributeName:[UIFont preferredFontForTextStyle:UIFontTextStyleCaption1]};
-    
     for (NSDictionary *rawDic in rawArray) {
         BUCPost *post = [[BUCPost alloc] init];
         
         post.pid = [rawDic objectForKey:BUCJsonPidKey];
         post.fid = [rawDic objectForKey:BUCJsonFidKey];
         
-        NSString *fname = [self urldecode:[rawDic objectForKey:BUCResponseForumNameKey]];
-        if (fname) {
-            post.fname = [[NSAttributedString alloc] initWithString:fname attributes:metaAttribute];
-        }
+        post.fname = [self urldecode:[rawDic objectForKey:BUCResponseForumNameKey]];
         
-        post.user = [[NSAttributedString alloc] initWithString:[self urldecode:[rawDic objectForKey:BUCResponseUsernameKey]]
-                                                    attributes:metaAttribute];
+        post.user = [self urldecode:[rawDic objectForKey:BUCResponseUsernameKey]];
         post.uid = [rawDic objectForKey:BUCResponseUidKey];
         
         post.avatar = [self.htmlScraper avatarUrlFromHtml:[self urldecode:[rawDic objectForKey:BUCResponseAvatarKey]]];
@@ -306,10 +300,9 @@ static NSString * const BUCImageFileTypePrefix = @"image/";
         if ([listKey isEqualToString:BUCResponseNewListKey]) {
             post.title = [self.htmlScraper richTextFromHtml:[self urldecode:[rawDic objectForKey:BUCResponseFrontPostTitleKey]]];
             NSString *lastPostDateline = [self parseDateline:[self urldecode:[[rawDic objectForKey:BUCResponseLastReplyKey] objectForKey:BUCResponseLastReplyDateKey]]];
-            NSString *lastPoster = [self urldecode:[[rawDic objectForKey:BUCResponseLastReplyKey] objectForKey:BUCResponseLastReplyUserKey]];
-            post.lastPoster = [[NSAttributedString alloc] initWithString:lastPoster attributes:metaAttribute];
-            post.lastPostDateline = [[NSAttributedString alloc] initWithString:lastPostDateline attributes:metaAttribute];
-            post.childCount = [rawDic objectForKey:BUCResponseFrontChildCountKey];
+            post.lastPoster = [self urldecode:[[rawDic objectForKey:BUCResponseLastReplyKey] objectForKey:BUCResponseLastReplyUserKey]];
+            post.lastPostDateline = [NSString stringWithFormat:@"最后回复: %@ by", lastPostDateline];
+            post.statistic = [NSString stringWithFormat:@"• %@回复", [rawDic objectForKey:BUCResponseFrontChildCountKey]];
         } else if ([listKey isEqualToString:BUCResponseDetailListKey]) {
             NSMutableString *content = [[NSMutableString alloc] init];
             NSString *title = [self urldecode:[rawDic objectForKey:BUCResponsePostTitleKey]];
@@ -335,18 +328,15 @@ static NSString * const BUCImageFileTypePrefix = @"image/";
             post.content = [self.htmlScraper richTextFromHtml:content];
         } else {
             post.title = [self.htmlScraper richTextFromHtml:[self urldecode:[rawDic objectForKey:BUCResponsePostTitleKey]]];
-            post.viewCount = [rawDic objectForKey:BUCResponseViewCountKey];
-            post.childCount = [rawDic objectForKey:BUCResponseChildCountKey];
+            NSString *viewCount = [rawDic objectForKey:BUCResponseViewCountKey];
+            NSString *childCount = [rawDic objectForKey:BUCResponseChildCountKey];
+            post.statistic = [NSString stringWithFormat:@"• %@回复/%@查看", childCount, viewCount];
             NSString *lastPostDateline = [self parseDateline:[rawDic objectForKey:BUCResponseLastPostDateKey]];
-            NSString *lastPoster = [self urldecode:[rawDic objectForKey:BUCResponseLastPostUserKey]];
-            post.lastPostDateline = [[NSAttributedString alloc] initWithString:lastPostDateline attributes:metaAttribute];
-            post.lastPoster = [[NSAttributedString alloc] initWithString:lastPoster attributes:metaAttribute];
+            post.lastPostDateline = [NSString stringWithFormat:@"最后回复: %@ by", lastPostDateline];
+            post.lastPoster = [self urldecode:[rawDic objectForKey:BUCResponseLastPostUserKey]];
         }
         
-        NSString *dateline = [self parseDateline:[rawDic objectForKey:BUCResponseDateKey]];
-        if (dateline) {
-            post.dateline = [[NSAttributedString alloc] initWithString:dateline attributes:metaAttribute];
-        }
+        post.dateline = [self parseDateline:[rawDic objectForKey:BUCResponseDateKey]];
         
         [list addObject:post];
     }

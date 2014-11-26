@@ -96,7 +96,7 @@
         <scene sceneID="SCp-Pa-nRK">
             <objects>
                 <viewController storyboardIdentifier="BUCPostListController" autoresizesArchivedViewToFullSize="NO" automaticallyAdjustsScrollViewInsets="NO" id="JvU-S9-777" customClass="BUCPostListController" sceneMemberID="viewController">
-                    <scrollView key="view" autoresizesSubviews="NO" contentMode="scaleToFill" showsHorizontalScrollIndicator="NO" canCancelContentTouches="NO" bouncesZoom="NO" id="UTn-g0-AuQ">
+                    <scrollView key="view" autoresizesSubviews="NO" contentMode="scaleToFill" alwaysBounceVertical="YES" showsHorizontalScrollIndicator="NO" canCancelContentTouches="NO" bouncesZoom="NO" id="UTn-g0-AuQ">
                         <rect key="frame" x="0.0" y="44" width="320" height="568"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
@@ -107,13 +107,14 @@
                                 <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
                                 <nil key="highlightedColor"/>
                             </label>
-                            <view hidden="YES" contentMode="scaleToFill" id="Gic-96-38l" userLabel="Previous holder" customClass="BUCListItem">
+                            <view hidden="YES" autoresizesSubviews="NO" contentMode="scaleToFill" id="Gic-96-38l" userLabel="Previous holder" customClass="BUCPostListCell">
                                 <rect key="frame" x="0.0" y="69" width="320" height="40"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                 <subviews>
-                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="上一页" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" id="bR6-2Y-HTy">
+                                    <label autoresizesSubviews="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="上一页" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" id="bR6-2Y-HTy">
                                         <rect key="frame" x="60" y="9" width="200" height="21"/>
                                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                        <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
                                         <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                         <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
                                         <nil key="highlightedColor"/>
@@ -121,36 +122,47 @@
                                 </subviews>
                                 <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                             </view>
-                            <view hidden="YES" contentMode="scaleToFill" id="pqe-Ez-wRx" userLabel="Next holder" customClass="BUCListItem">
+                            <view hidden="YES" contentMode="scaleToFill" id="pqe-Ez-wRx" userLabel="Next holder" customClass="BUCPostListCell">
                                 <rect key="frame" x="0.0" y="528" width="320" height="40"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                 <subviews>
-                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="More..." textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" id="veC-hD-DEa" userLabel="More or next">
+                                    <label autoresizesSubviews="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="More..." textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" id="veC-hD-DEa" userLabel="More or next">
                                         <rect key="frame" x="60" y="9" width="200" height="21"/>
                                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                        <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
                                         <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                         <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
                                         <nil key="highlightedColor"/>
                                     </label>
-                                    <activityIndicatorView hidden="YES" opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" hidesWhenStopped="YES" style="gray" id="IUf-Ip-kf8" userLabel="More indicator">
+                                    <activityIndicatorView hidden="YES" autoresizesSubviews="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" hidesWhenStopped="YES" style="gray" id="IUf-Ip-kf8" userLabel="More indicator">
                                         <rect key="frame" x="32" y="10" width="20" height="20"/>
                                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                     </activityIndicatorView>
                                 </subviews>
                                 <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                             </view>
+                            <view autoresizesSubviews="NO" clipsSubviews="YES" contentMode="scaleToFill" id="cMt-gC-Txe" userLabel="List Wrapper">
+                                <rect key="frame" x="30" y="137" width="260" height="325"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                <color key="backgroundColor" cocoaTouchSystemColor="groupTableViewBackgroundColor"/>
+                            </view>
                         </subviews>
                         <color key="backgroundColor" cocoaTouchSystemColor="groupTableViewBackgroundColor"/>
+                        <connections>
+                            <outlet property="delegate" destination="JvU-S9-777" id="ARn-Lj-6eA"/>
+                        </connections>
                     </scrollView>
                     <extendedEdge key="edgesForExtendedLayout" top="YES"/>
                     <toolbarItems/>
                     <navigationItem key="navigationItem" id="afc-Jk-Swf"/>
                     <connections>
+                        <outlet property="listWrapper" destination="cMt-gC-Txe" id="OW2-U7-Sc3"/>
                         <outlet property="moreIndicator" destination="IUf-Ip-kf8" id="G0n-s3-fBz"/>
                         <outlet property="moreOrNext" destination="veC-hD-DEa" id="MuL-Zo-1Up"/>
                         <outlet property="nextHolder" destination="pqe-Ez-wRx" id="psD-lf-adG"/>
                         <outlet property="previous" destination="bR6-2Y-HTy" id="vJE-TI-cjC"/>
                         <outlet property="previousHolder" destination="Gic-96-38l" id="vee-Ko-Xlr"/>
+                        <outlet property="scrollView" destination="UTn-g0-AuQ" id="Uql-nO-zY9"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="txp-o2-nfg" userLabel="First Responder" sceneMemberID="firstResponder"/>

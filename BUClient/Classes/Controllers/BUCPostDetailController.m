@@ -3,7 +3,6 @@
 #import "BUCModels.h"
 #import "BUCImageController.h"
 #import "BUCTextStack.h"
-#import "BUCTextView.h"
 
 
 @interface BUCPostDetailController () <UIScrollViewDelegate>
@@ -82,96 +81,96 @@
 
 
 - (void)buildList:(NSArray *)list {
-    UIScrollView *context = (UIScrollView *)self.view;
-    
-    UIView *wrapper;
-    CGFloat layoutPointX = BUCDefaultPadding;
-    CGFloat layoutPointY;
-    if (self.postList.count == 0) {
-        wrapper = [[UIView alloc] init];
-        wrapper.backgroundColor = [UIColor whiteColor];
-        self.listWrapper = wrapper;
-        layoutPointY = BUCDefaultPadding;
-    } else {
-        wrapper = self.listWrapper;
-        layoutPointY = CGRectGetHeight(wrapper.frame) + BUCDefaultMargin + BUCDefaultPadding;
-    }
-    
-    CGFloat wrapperWidth = CGRectGetWidth(context.frame);
-    CGFloat contentWidth = wrapperWidth - 2 * BUCDefaultPadding;
-    
-    CGFloat avatarWidth = 40.0f;
-    CGFloat avatarHeight = 40.0f;
-    
-    NSInteger index = self.postList.count;
-    
-    for (BUCPost *post in list) {
-        CGFloat savedLayoutPointY = layoutPointY;
-        
-        // avatar
-        UIImageView *avatar = [[UIImageView alloc] initWithFrame:CGRectMake(layoutPointX, layoutPointY, avatarWidth, avatarHeight)];
-        avatar.contentMode = UIViewContentModeScaleAspectFit;
-        avatar.image = self.defaultAvatar;
-        avatar.tag = index;
-        if (post.avatar) {
-            [[BUCDataManager sharedInstance] getImageFromUrl:post.avatar onSuccess:^(UIImage *image) {
-                avatar.image = image;
-            }];
-        }
-        [wrapper addSubview:avatar];
-        layoutPointX = layoutPointX + avatarWidth + BUCDefaultMargin;
-        
-        // username
-        UIButton *poster = [self buttonWithRichText:post.user location:CGPointMake(layoutPointX, layoutPointY)];
-        poster.tag = index;
-        [wrapper addSubview:poster];
-        
-        if ([post.user isEqualToAttributedString:self.post.user]) {
-            UILabel *op = [self opLabelAtLocation:CGPointMake(layoutPointX + CGRectGetWidth(poster.frame) + BUCDefaultMargin, layoutPointY)];
-            [wrapper addSubview:op];
-        }
-        
-        layoutPointY = layoutPointY + CGRectGetHeight(poster.frame) + BUCDefaultMargin;
-        
-        // post index
-        UILabel *postIndex = [[UILabel alloc] initWithFrame:CGRectMake(layoutPointX, layoutPointY, 0, 0)];
-        postIndex.attributedText = [[NSAttributedString alloc] initWithString:[NSString stringWithFormat:@"%lu楼", (unsigned long)(index + 1)] attributes:self.metaAttribute];
-        index = index + 1;
-        [postIndex sizeToFit];
-        [wrapper addSubview:postIndex];
-        
-        // dateline
-        UILabel *dateline = [[UILabel alloc] initWithFrame:CGRectMake(layoutPointX + CGRectGetWidth(postIndex.frame) + BUCDefaultMargin, layoutPointY, 0, 0)];
-        dateline.attributedText = post.dateline;
-        [dateline sizeToFit];
-        [wrapper addSubview:dateline];
-        
-        layoutPointX = BUCDefaultPadding;
-        layoutPointY = savedLayoutPointY + avatarHeight + BUCDefaultMargin;
-        
-        // post body
-        if (post.content) {
-            UITextView *textBlock = [self shit:post.content frame:CGRectMake(layoutPointX, layoutPointY, contentWidth, 0)];
-            [wrapper addSubview:textBlock];
-            layoutPointY = layoutPointY + CGRectGetHeight(textBlock.frame) + BUCDefaultPadding;
-        }
-        
-        UIView *border = [[UIView alloc] initWithFrame:CGRectMake(0, layoutPointY, wrapperWidth, BUCBorderWidth)];
-        border.backgroundColor = [UIColor lightGrayColor];
-        [wrapper addSubview:border];
-        
-        layoutPointY = layoutPointY + BUCDefaultMargin;
-    }
-    
-    layoutPointY = layoutPointY - BUCDefaultMargin;
-    wrapper.frame = CGRectMake(0, 0, CGRectGetWidth(context.frame), layoutPointY);
-    [context addSubview:wrapper];
-
-    if (layoutPointY <= CGRectGetHeight(context.frame)) {
-        layoutPointY = CGRectGetHeight(context.frame) + 1.0f;
-    }
-
-    context.contentSize = CGSizeMake(CGRectGetWidth(context.frame), layoutPointY);
+//    UIScrollView *context = (UIScrollView *)self.view;
+//    
+//    UIView *wrapper;
+//    CGFloat layoutPointX = BUCDefaultPadding;
+//    CGFloat layoutPointY;
+//    if (self.postList.count == 0) {
+//        wrapper = [[UIView alloc] init];
+//        wrapper.backgroundColor = [UIColor whiteColor];
+//        self.listWrapper = wrapper;
+//        layoutPointY = BUCDefaultPadding;
+//    } else {
+//        wrapper = self.listWrapper;
+//        layoutPointY = CGRectGetHeight(wrapper.frame) + BUCDefaultMargin + BUCDefaultPadding;
+//    }
+//    
+//    CGFloat wrapperWidth = CGRectGetWidth(context.frame);
+//    CGFloat contentWidth = wrapperWidth - 2 * BUCDefaultPadding;
+//    
+//    CGFloat avatarWidth = 40.0f;
+//    CGFloat avatarHeight = 40.0f;
+//    
+//    NSInteger index = self.postList.count;
+//    
+//    for (BUCPost *post in list) {
+//        CGFloat savedLayoutPointY = layoutPointY;
+//        
+//        // avatar
+//        UIImageView *avatar = [[UIImageView alloc] initWithFrame:CGRectMake(layoutPointX, layoutPointY, avatarWidth, avatarHeight)];
+//        avatar.contentMode = UIViewContentModeScaleAspectFit;
+//        avatar.image = self.defaultAvatar;
+//        avatar.tag = index;
+//        if (post.avatar) {
+//            [[BUCDataManager sharedInstance] getImageFromUrl:post.avatar onSuccess:^(UIImage *image) {
+//                avatar.image = image;
+//            }];
+//        }
+//        [wrapper addSubview:avatar];
+//        layoutPointX = layoutPointX + avatarWidth + BUCDefaultMargin;
+//        
+//        // username
+////        UIButton *poster = [self buttonWithRichText:post.user location:CGPointMake(layoutPointX, layoutPointY)];
+////        poster.tag = index;
+////        [wrapper addSubview:poster];
+//        
+//        if ([post.user isEqualToString:self.post.user]) {
+//            UILabel *op = [self opLabelAtLocation:CGPointMake(layoutPointX + CGRectGetWidth(poster.frame) + BUCDefaultMargin, layoutPointY)];
+//            [wrapper addSubview:op];
+//        }
+//        
+//        layoutPointY = layoutPointY + CGRectGetHeight(poster.frame) + BUCDefaultMargin;
+//        
+//        // post index
+//        UILabel *postIndex = [[UILabel alloc] initWithFrame:CGRectMake(layoutPointX, layoutPointY, 0, 0)];
+//        postIndex.attributedText = [[NSAttributedString alloc] initWithString:[NSString stringWithFormat:@"%lu楼", (unsigned long)(index + 1)] attributes:self.metaAttribute];
+//        index = index + 1;
+//        [postIndex sizeToFit];
+//        [wrapper addSubview:postIndex];
+//        
+//        // dateline
+//        UILabel *dateline = [[UILabel alloc] initWithFrame:CGRectMake(layoutPointX + CGRectGetWidth(postIndex.frame) + BUCDefaultMargin, layoutPointY, 0, 0)];
+////        dateline.attributedText = post.dateline;
+//        [dateline sizeToFit];
+//        [wrapper addSubview:dateline];
+//        
+//        layoutPointX = BUCDefaultPadding;
+//        layoutPointY = savedLayoutPointY + avatarHeight + BUCDefaultMargin;
+//        
+//        // post body
+//        if (post.content) {
+//            UITextView *textBlock = [self shit:post.content frame:CGRectMake(layoutPointX, layoutPointY, contentWidth, 0)];
+//            [wrapper addSubview:textBlock];
+//            layoutPointY = layoutPointY + CGRectGetHeight(textBlock.frame) + BUCDefaultPadding;
+//        }
+//        
+//        UIView *border = [[UIView alloc] initWithFrame:CGRectMake(0, layoutPointY, wrapperWidth, BUCBorderWidth)];
+//        border.backgroundColor = [UIColor lightGrayColor];
+//        [wrapper addSubview:border];
+//        
+//        layoutPointY = layoutPointY + BUCDefaultMargin;
+//    }
+//    
+//    layoutPointY = layoutPointY - BUCDefaultMargin;
+//    wrapper.frame = CGRectMake(0, 0, CGRectGetWidth(context.frame), layoutPointY);
+//    [context addSubview:wrapper];
+//
+//    if (layoutPointY <= CGRectGetHeight(context.frame)) {
+//        layoutPointY = CGRectGetHeight(context.frame) + 1.0f;
+//    }
+//
+//    context.contentSize = CGSizeMake(CGRectGetWidth(context.frame), layoutPointY);
 }
 
 

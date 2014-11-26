@@ -1,23 +1,27 @@
 #import "BUCPostListController.h"
 #import "BUCPostDetailController.h"
 #import "BUCConstants.h"
-#import "BUCListItem.h"
+#import "BUCPostListCell.h"
 #import "BUCDataManager.h"
 #import "BUCModels.h"
 
 
+static CGFloat const BUCPostListSupplementaryViewHeight = 40.0f;
+static NSString * const BUCCellNib = @"BUCPostListCell";
+
 @interface BUCPostListController () <UIScrollViewDelegate>
 
-@property (weak, nonatomic) IBOutlet BUCListItem *previousHolder;
+@property (weak, nonatomic) IBOutlet BUCPostListCell *previousHolder;
 @property (weak, nonatomic) IBOutlet UILabel *previous;
-@property (weak, nonatomic) IBOutlet BUCListItem *nextHolder;
+@property (weak, nonatomic) IBOutlet BUCPostListCell *nextHolder;
 @property (weak, nonatomic) IBOutlet UILabel *moreOrNext;
 @property (weak, nonatomic) IBOutlet UIActivityIndicatorView *moreIndicator;
 
-@property (nonatomic, weak) UIView *listWrapper;
+@property (nonatomic, weak) IBOutlet UIScrollView *scrollView;
+@property (nonatomic, weak) IBOutlet UIView *listWrapper;
 
 @property (nonatomic) NSMutableArray *postList;
-@property (nonatomic) NSMutableArray *backUp;
+@property (nonatomic) NSMutableArray *cellList;
 
 @property (nonatomic) NSString *from;
 @property (nonatomic) NSString *to;
@@ -25,6 +29,8 @@
 @property (nonatomic) NSUInteger postCount;
 @property (nonatomic) NSUInteger location;
 @property (nonatomic) NSUInteger length;
+
+@property (nonatomic) BOOL isRefresh;
 
 @end
 
@@ -36,19 +42,23 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     
-    UIScrollView *context = (UIScrollView *)self.view;
-    context.delegate = self;
-    context.scrollIndicatorInsets = UIEdgeInsetsMake(64.0f, 0, 0, 0);
+    self.scrollView.scrollIndicatorInsets = UIEdgeInsetsMake(BUCTopBarHeight, 0, 0, 0);
+    self.cellList = [[NSMutableArray alloc] init];
 
     self.navigationItem.backBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"" style:UIBarButtonItemStylePlain target:nil action:nil];
-    self.previousHolder.frame = CGRectMake(0, 0, CGRectGetWidth(self.view.frame), 40.0f);
-    self.previousHolder.frame = CGRectInset(self.previousHolder.frame, BUCDefaultPadding, 0);
-    [self.previousHolder addTarget:self action:@selector(loadPrevious) forControlEvents:UIControlEventTouchUpInside];
-    self.previous.frame = CGRectOffset(self.previous.frame, -BUCDefaultPadding, 0);
-    self.moreOrNext.frame = CGRectOffset(self.moreOrNext.frame, -BUCDefaultPadding, 0);
-    self.nextHolder.frame = self.previousHolder.frame;
-    self.previousHolder.frame = CGRectOffset(self.previousHolder.frame, 0, 64.0f + BUCDefaultPadding);
     
+    CGRect frame = self.previousHolder.frame;
+    frame.origin = CGPointMake(BUCDefaultPadding, BUCDefaultPadding + BUCTopBarHeight);
+    frame.size.width = frame.size.width - 2 * BUCDefaultPadding;
+    
+    self.previousHolder.frame = frame;
+    [self.previousHolder addTarget:self action:@selector(loadPrevious) forControlEvents:UIControlEventTouchUpInside];
+    self.previous.center = CGPointMake(CGRectGetMidX(self.previousHolder.bounds), CGRectGetMidY(self.previousHolder.bounds));
+    
+    self.nextHolder.frame = frame;
+    self.moreOrNext.center = self.previous.center;
+    [self.nextHolder addTarget:self action:@selector(loadNext) forControlEvents:UIControlEventTouchUpInside];
+
     if (self.fname) {
         self.navigationItem.title = [NSString stringWithFormat:@"%@[1]", self.fname];
         self.from = @"0";
@@ -66,9 +76,8 @@
 #pragma mark - actions and unwind methods
 - (void)refresh {
     [self displayLoading];
-    self.backUp = self.postList;
-    self.postList = nil;
-    self.view.userInteractionEnabled = NO;
+
+    self.isRefresh = YES;
     if (self.fid) {
         BUCPostListController * __weak weakSelf = self;
         [[BUCDataManager sharedInstance]
@@ -103,16 +112,13 @@
                 weakSelf.length = weakSelf.length + 20;
             }
         }
-        weakSelf.view.userInteractionEnabled = YES;
-        weakSelf.backUp = nil;
+        
         [weakSelf buildList:list];
         [weakSelf hideLoading];
         [weakSelf.moreIndicator stopAnimating];
     };
     
     void (^errorBlock)(NSError *) = ^(NSError *error) {
-        weakSelf.view.userInteractionEnabled = YES;
-        weakSelf.postList = weakSelf.backUp;
         [weakSelf hideLoading];
         [weakSelf.moreIndicator stopAnimating];
         [weakSelf alertMessage:error.localizedDescription];
@@ -129,7 +135,7 @@
 - (void)jumpToPost:(id)sender {
     UIStoryboard *storyboard = [UIStoryboard storyboardWithName:BUCMainStoryboardPath bundle:nil];
     BUCPostDetailController *postDetailController = [storyboard instantiateViewControllerWithIdentifier:BUCPostDetailControllerStoryboardID];
-    BUCListItem *listItem = (BUCListItem *)sender;
+    BUCPostListCell *listItem = (BUCPostListCell *)sender;
     BUCPost *post = [self.postList objectAtIndex:listItem.tag];
     postDetailController.post = post;
     [(UINavigationController *)self.parentViewController pushViewController:postDetailController animated:YES];
@@ -140,10 +146,10 @@
     UIStoryboard *storyboard = [UIStoryboard storyboardWithName:BUCMainStoryboardPath bundle:nil];
     BUCPostListController *postListController = [storyboard instantiateViewControllerWithIdentifier:BUCPostListControllerStoryboardID];
     UIButton *forumName = (UIButton *)sender;
-    BUCListItem *listItem = (BUCListItem *)forumName.superview;
+    BUCPostListCell *listItem = (BUCPostListCell *)forumName.superview;
     BUCPost *post = [self.postList objectAtIndex:listItem.tag];
     postListController.fid = post.fid;
-    postListController.fname = post.fname.string;
+    postListController.fname = post.fname;
     [(UINavigationController *)self.parentViewController pushViewController:postListController animated:YES];
 }
 
@@ -180,7 +186,7 @@
     CGFloat refreshFireHeight = 40.0f;
     if (scrollView.contentOffset.y <= -refreshFireHeight) {
         [self refresh];
-    } else if (self.fid && !decelerate && self.postList.count < 40 && self.postCount >= self.location + 20) {
+    } else if (self.fid && !decelerate && self.length != 40 && self.postCount >= self.location + 20) {
         CGFloat loadMoreHeight = ceilf(CGRectGetHeight(self.listWrapper.frame) / 2);
         if (scrollView.contentOffset.y >= loadMoreHeight) {
             [self loadMore];
@@ -190,7 +196,7 @@
 
 
 - (void)scrollViewDidEndDecelerating:(UIScrollView *)scrollView {
-    if (self.fid && self.postList.count < 40 && self.postCount >= self.location + 20) {
+    if (self.fid && self.length != 40 && self.postCount >= self.location + 20) {
         CGFloat loadMoreHeight = ceilf(CGRectGetHeight(self.listWrapper.frame) / 2);
         if (scrollView.contentOffset.y >= loadMoreHeight) {
             [self loadMore];
@@ -201,67 +207,77 @@
 
 #pragma mark - private methods
 - (void)buildList:(NSArray *)list {
-    UIScrollView *context = (UIScrollView *)self.view;
-    UIView *wrapper;
-    CGFloat layoutPointY;
-    
-    CGFloat contextWidth = CGRectGetWidth(context.frame);
-    CGFloat wrapperWidth = contextWidth - 2 * BUCDefaultPadding;
-    CGFloat topBarHeight = 64.0f;
-    
-    // index of list item
-    NSInteger index = self.postList.count;
+    CGSize contentSize = self.scrollView.contentSize;
+    contentSize.height = BUCTopBarHeight + 2 * BUCDefaultPadding;
+    CGRect listFrame = CGRectZero;
+    CGSize listSize = CGSizeZero;
+    listSize.width = CGRectGetWidth(self.scrollView.frame) - 2 * BUCDefaultPadding;
 
-    // set up wrapper
-    CGFloat contextLayoutPointY = topBarHeight + BUCDefaultPadding;
-    if (index == 0) {
-        [(UIScrollView *)self.view setContentOffset:CGPointMake(0, 0) animated:NO];
-        self.previousHolder.hidden = YES;
-        [self.listWrapper removeFromSuperview];
-        wrapper = [[UIView alloc] init];
-        wrapper.backgroundColor = context.backgroundColor;
-        self.listWrapper = wrapper;
-        layoutPointY = 0;
-        self.postList = [[NSMutableArray alloc] init];
-    } else {
-        wrapper = self.listWrapper;
-        layoutPointY = CGRectGetHeight(wrapper.frame) + BUCDefaultMargin;
-    }
-    
+    // header
     if (self.location >= 40) {
         self.previousHolder.hidden = NO;
-        contextLayoutPointY = contextLayoutPointY + CGRectGetHeight(self.previousHolder.frame) + BUCDefaultPadding;
+        listFrame.origin = CGPointMake(BUCDefaultPadding, BUCDefaultPadding + BUCDefaultMargin + BUCPostListSupplementaryViewHeight + BUCTopBarHeight);
+        contentSize.height = contentSize.height + BUCPostListSupplementaryViewHeight + BUCDefaultMargin;
     } else {
         self.previousHolder.hidden = YES;
+        listFrame.origin = CGPointMake(BUCDefaultPadding, BUCTopBarHeight + BUCDefaultPadding);
     }
     
-    if (self.fid) {
-        self.navigationItem.title = [NSString stringWithFormat:@"%@[%lu]", self.fname, (unsigned long)(self.location / 40 + 1)];
+    // list content
+    NSMutableArray *postList;
+    if (self.isRefresh) {
+        postList = [[NSMutableArray alloc] init];
+        self.isRefresh = NO;
+        [self.scrollView setContentOffset:CGPointZero];
+    } else {
+        postList = self.postList;
+        listSize.height = self.listWrapper.frame.size.height + BUCDefaultMargin;
     }
-    
+
+    NSInteger index = postList.count;
+    NSInteger cellCount = self.cellList.count;
+ 
     for (BUCPost *post in list) {
-        if ([self isLoadedBefore:post]) {
+        if ([self isLoadedBefore:post against:postList]) {
             continue;
         }
         
-        BUCListItem *listItem = [self listItemOfPost:post frame:CGRectMake(0, layoutPointY, wrapperWidth, 0)];
-        listItem.tag = index;
-        index = index + 1;
-        [listItem addTarget:self action:@selector(jumpToPost:) forControlEvents:UIControlEventTouchUpInside];
-        [wrapper addSubview:listItem];
-        layoutPointY = layoutPointY + CGRectGetHeight(listItem.frame) + BUCDefaultMargin;
+        BUCPostListCell *cell;
+        if (index >= cellCount) {
+            cell = [[[NSBundle mainBundle] loadNibNamed:BUCCellNib owner:nil options:nil] lastObject];
+            [self.cellList addObject:cell];
+            [self.listWrapper addSubview:cell];
+        } else {
+            cell = [self.cellList objectAtIndex:index];
+        }
         
-        [self.postList addObject:post];
+        cell.tag = index;
+        cell.hidden = NO;
+        CGRect cellFrame = CGRectMake(0, listSize.height, listSize.width, 0);
+        [self configureCell:cell post:post frame:cellFrame];
+        listSize.height = listSize.height + cell.frame.size.height + BUCDefaultMargin;
+        
+        [postList addObject:post];
+        index = index + 1;
     }
+    
+    for (; index < cellCount; index = index + 1) {
+        BUCPostListCell *cell = [self.cellList objectAtIndex:index];
+        cell.hidden = YES;
+    }
+    
+    listSize.height = listSize.height - BUCDefaultMargin;
+    listFrame.size = listSize;
+    self.listWrapper.frame = listFrame;
+    contentSize.height = contentSize.height + listSize.height;
 
-    wrapper.frame = CGRectMake(BUCDefaultPadding, contextLayoutPointY, wrapperWidth, layoutPointY - BUCDefaultMargin);
-    
-    contextLayoutPointY = contextLayoutPointY + layoutPointY;
-    
+    // footer
     if (self.postCount > 0 && self.postCount >= self.location + self.length) {
         self.nextHolder.hidden = NO;
-        self.nextHolder.frame = CGRectMake(BUCDefaultPadding, contextLayoutPointY, CGRectGetWidth(self.nextHolder.frame), CGRectGetHeight(self.nextHolder.frame));
-        contextLayoutPointY = contextLayoutPointY + CGRectGetHeight(self.nextHolder.frame) + BUCDefaultMargin;
+        CGRect frame = self.nextHolder.frame;
+        frame.origin = CGPointMake(BUCDefaultPadding, listFrame.origin.y + listSize.height + BUCDefaultMargin);
+        self.nextHolder.frame = frame;
+        contentSize.height = contentSize.height + BUCPostListSupplementaryViewHeight + BUCDefaultMargin;
         if (self.length == 20) {
             self.moreOrNext.text = @"More...";
             [self.nextHolder removeTarget:self action:NULL forControlEvents:UIControlEventTouchUpInside];
@@ -274,137 +290,118 @@
     } else {
         self.nextHolder.hidden = YES;
     }
+
+    // update content size of scroll view
+    self.scrollView.contentSize = contentSize;
     
-    if (contextLayoutPointY < CGRectGetHeight(context.frame)) {
-        contextLayoutPointY = CGRectGetHeight(context.frame) + 1.0f;
+    // update title of top bar
+    if (self.fid) {
+        self.navigationItem.title = [NSString stringWithFormat:@"%@[%lu]", self.fname, (unsigned long)(self.location / 40 + 1)];
     }
     
-    context.contentSize = CGSizeMake(contextWidth, contextLayoutPointY);
-    [context addSubview:wrapper];
+    self.postList = postList;
 }
 
 
-- (BUCListItem *)listItemOfPost:(BUCPost *)post frame:(CGRect)aRect {
-    CGFloat x = CGRectGetMinX(aRect);
-    CGFloat y = CGRectGetMinY(aRect);
-    CGFloat contextWidth = CGRectGetWidth(aRect);
-    
-    CGFloat contentWidth = contextWidth - 2 * BUCDefaultPadding;
-    
-    CGFloat titleBottomMargin = 20.0f;
-    
-    CGFloat layoutPointX = BUCDefaultPadding;
-    CGFloat layoutPointY = BUCDefaultPadding;
-    
-    BUCListItem *listItem = [[BUCListItem alloc] initWithFrame:CGRectZero];
+- (void)configureCell:(BUCPostListCell *)cell post:(BUCPost *)post frame:(CGRect)aRect {
+    CGFloat contentWidth = aRect.size.width - 2 * BUCDefaultPadding;
     
     // title
-    UILabel *title = [self labelWithRichText:post.title frame:CGRectMake(layoutPointX, layoutPointY, contentWidth, 0)];
-    [listItem addSubview:title];
-    layoutPointY = layoutPointY + CGRectGetHeight(title.frame) + titleBottomMargin;
+    CGRect frame = cell.title.frame;
+    frame.origin = CGPointMake(BUCDefaultPadding, BUCDefaultPadding);
+    CGSize size = frame.size;
+    size.width = contentWidth;
+    frame.size = size;
     
-    // username of original poster
-//    BUCTextButton *poster = [[BUCTextButton alloc] initWithTitle:post.user location:CGPointMake(layoutPointX, layoutPointY)];
-    UIButton *poster = [self buttonWithRichText:post.user location:CGPointMake(layoutPointX, layoutPointY)];
-    [listItem addSubview:poster];
-    [poster addTarget:self action:@selector(jumpToPoster:) forControlEvents:UIControlEventTouchUpInside];
-    layoutPointX = layoutPointX + CGRectGetWidth(poster.frame) + BUCDefaultMargin;
+    cell.title.frame = frame;
+    cell.title.attributedText = post.title;
+    [cell.title sizeToFit];
     
-    NSDictionary *metaAttributes = @{NSFontAttributeName:[UIFont preferredFontForTextStyle:UIFontTextStyleCaption1]};
+    frame.origin.y = frame.origin.y + ceilf(cell.title.frame.size.height) + BUCDefaultMargin;
     
-    NSAttributedString *snippetRichText = [[NSAttributedString alloc] initWithString:@"发表于" attributes:metaAttributes];
-    UILabel *snippet = [self labelWithRichText:snippetRichText frame:CGRectMake(layoutPointX, layoutPointY, 0, 0)];
-    [listItem addSubview:snippet];
-    layoutPointX = layoutPointX + CGRectGetWidth(snippet.frame) + BUCDefaultMargin;
+    // username
+    [cell.username setTitle:post.user forState:UIControlStateNormal];
+    [cell.username sizeToFit];
+    size.width = ceilf(cell.username.frame.size.width);
+    size.height = ceilf(cell.username.titleLabel.frame.size.height);
+    frame.size = size;
+    cell.username.frame = frame;
+    [cell.username addTarget:self action:@selector(jumpToPoster:) forControlEvents:UIControlEventTouchUpInside];
     
-    // forum name
-    if (!self.fid) {    
-//        BUCTextButton *forumName = [[BUCTextButton alloc] initWithTitle:post.fname location:CGPointMake(layoutPointX, layoutPointY)];
-        UIButton *forumName = [self buttonWithRichText:post.fname location:CGPointMake(layoutPointX, layoutPointY)];
-        [listItem addSubview:forumName];
-        [forumName addTarget:self action:@selector(jumpToForum:) forControlEvents:UIControlEventTouchUpInside];
-        layoutPointX = layoutPointX + CGRectGetWidth(forumName.frame) + BUCDefaultMargin;
+    frame.origin.x = frame.origin.x + size.width + BUCDefaultMargin;
+    
+    // preposition
+    [cell.preposition sizeToFit];
+    size.width = ceilf(cell.preposition.frame.size.width);
+    frame.size = size;
+    cell.preposition.frame = frame;
+    
+    frame.origin.x = frame.origin.x + size.width + BUCDefaultMargin;
+    
+    // forum name or dateline
+    if (post.fname) {
+        cell.forum.hidden = NO;
+        [cell.forum setTitle:post.fname forState:UIControlStateNormal];
+        [cell.forum sizeToFit];
+        size.width = ceilf(cell.forum.frame.size.width);
+        frame.size = size;
+        cell.forum.frame = frame;
+        [cell.forum addTarget:self action:@selector(jumpToForum:) forControlEvents:UIControlEventTouchUpInside];
     } else {
-        UILabel *dateline = [self labelWithRichText:post.dateline frame:CGRectMake(layoutPointX, layoutPointY, 0, 0)];
-        [listItem addSubview:dateline];
-        layoutPointX = layoutPointX + CGRectGetWidth(dateline.frame) + BUCDefaultMargin;
+        cell.dateline.hidden = NO;
+        cell.dateline.text = post.dateline;
+        [cell.dateline sizeToFit];
+        size.width = ceilf(cell.dateline.frame.size.width);
+        frame.size = size;
+        cell.dateline.frame = frame;
     }
     
-    // reply count
-    NSString *childCountString = [NSString stringWithFormat:@"• %@人回复", post.childCount];
-    NSAttributedString *replyCountRichText = [[NSAttributedString alloc] initWithString:childCountString attributes:metaAttributes];
-    UILabel *childCount = [self labelWithRichText:replyCountRichText frame:CGRectMake(layoutPointX, layoutPointY, 0, 0)];
-    [listItem addSubview:childCount];
+    frame.origin.x = frame.origin.x + size.width + BUCDefaultMargin;
     
-    // view count
-    if (self.fid) {
-        layoutPointX = layoutPointX + CGRectGetWidth(childCount.frame) + BUCDefaultMargin;
-        NSString *viewCountString = [NSString stringWithFormat:@"• %@次点击", post.viewCount];
-        NSAttributedString *viewCountRichText = [[NSAttributedString alloc] initWithString:viewCountString attributes:metaAttributes];
-        UILabel *viewCount = [self labelWithRichText:viewCountRichText frame:CGRectMake(layoutPointX, layoutPointY, 0, 0)];
-        [listItem addSubview:viewCount];
-    }
-    
-    layoutPointX = BUCDefaultPadding;
-    layoutPointY = layoutPointY + CGRectGetHeight(childCount.frame) + BUCDefaultMargin;
+    // statistic
+    cell.statistic.text = post.statistic;
+    [cell.statistic sizeToFit];
+    size.width = ceilf(cell.statistic.frame.size.width);
+    frame.size = size;
+    cell.statistic.frame = frame;
     
     // separator
-    UIView *separator = [[UIView alloc] initWithFrame:CGRectMake(layoutPointX, layoutPointY, contentWidth, BUCBorderWidth)];
-    separator.backgroundColor = [UIColor lightGrayColor];
-    [listItem addSubview:separator];
-    layoutPointY = layoutPointY + BUCBorderWidth + BUCDefaultMargin;
+    frame.origin = CGPointMake(BUCDefaultPadding, frame.origin.y + size.height + BUCDefaultMargin);
+    frame.size = CGSizeMake(contentWidth, BUCBorderWidth);
+    cell.separator.frame = frame;
+    
+    frame.origin.y = frame.origin.y + BUCDefaultMargin;
     
     // last reply
-    NSString *lastReplyString = [NSString stringWithFormat:@"最后回复：%@ by", post.lastPostDateline.string];
-    NSAttributedString *lastReplyRichText = [[NSAttributedString alloc] initWithString:lastReplyString attributes:metaAttributes];
-    UILabel *lastReply = [self labelWithRichText:lastReplyRichText frame:CGRectMake(layoutPointX, layoutPointY, 0, 0)];
-    [listItem addSubview:lastReply];
-    layoutPointX = layoutPointX + CGRectGetWidth(lastReply.frame) + BUCDefaultMargin;
+    cell.lastPostDate.text = post.lastPostDateline;
+    [cell.lastPostDate sizeToFit];
+    size.width = ceilf(cell.lastPostDate.frame.size.width);
+    frame.size = size;
+    cell.lastPostDate.frame = frame;
     
-//    BUCTextButton *lastReplyPoster = [[BUCTextButton alloc] initWithTitle:post.lastPoster location:CGPointMake(layoutPointX, layoutPointY)];
-    UIButton *lastReplyPoster = [self buttonWithRichText:post.lastPoster location:CGPointMake(layoutPointX, layoutPointY)];
-    [listItem addSubview:lastReplyPoster];
+    frame.origin.x = frame.origin.x + size.width + BUCDefaultMargin;
     
-    layoutPointY = layoutPointY + CGRectGetHeight(lastReplyPoster.frame) + BUCDefaultPadding;
+    [cell.lastPoster setTitle:post.lastPoster forState:UIControlStateNormal];
+    [cell.lastPoster sizeToFit];
+    size.width = ceilf(cell.lastPoster.frame.size.width);
+    frame.size = size;
+    cell.lastPoster.frame = frame;
+    [cell.lastPoster addTarget:self action:@selector(jumpToPoster:) forControlEvents:UIControlEventTouchUpInside];
     
     // reset frame
-    listItem.frame = CGRectMake(x, y, contextWidth, layoutPointY);
-
-    return listItem;
+    aRect.size.height = frame.origin.y + size.height + BUCDefaultPadding;
+    cell.frame = aRect;
 }
 
 
-- (UILabel *)labelWithRichText:(NSAttributedString *)richText frame:(CGRect)frame {
-    UILabel *label = [[UILabel alloc] initWithFrame:frame];
-    label.numberOfLines = 0;
-    label.attributedText = richText;
-    [label sizeToFit];
-    
-    return label;
-}
-
-
-- (BOOL)isLoadedBefore:(BUCPost *)newpost {
-    for (BUCPost *post in self.postList) {
+- (BOOL)isLoadedBefore:(BUCPost *)newpost against:(NSArray *)list{
+    for (BUCPost *post in list) {
         if ([post.pid isEqualToString:newpost.pid]) {
             return YES;
         }
     }
     
     return NO;
-}
-
-
-- (UIButton *)buttonWithRichText:(NSAttributedString *)richText location:(CGPoint)location {
-    UIButton *button = [UIButton buttonWithType:UIButtonTypeSystem];
-    [button setAttributedTitle:richText forState:UIControlStateNormal];
-    [button sizeToFit];
-    CGRect frame = button.frame;
-    frame.size = button.titleLabel.frame.size;
-    frame.origin = location;
-    button.frame = frame;
-    
-    return button;
 }
 
 

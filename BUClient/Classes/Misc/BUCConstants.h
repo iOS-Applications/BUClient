@@ -21,6 +21,8 @@ extern NSString * const BUCPostDetailControllerStoryboardID;
 extern NSString * const BUCUnwindToRootStoryboardID;
 
 // geometry constants
+extern CGFloat const BUCTopBarHeight;
+
 extern CGFloat const BUCImageThumbnailWidth;
 extern CGFloat const BUCImageThumbnailHeight;
 

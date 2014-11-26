@@ -8,21 +8,20 @@
 
 @property (nonatomic) NSString *pid;
 @property (nonatomic) NSString *fid;
-@property (nonatomic) NSAttributedString *fname;
+@property (nonatomic) NSString *fname;
 
-@property (nonatomic) NSAttributedString *user;
+@property (nonatomic) NSString *user;
 @property (nonatomic) NSString *uid;
 @property (nonatomic) NSURL *avatar;
 
 @property (nonatomic) NSAttributedString *title;
 @property (nonatomic) NSAttributedString *content;
-@property (nonatomic) NSAttributedString *dateline;
+@property (nonatomic) NSString *dateline;
 
-@property (nonatomic) NSString *viewCount;
-@property (nonatomic) NSString *childCount;
+@property (nonatomic) NSString *statistic;
 
-@property (nonatomic) NSAttributedString *lastPostDateline;
-@property (nonatomic) NSAttributedString *lastPoster;
+@property (nonatomic) NSString *lastPostDateline;
+@property (nonatomic) NSString *lastPoster;
 
 @end
 
