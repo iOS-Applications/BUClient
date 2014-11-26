@@ -127,12 +127,16 @@
             blockAttribute.backgroundColor = [self parseBoxColor:box];
             [self appendBox:box superAttributes:thisAttributes];
         } else {
+            blockAttribute.noBackground = YES; // do not draw background for list
             [self appendList:tree superAttributes:thisAttributes];
         }
         
         [self finishBlock:thisAttributes];
         NSUInteger length = self.output.length - location;
         blockAttribute.range = NSMakeRange(location, length);
+        if (!self.blockList) {
+            self.blockList = [[NSMutableArray alloc] init];
+        }
         [self.blockList addObject:blockAttribute];
         [self insertNewLine:superAttributes];
     } else {
@@ -221,6 +225,9 @@
     }
     
     attachment.glyphIndex = [self.output length];
+    if (!self.attachmentList) {
+        self.attachmentList = [[NSMutableArray alloc] init];
+    }
     [self.attachmentList addObject:attachment];
     
     [self.output appendAttributedString:[NSAttributedString attributedStringWithAttachment:attachment]];

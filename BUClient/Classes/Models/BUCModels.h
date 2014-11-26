@@ -51,6 +51,8 @@
 
 @property (nonatomic) UIColor *backgroundColor;
 
+@property (nonatomic) BOOL noBackground;
+
 @end
 
 
