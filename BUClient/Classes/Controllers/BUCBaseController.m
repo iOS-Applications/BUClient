@@ -22,6 +22,7 @@
     [[NSBundle mainBundle] loadNibNamed:@"BUCLoadingView" owner:self options:nil];
     self.loadingView.frame = CGRectMake(0, 0, 140.0f, 140.0f);
     self.loadingView.layer.cornerRadius = 10.0f;
+    self.loadingView.layer.masksToBounds = YES;
     [self.view addSubview:self.loadingView];
 }
 
