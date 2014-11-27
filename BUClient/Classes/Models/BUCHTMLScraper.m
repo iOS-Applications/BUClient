@@ -124,7 +124,7 @@
 
         } else if ([tagName isEqualToString:@"blockquote"]) {
             TFHppleElement *box = [tree.children objectAtIndex:1];
-            blockAttribute.backgroundColor = [self parseBoxColor:box];
+            blockAttribute.backgroundColor = [self colorAttributeOfBox:box];
             [self appendBox:box superAttributes:thisAttributes];
         } else {
             blockAttribute.noBackground = YES; // do not draw background for list
@@ -458,7 +458,7 @@
 }
 
 
-- (UIColor *)parseBoxColor:(TFHppleElement *)box {
+- (UIColor *)colorAttributeOfBox:(TFHppleElement *)box {
     NSString *styleString = [box objectForKey:@"style"];
     
     if (!styleString || styleString.length == 0) {

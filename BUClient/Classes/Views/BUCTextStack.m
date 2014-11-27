@@ -95,6 +95,10 @@
     BUCTextContainer *textContainer = [self.textContainers lastObject];
     
     for (BUCTextBlockAttribute *blockAttribute in [blockList reverseObjectEnumerator]) {
+        if (blockAttribute.noBackground) {
+            continue;
+        }
+
         if (blockAttribute.backgroundColor) {
             [blockAttribute.backgroundColor setFill];
         } else {
@@ -103,9 +107,7 @@
         
         CGRect frame = [self boundingRectForGlyphRange:blockAttribute.range inTextContainer:textContainer];
         frame = CGRectInset(frame, -BUCDefaultPadding, -BUCDefaultPadding);
-        if (!blockAttribute.noBackground) {
-            CGContextFillRect(context, frame);
-        }
+        CGContextFillRect(context, frame);
         CGContextStrokeRect(context, frame);
     }
 }

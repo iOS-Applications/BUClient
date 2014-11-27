@@ -15,6 +15,7 @@
 		D81ED3661A122FBD00D10243 /* icons in Resources */ = {isa = PBXBuildFile; fileRef = D81ED3651A122FBD00D10243 /* icons */; };
 		D81ED3681A122FE300D10243 /* etc in Resources */ = {isa = PBXBuildFile; fileRef = D81ED3671A122FE300D10243 /* etc */; };
 		D83AE4DF1A25B5D700BAF871 /* BUCPostListCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = D83AE4DE1A25B5D700BAF871 /* BUCPostListCell.xib */; };
+		D83AE4E11A26110C00BAF871 /* Launch Screen.xib in Resources */ = {isa = PBXBuildFile; fileRef = D83AE4E01A26110C00BAF871 /* Launch Screen.xib */; };
 		D848C0481A13BA8D0037F429 /* BUCImageController.m in Sources */ = {isa = PBXBuildFile; fileRef = D848C0471A13BA8D0037F429 /* BUCImageController.m */; };
 		D853E7EB1A1594490003C284 /* TFHpple.m in Sources */ = {isa = PBXBuildFile; fileRef = D853E7E31A1594490003C284 /* TFHpple.m */; };
 		D853E7EC1A1594490003C284 /* TFHppleElement.m in Sources */ = {isa = PBXBuildFile; fileRef = D853E7E51A1594490003C284 /* TFHppleElement.m */; };
@@ -72,6 +73,7 @@
 		D81ED3651A122FBD00D10243 /* icons */ = {isa = PBXFileReference; lastKnownFileType = folder; path = icons; sourceTree = "<group>"; };
 		D81ED3671A122FE300D10243 /* etc */ = {isa = PBXFileReference; lastKnownFileType = folder; path = etc; sourceTree = "<group>"; };
 		D83AE4DE1A25B5D700BAF871 /* BUCPostListCell.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = BUCPostListCell.xib; sourceTree = "<group>"; };
+		D83AE4E01A26110C00BAF871 /* Launch Screen.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = "Launch Screen.xib"; sourceTree = "<group>"; };
 		D848C0461A13BA8D0037F429 /* BUCImageController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BUCImageController.h; sourceTree = "<group>"; };
 		D848C0471A13BA8D0037F429 /* BUCImageController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BUCImageController.m; sourceTree = "<group>"; };
 		D853E7E21A1594490003C284 /* TFHpple.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TFHpple.h; sourceTree = "<group>"; };
@@ -260,6 +262,7 @@
 			isa = PBXGroup;
 			children = (
 				D8A2461518910A9A00AFD27A /* Main.storyboard */,
+				D83AE4E01A26110C00BAF871 /* Launch Screen.xib */,
 				D85EA9561A0DAF26000BE12A /* BUCLoadingView.xib */,
 				D83AE4DE1A25B5D700BAF871 /* BUCPostListCell.xib */,
 			);
@@ -441,6 +444,7 @@
 				D83AE4DF1A25B5D700BAF871 /* BUCPostListCell.xib in Resources */,
 				D872DE601A0FB46A00450E0B /* images in Resources */,
 				D81ED3681A122FE300D10243 /* etc in Resources */,
+				D83AE4E11A26110C00BAF871 /* Launch Screen.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -559,7 +563,7 @@
 					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
 					"$(SDKROOT)/usr/include/libxml2",
 				);
-				IPHONEOS_DEPLOYMENT_TARGET = 7.1;
+				IPHONEOS_DEPLOYMENT_TARGET = 8.1;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
 			};
@@ -596,7 +600,7 @@
 					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
 					"$(SDKROOT)/usr/include/libxml2",
 				);
-				IPHONEOS_DEPLOYMENT_TARGET = 7.1;
+				IPHONEOS_DEPLOYMENT_TARGET = 8.1;
 				SDKROOT = iphoneos;
 				VALIDATE_PRODUCT = YES;
 			};
@@ -609,7 +613,7 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "BUClient/BUClient-Prefix.pch";
 				INFOPLIST_FILE = "BUClient/BUClient-Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 7.1;
+				IPHONEOS_DEPLOYMENT_TARGET = 8.1;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				WRAPPER_EXTENSION = app;
 			};
@@ -622,7 +626,7 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "BUClient/BUClient-Prefix.pch";
 				INFOPLIST_FILE = "BUClient/BUClient-Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 7.1;
+				IPHONEOS_DEPLOYMENT_TARGET = 8.1;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				WRAPPER_EXTENSION = app;
 			};

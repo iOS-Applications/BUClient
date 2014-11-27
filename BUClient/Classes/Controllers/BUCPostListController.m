@@ -49,7 +49,7 @@ static NSString * const BUCCellNib = @"BUCPostListCell";
     
     CGRect frame = self.previousHolder.frame;
     frame.origin = CGPointMake(BUCDefaultPadding, BUCDefaultPadding + BUCTopBarHeight);
-    frame.size.width = frame.size.width - 2 * BUCDefaultPadding;
+    frame.size.width = self.scrollView.frame.size.width - 2 * BUCDefaultPadding;
     
     self.previousHolder.frame = frame;
     [self.previousHolder addTarget:self action:@selector(loadPrevious) forControlEvents:UIControlEventTouchUpInside];
@@ -174,6 +174,8 @@ static NSString * const BUCCellNib = @"BUCPostListCell";
 
 
 - (void)loadMore {
+    int i = 0;
+    NSLog(@"%d", i / 2);
     self.from = [NSString stringWithFormat:@"%lu", (unsigned long)(self.location + 20)];
     self.to = [NSString stringWithFormat:@"%lu", (unsigned long)(self.location + 40)];
     [self.moreIndicator startAnimating];
@@ -391,6 +393,7 @@ static NSString * const BUCCellNib = @"BUCPostListCell";
     // reset frame
     aRect.size.height = frame.origin.y + size.height + BUCDefaultPadding;
     cell.frame = aRect;
+    [cell addTarget:self action:@selector(jumpToPost:) forControlEvents:UIControlEventTouchUpInside];
 }
 
 
