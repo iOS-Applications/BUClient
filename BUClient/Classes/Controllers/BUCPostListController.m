@@ -11,6 +11,12 @@ static NSString * const BUCCellNib = @"BUCPostListCell";
 
 @interface BUCPostListController () <UIScrollViewDelegate>
 
+@property (weak, nonatomic) IBOutlet NSLayoutConstraint *listTopToContainer;
+@property (weak, nonatomic) IBOutlet NSLayoutConstraint *listTopToHeader;
+
+@property (weak, nonatomic) IBOutlet NSLayoutConstraint *listBottomToContainer;
+@property (weak, nonatomic) IBOutlet NSLayoutConstraint *listBottomToFooter;
+
 @property (weak, nonatomic) IBOutlet BUCPostListCell *previousHolder;
 @property (weak, nonatomic) IBOutlet UILabel *previous;
 @property (weak, nonatomic) IBOutlet BUCPostListCell *nextHolder;
@@ -42,7 +48,6 @@ static NSString * const BUCCellNib = @"BUCPostListCell";
 - (void)viewDidLoad {
     [super viewDidLoad];
     
-    self.scrollView.scrollIndicatorInsets = UIEdgeInsetsMake(BUCTopBarHeight, 0, 0, 0);
     self.cellList = [[NSMutableArray alloc] init];
 
     self.navigationItem.backBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"" style:UIBarButtonItemStylePlain target:nil action:nil];
