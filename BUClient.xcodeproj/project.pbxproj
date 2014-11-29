@@ -15,7 +15,6 @@
 		D81ED3661A122FBD00D10243 /* icons in Resources */ = {isa = PBXBuildFile; fileRef = D81ED3651A122FBD00D10243 /* icons */; };
 		D81ED3681A122FE300D10243 /* etc in Resources */ = {isa = PBXBuildFile; fileRef = D81ED3671A122FE300D10243 /* etc */; };
 		D83AE4DF1A25B5D700BAF871 /* BUCPostListCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = D83AE4DE1A25B5D700BAF871 /* BUCPostListCell.xib */; };
-		D83AE5471A27205000BAF871 /* Launch Screen.xib in Resources */ = {isa = PBXBuildFile; fileRef = D83AE5461A27205000BAF871 /* Launch Screen.xib */; };
 		D848C0481A13BA8D0037F429 /* BUCImageController.m in Sources */ = {isa = PBXBuildFile; fileRef = D848C0471A13BA8D0037F429 /* BUCImageController.m */; };
 		D853E7EB1A1594490003C284 /* TFHpple.m in Sources */ = {isa = PBXBuildFile; fileRef = D853E7E31A1594490003C284 /* TFHpple.m */; };
 		D853E7EC1A1594490003C284 /* TFHppleElement.m in Sources */ = {isa = PBXBuildFile; fileRef = D853E7E51A1594490003C284 /* TFHppleElement.m */; };
@@ -37,7 +36,6 @@
 		D8A3BFB3187C895F006CBF64 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D8A3BF9B187C895E006CBF64 /* UIKit.framework */; };
 		D8A3BFBB187C895F006CBF64 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = D8A3BFB9187C895F006CBF64 /* InfoPlist.strings */; };
 		D8A3BFBD187C895F006CBF64 /* BUClientTests.m in Sources */ = {isa = PBXBuildFile; fileRef = D8A3BFBC187C895F006CBF64 /* BUClientTests.m */; };
-		D8B483B31A09A3CB00CAE331 /* Default-568h@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = D8B483B21A09A3CB00CAE331 /* Default-568h@2x.png */; };
 		D8B766F519F41A1A00EB63D2 /* BUCAuthManager.m in Sources */ = {isa = PBXBuildFile; fileRef = D8B766F419F41A1A00EB63D2 /* BUCAuthManager.m */; };
 		D8B766F819F4FCA100EB63D2 /* BUCDataManager.m in Sources */ = {isa = PBXBuildFile; fileRef = D8B766F719F4FCA100EB63D2 /* BUCDataManager.m */; };
 		D8B792ED1A07A4950028D645 /* BUCConstants.m in Sources */ = {isa = PBXBuildFile; fileRef = D8B792EC1A07A4950028D645 /* BUCConstants.m */; };
@@ -73,7 +71,6 @@
 		D81ED3651A122FBD00D10243 /* icons */ = {isa = PBXFileReference; lastKnownFileType = folder; path = icons; sourceTree = "<group>"; };
 		D81ED3671A122FE300D10243 /* etc */ = {isa = PBXFileReference; lastKnownFileType = folder; path = etc; sourceTree = "<group>"; };
 		D83AE4DE1A25B5D700BAF871 /* BUCPostListCell.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = BUCPostListCell.xib; sourceTree = "<group>"; };
-		D83AE5461A27205000BAF871 /* Launch Screen.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = "Launch Screen.xib"; sourceTree = "<group>"; };
 		D848C0461A13BA8D0037F429 /* BUCImageController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BUCImageController.h; sourceTree = "<group>"; };
 		D848C0471A13BA8D0037F429 /* BUCImageController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BUCImageController.m; sourceTree = "<group>"; };
 		D853E7E21A1594490003C284 /* TFHpple.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TFHpple.h; sourceTree = "<group>"; };
@@ -107,7 +104,6 @@
 		D8A3BFB8187C895F006CBF64 /* BUClientTests-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "BUClientTests-Info.plist"; sourceTree = "<group>"; };
 		D8A3BFBA187C895F006CBF64 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		D8A3BFBC187C895F006CBF64 /* BUClientTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BUClientTests.m; sourceTree = "<group>"; };
-		D8B483B21A09A3CB00CAE331 /* Default-568h@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Default-568h@2x.png"; sourceTree = "<group>"; };
 		D8B766F319F41A1A00EB63D2 /* BUCAuthManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BUCAuthManager.h; sourceTree = "<group>"; };
 		D8B766F419F41A1A00EB63D2 /* BUCAuthManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BUCAuthManager.m; sourceTree = "<group>"; };
 		D8B766F619F4FCA100EB63D2 /* BUCDataManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BUCDataManager.h; sourceTree = "<group>"; };
@@ -262,7 +258,6 @@
 			isa = PBXGroup;
 			children = (
 				D8A2461518910A9A00AFD27A /* Main.storyboard */,
-				D83AE5461A27205000BAF871 /* Launch Screen.xib */,
 				D85EA9561A0DAF26000BE12A /* BUCLoadingView.xib */,
 				D83AE4DE1A25B5D700BAF871 /* BUCPostListCell.xib */,
 			);
@@ -316,7 +311,6 @@
 			isa = PBXGroup;
 			children = (
 				D8A3BF9F187C895E006CBF64 /* BUClient-Info.plist */,
-				D8B483B21A09A3CB00CAE331 /* Default-568h@2x.png */,
 				D8A3BFA0187C895E006CBF64 /* InfoPlist.strings */,
 				D8A3BFA3187C895E006CBF64 /* main.m */,
 				D8A3BFA5187C895E006CBF64 /* BUClient-Prefix.pch */,
@@ -438,13 +432,11 @@
 				D85EA9571A0DAF26000BE12A /* BUCLoadingView.xib in Resources */,
 				D8A2461718910A9A00AFD27A /* Main.storyboard in Resources */,
 				D8A3BFA2187C895E006CBF64 /* InfoPlist.strings in Resources */,
-				D8B483B31A09A3CB00CAE331 /* Default-568h@2x.png in Resources */,
 				D8A3BFAA187C895E006CBF64 /* Images.xcassets in Resources */,
 				D81ED3661A122FBD00D10243 /* icons in Resources */,
 				D83AE4DF1A25B5D700BAF871 /* BUCPostListCell.xib in Resources */,
 				D872DE601A0FB46A00450E0B /* images in Resources */,
 				D81ED3681A122FE300D10243 /* etc in Resources */,
-				D83AE5471A27205000BAF871 /* Launch Screen.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -610,10 +602,11 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "BUClient/BUClient-Prefix.pch";
 				INFOPLIST_FILE = "BUClient/BUClient-Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 8.1;
+				IPHONEOS_DEPLOYMENT_TARGET = 7.1;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				WRAPPER_EXTENSION = app;
 			};
@@ -623,10 +616,11 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "BUClient/BUClient-Prefix.pch";
 				INFOPLIST_FILE = "BUClient/BUClient-Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 8.1;
+				IPHONEOS_DEPLOYMENT_TARGET = 7.1;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				WRAPPER_EXTENSION = app;
 			};
