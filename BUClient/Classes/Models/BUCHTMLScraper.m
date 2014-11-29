@@ -43,7 +43,7 @@
     if (!html || html.length == 0) {
         return nil;
     }
-    
+
     TFHpple *parser = [TFHpple hppleWithHTMLData:[html dataUsingEncoding:NSUTF8StringEncoding]];
     TFHppleElement *body = [[parser searchWithXPathQuery:@"//body"] firstObject];
     

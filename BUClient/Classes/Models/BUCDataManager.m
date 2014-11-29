@@ -212,7 +212,7 @@ static NSString * const BUCImageFileTypePrefix = @"image/";
 
 
 #pragma mark - networking
-- (void)loadJsonFromUrl:(NSString *)url json:(NSMutableDictionary *)json onSuccess:(SuccessBlock)successBlock onError:(ErrorBlock)errorBlock {
+- (void)loadJsonFromUrl:(NSString *)url json:(NSMutableDictionary *)json onSuccess:(JsonBlock)jsonBlock onError:(ErrorBlock)errorBlock {
     BUCDataManager * __weak weakSelf = self;
     BUCAuthManager *authManager = [BUCAuthManager sharedInstance];
     BUCNetworkEngine *engine = [BUCNetworkEngine sharedInstance];
@@ -220,7 +220,7 @@ static NSString * const BUCImageFileTypePrefix = @"image/";
     if (!authManager.session) {
         [authManager
          updateSessionOnSuccess:^{
-             [weakSelf loadJsonFromUrl:url json:json onSuccess:successBlock onError:errorBlock];
+             [weakSelf loadJsonFromUrl:url json:json onSuccess:jsonBlock onError:errorBlock];
          }
          onFail:^(NSError *error) {
              errorBlock(error);
@@ -245,7 +245,7 @@ static NSString * const BUCImageFileTypePrefix = @"image/";
              
              [authManager
               updateSessionOnSuccess:^(void) {
-                  [weakSelf loadJsonFromUrl:url json:json onSuccess:successBlock onError:errorBlock];
+                  [weakSelf loadJsonFromUrl:url json:json onSuccess:jsonBlock onError:errorBlock];
               }
               
               onFail:^(NSError *error) {
@@ -255,7 +255,7 @@ static NSString * const BUCImageFileTypePrefix = @"image/";
              return;
          }
          
-         successBlock(resultJson);
+         jsonBlock(resultJson);
      }
      
      onError:errorBlock];
@@ -270,11 +270,11 @@ static NSString * const BUCImageFileTypePrefix = @"image/";
     
     BUCDataManager * __weak weakSelf = self;
     
-    SuccessBlock successBlock = ^(NSDictionary *resultJson) {
+    JsonBlock jsonBlock = ^(NSDictionary *resultJson) {
         [weakSelf successListHandler:resultJson listKey:listKey onSuccess:arrayBlock onError:errorBlock];
     };
     
-    [self loadJsonFromUrl:url json:json onSuccess:successBlock onError:errorBlock];
+    [self loadJsonFromUrl:url json:json onSuccess:jsonBlock onError:errorBlock];
 }
 
 

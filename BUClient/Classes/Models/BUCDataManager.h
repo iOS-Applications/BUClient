@@ -4,7 +4,7 @@
 typedef void(^CountBlock) (NSUInteger count);
 typedef void(^ArrayBlock) (NSArray *list);
 typedef void(^ErrorBlock) (NSError *error);
-typedef void(^SuccessBlock) (NSDictionary *json);
+typedef void(^JsonBlock) (NSDictionary *json);
 typedef void(^ImageBlock) (UIImage *image);
 
 
@@ -12,6 +12,7 @@ typedef void(^ImageBlock) (UIImage *image);
 
 
 + (BUCDataManager *)sharedInstance;
+
 
 - (void)getFrontListOnSuccess:(ArrayBlock)arrayBlock onError:(ErrorBlock)errorBlock;
 

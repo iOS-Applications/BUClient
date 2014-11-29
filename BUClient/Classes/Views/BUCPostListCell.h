@@ -13,4 +13,9 @@
 @property (weak, nonatomic) IBOutlet UILabel *lastPostDate;
 @property (weak, nonatomic) IBOutlet UIButton *lastPoster;
 
+@property (weak, nonatomic) IBOutlet NSLayoutConstraint *statisticLeftToPreposition;
+
+@property (nonatomic) NSLayoutConstraint *yConstraint;
+@property (nonatomic) NSLayoutConstraint *heightConstraint;
+
 @end

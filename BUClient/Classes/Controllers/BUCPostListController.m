@@ -5,20 +5,19 @@
 #import "BUCDataManager.h"
 #import "BUCModels.h"
 
-
 static CGFloat const BUCPostListSupplementaryViewHeight = 40.0f;
+
 static NSString * const BUCCellNib = @"BUCPostListCell";
 
 @interface BUCPostListController () <UIScrollViewDelegate>
 
-@property (weak, nonatomic) IBOutlet NSLayoutConstraint *listTopToContainer;
 @property (weak, nonatomic) IBOutlet NSLayoutConstraint *listTopToHeader;
-
-@property (weak, nonatomic) IBOutlet NSLayoutConstraint *listBottomToContainer;
 @property (weak, nonatomic) IBOutlet NSLayoutConstraint *listBottomToFooter;
 
+@property (weak, nonatomic) IBOutlet NSLayoutConstraint *listWidth;
+@property (weak, nonatomic) IBOutlet NSLayoutConstraint *listHeight;
+
 @property (weak, nonatomic) IBOutlet BUCPostListCell *previousHolder;
-@property (weak, nonatomic) IBOutlet UILabel *previous;
 @property (weak, nonatomic) IBOutlet BUCPostListCell *nextHolder;
 @property (weak, nonatomic) IBOutlet UILabel *moreOrNext;
 @property (weak, nonatomic) IBOutlet UIActivityIndicatorView *moreIndicator;
@@ -51,19 +50,9 @@ static NSString * const BUCCellNib = @"BUCPostListCell";
     self.cellList = [[NSMutableArray alloc] init];
 
     self.navigationItem.backBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"" style:UIBarButtonItemStylePlain target:nil action:nil];
-    
-    CGRect frame = self.previousHolder.frame;
-    frame.origin = CGPointMake(BUCDefaultPadding, BUCDefaultPadding + BUCTopBarHeight);
-    frame.size.width = self.scrollView.frame.size.width - 2 * BUCDefaultPadding;
-    
-    self.previousHolder.frame = frame;
-    [self.previousHolder addTarget:self action:@selector(loadPrevious) forControlEvents:UIControlEventTouchUpInside];
-    self.previous.center = CGPointMake(CGRectGetMidX(self.previousHolder.bounds), CGRectGetMidY(self.previousHolder.bounds));
-    
-    self.nextHolder.frame = frame;
-    self.moreOrNext.center = self.previous.center;
-    [self.nextHolder addTarget:self action:@selector(loadNext) forControlEvents:UIControlEventTouchUpInside];
 
+    self.listWidth.constant = CGRectGetWidth(self.view.frame) - 2 * BUCDefaultPadding;
+    
     if (self.fname) {
         self.navigationItem.title = [NSString stringWithFormat:@"%@[1]", self.fname];
         self.from = @"0";
@@ -164,7 +153,7 @@ static NSString * const BUCCellNib = @"BUCPostListCell";
 }
 
 
-- (void)loadPrevious {
+- (IBAction)loadPrevious {
     self.from = [NSString stringWithFormat:@"%lu", (unsigned long)(self.location - 40)];
     self.to = [NSString stringWithFormat:@"%lu", (unsigned long)(self.location - 20)];
     [self refresh];
@@ -179,8 +168,6 @@ static NSString * const BUCCellNib = @"BUCPostListCell";
 
 
 - (void)loadMore {
-    int i = 0;
-    NSLog(@"%d", i / 2);
     self.from = [NSString stringWithFormat:@"%lu", (unsigned long)(self.location + 20)];
     self.to = [NSString stringWithFormat:@"%lu", (unsigned long)(self.location + 40)];
     [self.moreIndicator startAnimating];
@@ -214,22 +201,16 @@ static NSString * const BUCCellNib = @"BUCPostListCell";
 
 #pragma mark - private methods
 - (void)buildList:(NSArray *)list {
-    CGSize contentSize = self.scrollView.contentSize;
-    contentSize.height = BUCTopBarHeight + 2 * BUCDefaultPadding;
-    CGRect listFrame = CGRectZero;
-    CGSize listSize = CGSizeZero;
-    listSize.width = CGRectGetWidth(self.scrollView.frame) - 2 * BUCDefaultPadding;
-
     // header
     if (self.location >= 40) {
         self.previousHolder.hidden = NO;
-        listFrame.origin = CGPointMake(BUCDefaultPadding, BUCDefaultPadding + BUCDefaultMargin + BUCPostListSupplementaryViewHeight + BUCTopBarHeight);
-        contentSize.height = contentSize.height + BUCPostListSupplementaryViewHeight + BUCDefaultMargin;
+        self.listTopToHeader.constant = BUCDefaultPadding;
     } else {
         self.previousHolder.hidden = YES;
-        listFrame.origin = CGPointMake(BUCDefaultPadding, BUCTopBarHeight + BUCDefaultPadding);
+        self.listTopToHeader.constant = -BUCPostListSupplementaryViewHeight;
     }
     
+    CGFloat listHeight = 0.0f;
     // list content
     NSMutableArray *postList;
     if (self.isRefresh) {
@@ -238,12 +219,12 @@ static NSString * const BUCCellNib = @"BUCPostListCell";
         [self.scrollView setContentOffset:CGPointZero];
     } else {
         postList = self.postList;
-        listSize.height = self.listWrapper.frame.size.height + BUCDefaultMargin;
+        listHeight = CGRectGetHeight(self.listWrapper.frame) + BUCDefaultMargin;
     }
 
     NSInteger index = postList.count;
     NSInteger cellCount = self.cellList.count;
- 
+
     for (BUCPost *post in list) {
         if ([self isLoadedBefore:post against:postList]) {
             continue;
@@ -252,39 +233,40 @@ static NSString * const BUCCellNib = @"BUCPostListCell";
         BUCPostListCell *cell;
         if (index >= cellCount) {
             cell = [[[NSBundle mainBundle] loadNibNamed:BUCCellNib owner:nil options:nil] lastObject];
+            [cell setTranslatesAutoresizingMaskIntoConstraints:NO];
             [self.cellList addObject:cell];
             [self.listWrapper addSubview:cell];
+            NSDictionary *views = @{@"cell":cell};
+            
+            [self.listWrapper addConstraints:
+             [NSLayoutConstraint constraintsWithVisualFormat:@"|[cell]|" options:0 metrics:nil views:views]];
+
+            cell.yConstraint = [NSLayoutConstraint constraintWithItem:cell attribute:NSLayoutAttributeTop relatedBy:NSLayoutRelationEqual toItem:self.listWrapper attribute:NSLayoutAttributeTop multiplier:1.0f constant:listHeight];
+            cell.heightConstraint = [NSLayoutConstraint constraintWithItem:cell attribute:NSLayoutAttributeHeight relatedBy:NSLayoutRelationEqual toItem:nil attribute:NSLayoutAttributeNotAnAttribute multiplier:1.0f constant:0];
+            [self.listWrapper addConstraint:cell.yConstraint];
+            [cell addConstraint:cell.heightConstraint];
         } else {
             cell = [self.cellList objectAtIndex:index];
+            cell.yConstraint.constant = listHeight;
         }
         
         cell.tag = index;
         cell.hidden = NO;
-        CGRect cellFrame = CGRectMake(0, listSize.height, listSize.width, 0);
-        [self configureCell:cell post:post frame:cellFrame];
-        listSize.height = listSize.height + cell.frame.size.height + BUCDefaultMargin;
+        [self configureCell:cell post:post];
+        
+        CGFloat cellHeight = CGRectGetMinY(cell.lastPoster.frame) + CGRectGetHeight(cell.lastPoster.frame);
+        cell.heightConstraint.constant = cellHeight;
         
         [postList addObject:post];
         index = index + 1;
+        listHeight = listHeight + cellHeight + BUCDefaultMargin;
     }
     
-    for (; index < cellCount; index = index + 1) {
-        BUCPostListCell *cell = [self.cellList objectAtIndex:index];
-        cell.hidden = YES;
-    }
+    self.listHeight.constant = listHeight - BUCDefaultMargin;
     
-    listSize.height = listSize.height - BUCDefaultMargin;
-    listFrame.size = listSize;
-    self.listWrapper.frame = listFrame;
-    contentSize.height = contentSize.height + listSize.height;
-
     // footer
     if (self.postCount > 0 && self.postCount >= self.location + self.length) {
         self.nextHolder.hidden = NO;
-        CGRect frame = self.nextHolder.frame;
-        frame.origin = CGPointMake(BUCDefaultPadding, listFrame.origin.y + listSize.height + BUCDefaultMargin);
-        self.nextHolder.frame = frame;
-        contentSize.height = contentSize.height + BUCPostListSupplementaryViewHeight + BUCDefaultMargin;
         if (self.length == 20) {
             self.moreOrNext.text = @"More...";
             [self.nextHolder removeTarget:self action:NULL forControlEvents:UIControlEventTouchUpInside];
@@ -294,12 +276,11 @@ static NSString * const BUCCellNib = @"BUCPostListCell";
             [self.nextHolder removeTarget:self action:NULL forControlEvents:UIControlEventTouchUpInside];
             [self.nextHolder addTarget:self action:@selector(loadNext) forControlEvents:UIControlEventTouchUpInside];
         }
+        self.listBottomToFooter.constant = BUCDefaultPadding;
     } else {
         self.nextHolder.hidden = YES;
+        self.listBottomToFooter.constant = -BUCPostListSupplementaryViewHeight;
     }
-
-    // update content size of scroll view
-    self.scrollView.contentSize = contentSize;
     
     // update title of top bar
     if (self.fid) {
@@ -310,95 +291,38 @@ static NSString * const BUCCellNib = @"BUCPostListCell";
 }
 
 
-- (void)configureCell:(BUCPostListCell *)cell post:(BUCPost *)post frame:(CGRect)aRect {
-    CGFloat contentWidth = aRect.size.width - 2 * BUCDefaultPadding;
-    
+- (void)configureCell:(BUCPostListCell *)cell post:(BUCPost *)post {
+    [cell layoutIfNeeded];
     // title
-    CGRect frame = cell.title.frame;
-    frame.origin = CGPointMake(BUCDefaultPadding, BUCDefaultPadding);
-    CGSize size = frame.size;
-    size.width = contentWidth;
-    frame.size = size;
-    
-    cell.title.frame = frame;
+    cell.title.preferredMaxLayoutWidth = CGRectGetWidth(cell.frame) - 2 * BUCDefaultMargin;
     cell.title.attributedText = post.title;
-    [cell.title sizeToFit];
-    
-    frame.origin.y = frame.origin.y + ceilf(cell.title.frame.size.height) + BUCDefaultMargin;
     
     // username
     [cell.username setTitle:post.user forState:UIControlStateNormal];
-    [cell.username sizeToFit];
-    size.width = ceilf(cell.username.frame.size.width);
-    size.height = ceilf(cell.username.titleLabel.frame.size.height);
-    frame.size = size;
-    cell.username.frame = frame;
-    [cell.username addTarget:self action:@selector(jumpToPoster:) forControlEvents:UIControlEventTouchUpInside];
-    
-    frame.origin.x = frame.origin.x + size.width + BUCDefaultMargin;
-    
-    // preposition
-    [cell.preposition sizeToFit];
-    size.width = ceilf(cell.preposition.frame.size.width);
-    frame.size = size;
-    cell.preposition.frame = frame;
-    
-    frame.origin.x = frame.origin.x + size.width + BUCDefaultMargin;
     
     // forum name or dateline
     if (post.fname) {
         cell.forum.hidden = NO;
         [cell.forum setTitle:post.fname forState:UIControlStateNormal];
-        [cell.forum sizeToFit];
-        size.width = ceilf(cell.forum.frame.size.width);
-        frame.size = size;
-        cell.forum.frame = frame;
         [cell.forum addTarget:self action:@selector(jumpToForum:) forControlEvents:UIControlEventTouchUpInside];
+        cell.statisticLeftToPreposition.constant = BUCDefaultMargin + cell.forum.intrinsicContentSize.width;
     } else {
         cell.dateline.hidden = NO;
         cell.dateline.text = post.dateline;
-        [cell.dateline sizeToFit];
-        size.width = ceilf(cell.dateline.frame.size.width);
-        frame.size = size;
-        cell.dateline.frame = frame;
+        cell.statisticLeftToPreposition.constant = BUCDefaultMargin + cell.dateline.intrinsicContentSize.width;
     }
-    
-    frame.origin.x = frame.origin.x + size.width + BUCDefaultMargin;
     
     // statistic
     cell.statistic.text = post.statistic;
-    [cell.statistic sizeToFit];
-    size.width = ceilf(cell.statistic.frame.size.width);
-    frame.size = size;
-    cell.statistic.frame = frame;
-    
-    // separator
-    frame.origin = CGPointMake(BUCDefaultPadding, frame.origin.y + size.height + BUCDefaultMargin);
-    frame.size = CGSizeMake(contentWidth, BUCBorderWidth);
-    cell.separator.frame = frame;
-    
-    frame.origin.y = frame.origin.y + BUCDefaultMargin;
     
     // last reply
     cell.lastPostDate.text = post.lastPostDateline;
-    [cell.lastPostDate sizeToFit];
-    size.width = ceilf(cell.lastPostDate.frame.size.width);
-    frame.size = size;
-    cell.lastPostDate.frame = frame;
-    
-    frame.origin.x = frame.origin.x + size.width + BUCDefaultMargin;
     
     [cell.lastPoster setTitle:post.lastPoster forState:UIControlStateNormal];
-    [cell.lastPoster sizeToFit];
-    size.width = ceilf(cell.lastPoster.frame.size.width);
-    frame.size = size;
-    cell.lastPoster.frame = frame;
     [cell.lastPoster addTarget:self action:@selector(jumpToPoster:) forControlEvents:UIControlEventTouchUpInside];
     
-    // reset frame
-    aRect.size.height = frame.origin.y + size.height + BUCDefaultPadding;
-    cell.frame = aRect;
     [cell addTarget:self action:@selector(jumpToPost:) forControlEvents:UIControlEventTouchUpInside];
+    [cell layoutIfNeeded];
 }
 
 
