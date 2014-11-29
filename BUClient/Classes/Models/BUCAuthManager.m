@@ -31,13 +31,12 @@ static NSString *kKeychainItemIdentifer = @"org.bitunion.buc.%@.KeychainUI";
 @synthesize password = _password;
 
 #pragma mark - public methods
-+ (BUCAuthManager *)sharedInstance {
++ (instancetype)sharedInstance {
     static BUCAuthManager *sharedInstance;
     static dispatch_once_t onceSecurePredicate;
-    dispatch_once(&onceSecurePredicate,
-                  ^{
-                      sharedInstance = [[self alloc] init];
-                  });
+    dispatch_once(&onceSecurePredicate, ^{
+        sharedInstance = [[self alloc] init];
+    });
     
     return sharedInstance;
 }
@@ -67,7 +66,7 @@ static NSString *kKeychainItemIdentifer = @"org.bitunion.buc.%@.KeychainUI";
 
 
 - (void)loginWithUsername:(NSString *)username
-              andPassword:(NSString *)password
+              password:(NSString *)password
                 onSuccess:(AuthSuccessBlock)successBlock
                    onFail:(AuthFailBlock)failBlock {
     
@@ -111,7 +110,7 @@ static NSString *kKeychainItemIdentifer = @"org.bitunion.buc.%@.KeychainUI";
 }
 
 
-- (void)updateSessionOnSuccess:(AuthSessionBlock)sessionBlock onFail:(AuthFailBlock)failBlock {
+- (void)updateSessionOnSuccess:(AuthSuccessBlock)sessionBlock onFail:(AuthFailBlock)failBlock {
     if (!self.password) {
         failBlock(self.loginError);
         return;
@@ -165,7 +164,7 @@ static NSString *kKeychainItemIdentifer = @"org.bitunion.buc.%@.KeychainUI";
     }
     
     [self setupQuery];
-    CFDataRef resultCF = nil;
+    CFDataRef resultCF = NULL;
     SecItemCopyMatching((__bridge CFDictionaryRef)self.genericPasswordQuery, (CFTypeRef *)&resultCF);
     NSData *passwordData = (__bridge NSData *)resultCF;
     _password = [[NSString alloc] initWithBytes:[passwordData bytes] length:[passwordData length] encoding:NSUTF8StringEncoding];
@@ -184,7 +183,7 @@ static NSString *kKeychainItemIdentifer = @"org.bitunion.buc.%@.KeychainUI";
 
 
 - (void)writeToKeychain {
-    CFDataRef resultCF;
+    CFDataRef resultCF = NULL;
     
     if (SecItemCopyMatching((__bridge CFDictionaryRef)self.genericPasswordQuery, (CFTypeRef *)&resultCF) == noErr) {
         CFRelease(resultCF);

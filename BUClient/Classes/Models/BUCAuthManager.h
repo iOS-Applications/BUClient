@@ -3,8 +3,6 @@
 
 typedef void(^AuthSuccessBlock) (void);
 typedef void(^AuthFailBlock) (NSError *);
-typedef void(^AuthSessionBlock) (void);
-
 
 @interface BUCAuthManager : NSObject
 
@@ -13,14 +11,14 @@ typedef void(^AuthSessionBlock) (void);
 @property (nonatomic, readonly) NSString *session;
 
 
-+ (BUCAuthManager *)sharedInstance;
++ (instancetype)sharedInstance;
 
 - (void)loginWithUsername:(NSString *)username
-              andPassword:(NSString *)password
+              password:(NSString *)password
                 onSuccess:(AuthSuccessBlock)successBlock
                    onFail:(AuthFailBlock)failBlock;
 
-- (void)updateSessionOnSuccess:(AuthSessionBlock)sessionBlock onFail:(AuthFailBlock)failBlock;
+- (void)updateSessionOnSuccess:(AuthSuccessBlock)sessionBlock onFail:(AuthFailBlock)failBlock;
 
 
 @end
