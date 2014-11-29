@@ -6,6 +6,8 @@
 #import "BUCModels.h"
 
 static CGFloat const BUCPostListSupplementaryViewHeight = 40.0f;
+static NSUInteger const BUCPostListMinPostCount = 20;
+static NSUInteger const BUCPostListMaxPostCount = 60;
 
 static NSString * const BUCCellNib = @"BUCPostListCell";
 
@@ -97,13 +99,12 @@ static NSString * const BUCCellNib = @"BUCPostListCell";
     
     void (^listBlock)(NSArray *) = ^(NSArray *list) {
         if (weakSelf.fid) {
-            NSUInteger location = weakSelf.location;
             NSUInteger from = weakSelf.from.integerValue;
-            if (abs((int)(location - from)) == 40) {
+            if (weakSelf.isRefresh) {
                 weakSelf.location = from;
-                weakSelf.length = 20;
-            } else{
-                weakSelf.length = weakSelf.length + 20;
+                weakSelf.length = BUCPostListMinPostCount;
+            } else {
+                weakSelf.length = weakSelf.length + BUCPostListMinPostCount;
             }
         }
         
@@ -154,22 +155,22 @@ static NSString * const BUCCellNib = @"BUCPostListCell";
 
 
 - (IBAction)loadPrevious {
-    self.from = [NSString stringWithFormat:@"%lu", (unsigned long)(self.location - 40)];
-    self.to = [NSString stringWithFormat:@"%lu", (unsigned long)(self.location - 20)];
+    self.from = [NSString stringWithFormat:@"%lu", (unsigned long)(self.location - BUCPostListMaxPostCount)];
+    self.to = [NSString stringWithFormat:@"%lu", (unsigned long)(self.location - BUCPostListMaxPostCount + BUCPostListMinPostCount)];
     [self refresh];
 }
 
 
 - (void)loadNext {
-    self.from = [NSString stringWithFormat:@"%lu", (unsigned long)(self.location + 40)];
-    self.to = [NSString stringWithFormat:@"%lu", (unsigned long)(self.location + 60)];
+    self.from = [NSString stringWithFormat:@"%lu", (unsigned long)(self.location + BUCPostListMaxPostCount)];
+    self.to = [NSString stringWithFormat:@"%lu", (unsigned long)(self.location + BUCPostListMaxPostCount + BUCPostListMinPostCount)];
     [self refresh];
 }
 
 
 - (void)loadMore {
-    self.from = [NSString stringWithFormat:@"%lu", (unsigned long)(self.location + 20)];
-    self.to = [NSString stringWithFormat:@"%lu", (unsigned long)(self.location + 40)];
+    self.from = [NSString stringWithFormat:@"%lu", (unsigned long)(self.location + self.length)];
+    self.to = [NSString stringWithFormat:@"%lu", (unsigned long)(self.location + self.length + BUCPostListMinPostCount)];
     [self.moreIndicator startAnimating];
     [self loadList];
 }
@@ -180,7 +181,7 @@ static NSString * const BUCCellNib = @"BUCPostListCell";
     CGFloat refreshFireHeight = 40.0f;
     if (scrollView.contentOffset.y <= -refreshFireHeight) {
         [self refresh];
-    } else if (self.fid && !decelerate && self.length != 40 && self.postCount >= self.location + 20) {
+    } else if (self.fid && !decelerate && self.length != BUCPostListMaxPostCount && self.postCount >= self.location + self.length) {
         CGFloat loadMoreHeight = ceilf(CGRectGetHeight(self.listWrapper.frame) / 2);
         if (scrollView.contentOffset.y >= loadMoreHeight) {
             [self loadMore];
@@ -190,7 +191,7 @@ static NSString * const BUCCellNib = @"BUCPostListCell";
 
 
 - (void)scrollViewDidEndDecelerating:(UIScrollView *)scrollView {
-    if (self.fid && self.length != 40 && self.postCount >= self.location + 20) {
+    if (self.fid && self.length != BUCPostListMaxPostCount && self.postCount >= self.location + self.length) {
         CGFloat loadMoreHeight = ceilf(CGRectGetHeight(self.listWrapper.frame) / 2);
         if (scrollView.contentOffset.y >= loadMoreHeight) {
             [self loadMore];
@@ -202,9 +203,9 @@ static NSString * const BUCCellNib = @"BUCPostListCell";
 #pragma mark - private methods
 - (void)buildList:(NSArray *)list {
     // header
-    if (self.location >= 40) {
+    if (self.location >= BUCPostListMaxPostCount) {
         self.previousHolder.hidden = NO;
-        self.listTopToHeader.constant = BUCDefaultPadding;
+        self.listTopToHeader.constant = BUCDefaultMargin;
     } else {
         self.previousHolder.hidden = YES;
         self.listTopToHeader.constant = -BUCPostListSupplementaryViewHeight;
@@ -262,21 +263,28 @@ static NSString * const BUCCellNib = @"BUCPostListCell";
         listHeight = listHeight + cellHeight + BUCDefaultMargin;
     }
     
+    for (; index < cellCount; index = index + 1) {
+        BUCPostListCell *cell = [self.cellList objectAtIndex:index];
+        cell.hidden = YES;
+    }
+    
     self.listHeight.constant = listHeight - BUCDefaultMargin;
     
     // footer
     if (self.postCount > 0 && self.postCount >= self.location + self.length) {
         self.nextHolder.hidden = NO;
-        if (self.length == 20) {
+        self.listBottomToFooter.constant = BUCDefaultMargin;
+        
+        if (self.length < BUCPostListMaxPostCount) {
             self.moreOrNext.text = @"More...";
             [self.nextHolder removeTarget:self action:NULL forControlEvents:UIControlEventTouchUpInside];
             [self.nextHolder addTarget:self action:@selector(loadMore) forControlEvents:UIControlEventTouchUpInside];
-        } else if (self.length == 40) {
+        } else {
             self.moreOrNext.text = @"下一页";
             [self.nextHolder removeTarget:self action:NULL forControlEvents:UIControlEventTouchUpInside];
             [self.nextHolder addTarget:self action:@selector(loadNext) forControlEvents:UIControlEventTouchUpInside];
         }
-        self.listBottomToFooter.constant = BUCDefaultPadding;
+        
     } else {
         self.nextHolder.hidden = YES;
         self.listBottomToFooter.constant = -BUCPostListSupplementaryViewHeight;
@@ -284,7 +292,7 @@ static NSString * const BUCCellNib = @"BUCPostListCell";
     
     // update title of top bar
     if (self.fid) {
-        self.navigationItem.title = [NSString stringWithFormat:@"%@[%lu]", self.fname, (unsigned long)(self.location / 40 + 1)];
+        self.navigationItem.title = [NSString stringWithFormat:@"%@[%lu]", self.fname, (unsigned long)(self.location / BUCPostListMaxPostCount + 1)];
     }
     
     self.postList = postList;
