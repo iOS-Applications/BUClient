@@ -15,7 +15,4 @@
 
 @property (weak, nonatomic) IBOutlet NSLayoutConstraint *statisticLeftToPreposition;
 
-@property (nonatomic) NSLayoutConstraint *yConstraint;
-@property (nonatomic) NSLayoutConstraint *heightConstraint;
-
 @end

@@ -193,6 +193,9 @@
                                             <constraint firstAttribute="centerX" secondItem="vsB-wN-Ebe" secondAttribute="centerX" id="il7-sO-PXV"/>
                                             <constraint firstItem="bNk-BR-KvO" firstAttribute="leading" secondItem="9Tp-kg-EVj" secondAttribute="leading" constant="20" id="vyO-i1-rzu"/>
                                         </constraints>
+                                        <connections>
+                                            <action selector="loadMoreOrNext" destination="JvU-S9-777" eventType="touchUpInside" id="Uop-Y5-fOQ"/>
+                                        </connections>
                                     </view>
                                 </subviews>
                                 <color key="backgroundColor" cocoaTouchSystemColor="groupTableViewBackgroundColor"/>

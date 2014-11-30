@@ -7,7 +7,7 @@
 
 static CGFloat const BUCPostListSupplementaryViewHeight = 40.0f;
 static NSUInteger const BUCPostListMinPostCount = 20;
-static NSUInteger const BUCPostListMaxPostCount = 60;
+static NSUInteger const BUCPostListMaxPostCount = 40;
 
 static NSString * const BUCCellNib = @"BUCPostListCell";
 
@@ -160,19 +160,25 @@ static NSString * const BUCCellNib = @"BUCPostListCell";
     [self refresh];
 }
 
+- (IBAction)loadMoreOrNext {
+    NSUInteger from = 0;
 
-- (void)loadNext {
-    self.from = [NSString stringWithFormat:@"%lu", (unsigned long)(self.location + BUCPostListMaxPostCount)];
-    self.to = [NSString stringWithFormat:@"%lu", (unsigned long)(self.location + BUCPostListMaxPostCount + BUCPostListMinPostCount)];
-    [self refresh];
-}
-
-
-- (void)loadMore {
-    self.from = [NSString stringWithFormat:@"%lu", (unsigned long)(self.location + self.length)];
-    self.to = [NSString stringWithFormat:@"%lu", (unsigned long)(self.location + self.length + BUCPostListMinPostCount)];
-    [self.moreIndicator startAnimating];
-    [self loadList];
+    if (self.length < BUCPostListMaxPostCount) {
+        from = self.location + self.length;
+    } else {
+        from = self.location + BUCPostListMaxPostCount;
+    }
+    
+    NSUInteger to = from + BUCPostListMinPostCount;
+    self.from = [NSString stringWithFormat:@"%lu", from];
+    self.to = [NSString stringWithFormat:@"%lu", to];
+    
+    if (self.length < BUCPostListMaxPostCount) {
+        [self.moreIndicator startAnimating];
+        [self loadList];
+    } else {
+        [self refresh];
+    }
 }
 
 
@@ -184,7 +190,7 @@ static NSString * const BUCCellNib = @"BUCPostListCell";
     } else if (self.fid && !decelerate && self.length != BUCPostListMaxPostCount && self.postCount >= self.location + self.length) {
         CGFloat loadMoreHeight = ceilf(CGRectGetHeight(self.listWrapper.frame) / 2);
         if (scrollView.contentOffset.y >= loadMoreHeight) {
-            [self loadMore];
+            [self loadMoreOrNext];
         }
     }
 }
@@ -194,7 +200,7 @@ static NSString * const BUCCellNib = @"BUCPostListCell";
     if (self.fid && self.length != BUCPostListMaxPostCount && self.postCount >= self.location + self.length) {
         CGFloat loadMoreHeight = ceilf(CGRectGetHeight(self.listWrapper.frame) / 2);
         if (scrollView.contentOffset.y >= loadMoreHeight) {
-            [self loadMore];
+            [self loadMoreOrNext];
         }
     }
 }
@@ -212,6 +218,7 @@ static NSString * const BUCCellNib = @"BUCPostListCell";
     }
     
     CGFloat listHeight = 0.0f;
+    CGFloat listWidth = self.listWidth.constant;
     // list content
     NSMutableArray *postList;
     if (self.isRefresh) {
@@ -234,33 +241,20 @@ static NSString * const BUCCellNib = @"BUCPostListCell";
         BUCPostListCell *cell;
         if (index >= cellCount) {
             cell = [[[NSBundle mainBundle] loadNibNamed:BUCCellNib owner:nil options:nil] lastObject];
-            [cell setTranslatesAutoresizingMaskIntoConstraints:NO];
             [self.cellList addObject:cell];
             [self.listWrapper addSubview:cell];
-            NSDictionary *views = @{@"cell":cell};
-            
-            [self.listWrapper addConstraints:
-             [NSLayoutConstraint constraintsWithVisualFormat:@"|[cell]|" options:0 metrics:nil views:views]];
-
-            cell.yConstraint = [NSLayoutConstraint constraintWithItem:cell attribute:NSLayoutAttributeTop relatedBy:NSLayoutRelationEqual toItem:self.listWrapper attribute:NSLayoutAttributeTop multiplier:1.0f constant:listHeight];
-            cell.heightConstraint = [NSLayoutConstraint constraintWithItem:cell attribute:NSLayoutAttributeHeight relatedBy:NSLayoutRelationEqual toItem:nil attribute:NSLayoutAttributeNotAnAttribute multiplier:1.0f constant:0];
-            [self.listWrapper addConstraint:cell.yConstraint];
-            [cell addConstraint:cell.heightConstraint];
         } else {
             cell = [self.cellList objectAtIndex:index];
-            cell.yConstraint.constant = listHeight;
         }
         
+        cell.frame = CGRectMake(0, listHeight, listWidth, 0);
         cell.tag = index;
         cell.hidden = NO;
         [self configureCell:cell post:post];
         
-        CGFloat cellHeight = CGRectGetMinY(cell.lastPoster.frame) + CGRectGetHeight(cell.lastPoster.frame);
-        cell.heightConstraint.constant = cellHeight;
-        
         [postList addObject:post];
         index = index + 1;
-        listHeight = listHeight + cellHeight + BUCDefaultMargin;
+        listHeight = listHeight + CGRectGetHeight(cell.frame) + BUCDefaultMargin;
     }
     
     for (; index < cellCount; index = index + 1) {
@@ -268,6 +262,7 @@ static NSString * const BUCCellNib = @"BUCPostListCell";
         cell.hidden = YES;
     }
     
+    self.postList = postList;
     self.listHeight.constant = listHeight - BUCDefaultMargin;
     
     // footer
@@ -277,14 +272,9 @@ static NSString * const BUCCellNib = @"BUCPostListCell";
         
         if (self.length < BUCPostListMaxPostCount) {
             self.moreOrNext.text = @"More...";
-            [self.nextHolder removeTarget:self action:NULL forControlEvents:UIControlEventTouchUpInside];
-            [self.nextHolder addTarget:self action:@selector(loadMore) forControlEvents:UIControlEventTouchUpInside];
         } else {
             self.moreOrNext.text = @"下一页";
-            [self.nextHolder removeTarget:self action:NULL forControlEvents:UIControlEventTouchUpInside];
-            [self.nextHolder addTarget:self action:@selector(loadNext) forControlEvents:UIControlEventTouchUpInside];
         }
-        
     } else {
         self.nextHolder.hidden = YES;
         self.listBottomToFooter.constant = -BUCPostListSupplementaryViewHeight;
@@ -294,15 +284,12 @@ static NSString * const BUCCellNib = @"BUCPostListCell";
     if (self.fid) {
         self.navigationItem.title = [NSString stringWithFormat:@"%@[%lu]", self.fname, (unsigned long)(self.location / BUCPostListMaxPostCount + 1)];
     }
-    
-    self.postList = postList;
 }
 
 
 - (void)configureCell:(BUCPostListCell *)cell post:(BUCPost *)post {
-    [cell layoutIfNeeded];
     // title
-    cell.title.preferredMaxLayoutWidth = CGRectGetWidth(cell.frame) - 2 * BUCDefaultMargin;
+    cell.title.preferredMaxLayoutWidth = self.listWidth.constant - 2 * BUCDefaultMargin;
     cell.title.attributedText = post.title;
     
     // username
@@ -331,6 +318,9 @@ static NSString * const BUCCellNib = @"BUCPostListCell";
     
     [cell addTarget:self action:@selector(jumpToPost:) forControlEvents:UIControlEventTouchUpInside];
     [cell layoutIfNeeded];
+    CGRect frame = cell.frame;
+    frame.size.height = cell.lastPoster.frame.origin.y + CGRectGetHeight(cell.lastPoster.frame);
+    cell.frame = frame;
 }
 
 
