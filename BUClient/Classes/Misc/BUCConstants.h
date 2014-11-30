@@ -31,6 +31,8 @@ extern CGFloat const BUCDefaultMargin;
 
 extern CGFloat const BUCBorderWidth;
 
+// settings
+extern int const BUCMaxImageCountSinglePost;
 
 // rich text attirbute keys
 extern NSString * const BUCLinkAttributeName;

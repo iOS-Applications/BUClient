@@ -130,9 +130,8 @@ static NSString * const BUCCellNib = @"BUCPostListCell";
 - (void)jumpToPost:(id)sender {
     UIStoryboard *storyboard = [UIStoryboard storyboardWithName:BUCMainStoryboardPath bundle:nil];
     BUCPostDetailController *postDetailController = [storyboard instantiateViewControllerWithIdentifier:BUCPostDetailControllerStoryboardID];
-    BUCPostListCell *listItem = (BUCPostListCell *)sender;
-    BUCPost *post = [self.postList objectAtIndex:listItem.tag];
-    postDetailController.post = post;
+    BUCPostListCell *cell = (BUCPostListCell *)sender;
+    postDetailController.post = [self.postList objectAtIndex:cell.tag];
     [(UINavigationController *)self.parentViewController pushViewController:postDetailController animated:YES];
 }
 

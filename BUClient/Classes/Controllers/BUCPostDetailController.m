@@ -3,23 +3,30 @@
 #import "BUCModels.h"
 #import "BUCImageController.h"
 #import "BUCTextStack.h"
+#import "BUCPostDetailCell.h"
 
 
-@interface BUCPostDetailController () <UIScrollViewDelegate>
+@interface BUCPostDetailController () <UIScrollViewDelegate, UITableViewDataSource, UITableViewDelegate, UITextViewDelegate>
 
+@property (strong, nonatomic) IBOutlet UITableView *tableView;
 
 @property (nonatomic) NSMutableArray *postList;
 
 @property (nonatomic) NSString *from;
 @property (nonatomic) NSString *to;
 
+@property (nonatomic) NSUInteger postCount;
+@property (nonatomic) NSUInteger location;
+@property (nonatomic) NSUInteger length;
+
+@property (nonatomic) BOOL isRefresh;
+
 @property (nonatomic) UIImage *defaultAvatar;
 
-@property (weak, nonatomic) UIView *listWrapper;
-
-@property (nonatomic) NSDictionary *metaAttribute;
-
 @end
+
+
+static NSUInteger const BUCPostDetailMinPostCount = 20;
 
 
 @implementation BUCPostDetailController
@@ -30,16 +37,20 @@
     
     self.modalTransitionStyle = UIModalTransitionStyleCrossDissolve;
     
-    self.defaultAvatar = [UIImage imageNamed:@"etc/avatar.png"];
-    
-    self.metaAttribute = @{NSFontAttributeName:[UIFont preferredFontForTextStyle:UIFontTextStyleCaption1]};
-    
     self.from = @"0";
     self.to = @"20";
     
-    self.postList = [[NSMutableArray alloc] init];
+    if ([self.tableView respondsToSelector:@selector(layoutMargins)]) {
+        self.tableView.layoutMargins = UIEdgeInsetsZero;
+    }
     
-    [self refresh:nil];
+    self.defaultAvatar = [UIImage imageNamed:@"avatar"];
+    
+    UIView *shit = [[UIView alloc] initWithFrame:CGRectMake(100, 100, 100, 100)];
+    shit.backgroundColor = [UIColor redColor];
+    [self.tableView addSubview:shit];
+    
+    [self refresh];
 }
 
 
@@ -50,25 +61,44 @@
 }
 
 
-- (IBAction)refresh:(id)sender {
+- (void)refresh {
     [self displayLoading];
-    [self loadList];
+    
+    self.isRefresh = YES;
+
+    BUCPostDetailController * __weak weakSelf = self;
+    [[BUCDataManager sharedInstance]
+     getPostCountOfForum:nil
+     post:self.post.tid
+     onSuccess:^(NSUInteger count) {
+         weakSelf.postCount = count;
+         [weakSelf loadList];
+     } onError:^(NSError *error) {
+         [weakSelf hideLoading];
+         [weakSelf alertMessage:error.localizedDescription];
+     }];
 }
 
 
-#pragma mark - private methods
 - (void)loadList {
     BUCPostDetailController * __weak weakSelf = self;
-    BUCDataManager *dataManager = [BUCDataManager sharedInstance];
     
-    [dataManager
-     getPost:self.post.pid
+    [[BUCDataManager sharedInstance]
+     getPost:self.post.tid
      
      from:self.from
      
      to:self.to
      
      onSuccess:^(NSArray *list) {
+         NSUInteger from = weakSelf.from.integerValue;
+         if (weakSelf.isRefresh) {
+             weakSelf.location = from;
+             weakSelf.length = BUCPostDetailMinPostCount;
+         } else {
+             weakSelf.length = weakSelf.length + BUCPostDetailMinPostCount;
+         }
+         
          [weakSelf buildList:list];
          [weakSelf hideLoading];
      }
@@ -80,166 +110,203 @@
 }
 
 
-- (void)buildList:(NSArray *)list {
-//    UIScrollView *context = (UIScrollView *)self.view;
-//    
-//    UIView *wrapper;
-//    CGFloat layoutPointX = BUCDefaultPadding;
-//    CGFloat layoutPointY;
-//    if (self.postList.count == 0) {
-//        wrapper = [[UIView alloc] init];
-//        wrapper.backgroundColor = [UIColor whiteColor];
-//        self.listWrapper = wrapper;
-//        layoutPointY = BUCDefaultPadding;
-//    } else {
-//        wrapper = self.listWrapper;
-//        layoutPointY = CGRectGetHeight(wrapper.frame) + BUCDefaultMargin + BUCDefaultPadding;
-//    }
-//    
-//    CGFloat wrapperWidth = CGRectGetWidth(context.frame);
-//    CGFloat contentWidth = wrapperWidth - 2 * BUCDefaultPadding;
-//    
-//    CGFloat avatarWidth = 40.0f;
-//    CGFloat avatarHeight = 40.0f;
-//    
-//    NSInteger index = self.postList.count;
-//    
-//    for (BUCPost *post in list) {
-//        CGFloat savedLayoutPointY = layoutPointY;
-//        
-//        // avatar
-//        UIImageView *avatar = [[UIImageView alloc] initWithFrame:CGRectMake(layoutPointX, layoutPointY, avatarWidth, avatarHeight)];
-//        avatar.contentMode = UIViewContentModeScaleAspectFit;
-//        avatar.image = self.defaultAvatar;
-//        avatar.tag = index;
-//        if (post.avatar) {
-//            [[BUCDataManager sharedInstance] getImageFromUrl:post.avatar onSuccess:^(UIImage *image) {
-//                avatar.image = image;
-//            }];
-//        }
-//        [wrapper addSubview:avatar];
-//        layoutPointX = layoutPointX + avatarWidth + BUCDefaultMargin;
-//        
-//        // username
-////        UIButton *poster = [self buttonWithRichText:post.user location:CGPointMake(layoutPointX, layoutPointY)];
-////        poster.tag = index;
-////        [wrapper addSubview:poster];
-//        
-//        if ([post.user isEqualToString:self.post.user]) {
-//            UILabel *op = [self opLabelAtLocation:CGPointMake(layoutPointX + CGRectGetWidth(poster.frame) + BUCDefaultMargin, layoutPointY)];
-//            [wrapper addSubview:op];
-//        }
-//        
-//        layoutPointY = layoutPointY + CGRectGetHeight(poster.frame) + BUCDefaultMargin;
-//        
-//        // post index
-//        UILabel *postIndex = [[UILabel alloc] initWithFrame:CGRectMake(layoutPointX, layoutPointY, 0, 0)];
-//        postIndex.attributedText = [[NSAttributedString alloc] initWithString:[NSString stringWithFormat:@"%lu楼", (unsigned long)(index + 1)] attributes:self.metaAttribute];
-//        index = index + 1;
-//        [postIndex sizeToFit];
-//        [wrapper addSubview:postIndex];
-//        
-//        // dateline
-//        UILabel *dateline = [[UILabel alloc] initWithFrame:CGRectMake(layoutPointX + CGRectGetWidth(postIndex.frame) + BUCDefaultMargin, layoutPointY, 0, 0)];
-////        dateline.attributedText = post.dateline;
-//        [dateline sizeToFit];
-//        [wrapper addSubview:dateline];
-//        
-//        layoutPointX = BUCDefaultPadding;
-//        layoutPointY = savedLayoutPointY + avatarHeight + BUCDefaultMargin;
-//        
-//        // post body
-//        if (post.content) {
-//            UITextView *textBlock = [self shit:post.content frame:CGRectMake(layoutPointX, layoutPointY, contentWidth, 0)];
-//            [wrapper addSubview:textBlock];
-//            layoutPointY = layoutPointY + CGRectGetHeight(textBlock.frame) + BUCDefaultPadding;
-//        }
-//        
-//        UIView *border = [[UIView alloc] initWithFrame:CGRectMake(0, layoutPointY, wrapperWidth, BUCBorderWidth)];
-//        border.backgroundColor = [UIColor lightGrayColor];
-//        [wrapper addSubview:border];
-//        
-//        layoutPointY = layoutPointY + BUCDefaultMargin;
-//    }
-//    
-//    layoutPointY = layoutPointY - BUCDefaultMargin;
-//    wrapper.frame = CGRectMake(0, 0, CGRectGetWidth(context.frame), layoutPointY);
-//    [context addSubview:wrapper];
-//
-//    if (layoutPointY <= CGRectGetHeight(context.frame)) {
-//        layoutPointY = CGRectGetHeight(context.frame) + 1.0f;
-//    }
-//
-//    context.contentSize = CGSizeMake(CGRectGetWidth(context.frame), layoutPointY);
-}
-
-
-- (UILabel *)opLabelAtLocation:(CGPoint)location {
-    UILabel *op = [[UILabel alloc] init];
-    op.attributedText = [[NSAttributedString alloc] initWithString:@"LZ" attributes:self.metaAttribute];
-    op.textAlignment = NSTextAlignmentCenter;
-    [op sizeToFit];
-    op.frame = CGRectOffset(op.frame, location.x, location.y);
-    op.frame = CGRectInset(op.frame, -2.0f, -2.0f);
-    op.backgroundColor = op.tintColor;
-    op.textColor = [UIColor whiteColor];
+- (void)loadMore {
     
-    return op;
 }
 
 
-- (UITextView *)shit:(NSAttributedString *)richText frame:(CGRect)frame {
+- (void)jumpPage {
+    
+}
+
+
+- (IBAction)jumpToPoster:(id)sender {
+}
+
+
+#pragma mark - table view data source
+- (NSInteger)tableView:(UITableView *)tableView
+ numberOfRowsInSection:(NSInteger)section {
+    return self.postList.count;
+}
+
+- (UITableViewCell *)tableView:(UITableView *)tableView
+         cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+    static NSString * const cellIdentifier = @"cell";
+    BUCPostDetailCell *cell = [self.tableView dequeueReusableCellWithIdentifier:cellIdentifier];
+    [self configureCell:cell post:[self.postList objectAtIndex:indexPath.row]];
+
+    return cell;
+}
+
+
+#pragma mark - table view delegate
+- (CGFloat)tableView:(UITableView *)tableView
+heightForRowAtIndexPath:(NSIndexPath *)indexPath {
+    CGFloat height = ((BUCPost *)[self.postList objectAtIndex:indexPath.row]).cellHeight;
+    return height;
+}
+
+
+#pragma mark - scroll view delegate
+
+
+#pragma mark - private methods
+- (void)buildList:(NSArray *)list {
+    NSMutableArray *postList;
+    if (self.isRefresh) {
+        postList = [[NSMutableArray alloc] init];
+        self.isRefresh = NO;
+        [self.tableView setContentOffset:CGPointZero];
+    } else {
+        postList = self.postList;
+    }
+    
+    NSInteger index = postList.count;
+    
+    for (BUCPost *post in list) {
+        if ([self isLoadedBefore:post against:postList]) {
+            continue;
+        }
+        
+        post.index = index;
+        [self calculateFrameOfPost:post];
+        [postList addObject:post];
+        index = index + 1;
+    }
+    
+    self.postList = postList;
+    [self.tableView reloadData];
+}
+
+
+- (void)calculateFrameOfPost:(BUCPost *)post {
+    static NSTextStorage *textStorage;
+    static BUCTextContainer *textContainer;
+    static BUCLayoutManager *layoutManager;;
+    static CGPoint contentOrigin;
+    static CGFloat contentWidth;
+    static dispatch_once_t onceSecurePredicate;
+    
+    BUCPostDetailController * __weak weakSelf = self;
+    dispatch_once(&onceSecurePredicate, ^{
+        contentWidth = CGRectGetWidth(weakSelf.tableView.frame) - 2 * BUCDefaultMargin;
+        textStorage = [[NSTextStorage alloc] init];
+        layoutManager = [[BUCLayoutManager alloc] init];
+        [textStorage addLayoutManager:layoutManager];
+        textContainer = [[BUCTextContainer alloc] initWithSize:CGSizeMake(contentWidth, FLT_MAX)];
+        textContainer.lineFragmentPadding = 0;
+        [layoutManager addTextContainer:textContainer];
+        contentOrigin = CGPointMake(BUCDefaultMargin, 45.0f + BUCDefaultMargin);
+    });
+
+    [textStorage setAttributedString:post.content];
+    [layoutManager ensureLayoutForTextContainer:textContainer];
+    CGRect frame = [layoutManager usedRectForTextContainer:textContainer];
+    frame.size.width = contentWidth;
+    frame.size.height = ceilf(frame.size.height) + BUCDefaultMargin + BUCDefaultPadding;
+    frame.origin = contentOrigin;
+    post.textFrame = frame;
+    post.cellHeight = CGRectGetMaxY(frame);
+}
+
+- (void)configureCell:(BUCPostDetailCell *)cell post:(BUCPost *)post {
+    UIImage *defaultAvatar = self.defaultAvatar;
+    // avatar
+    if (post.avatar) {
+        [[BUCDataManager sharedInstance] getImageFromUrl:post.avatar onSuccess:^(UIImage *image) {
+            if (image) {
+                cell.avatar.image = image;
+            } else {
+                cell.avatar.image = defaultAvatar;
+            }
+        }];
+    }
+    // username
+    NSString *username = post.user;
+    if ([post.user isEqualToString:self.post.user]) {
+        username = [NSString stringWithFormat:@"%@(LZ)", post.user];
+    }
+    [cell.poster setTitle:username forState:UIControlStateNormal];
+    
+    // index
+    cell.index.text = [NSString stringWithFormat:@"%ld楼", (long)(post.index + 1)];
+    
+    // dateline
+    cell.dateline.text = post.dateline;
+    
+    // content
+    UITextView *textView;
+    if (cell.content) {
+        textView = cell.content;
+        for (UIImageView *imageView in textView.subviews) {
+            if ([imageView isKindOfClass:[UIImageView class]]) {
+                [imageView removeFromSuperview];
+            }
+        }
+        
+        [textView.textStorage setAttributedString:post.content];
+
+        [self layoutImagesForTextView:textView];
+        textView.frame = post.textFrame;
+    } else {
+        textView = [self textViewWithRichText:post.content frame:post.textFrame];
+        [cell.contentView addSubview:textView];
+        cell.content = textView;
+    }
+}
+
+
+- (UITextView *)textViewWithRichText:(NSAttributedString *)richText frame:(CGRect)textFrame {
     NSTextStorage *textStorage = [[NSTextStorage alloc] initWithAttributedString:richText];
     BUCLayoutManager *layoutManager = [[BUCLayoutManager alloc] init];
     [textStorage addLayoutManager:layoutManager];
-    BUCTextContainer *textContainer = [[BUCTextContainer alloc] initWithSize:CGSizeMake(CGRectGetWidth(frame), FLT_MAX)];
+    BUCTextContainer *textContainer = [[BUCTextContainer alloc] initWithSize:CGSizeMake(CGRectGetWidth(textFrame), FLT_MAX)];
     textContainer.lineFragmentPadding = 0;
-    
     [layoutManager addTextContainer:textContainer];
-
-    [layoutManager ensureLayoutForTextContainer:textContainer];
-    CGRect textFrame = [layoutManager usedRectForTextContainer:textContainer];
-    textFrame.origin = frame.origin;
-    textFrame.size.width = CGRectGetWidth(frame);
-    textFrame.size.height = ceilf(textFrame.size.height) + BUCDefaultPadding + BUCDefaultMargin;
 
     UITextView *textView = [[UITextView alloc] initWithFrame:textFrame textContainer:textContainer];
     textView.textContainerInset = UIEdgeInsetsZero;
     textView.editable = NO;
     textView.scrollEnabled = NO;
     
-    NSArray *attachmentList = [textStorage attribute:BUCAttachmentListAttributeName atIndex:0 effectiveRange:NULL];
-    if (attachmentList) {
-        for (BUCImageAttachment *attachment in attachmentList) {
-            CGRect frame = [layoutManager boundingRectForGlyphRange:NSMakeRange(attachment.glyphIndex, 1) inTextContainer:textContainer];
-            UIImageView *imageView = [[UIImageView alloc] initWithFrame:frame];
-            imageView.contentMode = UIViewContentModeScaleAspectFit;
-            if (attachment.gif) {
-                imageView.image = attachment.gif;
-            } else {
-                [[BUCDataManager sharedInstance] getImageFromUrl:attachment.url onSuccess:^(UIImage *image) {
-                    imageView.image = image;
-                }];
-            }
-            
-            [textView addSubview:imageView];
-        }
-    }
+    [self layoutImagesForTextView:textView];
     
     return textView;
 }
 
 
-- (UIButton *)buttonWithRichText:(NSAttributedString *)richText location:(CGPoint)location {
-    UIButton *button = [UIButton buttonWithType:UIButtonTypeSystem];
-    [button setAttributedTitle:richText forState:UIControlStateNormal];
-    [button sizeToFit];
-    CGRect frame = button.frame;
-    frame.size = button.titleLabel.frame.size;
-    frame.origin = location;
-    button.frame = frame;
+- (void)layoutImagesForTextView:(UITextView *)textView {
+    NSArray *attachmentList = [textView.textStorage attribute:BUCAttachmentListAttributeName atIndex:0 effectiveRange:NULL];
+    if (attachmentList) {
+        for (BUCImageAttachment *attachment in attachmentList) {
+            CGRect frame = [textView.layoutManager boundingRectForGlyphRange:NSMakeRange(attachment.glyphIndex, 1) inTextContainer:textView.textContainer];
+            UIImageView *imageView = [[UIImageView alloc] initWithFrame:frame];
+            imageView.contentMode = UIViewContentModeScaleAspectFit;
+            imageView.backgroundColor = [UIColor whiteColor];
+            [textView addSubview:imageView];
+            
+            if (attachment.gif) {
+                imageView.image = attachment.gif;
+            } else {
+                imageView.backgroundColor = [UIColor lightGrayColor];
+                [[BUCDataManager sharedInstance] getImageFromUrl:attachment.url onSuccess:^(UIImage *image) {
+                    imageView.image = image;
+                }];
+            }
+        }
+    }
+}
+
+
+- (BOOL)isLoadedBefore:(BUCPost *)newpost against:(NSArray *)list{
+    for (BUCPost *post in list) {
+        if ([post.pid isEqualToString:newpost.pid]) {
+            return YES;
+        }
+    }
     
-    return button;
+    return NO;
 }
 
 

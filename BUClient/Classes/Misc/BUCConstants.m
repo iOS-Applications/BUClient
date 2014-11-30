@@ -28,6 +28,9 @@ CGFloat const BUCDefaultMargin = 5.0f;
 
 CGFloat const BUCBorderWidth = 0.5f;
 
+// settings
+int const BUCMaxImageCountSinglePost = 10;
+
 // BUC rich text attributes
 NSString * const BUCLinkAttributeName = @"BUCLinkAttribute";
 NSString * const BUCTextBlockAttributeName = @"BUCTextBlockAttribute";

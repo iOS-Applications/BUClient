@@ -64,7 +64,8 @@ static NSString * const BUCJsonUsernameKey = @"username";
 static NSString * const BUCJsonPasswordKey = @"password";
 static NSString * const BUCJsonSessionKey = @"session";
 static NSString * const BUCJsonFidKey = @"fid";
-static NSString * const BUCJsonPidKey = @"tid";
+static NSString * const BUCJsonPidKey = @"pid";
+static NSString * const BUCJsonTidKey = @"tid";
 static NSString * const BUCJsonListFromKey = @"from";
 static NSString * const BUCJsonListToKey = @"to";
 static NSString * const BUCJsonProfileUidKey = @"uid";
@@ -134,7 +135,7 @@ static NSString * const BUCImageFileTypePrefix = @"image/";
     }
     
     if (pid) {
-        [json setObject:pid forKey:BUCJsonPidKey];
+        [json setObject:pid forKey:BUCJsonTidKey];
     }
     
     [self
@@ -169,7 +170,7 @@ static NSString * const BUCImageFileTypePrefix = @"image/";
     
     NSMutableDictionary *json = [[NSMutableDictionary alloc] init];
     [json setObject:BUCJsonPostDetailAction forKey:BUCJsonActionKey];
-    [json setObject:postID forKey:BUCJsonPidKey];
+    [json setObject:postID forKey:BUCJsonTidKey];
     [json setObject:from forKey:BUCJsonListFromKey];
     [json setObject:to forKey:BUCJsonListToKey];
     
@@ -188,18 +189,14 @@ static NSString * const BUCImageFileTypePrefix = @"image/";
 
         UIImage *image = [weakSelf imageFromData:data url:url];
         
-        if (image) {
-            imageBlock(image);
-        }
+        imageBlock(image);
     };
     
     NSCachedURLResponse *cachedResponse = [self.imageCache cachedResponseForRequest:request];
     if (cachedResponse) {
         NSData *imageData = cachedResponse.data;
         UIImage *image = [self imageFromData:imageData url:url];
-        if (image) {
-            imageBlock(image);
-        }
+        imageBlock(image);
     } else {
         [[BUCNetworkEngine sharedInstance]
          fetchImageFromUrl:request
@@ -287,6 +284,7 @@ static NSString * const BUCImageFileTypePrefix = @"image/";
         BUCPost *post = [[BUCPost alloc] init];
         
         post.pid = [rawDic objectForKey:BUCJsonPidKey];
+        post.tid = [rawDic objectForKey:BUCJsonTidKey];
         post.fid = [rawDic objectForKey:BUCJsonFidKey];
         
         post.fname = [self urldecode:[rawDic objectForKey:BUCResponseForumNameKey]];

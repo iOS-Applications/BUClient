@@ -7,6 +7,7 @@
 @interface BUCPost : NSObject
 
 @property (nonatomic) NSString *pid;
+@property (nonatomic) NSString *tid;
 @property (nonatomic) NSString *fid;
 @property (nonatomic) NSString *fname;
 
@@ -22,6 +23,10 @@
 
 @property (nonatomic) NSString *lastPostDateline;
 @property (nonatomic) NSString *lastPoster;
+
+@property (nonatomic) NSUInteger index;
+@property (nonatomic) CGFloat cellHeight;
+@property (nonatomic) CGRect textFrame;
 
 @end
 

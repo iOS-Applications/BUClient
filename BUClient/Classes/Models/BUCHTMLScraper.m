@@ -198,7 +198,7 @@
 
 - (void)appendImage:(TFHppleElement *)tree superAttributes:(NSDictionary *)superAttributes {
     NSString *source = [tree objectForKey:@"src"];
-    if (!source || source.length == 0) {
+    if (!source || source.length == 0 || self.attachmentList.count > BUCMaxImageCountSinglePost) {
         return;
     }
 

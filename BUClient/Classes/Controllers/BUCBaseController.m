@@ -40,17 +40,12 @@ static NSString * const BUCLoadingView = @"BUCLoadingView";
 }
 
 
-- (void)dealloc
-{
-    [self hideLoading];
-}
-
-
 #pragma mark - public methods
 - (void)displayLoading {
     [self.activityIndicator startAnimating];
     [self.view bringSubviewToFront:self.loadingView];
-    self.loadingView.center = CGPointMake(CGRectGetMidX(self.view.bounds), CGRectGetMidY(self.view.bounds) - 64.0f);
+    CGRect frame = [UIScreen mainScreen].bounds;
+    self.loadingView.center = CGPointMake(CGRectGetMidX(frame), CGRectGetMidY(frame) - 64.0f);
     self.loadingView.hidden = NO;
 }
 
