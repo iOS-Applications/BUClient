@@ -161,7 +161,7 @@ static NSString * const BUCCellNib = @"BUCPostListCell";
 }
 
 - (IBAction)loadMoreOrNext {
-    NSUInteger from = 0;
+    unsigned long from = 0;
 
     if (self.length < BUCPostListMaxPostCount) {
         from = self.location + self.length;
@@ -169,7 +169,7 @@ static NSString * const BUCCellNib = @"BUCPostListCell";
         from = self.location + BUCPostListMaxPostCount;
     }
     
-    NSUInteger to = from + BUCPostListMinPostCount;
+    unsigned long to = from + BUCPostListMinPostCount;
     self.from = [NSString stringWithFormat:@"%lu", from];
     self.to = [NSString stringWithFormat:@"%lu", to];
     
