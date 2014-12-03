@@ -1,6 +1,7 @@
-#import "UIImage+animatedGIF.h"
-#import "UIImage+SimpleResize.h"
+#import "UIImage+BUCImageCategory.h"
+#import "BUCNetworkEngine.h"
 #import <ImageIO/ImageIO.h>
+
 
 #if __has_feature(objc_arc)
 #define toCF (__bridge CFTypeRef)
@@ -10,7 +11,7 @@
 #define fromCF (id)
 #endif
 
-@implementation UIImage (animatedGIF)
+@implementation UIImage (BUCImageCategory)
 
 static int delayCentisecondsForImageAtIndex(CGImageSourceRef const source, size_t const i) {
     int delayCentiseconds = 1;
@@ -32,9 +33,9 @@ static int delayCentisecondsForImageAtIndex(CGImageSourceRef const source, size_
     return delayCentiseconds;
 }
 
-static void createImagesAndDelays(CGImageSourceRef source, size_t count, CGImageRef imagesOut[count], int delayCentisecondsOut[count]) {
+static void createImagesAndDelays(CGImageSourceRef source, size_t count, CGImageRef imagesOut[count], int delayCentisecondsOut[count], CFDictionaryRef options) {
     for (size_t i = 0; i < count; ++i) {
-        imagesOut[i] = CGImageSourceCreateImageAtIndex(source, i, NULL);
+        imagesOut[i] = CGImageSourceCreateThumbnailAtIndex(source, i, options);
         delayCentisecondsOut[i] = delayCentisecondsForImageAtIndex(source, i);
     }
 }
@@ -47,7 +48,7 @@ static int sum(size_t const count, int const *const values) {
     return theSum;
 }
 
-static int pairGCD(int a, int b) {    
+static int pairGCD(int a, int b) {
     if (a < b)
         return pairGCD(b, a);
     while (true) {
@@ -89,38 +90,113 @@ static void releaseImages(size_t const count, CGImageRef const images[count]) {
     }
 }
 
-static UIImage *animatedImageWithAnimatedGIFImageSource(CGImageSourceRef const source) {
+static UIImage *animatedImageWithAnimatedGIFImageSource(CGImageSourceRef const source, CFDictionaryRef options) {
     size_t const count = CGImageSourceGetCount(source);
     CGImageRef images[count];
     int delayCentiseconds[count]; // in centiseconds
-    createImagesAndDelays(source, count, images, delayCentiseconds);
+    createImagesAndDelays(source, count, images, delayCentiseconds, options);
     int const totalDurationCentiseconds = sum(count, delayCentiseconds);
     NSArray *const frames = frameArray(count, images, delayCentiseconds, totalDurationCentiseconds);
     NSTimeInterval duration = (NSTimeInterval)totalDurationCentiseconds / 100.0;
-    if (count <= 10 && duration <= 0.01) {
-        duration = duration * 8;
+    if (duration <= 0.01) {
+        duration = 0.1;
     }
     UIImage *const animation = [UIImage animatedImageWithImages:frames duration:duration];
     releaseImages(count, images);
     return animation;
 }
 
-static UIImage *animatedImageWithAnimatedGIFReleasingImageSource(CGImageSourceRef CF_RELEASES_ARGUMENT source) {
-    if (source) {
-        UIImage *const image = animatedImageWithAnimatedGIFImageSource(source);
-        CFRelease(source);
-        return image;
+static int maxDimension(CFDictionaryRef properties, CGSize fitSize) {
+    NSNumber *width;
+    NSNumber *height;
+    CGFloat scaledWidth;
+    CGFloat scaledHeight;
+    CGFloat scale = 1.0f;
+#if TARGET_IPHONE_SIMULATOR
+    scale = 1.0f;
+#else
+    scale = 2.0f;
+#endif
+    
+    width = (NSNumber *)CFDictionaryGetValue(properties, kCGImagePropertyPixelWidth);
+    height = (NSNumber *)CFDictionaryGetValue(properties, kCGImagePropertyPixelHeight);
+    
+    CGFloat targetRatio = fitSize.width / fitSize.height;
+    CGFloat imageRatio = width.floatValue / height.floatValue;
+    
+    if (targetRatio > imageRatio) {
+        scaledWidth = width.floatValue * fitSize.height / height.floatValue;
+        scaledHeight = fitSize.height;
     } else {
-        return nil;
+        scaledWidth = fitSize.width;
+        scaledHeight = height.floatValue * fitSize.width / width.floatValue;
     }
+    
+    return floorf(MAX(scaledWidth, scaledHeight)) * scale;
 }
 
-+ (UIImage *)animatedImageWithAnimatedGIFData:(NSData *)data {
-    return animatedImageWithAnimatedGIFReleasingImageSource(CGImageSourceCreateWithData(toCF data, NULL));
+
++ (UIImage *)imageWithData:(NSData *)data size:(CGSize)size {
+    UIImage *output;
+    CGImageRef image = NULL;
+    CGImageSourceRef source = NULL;
+    CFDictionaryRef properties = NULL;
+    NSString *type;
+    NSMutableDictionary *options;
+    
+    source = CGImageSourceCreateWithData(toCF data, NULL);
+    if (!source) {
+        goto cleanup;
+    }
+    
+    options = [NSMutableDictionary dictionaryWithObjectsAndKeys:
+               (id)kCFBooleanTrue, (id)kCGImageSourceShouldCache,
+               nil];
+    
+    properties = CGImageSourceCopyPropertiesAtIndex(source, 0, toCF options);
+    if (!properties) {
+        goto cleanup;
+    }
+    
+    if (size.width > 0) {
+        [options setObject:[NSNumber numberWithInt:maxDimension(properties, size)] forKey:(id)kCGImageSourceThumbnailMaxPixelSize];
+    }
+    [options setObject:(id)kCFBooleanTrue forKey:(id)kCGImageSourceCreateThumbnailFromImageIfAbsent];
+    [options setObject:(id)kCFBooleanTrue forKey:(id)kCGImageSourceCreateThumbnailWithTransform];
+    
+    type = (NSString *)CGImageSourceGetType(source);
+    if ([type isEqualToString:@"com.compuserve.gif"]) {
+        output = animatedImageWithAnimatedGIFImageSource(source, toCF options);
+    } else {
+        image = CGImageSourceCreateThumbnailAtIndex(source, 0, toCF options);
+        output = [UIImage imageWithCGImage:image];
+    }
+    
+cleanup:
+    if (source) {
+        CFRelease(source);
+    }
+    if (properties) {
+        CFRelease(properties);
+    }
+    if (image) {
+        CFRelease(image);
+    }
+    
+    return output;
 }
 
-+ (UIImage *)animatedImageWithAnimatedGIFURL:(NSURL *)url {
-    return animatedImageWithAnimatedGIFReleasingImageSource(CGImageSourceCreateWithURL(toCF url, NULL));
-}
 
 @end
+
+
+
+
+
+
+
+
+
+
+
+

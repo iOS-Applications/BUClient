@@ -23,7 +23,6 @@ extern NSString * const BUCUnwindToRootStoryboardID;
 // geometry constants
 extern CGFloat const BUCTopBarHeight;
 
-extern CGFloat const BUCImageThumbnailWidth;
 extern CGFloat const BUCImageThumbnailHeight;
 
 extern CGFloat const BUCDefaultPadding;
@@ -52,6 +51,14 @@ typedef NS_OPTIONS(uint32_t, BUCLinkType) {
     BUCUrlLink = 1 << 6
 };
 
+
+// block types
+typedef void(^BUCMapBlock)(NSDictionary *map);
+typedef void(^BUCListBlock)(NSArray *list);
+typedef void(^BUCDataBlock)(NSData *data);
+typedef void(^BUCImageBlock)(UIImage *image);
+typedef void(^BUCNumberBlock)(NSUInteger number);
+typedef void(^BUCErrorBlock)(NSError *error);
 
 #endif
 

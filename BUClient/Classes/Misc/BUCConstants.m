@@ -20,7 +20,6 @@ NSString * const BUCUnwindToRootStoryboardID = @"BUCUnwindToRoot";
 
 // geometry constants
 CGFloat const BUCTopBarHeight = 64.0f;
-CGFloat const BUCImageThumbnailWidth = 310.0f;
 CGFloat const BUCImageThumbnailHeight = 100.0f;
 
 CGFloat const BUCDefaultPadding = 8.0f;
