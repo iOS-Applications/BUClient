@@ -124,11 +124,7 @@ static NSString * const BUCImageFileTypePrefix = @"image/";
 }
 
 #pragma mark - public methods
-- (BOOL)loggedIn {
-    if (!self.session) {
-        return NO;
-    }
-    
+- (BOOL)loggedIn {    
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
     self.username = [defaults stringForKey:BUCCurrentUserDefaultKey];
     self.password = [self.authManager getPasswordWithUsername:self.username];

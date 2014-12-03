@@ -1,5 +1,4 @@
 #import "UIImage+BUCImageCategory.h"
-#import "BUCNetworkEngine.h"
 #import <ImageIO/ImageIO.h>
 
 

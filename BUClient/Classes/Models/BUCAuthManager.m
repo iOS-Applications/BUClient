@@ -1,5 +1,4 @@
 #import "BUCAuthManager.h"
-#import "BUCConstants.h"
 
 
 static NSString *kKeychainItemIdentifer = @"org.bitunion.buc.%@.KeychainUI";
@@ -67,6 +66,7 @@ static NSString *kKeychainItemIdentifer = @"org.bitunion.buc.%@.KeychainUI";
         CFRelease(resultCF);
         [self.keychainData removeObjectForKey:(__bridge id)kSecClass];
         SecItemUpdate((__bridge CFDictionaryRef)self.genericPasswordQuery, (__bridge CFDictionaryRef)self.keychainData);
+        return;
     } else {
         [self.keychainData setObject:(__bridge id)kSecClassGenericPassword forKey:(__bridge id)kSecClass];
         SecItemAdd((__bridge CFDictionaryRef)self.keychainData, NULL);
