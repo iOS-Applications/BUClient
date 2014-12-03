@@ -217,7 +217,10 @@ static NSUInteger const BUCPostDetailMinPostCount = 20;
                 cell.avatar.image = defaultAvatar;
             }
         }];
+    } else {
+        cell.avatar.image = self.defaultAvatar;
     }
+    
     // username
     NSString *username = post.user;
     if ([post.user isEqualToString:self.post.user]) {

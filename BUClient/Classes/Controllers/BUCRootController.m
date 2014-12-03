@@ -20,6 +20,8 @@
 
 
 - (void)viewDidAppear:(BOOL)animated {
+    [super viewDidAppear:animated];
+    
     if (![BUCDataManager sharedInstance].loggedIn) {
         BUCLoginController *loginController = [self.storyboard instantiateViewControllerWithIdentifier:BUCLoginControllerStoryboardID];
         [self presentViewController:loginController animated:YES completion:nil];
