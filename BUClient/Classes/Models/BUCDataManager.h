@@ -1,17 +1,17 @@
 #import <Foundation/Foundation.h>
-
-#import "BUCAuthManager.h"
-#import "BUCImageManager.h"
 #import "BUCConstants.h"
 
 
 @interface BUCDataManager : NSObject
 
 
-@property (nonatomic, readonly) BUCAuthManager *authManager;
-@property (nonatomic, readonly) BUCImageManager *imageManager;
+@property (nonatomic, readonly) BOOL loggedIn;
+
 
 + (BUCDataManager *)sharedInstance;
+
+
+- (void)loginWithUsername:(NSString *)username password:(NSString *)password onSuccess:(BUCVoidBlock)voidBlock onFail:(BUCErrorBlock)errorBlock;
 
 
 - (void)listOfFrontOnSuccess:(BUCListBlock)listBlock onError:(BUCErrorBlock)errorBlock;
@@ -30,8 +30,7 @@
 
 - (void)childCountOfForum:(NSString *)fid post:(NSString *)pid onSuccess:(BUCNumberBlock)numberBlock onError:(BUCErrorBlock)errorBlock;
 
-- (void)getImageFromUrl:(NSURL *)url onSuccess:(BUCImageBlock)imageBlock;
-
 - (void)getImageFromUrl:(NSURL *)url size:(CGSize)size onSuccess:(BUCImageBlock)imageBlock;
+
 
 @end

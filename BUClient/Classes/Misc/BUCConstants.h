@@ -7,8 +7,6 @@ extern NSString * const BUCAppLaunchStateDefaultKey;
 extern NSString * const BUCCurrentUserDefaultKey;
 extern NSString * const BUCUserLoginStateDefaultKey;
 
-// name of main storyboard file
-extern NSString * const BUCMainStoryboardPath;
 
 // storyboard identifier of controllers
 extern NSString * const BUCLoginControllerStoryboardID;
@@ -59,7 +57,7 @@ typedef void(^BUCDataBlock)(NSData *data);
 typedef void(^BUCImageBlock)(UIImage *image);
 typedef void(^BUCNumberBlock)(NSUInteger number);
 typedef void(^BUCErrorBlock)(NSError *error);
-
+typedef void(^BUCVoidBlock)(void);
 #endif
 
 

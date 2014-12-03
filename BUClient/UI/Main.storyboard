@@ -1,34 +1,14 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="6250" systemVersion="14B25" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" initialViewController="0Gh-hd-DNQ">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="6254" systemVersion="14B25" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" initialViewController="hFi-ew-Pwi">
     <dependencies>
         <deployment version="1792" identifier="iOS"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="6244"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="6247"/>
     </dependencies>
     <scenes>
-        <!--Root Controller-->
-        <scene sceneID="xcZ-Ez-eMP">
-            <objects>
-                <viewController storyboardIdentifier="BUCRootController" autoresizesArchivedViewToFullSize="NO" automaticallyAdjustsScrollViewInsets="NO" id="0Gh-hd-DNQ" customClass="BUCRootController" sceneMemberID="viewController">
-                    <layoutGuides>
-                        <viewControllerLayoutGuide type="top" id="rb1-nG-dAa"/>
-                        <viewControllerLayoutGuide type="bottom" id="lhn-TR-ImC"/>
-                    </layoutGuides>
-                    <view key="view" autoresizesSubviews="NO" clearsContextBeforeDrawing="NO" contentMode="scaleToFill" id="7dO-lY-43F">
-                        <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
-                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                        <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
-                        <gestureRecognizers/>
-                    </view>
-                    <extendedEdge key="edgesForExtendedLayout"/>
-                </viewController>
-                <placeholder placeholderIdentifier="IBFirstResponder" id="Phv-8Q-72y" userLabel="First Responder" sceneMemberID="firstResponder"/>
-            </objects>
-            <point key="canvasLocation" x="3101.25" y="118.30985915492953"/>
-        </scene>
         <!--Login Controller-->
         <scene sceneID="Vgy-wN-jNb">
             <objects>
-                <viewController storyboardIdentifier="BUCLoginController" id="FHD-W1-3aU" customClass="BUCLoginController" sceneMemberID="viewController">
+                <viewController storyboardIdentifier="BUCLoginController" automaticallyAdjustsScrollViewInsets="NO" modalTransitionStyle="crossDissolve" id="FHD-W1-3aU" customClass="BUCLoginController" sceneMemberID="viewController">
                     <layoutGuides>
                         <viewControllerLayoutGuide type="top" id="Ja2-2M-FHs"/>
                         <viewControllerLayoutGuide type="bottom" id="4U7-xt-m2R"/>
@@ -101,6 +81,7 @@
                             <outletCollection property="gestureRecognizers" destination="Kem-wl-ESS" appends="YES" id="4YX-PZ-Rjl"/>
                         </connections>
                     </view>
+                    <extendedEdge key="edgesForExtendedLayout" top="YES"/>
                     <connections>
                         <outlet property="loginButton" destination="p6Q-ty-e5D" id="eIp-jb-F33"/>
                         <outlet property="password" destination="UH4-D8-KLE" id="3fX-A4-te9"/>
@@ -251,19 +232,23 @@
         <scene sceneID="PEe-cG-dxn">
             <objects>
                 <viewController storyboardIdentifier="BUCPostDetailController" autoresizesArchivedViewToFullSize="NO" automaticallyAdjustsScrollViewInsets="NO" id="oiG-Nc-ZDP" customClass="BUCPostDetailController" sceneMemberID="viewController">
-                    <tableView key="view" clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" showsHorizontalScrollIndicator="NO" canCancelContentTouches="NO" dataMode="prototypes" style="plain" separatorStyle="default" allowsSelection="NO" showsSelectionImmediatelyOnTouchBegin="NO" rowHeight="583" sectionHeaderHeight="22" sectionFooterHeight="22" id="Sik-0j-NGp">
+                    <tableView key="view" clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" showsHorizontalScrollIndicator="NO" canCancelContentTouches="NO" dataMode="prototypes" style="plain" separatorStyle="default" allowsSelection="NO" showsSelectionImmediatelyOnTouchBegin="NO" rowHeight="400" sectionHeaderHeight="1" sectionFooterHeight="1" id="Sik-0j-NGp">
                         <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                         <inset key="separatorInset" minX="0.0" minY="0.0" maxX="0.0" maxY="0.0"/>
+                        <view key="tableFooterView" contentMode="scaleToFill" id="hnt-O7-7kl" userLabel="footer">
+                            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                            <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                        </view>
                         <prototypes>
-                            <tableViewCell autoresizesSubviews="NO" contentMode="scaleToFill" selectionStyle="none" indentationWidth="10" reuseIdentifier="cell" rowHeight="580" id="mrz-4C-Ab1" customClass="BUCPostDetailCell">
+                            <tableViewCell autoresizesSubviews="NO" contentMode="scaleToFill" selectionStyle="none" indentationWidth="10" shouldIndentWhileEditing="NO" reuseIdentifier="cell" id="mrz-4C-Ab1" customClass="BUCPostDetailCell">
                                 <rect key="frame" x="0.0" y="0.0" width="600" height="44"/>
                                 <autoresizingMask key="autoresizingMask"/>
                                 <tableViewCellContentView key="contentView" autoresizesSubviews="NO" multipleTouchEnabled="YES" contentMode="center" tableViewCell="mrz-4C-Ab1" id="nrW-mj-TlB">
                                     <autoresizingMask key="autoresizingMask"/>
                                     <subviews>
-                                        <imageView autoresizesSubviews="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="avatar.png" translatesAutoresizingMaskIntoConstraints="NO" id="HBS-9e-srw">
+                                        <imageView autoresizesSubviews="NO" clipsSubviews="YES" contentMode="center" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="avatar.png" translatesAutoresizingMaskIntoConstraints="NO" id="HBS-9e-srw">
                                             <rect key="frame" x="5" y="5" width="40" height="40"/>
                                             <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                                             <constraints>
@@ -273,6 +258,7 @@
                                         </imageView>
                                         <button autoresizesSubviews="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="KXz-SA-KFd" userLabel="username">
                                             <rect key="frame" x="50" y="5" width="48" height="26"/>
+                                            <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                                             <constraints>
                                                 <constraint firstAttribute="height" constant="26" id="RoV-Si-lXz"/>
                                             </constraints>
@@ -286,14 +272,14 @@
                                         </button>
                                         <label autoresizesSubviews="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" preferredMaxLayoutWidth="1000" translatesAutoresizingMaskIntoConstraints="NO" id="aDl-QG-7gh" userLabel="index">
                                             <rect key="frame" x="562" y="5" width="33" height="16"/>
-                                            <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
+                                            <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                                             <fontDescription key="fontDescription" type="system" pointSize="13"/>
                                             <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
                                             <nil key="highlightedColor"/>
                                         </label>
                                         <label autoresizesSubviews="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" preferredMaxLayoutWidth="1000" translatesAutoresizingMaskIntoConstraints="NO" id="GsA-iQ-jYT" userLabel="dateline">
                                             <rect key="frame" x="50" y="31" width="33" height="14"/>
-                                            <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
+                                            <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                                             <constraints>
                                                 <constraint firstAttribute="height" constant="14" id="u1K-Tt-u2T"/>
                                             </constraints>
@@ -315,7 +301,6 @@
                                     </constraints>
                                 </tableViewCellContentView>
                                 <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
-                                <inset key="separatorInset" minX="0.0" minY="0.0" maxX="0.0" maxY="0.0"/>
                                 <connections>
                                     <outlet property="avatar" destination="HBS-9e-srw" id="BmR-u5-eCz"/>
                                     <outlet property="dateline" destination="GsA-iQ-jYT" id="qLB-pS-9e4"/>
@@ -383,10 +368,10 @@
             </objects>
             <point key="canvasLocation" x="3873.75" y="118.30985915492953"/>
         </scene>
-        <!--Menu Controller-->
+        <!--Root Controller-->
         <scene sceneID="ovE-Va-9xO">
             <objects>
-                <viewController autoresizesArchivedViewToFullSize="NO" automaticallyAdjustsScrollViewInsets="NO" id="GL1-z2-a4Z" customClass="BUCMenuController" sceneMemberID="viewController">
+                <viewController autoresizesArchivedViewToFullSize="NO" automaticallyAdjustsScrollViewInsets="NO" id="GL1-z2-a4Z" customClass="BUCRootController" sceneMemberID="viewController">
                     <layoutGuides>
                         <viewControllerLayoutGuide type="top" id="4x9-yb-7Od"/>
                         <viewControllerLayoutGuide type="bottom" id="YWa-vD-8aZ"/>

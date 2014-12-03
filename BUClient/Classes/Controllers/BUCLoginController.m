@@ -1,8 +1,8 @@
 #import "BUCLoginController.h"
-#import "BUCAuthManager.h"
+#import "BUCDataManager.h"
 
 
-@interface BUCLoginController ()
+@interface BUCLoginController () <UITextFieldDelegate>
 
 @property (weak, nonatomic) IBOutlet UITextField *username;
 @property (weak, nonatomic) IBOutlet UITextField *password;
@@ -30,8 +30,6 @@
     
     self.loginButton.layer.cornerRadius = 3;
     self.loginButton.layer.masksToBounds = YES;
-    
-    self.modalTransitionStyle = UIModalTransitionStyleCrossDissolve;
 }
 
 
@@ -48,7 +46,7 @@
     }
     
 
-    [[BUCAuthManager sharedInstance]
+    [[BUCDataManager sharedInstance]
      
      loginWithUsername:username
      
@@ -56,7 +54,7 @@
      
      onSuccess:^(void) {
          [weakSelf hideLoading];
-         [weakSelf performSegueWithIdentifier:weakSelf.unwindIdentifier sender:nil];
+         [weakSelf.presentingViewController dismissViewControllerAnimated:YES completion:nil];
      }
      
      onFail:^(NSError *error) {

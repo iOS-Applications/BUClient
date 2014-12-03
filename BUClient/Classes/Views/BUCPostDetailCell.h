@@ -19,6 +19,4 @@
 
 @property (weak, nonatomic) UITextView *content;
 
-@property (nonatomic) CGFloat height;
-
 @end

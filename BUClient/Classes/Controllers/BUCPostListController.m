@@ -77,7 +77,7 @@ static NSString * const BUCCellNib = @"BUCPostListCell";
     if (self.fid) {
         BUCPostListController * __weak weakSelf = self;
         [[BUCDataManager sharedInstance]
-         getPostCountOfForum:self.fid
+         childCountOfForum:self.fid
          post:nil
          onSuccess:^(NSUInteger count) {
              weakSelf.postCount = count;
@@ -120,16 +120,15 @@ static NSString * const BUCCellNib = @"BUCPostListCell";
     };
 
     if (self.fid) {
-        [dataManager getForumList:self.fid from:self.from to:self.to onSuccess:listBlock onError:errorBlock];
+        [dataManager listOfForum:self.fid from:self.from to:self.to onSuccess:listBlock onError:errorBlock];
     } else {
-        [dataManager getFrontListOnSuccess:listBlock onError:errorBlock];
+        [dataManager listOfFrontOnSuccess:listBlock onError:errorBlock];
     }
 }
 
 
 - (void)jumpToPost:(id)sender {
-    UIStoryboard *storyboard = [UIStoryboard storyboardWithName:BUCMainStoryboardPath bundle:nil];
-    BUCPostDetailController *postDetailController = [storyboard instantiateViewControllerWithIdentifier:BUCPostDetailControllerStoryboardID];
+    BUCPostDetailController *postDetailController = [self.storyboard instantiateViewControllerWithIdentifier:BUCPostDetailControllerStoryboardID];
     BUCPostListCell *cell = (BUCPostListCell *)sender;
     postDetailController.post = [self.postList objectAtIndex:cell.tag];
     [(UINavigationController *)self.parentViewController pushViewController:postDetailController animated:YES];
@@ -137,8 +136,7 @@ static NSString * const BUCCellNib = @"BUCPostListCell";
 
 
 - (void)jumpToForum:(id)sender {
-    UIStoryboard *storyboard = [UIStoryboard storyboardWithName:BUCMainStoryboardPath bundle:nil];
-    BUCPostListController *postListController = [storyboard instantiateViewControllerWithIdentifier:BUCPostListControllerStoryboardID];
+    BUCPostListController *postListController = [self.storyboard instantiateViewControllerWithIdentifier:BUCPostListControllerStoryboardID];
     UIButton *forumName = (UIButton *)sender;
     BUCPostListCell *listItem = (BUCPostListCell *)forumName.superview;
     BUCPost *post = [self.postList objectAtIndex:listItem.tag];

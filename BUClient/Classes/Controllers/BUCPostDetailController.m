@@ -35,8 +35,6 @@ static NSUInteger const BUCPostDetailMinPostCount = 20;
 - (void)viewDidLoad {
     [super viewDidLoad];
     
-    self.modalTransitionStyle = UIModalTransitionStyleCrossDissolve;
-    
     self.from = @"0";
     self.to = @"20";
     
@@ -46,9 +44,8 @@ static NSUInteger const BUCPostDetailMinPostCount = 20;
     
     self.defaultAvatar = [UIImage imageNamed:@"avatar"];
     
-    UIView *shit = [[UIView alloc] initWithFrame:CGRectMake(100, 100, 100, 100)];
-    shit.backgroundColor = [UIColor redColor];
-    [self.tableView addSubview:shit];
+    self.tableView.backgroundView = nil;
+    self.tableView.backgroundColor = [UIColor groupTableViewBackgroundColor];
     
     [self refresh];
 }
@@ -68,7 +65,7 @@ static NSUInteger const BUCPostDetailMinPostCount = 20;
 
     BUCPostDetailController * __weak weakSelf = self;
     [[BUCDataManager sharedInstance]
-     getPostCountOfForum:nil
+     childCountOfForum:nil
      post:self.post.tid
      onSuccess:^(NSUInteger count) {
          weakSelf.postCount = count;
@@ -84,7 +81,7 @@ static NSUInteger const BUCPostDetailMinPostCount = 20;
     BUCPostDetailController * __weak weakSelf = self;
     
     [[BUCDataManager sharedInstance]
-     getPost:self.post.tid
+     listOfPost:self.post.tid
      
      from:self.from
      
@@ -125,15 +122,13 @@ static NSUInteger const BUCPostDetailMinPostCount = 20;
 
 
 #pragma mark - table view data source
-- (NSInteger)tableView:(UITableView *)tableView
- numberOfRowsInSection:(NSInteger)section {
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
     return self.postList.count;
 }
 
-- (UITableViewCell *)tableView:(UITableView *)tableView
-         cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     static NSString * const cellIdentifier = @"cell";
-    BUCPostDetailCell *cell = [self.tableView dequeueReusableCellWithIdentifier:cellIdentifier];
+    BUCPostDetailCell *cell = [self.tableView dequeueReusableCellWithIdentifier:cellIdentifier forIndexPath:indexPath];
     [self configureCell:cell post:[self.postList objectAtIndex:indexPath.row]];
 
     return cell;
@@ -141,15 +136,16 @@ static NSUInteger const BUCPostDetailMinPostCount = 20;
 
 
 #pragma mark - table view delegate
-- (CGFloat)tableView:(UITableView *)tableView
-heightForRowAtIndexPath:(NSIndexPath *)indexPath {
+- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {
     CGFloat height = ((BUCPost *)[self.postList objectAtIndex:indexPath.row]).cellHeight;
     return height;
 }
 
 
 #pragma mark - scroll view delegate
-
+//- (void)scrollViewDidEndDragging:(UIScrollView *)scrollView willDecelerate:(BOOL)decelerate {
+//    
+//}
 
 #pragma mark - private methods
 - (void)buildList:(NSArray *)list {
@@ -214,7 +210,7 @@ heightForRowAtIndexPath:(NSIndexPath *)indexPath {
     UIImage *defaultAvatar = self.defaultAvatar;
     // avatar
     if (post.avatar) {
-        [[BUCDataManager sharedInstance] getImageFromUrl:post.avatar onSuccess:^(UIImage *image) {
+        [[BUCDataManager sharedInstance] getImageFromUrl:post.avatar size:cell.avatar.frame.size onSuccess:^(UIImage *image) {
             if (image) {
                 cell.avatar.image = image;
             } else {
@@ -279,18 +275,18 @@ heightForRowAtIndexPath:(NSIndexPath *)indexPath {
 - (void)layoutImagesForTextView:(UITextView *)textView {
     NSArray *attachmentList = [textView.textStorage attribute:BUCAttachmentListAttributeName atIndex:0 effectiveRange:NULL];
     if (attachmentList) {
+        CGSize size = CGSizeMake(CGRectGetWidth(textView.frame), BUCImageThumbnailHeight);
         for (BUCImageAttachment *attachment in attachmentList) {
             CGRect frame = [textView.layoutManager boundingRectForGlyphRange:NSMakeRange(attachment.glyphIndex, 1) inTextContainer:textView.textContainer];
             UIImageView *imageView = [[UIImageView alloc] initWithFrame:frame];
-            imageView.contentMode = UIViewContentModeScaleAspectFit;
+            imageView.contentMode = UIViewContentModeCenter;
             imageView.backgroundColor = [UIColor whiteColor];
             [textView addSubview:imageView];
             
             if (attachment.gif) {
                 imageView.image = attachment.gif;
             } else {
-                imageView.backgroundColor = [UIColor lightGrayColor];
-                [[BUCDataManager sharedInstance] getImageFromUrl:attachment.url onSuccess:^(UIImage *image) {
+                [[BUCDataManager sharedInstance] getImageFromUrl:attachment.url size:size onSuccess:^(UIImage *image) {
                     imageView.image = image;
                 }];
             }

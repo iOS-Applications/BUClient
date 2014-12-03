@@ -5,9 +5,6 @@ NSString * const BUCAppLaunchStateDefaultKey = @"AppIsJustLaunched";
 NSString * const BUCCurrentUserDefaultKey = @"CurrentUser";
 NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
 
-// name of main storyboard file
-NSString * const BUCMainStoryboardPath = @"Main";
-
 // storyboard identifier string of controllers
 NSString * const BUCLoginControllerStoryboardID = @"BUCLoginController";
 NSString * const BUCRootControllerStoryboardID = @"BUCRootController";

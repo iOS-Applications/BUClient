@@ -1,74 +1,36 @@
 #import "BUCRootController.h"
-#import "BUCLoginController.h"
-#import "BUCAuthManager.h"
 #import "BUCConstants.h"
+#import "BUCLoginController.h"
+#import "BUCDataManager.h"
+
+
+@interface BUCRootController ()
+
+@end
 
 
 @implementation BUCRootController
 
 
-- (void)viewDidAppear:(BOOL)animated {
-    [super viewDidAppear:animated];
-    
-    if ([[NSUserDefaults standardUserDefaults] boolForKey:BUCAppLaunchStateDefaultKey]) {
-        [[NSUserDefaults standardUserDefaults] setBool:NO forKey:BUCAppLaunchStateDefaultKey];
-        [[NSUserDefaults standardUserDefaults] synchronize];
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    // Do any additional setup after loading the view.
+    self.navigationItem.backBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"" style:UIBarButtonItemStylePlain target:nil action:nil];
+}
 
-        if ([[NSUserDefaults standardUserDefaults] boolForKey:BUCUserLoginStateDefaultKey]) {
-            [self loadContent];
-        } else {
-            UIStoryboard *storyboard = [UIStoryboard storyboardWithName:BUCMainStoryboardPath bundle:nil];
-            BUCLoginController *loginController = [storyboard instantiateViewControllerWithIdentifier:BUCLoginControllerStoryboardID];
-            loginController.unwindIdentifier = BUCUnwindToRootStoryboardID;
-            
-            [self presentViewController:loginController animated:NO completion:nil];
-        }
+
+- (void)viewDidAppear:(BOOL)animated {
+    if (![BUCDataManager sharedInstance].loggedIn) {
+        BUCLoginController *loginController = [self.storyboard instantiateViewControllerWithIdentifier:BUCLoginControllerStoryboardID];
+        [self presentViewController:loginController animated:YES completion:nil];
     }
 }
 
 
-#pragma mark - unwind callback
-- (IBAction)unwindToRoot:(UIStoryboardSegue *)segue {
-    [self loadContent];
-}
-
-
-#pragma mark - private methods
-- (void)loadContent {
-    UIStoryboard *storyboard = [UIStoryboard storyboardWithName:BUCMainStoryboardPath bundle:nil];
-    UIViewController *ContentController = [storyboard instantiateViewControllerWithIdentifier:BUCContentControllerStoryboardID];
-
-    ContentController.view.frame = self.view.frame;
-    [self addChildViewController:ContentController];
-    [self.view addSubview:ContentController.view];
-    [ContentController didMoveToParentViewController:self];
+- (IBAction)shit:(id)sender {
+    UIViewController *postListController = [self.storyboard instantiateViewControllerWithIdentifier:BUCPostListControllerStoryboardID];
+    [(UINavigationController *)self.parentViewController pushViewController:postListController animated:YES];
 }
 
 
 @end
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

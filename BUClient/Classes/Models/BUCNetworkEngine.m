@@ -11,18 +11,6 @@
 
 
 @implementation BUCNetworkEngine
-#pragma mark - singleton class method
-+(BUCNetworkEngine *)sharedInstance {   
-    static BUCNetworkEngine *sharedInstance;
-    static dispatch_once_t onceSecurePredicate;
-    dispatch_once(&onceSecurePredicate, ^{
-        sharedInstance = [[self alloc] init];
-    });
-    
-    return sharedInstance;
-}
-
-
 #pragma mark - init
 - (instancetype)init {
     self = [super init];
@@ -43,10 +31,10 @@
 
 
 #pragma mark - public methods
-- (void)fetchDataFromUrl:(NSString *)url
+- (void)fetchJsonFromUrl:(NSString *)url
                     json:(NSDictionary *)json
-                onResult:(networkResultBlock)resultBlock
-                 onError:(networkErrorBlock)errorBlock {
+                onResult:(BUCMapBlock)mapBlock
+                 onError:(BUCErrorBlock)errorBlock {
     
     NSError *error;
     NSURLRequest *request = [self requestFromURL:url json:json error:&error];
@@ -57,21 +45,21 @@
     
     BUCNetworkEngine * __weak weakSelf = self;
     
-    void (^urlSessionBlock)(NSData *, NSURLResponse *, NSError *);
-    urlSessionBlock = ^(NSData *data, NSURLResponse *response, NSError *error) {
-        NSDictionary *resultJSON;
+    void (^block)(NSData *, NSURLResponse *, NSError *);
+    block = ^(NSData *data, NSURLResponse *response, NSError *error) {
+        NSDictionary *result;
         if (error || ((NSHTTPURLResponse *)response).statusCode != 200) {
             goto fail;
         }
         
-        resultJSON = [NSJSONSerialization JSONObjectWithData:data
+        result = [NSJSONSerialization JSONObjectWithData:data
                                                      options:NSJSONReadingMutableContainers
                                                        error:&error];
-        if (!resultJSON) {
+        if (!result) {
             goto fail;
         }
         
-        resultBlock(resultJSON);
+        mapBlock(result);
         
         return;
         
@@ -79,17 +67,17 @@
         errorBlock([weakSelf checkErr:error response:response]);
     };
     
-    [[self.defaultSession dataTaskWithRequest:request completionHandler:urlSessionBlock] resume];
+    [[self.defaultSession dataTaskWithRequest:request completionHandler:block] resume];
 }
 
 
-- (void)fetchImageFromUrl:(NSURLRequest *)request onResult:(networkImageBlock)imageBlock onError:(networkErrorBlock)errorBlock {
+- (void)fetchDataFromUrl:(NSURLRequest *)request onResult:(BUCDataBlock)dataBlock onError:(BUCErrorBlock)errorBlock {
     void(^urlSessionBlock)(NSData *, NSURLResponse *, NSError *);
     urlSessionBlock = ^(NSData *data, NSURLResponse *response, NSError *error) {
         if (error || !data) {
             return;
         } else {
-            imageBlock(data, response);
+            dataBlock(data);
         }
     };
     

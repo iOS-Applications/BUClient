@@ -1,6 +1,6 @@
 #import "BUCHTMLScraper.h"
 #import "TFHpple.h"
-#import "UIImage+animatedGIF.h"
+#import "UIImage+BUCImageCategory.h"
 #import "BUCConstants.h"
 #import "BUCModels.h"
 
@@ -10,6 +10,7 @@
 @property (nonatomic) NSMutableAttributedString *output;
 @property (nonatomic) NSMutableArray *attachmentList;
 @property (nonatomic) NSMutableArray *blockList;
+@property (nonatomic) CGFloat imageWidth;
 
 @end
 
@@ -18,6 +19,17 @@
 
 
 #pragma mark - public interface
+- (instancetype)init {
+    self = [super init];
+    
+    if (self) {
+        _imageWidth = CGRectGetWidth([UIScreen mainScreen].bounds) - 2 * BUCDefaultMargin;
+    }
+    
+    return self;
+}
+
+
 - (NSURL *)avatarUrlFromHtml:(NSString *)html {
     if (!html || html.length == 0) {
         return nil;
@@ -186,7 +198,7 @@
     }
     
     NSMutableDictionary *attributes = [NSMutableDictionary dictionaryWithDictionary:superAttributes];
-    NSString *pattern = @"\\s*\\[ Last edited by .+ on [0-9]{4}-[0-9]{1,2}-[0-9]{1,2} at [0-9]{2}:[0-9]{2} \\]";
+    static NSString *pattern = @"\\s*\\[ Last edited by .+ on [0-9]{4}-[0-9]{1,2}-[0-9]{1,2} at [0-9]{2}:[0-9]{2} \\]";
     
     if ([self matchString:tree.content withPattern:pattern match:NULL]) {
         [attributes setObject:[UIFont preferredFontForTextStyle:UIFontTextStyleCaption1] forKeyedSubscript:NSFontAttributeName];
@@ -198,17 +210,17 @@
 
 - (void)appendImage:(TFHppleElement *)tree superAttributes:(NSDictionary *)superAttributes {
     NSString *source = [tree objectForKey:@"src"];
-    if (!source || source.length == 0 || self.attachmentList.count > BUCMaxImageCountSinglePost) {
+    if (!source || source.length == 0) {
         return;
     }
 
     BUCImageAttachment *attachment = [[BUCImageAttachment alloc] init];
-    NSString *pattern = @"^\\.\\./images/.+$";
+    static NSString *pattern = @"^\\.\\./images/.+$";
     
     if ([self matchString:source withPattern:pattern match:NULL]) {
         NSString *resourcePath = [[NSBundle mainBundle] resourcePath];
         NSString *path = [NSString stringWithFormat:@"%@/%@", resourcePath, [source substringFromIndex:3]];
-        UIImage *image = [UIImage animatedImageWithAnimatedGIFData:[NSData dataWithContentsOfFile:path]];
+        UIImage *image = [UIImage imageWithData:[NSData dataWithContentsOfFile:path] size:CGSizeZero];
         if (!image) {
             return;
         } else {
@@ -220,7 +232,7 @@
         if (!attachment.url) {
             return;
         } else {
-            attachment.bounds = CGRectMake(0, 0, BUCImageThumbnailWidth, BUCImageThumbnailHeight);
+            attachment.bounds = CGRectMake(0, 0, self.imageWidth, BUCImageThumbnailHeight);
         }
     }
     
@@ -262,7 +274,7 @@
 
 
 - (void)appendCode:(TFHppleElement *)tree superAttributes:(NSDictionary *)superAttributes {
-    NSString *query = @"//div/ol/li";
+    static NSString *query = @"//div/ol/li";
     NSArray *codeLines = [tree searchWithXPathQuery:query];
     
     if (!codeLines || codeLines.count == 0) {
@@ -374,7 +386,7 @@
         return output;
     }
     
-    NSString *pattern = @"^#\\s*([a-z0-9]{3}|[a-z0-9]{6})$";
+    static NSString *pattern = @"^#\\s*([a-z0-9]{3}|[a-z0-9]{6})$";
     
     if (![self matchString:color withPattern:pattern match:NULL]) {
         output = [UIColor blackColor];
@@ -403,13 +415,13 @@
         return nil;
     }
     
-    NSString *usernamePattern = @"^/profile-username-.+\\.html$";
-    NSString *mailPattern = @"^mailto:.+$";
-    NSString *buPattern  = @"^(http://)?(((www)|(out)|(us))\\.)?bitunion\\.org(/.*)?$";
-    NSString *threadPattern = @"^/thread-([1-9][0-9]+)-[1-9]-[1-9]\\.html$";
-    NSString *viewThreadPattern = @"^/viewthread\\.php\\?tid=([1-9][0-9]+).*$";
-    NSString *forumPattern = @"^/forum-([1-9]{1,3})-[1-9]\\.html$";
-    NSString *buDomanName = @"bitunion.org";
+    static NSString *usernamePattern = @"^/profile-username-.+\\.html$";
+    static NSString *mailPattern = @"^mailto:.+$";
+    static NSString *buPattern  = @"^(http://)?(((www)|(out)|(us))\\.)?bitunion\\.org(/.*)?$";
+    static NSString *threadPattern = @"^/thread-([1-9][0-9]+)-[1-9]-[1-9]\\.html$";
+    static NSString *viewThreadPattern = @"^/viewthread\\.php\\?tid=([1-9][0-9]+).*$";
+    static NSString *forumPattern = @"^/forum-([1-9]{1,3})-[1-9]\\.html$";
+    static NSString *buDomanName = @"bitunion.org";
     
     BUCLinkAttribute *linkAttribute = [[BUCLinkAttribute alloc] init];
     NSTextCheckingResult *match;
@@ -465,7 +477,7 @@
         return [UIColor whiteColor];
     }
     
-    NSString *pattern = @"background-color:\\s*(#[0-9a-f]{6}|[0-9a-f]{3})";
+    static NSString *pattern = @"background-color:\\s*(#[0-9a-f]{6}|[0-9a-f]{3})";
     NSTextCheckingResult *match;
     if ([self matchString:styleString withPattern:pattern match:&match]) {
         return [self colorAttribute:[styleString substringWithRange:[match rangeAtIndex:1]]];
@@ -564,9 +576,9 @@
     NSString *baseUrl = @"http://out.bitunion.org";
     NSURL *url = [NSURL URLWithString:source];
     
-    NSString *lanPattern = @"^http://www\\.bitunion\\.org/.+$";
-    NSString *relativePattern = @"^images/.+$";
-    NSString *attachmentPattern = @"^/attachments/.+$";
+    static NSString *lanPattern = @"^http://www\\.bitunion\\.org/.+$";
+    static NSString *relativePattern = @"^images/.+$";
+    static NSString *attachmentPattern = @"^/attachments/.+$";
     
     if ([url.host isEqualToString:@"bitunion.org"]) {
         source = [NSString stringWithFormat:@"%@%@", baseUrl, url.path];

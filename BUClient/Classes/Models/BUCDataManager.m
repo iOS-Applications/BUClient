@@ -1,9 +1,9 @@
 #import "BUCDataManager.h"
 #import "BUCNetworkEngine.h"
 #import "BUCHTMLScraper.h"
-#import "UIImage+animatedGIF.h"
+#import "UIImage+BUCImageCategory.h"
 #import "BUCModels.h"
-#import <ImageIO/ImageIO.h>
+#import "BUCAuthManager.h"
 
 // bu api response json key-value pairs
 static NSString * const BUCJsonMessageKey = @"msg";
@@ -79,9 +79,17 @@ static NSString * const BUCImageFileTypePrefix = @"image/";
 
 @interface BUCDataManager ()
 
-
+@property (nonatomic, readwrite) BUCAuthManager *authManager;
 @property (nonatomic) BUCHTMLScraper *htmlScraper;
+@property (nonatomic) BUCNetworkEngine *networkEngine;
 
+@property (nonatomic) NSString *username;
+@property (nonatomic) NSString *password;
+@property (nonatomic) NSString *session;
+
+@property (nonatomic, readwrite) BOOL loggedIn;
+
+@property (nonatomic) NSError *loginError;
 
 @end
 
@@ -104,15 +112,84 @@ static NSString * const BUCImageFileTypePrefix = @"image/";
     self = [super init];
     
     if (self) {
+        _networkEngine = [[BUCNetworkEngine alloc] init];
         _htmlScraper = [[BUCHTMLScraper alloc] init];
         _authManager = [[BUCAuthManager alloc] init];
-        _imageManager = [[BUCImageManager alloc] init];
+        
+        _loggedIn = NO;
+        _loginError = [NSError errorWithDomain:@"BUClient.ErrorDomain" code:1 userInfo:@{NSLocalizedDescriptionKey:@"帐号与密码不符，请检查帐号状态"}];
     }
     
     return self;
 }
 
 #pragma mark - public methods
+- (BOOL)loggedIn {
+    if (!self.session) {
+        return NO;
+    }
+    
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    self.username = [defaults stringForKey:BUCCurrentUserDefaultKey];
+    self.password = [self.authManager getPasswordWithUsername:self.username];
+    
+    if (!self.username || self.username.length == 0 || !self.password || self.password.length == 0) {
+        return NO;
+    }
+
+    _loggedIn = [defaults boolForKey:BUCUserLoginStateDefaultKey];
+    return _loggedIn;
+}
+
+
+-(void)loginWithUsername:(NSString *)username password:(NSString *)password onSuccess:(BUCVoidBlock)voidBlock onFail:(BUCErrorBlock)errorBlock {
+    NSString *savedUsername = self.username;
+    NSString *savedPassword = self.password;
+    self.username = username;
+    self.password = password;
+    BUCDataManager * __weak weakSelf = self;
+    
+    [self
+     updateSessionOnSuccess:^{
+        NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+        [defaults setObject:username forKey:BUCCurrentUserDefaultKey];
+        [defaults setBool:YES forKey:BUCUserLoginStateDefaultKey];
+        [defaults synchronize];
+        
+        if (![savedUsername isEqualToString:username] || ![savedPassword isEqualToString:password]) {
+            [weakSelf.authManager savePassword:password username:username];
+        }
+        
+        voidBlock();
+    }
+     onError:^(NSError *error) {
+         weakSelf.username = savedUsername;
+         weakSelf.password = savedPassword;
+         errorBlock(error);
+     }];
+}
+
+
+- (void)updateSessionOnSuccess:(BUCVoidBlock)voidBlock onError:(BUCErrorBlock)errorBlock {
+    NSMutableDictionary *json = [[NSMutableDictionary alloc] init];
+    
+    [json setObject:BUCJsonActionLogin forKey:BUCJsonActionKey];
+    [json setObject:self.username forKey:BUCJsonUsernameKey];
+    [json setObject:self.password forKey:BUCJsonPasswordKey];
+    BUCDataManager * __weak weakSelf = self;
+    
+    [self
+     loadJsonFromUrl:BUCUrlLogin
+     json:json
+     onSuccess:^(NSDictionary *map) {
+         weakSelf.session = [map objectForKey:@"session"];
+         weakSelf.loggedIn = YES;
+         voidBlock();
+     }
+     onError:errorBlock];
+}
+
+
 - (void)listOfFrontOnSuccess:(BUCListBlock)listBlock onError:(BUCErrorBlock)errorBlock {
     NSMutableDictionary *json = [[NSMutableDictionary alloc] init];
     
@@ -171,25 +248,14 @@ static NSString * const BUCImageFileTypePrefix = @"image/";
 }
 
 
-- (void)getThumbnailFromUrl:(NSURL *)url onSuccess:(BUCImageBlock)imageBlock {
-    
-}
-
-
 - (void)getImageFromUrl:(NSURL *)url size:(CGSize)size onSuccess:(BUCImageBlock)imageBlock {
-    
-}
-
-
-- (void)getImageFromUrl:(NSURL *)url onSuccess:(BUCImageBlock)imageBlock {
     NSURLRequest *request = [NSURLRequest requestWithURL:url];
-    BUCDataManager * __weak weakSelf = self;
     
-    [[BUCNetworkEngine sharedInstance]
-     fetchImageFromUrl:request
+    [self.networkEngine
+     fetchDataFromUrl:request
      
      onResult:^(NSData *data) {
-         imageBlock([weakSelf imageFromData:data url:url]);
+         imageBlock([UIImage imageWithData:data size:size]);
      }
      
      onError:nil];
@@ -199,44 +265,40 @@ static NSString * const BUCImageFileTypePrefix = @"image/";
 #pragma mark - networking
 - (void)loadJsonFromUrl:(NSString *)url json:(NSMutableDictionary *)json onSuccess:(BUCMapBlock)mapBlock onError:(BUCErrorBlock)errorBlock {
     BUCDataManager * __weak weakSelf = self;
-    BUCAuthManager *authManager = self.authManager;
-    BUCNetworkEngine *engine = [BUCNetworkEngine sharedInstance];
     
-    if (!authManager.session) {
-        [authManager
-         updateSessionOnSuccess:^{
-             [weakSelf loadJsonFromUrl:url json:json onSuccess:mapBlock onError:errorBlock];
-         }
-         onFail:^(NSError *error) {
-             errorBlock(error);
-         }];
-        
-        return;
+    if (![url isEqualToString:BUCUrlLogin]) {
+        if (!self.session) {
+            [self
+             updateSessionOnSuccess:^{
+                 [weakSelf loadJsonFromUrl:url json:json onSuccess:mapBlock onError:errorBlock];
+             }
+             
+             onError:errorBlock];
+            
+            return;
+        } else {
+            [json setObject:weakSelf.username forKey:BUCJsonUsernameKey];
+            [json setObject:weakSelf.session forKey:BUCJsonSessionKey];
+        }
     }
     
-    [json setObject:authManager.currentUser forKey:BUCJsonUsernameKey];
-    [json setObject:authManager.session forKey:BUCJsonSessionKey];
-    
-    [engine
-     fetchDataFromUrl:url
+    [self.networkEngine
+     fetchJsonFromUrl:url
      json:json
      
      onResult:^(NSDictionary *map) {
          if ([[map objectForKey:BUCJsonResultKey] isEqualToString:BUCJsonResultFail]) {
              if ([[map objectForKey:BUCJsonMessageKey] isEqualToString:BUCJsonNoPermission]) {
-                 errorBlock([self noPermissionError]);
-                 return;
+                 errorBlock([weakSelf noPermissionError]);
+                 goto done;
+             } else if ([url isEqualToString:BUCUrlLogin]) {
+                 errorBlock(weakSelf.loginError);
+                 goto done;
              }
              
-             [authManager
-              updateSessionOnSuccess:^(void) {
-                  [weakSelf loadJsonFromUrl:url json:json onSuccess:mapBlock onError:errorBlock];
-              }
-              
-              onFail:^(NSError *error) {
-                  errorBlock(error);
-              }];
-             
+             weakSelf.session = nil;
+             [weakSelf loadJsonFromUrl:url json:json onSuccess:mapBlock onError:errorBlock];
+         done:
              return;
          }
          
@@ -277,7 +339,7 @@ static NSString * const BUCImageFileTypePrefix = @"image/";
         
         post.fname = [self urldecode:[rawMap objectForKey:BUCJsonForumNameKey]];
         
-        post.user = [self urldecode:[rawMap objectForKey:BUCJsonUsernameKey]];
+        post.user = [self urldecode:[rawMap objectForKey:BUCJsonAuthorKey]];
         post.uid = [rawMap objectForKey:BUCJsonUidKey];
         
         post.avatar = [self.htmlScraper avatarUrlFromHtml:[self urldecode:[rawMap objectForKey:BUCJsonAvatarKey]]];
@@ -393,46 +455,6 @@ static NSString * const BUCImageFileTypePrefix = @"image/";
     }
     
     return output;
-}
-
-
-- (UIImage *)imageFromData:(NSData *)data url:(NSURL *)url {
-    UIImage *image;
-    
-    if ([[url pathExtension] isEqualToString:@"gif"]) {
-        image = [UIImage animatedImageWithAnimatedGIFData:data];
-    } else {
-        image = [UIImage imageWithData:data];
-    }
-    
-    return image;
-}
-
-
-- (UIImage *)imageFromData:(NSData *)data size:(CGSize)size url:(NSURL *)url {
-    UIImage *image;
-    
-    if ([[url pathExtension] isEqualToString:@"gif"]) {
-        image = [UIImage animatedImageWithAnimatedGIFData:data];
-    } else {
-        image = [UIImage imageWithData:data];
-    }
-    
-    NSString *string;
-    NSRegularExpression *pattern = [NSRegularExpression
-                                    regularExpressionWithPattern:@"龜"
-                                    options:NSRegularExpressionCaseInsensitive error:NULL];
-    NSMutableArray *lineList = [[NSMutableArray alloc] init];
-    [string enumerateLinesUsingBlock:^(NSString *line, BOOL *stop) {
-        NSTextCheckingResult *match = [pattern firstMatchInString:line
-                                                          options:0
-                                                            range:NSMakeRange(0, line.length)];
-        if (match.numberOfRanges > 0) {
-            [lineList addObject:line];
-        }
-    }];
-    
-    return image;
 }
 
 

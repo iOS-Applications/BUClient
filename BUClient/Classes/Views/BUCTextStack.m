@@ -106,7 +106,7 @@
         }
         
         CGRect frame = [self boundingRectForGlyphRange:blockAttribute.range inTextContainer:textContainer];
-        frame = CGRectInset(frame, -BUCDefaultPadding, -BUCDefaultPadding);
+        frame = CGRectInset(frame, -BUCDefaultMargin, -BUCDefaultMargin);
         CGContextFillRect(context, frame);
         CGContextStrokeRect(context, frame);
     }
