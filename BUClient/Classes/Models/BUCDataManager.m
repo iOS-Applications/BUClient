@@ -1,78 +1,75 @@
 #import "BUCDataManager.h"
 #import "BUCNetworkEngine.h"
-#import "BUCAuthManager.h"
 #import "BUCHTMLScraper.h"
 #import "UIImage+animatedGIF.h"
-#import "UIImage+SimpleResize.h"
 #import "BUCModels.h"
+#import <ImageIO/ImageIO.h>
 
 // bu api response json key-value pairs
-static NSString * const BUCResponseMessageKey = @"msg";
-static NSString * const BUCResponseNoPermission = @"thread_nopermission";
-static NSString * const BUCResponseResultKey = @"result";
-static NSString * const BUCResponseResultSuccess = @"success";
-static NSString * const BUCResponseResultFail = @"fail";
+static NSString * const BUCJsonMessageKey = @"msg";
+static NSString * const BUCJsonNoPermission = @"thread_nopermission";
+static NSString * const BUCJsonResultKey = @"result";
+static NSString * const BUCJsonResultSuccess = @"success";
+static NSString * const BUCJsonResultFail = @"fail";
 
-static NSString * const BUCResponseNewListKey = @"newlist";
-static NSString * const BUCResponseDetailListKey = @"postlist";
-static NSString * const BUCResponseForumListKey = @"threadlist";
-static NSString * const BUCResponsePostCountKey = @"fid_sum";
-static NSString * const BUCResponsePostChildCountKey = @"tid_sum";
-static NSString * const BUCResponseForumNameKey = @"fname";
-static NSString * const BUCResponseFidKey = @"fid";
-static NSString * const BUCResponsePidKey = @"tid";
-static NSString * const BUCResponseChildPidKey = @"pid";
-static NSString * const BUCResponseFrontPostTitleKey = @"pname";
-static NSString * const BUCResponsePostTitleKey = @"subject";
-static NSString * const BUCResponseUidKey = @"authorid";
-static NSString * const BUCResponseUsernameKey = @"author";
-static NSString * const BUCResponseAvatarKey = @"avatar";
-static NSString * const BUCResponseLastReplyKey = @"lastreply";
-static NSString * const BUCResponseLastReplyDateKey = @"when";
-static NSString * const BUCResponseLastReplyUserKey = @"who";
-static NSString * const BUCResponseContentKey = @"message";
-static NSString * const BUCResponseAttachmentKey = @"attachment";
-static NSString * const BUCResponseAttachmentTypeKey = @"filetype";
-static NSString * const BUCResponseViewCountKey = @"views";
-static NSString * const BUCResponseChildCountKey = @"replies";
-static NSString * const BUCResponseFrontChildCountKey = @"tid_sum";
-static NSString * const BUCResponseLastPostDateKey = @"lastpost";
-static NSString * const BUCResponseLastPostUserKey = @"lastposter";
-static NSString * const BUCResponseDateKey = @"dateline";
+static NSString * const BUCJsonNewListKey = @"newlist";
+static NSString * const BUCJsonDetailListKey = @"postlist";
+static NSString * const BUCJsonPostListKey = @"threadlist";
+static NSString * const BUCJsonForumChildCountKey = @"fid_sum";
+static NSString * const BUCJsonPostChildCountKey = @"tid_sum";
+static NSString * const BUCJsonForumNameKey = @"fname";
+static NSString * const BUCJsonFidKey = @"fid";
+static NSString * const BUCJsonTidKey = @"tid";
+static NSString * const BUCJsonPidKey = @"pid";
+static NSString * const BUCJsonPostNameKey = @"pname";
+static NSString * const BUCJsonPostTitleKey = @"subject";
+static NSString * const BUCJsonUidKey = @"authorid";
+static NSString * const BUCJsonAuthorKey = @"author";
+static NSString * const BUCJsonAvatarKey = @"avatar";
+static NSString * const BUCJsonLastReplyKey = @"lastreply";
+static NSString * const BUCJsonLastReplyDateKey = @"when";
+static NSString * const BUCJsonLastReplyUserKey = @"who";
+static NSString * const BUCJsonPostContentKey = @"message";
+static NSString * const BUCJsonAttachmentKey = @"attachment";
+static NSString * const BUCJsonAttachmentTypeKey = @"filetype";
+static NSString * const BUCJsonViewCountKey = @"views";
+static NSString * const BUCJsonChildCountKey = @"replies";
+static NSString * const BUCJsonLastPostDateKey = @"lastpost";
+static NSString * const BUCJsonLastPostUserKey = @"lastposter";
+static NSString * const BUCJsonDateKey = @"dateline";
 
 // bu api url
-static NSString * const BUCLoginUrl = @"logging";
-static NSString * const BUCFrontUrl = @"home";
-static NSString * const BUCPostCountUrl = @"fid_tid";
-static NSString * const BUCPostListUrl = @"thread";
-static NSString * const BUCPostDetailUrl = @"post";
-static NSString * const BUCProfileUrl = @"profile";
-static NSString * const BUCNewPostUrl = @"newpost";
-static NSString * const BUCNewReplyUrl = @"newpost";
-
+static NSString * const BUCUrlLogin = @"logging";
+static NSString * const BUCUrlFront = @"home";
+static NSString * const BUCUrlPostCount = @"fid_tid";
+static NSString * const BUCUrlPostList = @"thread";
+static NSString * const BUCUrlPostDetail = @"post";
+static NSString * const BUCUrlProfile = @"profile";
+static NSString * const BUCUrlNewPost = @"newpost";
 
 // bu api post json key-value pairs
-static NSString * const BUCJsonActionKey = @"action";
-static NSString * const BUCJsonLoginAction = @"login";
-static NSString * const BUCJsonPostListAction = @"thread";
-static NSString * const BUCJsonPostDetailAction = @"post";
-static NSString * const BUCJsonProfileAction = @"profile";
-static NSString * const BUCJsonNewPostAction = @"newthread";
-static NSString * const BUCJsonNewReplyAction = @"newreply";
-
 static NSString * const BUCJsonUsernameKey = @"username";
 static NSString * const BUCJsonPasswordKey = @"password";
 static NSString * const BUCJsonSessionKey = @"session";
-static NSString * const BUCJsonFidKey = @"fid";
-static NSString * const BUCJsonPidKey = @"pid";
-static NSString * const BUCJsonTidKey = @"tid";
+
+static NSString * const BUCJsonActionKey = @"action";
+
+static NSString * const BUCJsonActionLogin = @"login";
+
+static NSString * const BUCJsonActionLogout = @"logout";
+
+static NSString * const BUCJsonActionForum = @"forum";
+
+static NSString * const BUCJsonActionPostList = @"thread";
+static NSString * const BUCJsonActionPostDetail = @"post";
 static NSString * const BUCJsonListFromKey = @"from";
 static NSString * const BUCJsonListToKey = @"to";
-static NSString * const BUCJsonProfileUidKey = @"uid";
+
+static NSString * const BUCJsonActionProfile = @"profile";
 static NSString * const BUCJsonProfileUsernameKey = @"queryusername";
-static NSString * const BUCJsonNewSubjectKey = @"subject";
-static NSString * const BUCJsonNewContentKey = @"message";
-static NSString * const BUCJsonNewAttachmentKey = @"attachment";
+
+static NSString * const BUCJsonActionNewPost = @"newthread";
+static NSString * const BUCJsonActionNewReply = @"newreply";
 
 // handy string patterns
 static NSString * const BUCPostTitleTemplate = @"<b>%@</b>\n\n";
@@ -84,10 +81,6 @@ static NSString * const BUCImageFileTypePrefix = @"image/";
 
 
 @property (nonatomic) BUCHTMLScraper *htmlScraper;
-
-@property (nonatomic) NSURLCache *imageCache;
-
-@property (nonatomic) NSMutableSet *cachedImageUrlSet;
 
 
 @end
@@ -107,27 +100,27 @@ static NSString * const BUCImageFileTypePrefix = @"image/";
     return sharedInstance;
 }
 
-- (instancetype)init
-{
+- (instancetype)init {
     self = [super init];
     
     if (self) {
         _htmlScraper = [[BUCHTMLScraper alloc] init];
-        _imageCache = [[NSURLCache alloc] initWithMemoryCapacity:16384 diskCapacity:268435456 diskPath:@"/imageCache"];
+        _authManager = [[BUCAuthManager alloc] init];
+        _imageManager = [[BUCImageManager alloc] init];
     }
     
     return self;
 }
 
 #pragma mark - public methods
-- (void)getFrontListOnSuccess:(ArrayBlock)arrayBlock onError:(ErrorBlock)errorBlock {
+- (void)listOfFrontOnSuccess:(BUCListBlock)listBlock onError:(BUCErrorBlock)errorBlock {
     NSMutableDictionary *json = [[NSMutableDictionary alloc] init];
     
-    [self loadListFromUrl:BUCFrontUrl json:json listKey:BUCResponseNewListKey onSuccess:arrayBlock onError:errorBlock];
+    [self loadListFromUrl:BUCUrlFront json:json listKey:BUCJsonNewListKey onSuccess:listBlock onError:errorBlock];
 }
 
 
-- (void)getPostCountOfForum:(NSString *)fid post:(NSString *)pid onSuccess:(CountBlock)countBlock onError:(ErrorBlock)errorBlock {
+- (void)childCountOfForum:(NSString *)fid post:(NSString *)pid onSuccess:(BUCNumberBlock)numberBlock onError:(BUCErrorBlock)errorBlock {
     NSMutableDictionary *json = [[NSMutableDictionary alloc] init];
     
     if (fid) {
@@ -139,85 +132,80 @@ static NSString * const BUCImageFileTypePrefix = @"image/";
     }
     
     [self
-     loadJsonFromUrl:BUCPostCountUrl
+     loadJsonFromUrl:BUCUrlPostCount
      json:json
-     onSuccess:^(NSDictionary *resultJson) {
+     onSuccess:^(NSDictionary *map) {
          NSString *count;
          if (fid) {
-             count = [resultJson objectForKey:BUCResponsePostCountKey];
+             count = [map objectForKey:BUCJsonForumChildCountKey];
          } else {
-             count = [resultJson objectForKey:BUCResponsePostChildCountKey];
+             count = [map objectForKey:BUCJsonPostChildCountKey];
          }
-         countBlock(count.integerValue);
+         numberBlock(count.integerValue);
      }
      onError:errorBlock];
 }
 
 
-- (void)getForumList:(NSString *)fid from:(NSString *)from to:(NSString *)to onSuccess:(ArrayBlock)arrayBlock onError:(ErrorBlock)errorBlock {
+- (void)listOfForum:(NSString *)fid from:(NSString *)from to:(NSString *)to onSuccess:(BUCListBlock)listBlock onError:(BUCErrorBlock)errorBlock {
     
     NSMutableDictionary *json = [[NSMutableDictionary alloc] init];
-    [json setObject:BUCJsonPostListAction forKey:BUCJsonActionKey];
+    [json setObject:BUCJsonActionPostList forKey:BUCJsonActionKey];
     [json setObject:fid forKey:BUCJsonFidKey];
     [json setObject:from forKey:BUCJsonListFromKey];
     [json setObject:to forKey:BUCJsonListToKey];
     
-    [self loadListFromUrl:BUCPostListUrl json:json listKey:BUCResponseForumListKey onSuccess:arrayBlock onError:errorBlock];
+    [self loadListFromUrl:BUCUrlPostList json:json listKey:BUCJsonPostListKey onSuccess:listBlock onError:errorBlock];
 }
 
 
-- (void)getPost:(NSString *)postID from:(NSString *)from to:(NSString *)to onSuccess:(ArrayBlock)arrayBlock onError:(ErrorBlock)errorBlock {
+- (void)listOfPost:(NSString *)postID from:(NSString *)from to:(NSString *)to onSuccess:(BUCListBlock)listBlock onError:(BUCErrorBlock)errorBlock {
     
     NSMutableDictionary *json = [[NSMutableDictionary alloc] init];
-    [json setObject:BUCJsonPostDetailAction forKey:BUCJsonActionKey];
+    [json setObject:BUCJsonActionPostDetail forKey:BUCJsonActionKey];
     [json setObject:postID forKey:BUCJsonTidKey];
     [json setObject:from forKey:BUCJsonListFromKey];
     [json setObject:to forKey:BUCJsonListToKey];
     
-    [self loadListFromUrl:BUCPostDetailUrl json:json listKey:BUCResponseDetailListKey onSuccess:arrayBlock onError:errorBlock];
+    [self loadListFromUrl:BUCUrlPostDetail json:json listKey:BUCJsonDetailListKey onSuccess:listBlock onError:errorBlock];
 }
 
 
-- (void)getImageFromUrl:(NSURL *)url onSuccess:(ImageBlock)imageBlock {
+- (void)getThumbnailFromUrl:(NSURL *)url onSuccess:(BUCImageBlock)imageBlock {
+    
+}
+
+
+- (void)getImageFromUrl:(NSURL *)url size:(CGSize)size onSuccess:(BUCImageBlock)imageBlock {
+    
+}
+
+
+- (void)getImageFromUrl:(NSURL *)url onSuccess:(BUCImageBlock)imageBlock {
     NSURLRequest *request = [NSURLRequest requestWithURL:url];
-    NSURLCache *imageCache = self.imageCache;
     BUCDataManager * __weak weakSelf = self;
     
-    void (^methodBlock)(NSData *, NSURLResponse *) = ^(NSData *data, NSURLResponse *response) {
-        NSCachedURLResponse *cachedImageResponse = [[NSCachedURLResponse alloc] initWithResponse:response data:data];
-        [imageCache storeCachedResponse:cachedImageResponse forRequest:request];
-
-        UIImage *image = [weakSelf imageFromData:data url:url];
-        
-        imageBlock(image);
-    };
-    
-    NSCachedURLResponse *cachedResponse = [self.imageCache cachedResponseForRequest:request];
-    if (cachedResponse) {
-        NSData *imageData = cachedResponse.data;
-        UIImage *image = [self imageFromData:imageData url:url];
-        imageBlock(image);
-    } else {
-        [[BUCNetworkEngine sharedInstance]
-         fetchImageFromUrl:request
-         
-         onResult:methodBlock
-         
-         onError:nil];
-    }
+    [[BUCNetworkEngine sharedInstance]
+     fetchImageFromUrl:request
+     
+     onResult:^(NSData *data) {
+         imageBlock([weakSelf imageFromData:data url:url]);
+     }
+     
+     onError:nil];
 }
 
 
 #pragma mark - networking
-- (void)loadJsonFromUrl:(NSString *)url json:(NSMutableDictionary *)json onSuccess:(JsonBlock)jsonBlock onError:(ErrorBlock)errorBlock {
+- (void)loadJsonFromUrl:(NSString *)url json:(NSMutableDictionary *)json onSuccess:(BUCMapBlock)mapBlock onError:(BUCErrorBlock)errorBlock {
     BUCDataManager * __weak weakSelf = self;
-    BUCAuthManager *authManager = [BUCAuthManager sharedInstance];
+    BUCAuthManager *authManager = self.authManager;
     BUCNetworkEngine *engine = [BUCNetworkEngine sharedInstance];
     
     if (!authManager.session) {
         [authManager
          updateSessionOnSuccess:^{
-             [weakSelf loadJsonFromUrl:url json:json onSuccess:jsonBlock onError:errorBlock];
+             [weakSelf loadJsonFromUrl:url json:json onSuccess:mapBlock onError:errorBlock];
          }
          onFail:^(NSError *error) {
              errorBlock(error);
@@ -233,16 +221,16 @@ static NSString * const BUCImageFileTypePrefix = @"image/";
      fetchDataFromUrl:url
      json:json
      
-     onResult:^(NSDictionary *resultJson) {
-         if ([[resultJson objectForKey:BUCResponseResultKey] isEqualToString:BUCResponseResultFail]) {
-             if ([[resultJson objectForKey:BUCResponseMessageKey] isEqualToString:BUCResponseNoPermission]) {
+     onResult:^(NSDictionary *map) {
+         if ([[map objectForKey:BUCJsonResultKey] isEqualToString:BUCJsonResultFail]) {
+             if ([[map objectForKey:BUCJsonMessageKey] isEqualToString:BUCJsonNoPermission]) {
                  errorBlock([self noPermissionError]);
                  return;
              }
              
              [authManager
               updateSessionOnSuccess:^(void) {
-                  [weakSelf loadJsonFromUrl:url json:json onSuccess:jsonBlock onError:errorBlock];
+                  [weakSelf loadJsonFromUrl:url json:json onSuccess:mapBlock onError:errorBlock];
               }
               
               onFail:^(NSError *error) {
@@ -252,7 +240,7 @@ static NSString * const BUCImageFileTypePrefix = @"image/";
              return;
          }
          
-         jsonBlock(resultJson);
+         mapBlock(map);
      }
      
      onError:errorBlock];
@@ -262,61 +250,61 @@ static NSString * const BUCImageFileTypePrefix = @"image/";
 - (void)loadListFromUrl:(NSString *)url
                    json:(NSMutableDictionary *)json
                 listKey:(NSString *)listKey
-              onSuccess:(ArrayBlock)arrayBlock
-                onError:(ErrorBlock)errorBlock {
+              onSuccess:(BUCListBlock)listBlock
+                onError:(BUCErrorBlock)errorBlock {
     
     BUCDataManager * __weak weakSelf = self;
     
-    JsonBlock jsonBlock = ^(NSDictionary *resultJson) {
-        [weakSelf successListHandler:resultJson listKey:listKey onSuccess:arrayBlock onError:errorBlock];
+    BUCMapBlock block = ^(NSDictionary *map) {
+        [weakSelf successListHandler:map listKey:listKey onSuccess:listBlock onError:errorBlock];
     };
     
-    [self loadJsonFromUrl:url json:json onSuccess:jsonBlock onError:errorBlock];
+    [self loadJsonFromUrl:url json:json onSuccess:block onError:errorBlock];
 }
 
 
-- (void)successListHandler:(NSDictionary *)resultJson listKey:(NSString *)listKey onSuccess:(ArrayBlock)arrayBlock onError:(ErrorBlock)errorBlock {
+- (void)successListHandler:(NSDictionary *)map listKey:(NSString *)listKey onSuccess:(BUCListBlock)listBlock onError:(BUCErrorBlock)errorBlock {
     
     NSMutableArray *list = [[NSMutableArray alloc] init];
-    NSArray *rawArray = [resultJson objectForKey:listKey];
+    NSArray *rawArray = [map objectForKey:listKey];
     
-    for (NSDictionary *rawDic in rawArray) {
+    for (NSDictionary *rawMap in rawArray) {
         BUCPost *post = [[BUCPost alloc] init];
         
-        post.pid = [rawDic objectForKey:BUCJsonPidKey];
-        post.tid = [rawDic objectForKey:BUCJsonTidKey];
-        post.fid = [rawDic objectForKey:BUCJsonFidKey];
+        post.pid = [rawMap objectForKey:BUCJsonPidKey];
+        post.tid = [rawMap objectForKey:BUCJsonTidKey];
+        post.fid = [rawMap objectForKey:BUCJsonFidKey];
         
-        post.fname = [self urldecode:[rawDic objectForKey:BUCResponseForumNameKey]];
+        post.fname = [self urldecode:[rawMap objectForKey:BUCJsonForumNameKey]];
         
-        post.user = [self urldecode:[rawDic objectForKey:BUCResponseUsernameKey]];
-        post.uid = [rawDic objectForKey:BUCResponseUidKey];
+        post.user = [self urldecode:[rawMap objectForKey:BUCJsonUsernameKey]];
+        post.uid = [rawMap objectForKey:BUCJsonUidKey];
         
-        post.avatar = [self.htmlScraper avatarUrlFromHtml:[self urldecode:[rawDic objectForKey:BUCResponseAvatarKey]]];
+        post.avatar = [self.htmlScraper avatarUrlFromHtml:[self urldecode:[rawMap objectForKey:BUCJsonAvatarKey]]];
         
 
-        if ([listKey isEqualToString:BUCResponseNewListKey]) {
-            post.title = [self.htmlScraper richTextFromHtml:[self urldecode:[rawDic objectForKey:BUCResponseFrontPostTitleKey]]];
-            NSString *lastPostDateline = [self parseDateline:[self urldecode:[[rawDic objectForKey:BUCResponseLastReplyKey] objectForKey:BUCResponseLastReplyDateKey]]];
-            post.lastPoster = [self urldecode:[[rawDic objectForKey:BUCResponseLastReplyKey] objectForKey:BUCResponseLastReplyUserKey]];
+        if ([listKey isEqualToString:BUCJsonNewListKey]) {
+            post.title = [self.htmlScraper richTextFromHtml:[self urldecode:[rawMap objectForKey:BUCJsonPostNameKey]]];
+            NSString *lastPostDateline = [self parseDateline:[self urldecode:[[rawMap objectForKey:BUCJsonLastReplyKey] objectForKey:BUCJsonLastReplyDateKey]]];
+            post.lastPoster = [self urldecode:[[rawMap objectForKey:BUCJsonLastReplyKey] objectForKey:BUCJsonLastReplyUserKey]];
             post.lastPostDateline = [NSString stringWithFormat:@"最后回复: %@ by", lastPostDateline];
-            post.statistic = [NSString stringWithFormat:@"• %@回复", [rawDic objectForKey:BUCResponseFrontChildCountKey]];
-        } else if ([listKey isEqualToString:BUCResponseDetailListKey]) {
+            post.statistic = [NSString stringWithFormat:@"• %@回复", [rawMap objectForKey:BUCJsonPostChildCountKey]];
+        } else if ([listKey isEqualToString:BUCJsonDetailListKey]) {
             NSMutableString *content = [[NSMutableString alloc] init];
-            NSString *title = [self urldecode:[rawDic objectForKey:BUCResponsePostTitleKey]];
+            NSString *title = [self urldecode:[rawMap objectForKey:BUCJsonPostTitleKey]];
             if (title) {
                 title = [NSString stringWithFormat:BUCPostTitleTemplate, title];
                 [content appendString:title];
             }
             
-            NSString *body = [self urldecode:[rawDic objectForKey:BUCResponseContentKey]];
+            NSString *body = [self urldecode:[rawMap objectForKey:BUCJsonPostContentKey]];
             if (body) {
                 [content appendString:body];
             }
             
-            NSString *attachment = [self urldecode:[rawDic objectForKey:BUCResponseAttachmentKey]];
+            NSString *attachment = [self urldecode:[rawMap objectForKey:BUCJsonAttachmentKey]];
             if (attachment) {
-                NSString *filetype = [self urldecode:[rawDic objectForKey:BUCResponseAttachmentTypeKey]];
+                NSString *filetype = [self urldecode:[rawMap objectForKey:BUCJsonAttachmentTypeKey]];
                 if (filetype && [filetype rangeOfString:BUCImageFileTypePrefix].length > 0) {
                     attachment = [NSString stringWithFormat:BUCPostAttachmentTemplate, attachment];
                     [content appendString:attachment];
@@ -325,21 +313,21 @@ static NSString * const BUCImageFileTypePrefix = @"image/";
             
             post.content = [self.htmlScraper richTextFromHtml:content];
         } else {
-            post.title = [self.htmlScraper richTextFromHtml:[self urldecode:[rawDic objectForKey:BUCResponsePostTitleKey]]];
-            NSString *viewCount = [rawDic objectForKey:BUCResponseViewCountKey];
-            NSString *childCount = [rawDic objectForKey:BUCResponseChildCountKey];
+            post.title = [self.htmlScraper richTextFromHtml:[self urldecode:[rawMap objectForKey:BUCJsonPostTitleKey]]];
+            NSString *viewCount = [rawMap objectForKey:BUCJsonViewCountKey];
+            NSString *childCount = [rawMap objectForKey:BUCJsonChildCountKey];
             post.statistic = [NSString stringWithFormat:@"• %@回复/%@查看", childCount, viewCount];
-            NSString *lastPostDateline = [self parseDateline:[rawDic objectForKey:BUCResponseLastPostDateKey]];
+            NSString *lastPostDateline = [self parseDateline:[rawMap objectForKey:BUCJsonLastPostDateKey]];
             post.lastPostDateline = [NSString stringWithFormat:@"最后回复: %@ by", lastPostDateline];
-            post.lastPoster = [self urldecode:[rawDic objectForKey:BUCResponseLastPostUserKey]];
+            post.lastPoster = [self urldecode:[rawMap objectForKey:BUCJsonLastPostUserKey]];
         }
         
-        post.dateline = [self parseDateline:[rawDic objectForKey:BUCResponseDateKey]];
+        post.dateline = [self parseDateline:[rawMap objectForKey:BUCJsonDateKey]];
         
         [list addObject:post];
     }
     
-    arrayBlock(list);
+    listBlock(list);
 }
 
 
@@ -416,6 +404,33 @@ static NSString * const BUCImageFileTypePrefix = @"image/";
     } else {
         image = [UIImage imageWithData:data];
     }
+    
+    return image;
+}
+
+
+- (UIImage *)imageFromData:(NSData *)data size:(CGSize)size url:(NSURL *)url {
+    UIImage *image;
+    
+    if ([[url pathExtension] isEqualToString:@"gif"]) {
+        image = [UIImage animatedImageWithAnimatedGIFData:data];
+    } else {
+        image = [UIImage imageWithData:data];
+    }
+    
+    NSString *string;
+    NSRegularExpression *pattern = [NSRegularExpression
+                                    regularExpressionWithPattern:@"龜"
+                                    options:NSRegularExpressionCaseInsensitive error:NULL];
+    NSMutableArray *lineList = [[NSMutableArray alloc] init];
+    [string enumerateLinesUsingBlock:^(NSString *line, BOOL *stop) {
+        NSTextCheckingResult *match = [pattern firstMatchInString:line
+                                                          options:0
+                                                            range:NSMakeRange(0, line.length)];
+        if (match.numberOfRanges > 0) {
+            [lineList addObject:line];
+        }
+    }];
     
     return image;
 }

@@ -1,35 +1,37 @@
 #import <Foundation/Foundation.h>
 
-
-typedef void(^CountBlock) (NSUInteger count);
-typedef void(^ArrayBlock) (NSArray *list);
-typedef void(^ErrorBlock) (NSError *error);
-typedef void(^JsonBlock) (NSDictionary *json);
-typedef void(^ImageBlock) (UIImage *image);
+#import "BUCAuthManager.h"
+#import "BUCImageManager.h"
+#import "BUCConstants.h"
 
 
 @interface BUCDataManager : NSObject
 
 
+@property (nonatomic, readonly) BUCAuthManager *authManager;
+@property (nonatomic, readonly) BUCImageManager *imageManager;
+
 + (BUCDataManager *)sharedInstance;
 
 
-- (void)getFrontListOnSuccess:(ArrayBlock)arrayBlock onError:(ErrorBlock)errorBlock;
+- (void)listOfFrontOnSuccess:(BUCListBlock)listBlock onError:(BUCErrorBlock)errorBlock;
 
-- (void)getForumList:(NSString *)fid
+- (void)listOfForum:(NSString *)fid
                 from:(NSString *)from
                   to:(NSString *)to
-           onSuccess:(ArrayBlock)arrayBlock
-             onError:(ErrorBlock)errorBlock;
+           onSuccess:(BUCListBlock)listBlock
+             onError:(BUCErrorBlock)errorBlock;
 
-- (void)getPost:(NSString *)postID
+- (void)listOfPost:(NSString *)postID
            from:(NSString *)from
              to:(NSString *)to
-      onSuccess:(ArrayBlock)arrayBlock
-        onError:(ErrorBlock)errorBlock;
+      onSuccess:(BUCListBlock)listBlock
+        onError:(BUCErrorBlock)errorBlock;
 
-- (void)getPostCountOfForum:(NSString *)fid post:(NSString *)pid onSuccess:(CountBlock)countBlock onError:(ErrorBlock)errorBlock;
+- (void)childCountOfForum:(NSString *)fid post:(NSString *)pid onSuccess:(BUCNumberBlock)numberBlock onError:(BUCErrorBlock)errorBlock;
 
-- (void)getImageFromUrl:(NSURL *)url onSuccess:(ImageBlock)imageBlock;
+- (void)getImageFromUrl:(NSURL *)url onSuccess:(BUCImageBlock)imageBlock;
+
+- (void)getImageFromUrl:(NSURL *)url size:(CGSize)size onSuccess:(BUCImageBlock)imageBlock;
 
 @end
