@@ -3,7 +3,7 @@
 #import "BUCHTMLScraper.h"
 #import "UIImage+BUCImageCategory.h"
 #import "BUCModels.h"
-#import "BUCAuthManager.h"
+#import "BUCKeyChainWrapper.h"
 
 // bu api response json key-value pairs
 static NSString * const BUCJsonMessageKey = @"msg";
@@ -74,7 +74,7 @@ static NSString * const BUCJsonActionNewReply = @"newreply";
 
 @interface BUCDataManager ()
 
-@property (nonatomic) BUCAuthManager *authManager;
+@property (nonatomic) BUCKeyChainWrapper *authManager;
 @property (nonatomic) BUCHTMLScraper *htmlScraper;
 @property (nonatomic) BUCNetworkEngine *networkEngine;
 
@@ -107,7 +107,7 @@ static NSString * const BUCJsonActionNewReply = @"newreply";
     if (self) {
         _networkEngine = [[BUCNetworkEngine alloc] init];
         _htmlScraper = [[BUCHTMLScraper alloc] init];
-        _authManager = [[BUCAuthManager alloc] init];
+        _authManager = [[BUCKeyChainWrapper alloc] init];
         
         _loginError = [NSError errorWithDomain:@"BUClient.ErrorDomain" code:1 userInfo:@{NSLocalizedDescriptionKey:@"帐号与密码不符，请检查帐号状态"}];
     }
@@ -320,45 +320,45 @@ static NSString * const BUCJsonActionNewReply = @"newreply";
     static NSString * const BUCPostStaticsTemplate2 = @"• %@回复/%@查看";
     
     NSMutableArray *list = [[NSMutableArray alloc] init];
-    NSArray *rawArray = [map objectForKey:listKey];
+    NSArray *rawList = [map objectForKey:listKey];
     
-    for (NSDictionary *rawMap in rawArray) {
+    for (NSDictionary *rawPost in rawList) {
         BUCPost *post = [[BUCPost alloc] init];
         
-        post.pid = [rawMap objectForKey:BUCJsonPidKey];
-        post.tid = [rawMap objectForKey:BUCJsonTidKey];
-        post.fid = [rawMap objectForKey:BUCJsonFidKey];
+        post.pid = [rawPost objectForKey:BUCJsonPidKey];
+        post.tid = [rawPost objectForKey:BUCJsonTidKey];
+        post.fid = [rawPost objectForKey:BUCJsonFidKey];
         
-        post.fname = [self urldecode:[rawMap objectForKey:BUCJsonForumNameKey]];
+        post.fname = [self urldecode:[rawPost objectForKey:BUCJsonForumNameKey]];
         
-        post.user = [self urldecode:[rawMap objectForKey:BUCJsonAuthorKey]];
-        post.uid = [rawMap objectForKey:BUCJsonUidKey];
+        post.user = [self urldecode:[rawPost objectForKey:BUCJsonAuthorKey]];
+        post.uid = [rawPost objectForKey:BUCJsonUidKey];
         
-        post.avatar = [self.htmlScraper avatarUrlFromHtml:[self urldecode:[rawMap objectForKey:BUCJsonAvatarKey]]];
+        post.avatar = [self.htmlScraper avatarUrlFromHtml:[self urldecode:[rawPost objectForKey:BUCJsonAvatarKey]]];
         
 
         if ([listKey isEqualToString:BUCJsonNewListKey]) {
-            post.title = [self.htmlScraper richTextFromHtml:[self urldecode:[rawMap objectForKey:BUCJsonPostNameKey]]];
-            NSString *lastPostDateline = [self parseDateline:[self urldecode:[[rawMap objectForKey:BUCJsonLastReplyKey] objectForKey:BUCJsonLastReplyDateKey]]];
-            post.lastPoster = [self urldecode:[[rawMap objectForKey:BUCJsonLastReplyKey] objectForKey:BUCJsonLastReplyUserKey]];
+            post.title = [self.htmlScraper richTextFromHtml:[self urldecode:[rawPost objectForKey:BUCJsonPostNameKey]]];
+            NSString *lastPostDateline = [self parseDateline:[self urldecode:[[rawPost objectForKey:BUCJsonLastReplyKey] objectForKey:BUCJsonLastReplyDateKey]]];
+            post.lastPoster = [self urldecode:[[rawPost objectForKey:BUCJsonLastReplyKey] objectForKey:BUCJsonLastReplyUserKey]];
             post.lastPostDateline = [NSString stringWithFormat:BUCLastPosterTemplate, lastPostDateline];
-            post.statistic = [NSString stringWithFormat:BUCPostStaticsTemplate1, [rawMap objectForKey:BUCJsonPostChildCountKey]];
+            post.statistic = [NSString stringWithFormat:BUCPostStaticsTemplate1, [rawPost objectForKey:BUCJsonPostChildCountKey]];
         } else if ([listKey isEqualToString:BUCJsonDetailListKey]) {
             NSMutableString *content = [[NSMutableString alloc] init];
-            NSString *title = [self urldecode:[rawMap objectForKey:BUCJsonPostTitleKey]];
+            NSString *title = [self urldecode:[rawPost objectForKey:BUCJsonPostTitleKey]];
             if (title) {
                 title = [NSString stringWithFormat:BUCPostTitleTemplate, title];
                 [content appendString:title];
             }
             
-            NSString *body = [self urldecode:[rawMap objectForKey:BUCJsonPostContentKey]];
+            NSString *body = [self urldecode:[rawPost objectForKey:BUCJsonPostContentKey]];
             if (body) {
                 [content appendString:body];
             }
             
-            NSString *attachment = [self urldecode:[rawMap objectForKey:BUCJsonAttachmentKey]];
+            NSString *attachment = [self urldecode:[rawPost objectForKey:BUCJsonAttachmentKey]];
             if (attachment) {
-                NSString *filetype = [self urldecode:[rawMap objectForKey:BUCJsonAttachmentTypeKey]];
+                NSString *filetype = [self urldecode:[rawPost objectForKey:BUCJsonAttachmentTypeKey]];
                 if (filetype && [filetype rangeOfString:BUCImageFileTypePrefix].length > 0) {
                     attachment = [NSString stringWithFormat:BUCPostAttachmentTemplate, attachment];
                     [content appendString:attachment];
@@ -367,16 +367,16 @@ static NSString * const BUCJsonActionNewReply = @"newreply";
             
             post.content = [self.htmlScraper richTextFromHtml:content];
         } else {
-            post.title = [self.htmlScraper richTextFromHtml:[self urldecode:[rawMap objectForKey:BUCJsonPostTitleKey]]];
-            NSString *viewCount = [rawMap objectForKey:BUCJsonViewCountKey];
-            NSString *childCount = [rawMap objectForKey:BUCJsonChildCountKey];
+            post.title = [self.htmlScraper richTextFromHtml:[self urldecode:[rawPost objectForKey:BUCJsonPostTitleKey]]];
+            NSString *viewCount = [rawPost objectForKey:BUCJsonViewCountKey];
+            NSString *childCount = [rawPost objectForKey:BUCJsonChildCountKey];
             post.statistic = [NSString stringWithFormat:BUCPostStaticsTemplate2, childCount, viewCount];
-            NSString *lastPostDateline = [self parseDateline:[rawMap objectForKey:BUCJsonLastPostDateKey]];
+            NSString *lastPostDateline = [self parseDateline:[rawPost objectForKey:BUCJsonLastPostDateKey]];
             post.lastPostDateline = [NSString stringWithFormat:BUCLastPosterTemplate, lastPostDateline];
-            post.lastPoster = [self urldecode:[rawMap objectForKey:BUCJsonLastPostUserKey]];
+            post.lastPoster = [self urldecode:[rawPost objectForKey:BUCJsonLastPostUserKey]];
         }
         
-        post.dateline = [self parseDateline:[rawMap objectForKey:BUCJsonDateKey]];
+        post.dateline = [self parseDateline:[rawPost objectForKey:BUCJsonDateKey]];
         
         [list addObject:post];
     }
@@ -397,8 +397,8 @@ static NSString * const BUCJsonActionNewReply = @"newreply";
 
 
 - (NSError *)noPermissionError {
-    NSString *failErrorMsg = @"该帖设置了访问权限，无法访问";
-    NSString *BUCErrorDomain = @"BUClient.ErrorDomain";
+    static NSString * const failErrorMsg = @"该帖设置了访问权限，无法访问";
+    static NSString * const BUCErrorDomain = @"BUClient.ErrorDomain";
     NSDictionary *errorInfo = @{NSLocalizedDescriptionKey:failErrorMsg};
     
     return [NSError errorWithDomain:BUCErrorDomain code:1 userInfo:errorInfo];;

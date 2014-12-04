@@ -141,7 +141,7 @@
     static NSString * const BUCConnenctionERROR =    @"无法连接至服务器";
     static NSString * const BUCInternetERROR = @"无网络连接，请检查网络连接";
     static NSString * const BUCUnknownERROR =    @"未知错误";
-    static NSString * const BUCErrorDomain = @"buc.http.errorDomain";
+    static NSString * const BUCHTTPErrorDomain = @"buc.http.errorDomain";
     
     NSDictionary *errorInfo;
     
@@ -155,7 +155,7 @@
             errorInfo = @{NSLocalizedDescriptionKey:BUCUnknownERROR};
         }
         
-        return [NSError errorWithDomain:BUCErrorDomain code:0 userInfo:errorInfo];
+        return [NSError errorWithDomain:BUCHTTPErrorDomain code:0 userInfo:errorInfo];
 
     } else if (error.code == NSURLErrorTimedOut) {
         errorInfo = @{NSLocalizedDescriptionKey:BUCTimeoutERROR};

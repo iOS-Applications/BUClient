@@ -125,7 +125,6 @@
             content = content.firstChild.firstChild.firstChild.firstChild;
             
             if ([header rangeOfString:@"引用"].length > 0) {
-                [self.output appendAttributedString:[[NSAttributedString alloc] initWithString:@"引用:\n" attributes:superAttributes]];
                 location = self.output.length;
                 [self appendQuote:content superAttributes:thisAttributes];
             } else if ([header rangeOfString:@"代码"].length > 0) {
@@ -560,22 +559,14 @@
 
 
 - (void)insertNewLine:(NSDictionary *)attributes {
-    if (self.output.length == 0) {
-        return;
-    }
-    
     NSMutableDictionary *newLineAttributes = [NSMutableDictionary dictionaryWithDictionary:attributes];
     [newLineAttributes setObject:[UIFont preferredFontForTextStyle:UIFontTextStyleCaption1] forKeyedSubscript:NSFontAttributeName];
     [self.output appendAttributedString:[[NSAttributedString alloc] initWithString:@"\n" attributes:newLineAttributes]];
 }
 
 
-- (void)finishBlock:(NSDictionary *)attributes {
-    if (self.output.length == 0) {
-        return;
-    }
-    
-    if ([self.output.string characterAtIndex:self.output.length - 1] != '\n') {
+- (void)finishBlock:(NSDictionary *)attributes {    
+    if (self.output.length == 0 || [self.output.string characterAtIndex:self.output.length - 1] != '\n') {
         [self.output appendAttributedString:[[NSAttributedString alloc] initWithString:@"\n" attributes:attributes]];
     }
 }

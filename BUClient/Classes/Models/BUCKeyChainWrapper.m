@@ -1,10 +1,10 @@
-#import "BUCAuthManager.h"
+#import "BUCKeyChainWrapper.h"
 
 
 static NSString *kKeychainItemIdentifer = @"org.bitunion.buc.%@.KeychainUI";
 
 
-@interface BUCAuthManager ()
+@interface BUCKeyChainWrapper ()
 
 @property (nonatomic) NSMutableDictionary *keychainData;
 @property (nonatomic) NSMutableDictionary *genericPasswordQuery;
@@ -13,7 +13,7 @@ static NSString *kKeychainItemIdentifer = @"org.bitunion.buc.%@.KeychainUI";
 @end
 
 
-@implementation BUCAuthManager
+@implementation BUCKeyChainWrapper
 #pragma mark - public methods
 - (instancetype)init {
     self = [super init];
