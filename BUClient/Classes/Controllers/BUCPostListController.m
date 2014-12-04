@@ -69,7 +69,7 @@ static NSString * const BUCCellNib = @"BUCPostListCell";
 }
 
 
-#pragma mark - actions and unwind methods
+#pragma mark - actions
 - (void)refresh {
     [self displayLoading];
 

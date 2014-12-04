@@ -218,12 +218,11 @@
     
     if ([self matchString:source withPattern:pattern match:NULL]) {
         NSString *resourcePath = [[NSBundle mainBundle] resourcePath];
-        NSString *path = [NSString stringWithFormat:@"%@/%@", resourcePath, [source substringFromIndex:3]];
-        UIImage *image = [UIImage imageWithData:[NSData dataWithContentsOfFile:path] size:CGSizeZero];
+        attachment.path = [NSString stringWithFormat:@"%@/%@", resourcePath, [source substringFromIndex:3]];
+        UIImage *image = [self.dataManager getImageWithPath:attachment.path];
         if (!image) {
             return;
         } else {
-            attachment.gif = image;
             attachment.bounds = CGRectMake(0, 0, image.size.width, image.size.height);
         }
     } else {
@@ -240,8 +239,8 @@
         self.attachmentList = [[NSMutableArray alloc] init];
     }
     [self.attachmentList addObject:attachment];
-    
     [self.output appendAttributedString:[NSAttributedString attributedStringWithAttachment:attachment]];
+    [self.output addAttributes:superAttributes range:NSMakeRange(self.output.length - 1, 1)];
 }
 
 
@@ -558,7 +557,7 @@
 }
 
 
-- (void)insertNewLine:(NSDictionary *)attributes {
+- (void)insertNewLine:(NSDictionary *)attributes {    
     NSMutableDictionary *newLineAttributes = [NSMutableDictionary dictionaryWithDictionary:attributes];
     [newLineAttributes setObject:[UIFont preferredFontForTextStyle:UIFontTextStyleCaption1] forKeyedSubscript:NSFontAttributeName];
     [self.output appendAttributedString:[[NSAttributedString alloc] initWithString:@"\n" attributes:newLineAttributes]];

@@ -18,5 +18,6 @@
 @property (weak, nonatomic) IBOutlet UILabel *index;
 
 @property (weak, nonatomic) UITextView *content;
+@property (nonatomic) NSMutableArray *imageViewList;
 
 @end

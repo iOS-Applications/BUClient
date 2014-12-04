@@ -78,9 +78,12 @@ static NSString * const BUCJsonActionNewReply = @"newreply";
 @property (nonatomic) BUCHTMLScraper *htmlScraper;
 @property (nonatomic) BUCNetworkEngine *networkEngine;
 
+@property (nonatomic) NSCache *defaultCache;
+
 @property (nonatomic) NSString *username;
 @property (nonatomic) NSString *password;
 @property (nonatomic) NSString *session;
+@property (nonatomic, readwrite) BOOL loggedIn;
 
 @property (nonatomic) NSError *loginError;
 
@@ -107,7 +110,9 @@ static NSString * const BUCJsonActionNewReply = @"newreply";
     if (self) {
         _networkEngine = [[BUCNetworkEngine alloc] init];
         _htmlScraper = [[BUCHTMLScraper alloc] init];
+        _htmlScraper.dataManager = self;
         _authManager = [[BUCKeyChainWrapper alloc] init];
+        _defaultCache = [[NSCache alloc] init];
         
         _loginError = [NSError errorWithDomain:@"BUClient.ErrorDomain" code:1 userInfo:@{NSLocalizedDescriptionKey:@"帐号与密码不符，请检查帐号状态"}];
     }
@@ -116,7 +121,11 @@ static NSString * const BUCJsonActionNewReply = @"newreply";
 }
 
 #pragma mark - public methods
-- (BOOL)loggedIn {    
+- (BOOL)loggedIn {
+    if (_loggedIn) {
+        return _loggedIn;
+    }
+    
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
     self.username = [defaults stringForKey:BUCCurrentUserDefaultKey];
     self.password = [self.authManager getPasswordWithUsername:self.username];
@@ -124,7 +133,7 @@ static NSString * const BUCJsonActionNewReply = @"newreply";
     if (!self.username || !self.password) {
         return NO;
     }
-
+    
     return [defaults boolForKey:BUCUserLoginStateDefaultKey];
 }
 
@@ -138,41 +147,23 @@ static NSString * const BUCJsonActionNewReply = @"newreply";
     
     [self
      updateSessionOnSuccess:^{
-        NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-        [defaults setObject:username forKey:BUCCurrentUserDefaultKey];
-        [defaults setBool:YES forKey:BUCUserLoginStateDefaultKey];
-        [defaults synchronize];
-        
-        if (![savedUsername isEqualToString:username] || ![savedPassword isEqualToString:password]) {
-            [weakSelf.authManager savePassword:password username:username];
-        }
-        
-        voidBlock();
-    }
+         NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+         [defaults setObject:username forKey:BUCCurrentUserDefaultKey];
+         [defaults setBool:YES forKey:BUCUserLoginStateDefaultKey];
+         [defaults synchronize];
+         
+         if (![savedUsername isEqualToString:username] || ![savedPassword isEqualToString:password]) {
+             [weakSelf.authManager savePassword:password username:username];
+         }
+         
+         weakSelf.loggedIn = YES;
+         voidBlock();
+     }
      onError:^(NSError *error) {
          weakSelf.username = savedUsername;
          weakSelf.password = savedPassword;
          errorBlock(error);
      }];
-}
-
-
-- (void)updateSessionOnSuccess:(BUCVoidBlock)voidBlock onError:(BUCErrorBlock)errorBlock {
-    NSMutableDictionary *json = [[NSMutableDictionary alloc] init];
-    
-    [json setObject:BUCJsonActionLogin forKey:BUCJsonActionKey];
-    [json setObject:self.username forKey:BUCJsonUsernameKey];
-    [json setObject:self.password forKey:BUCJsonPasswordKey];
-    BUCDataManager * __weak weakSelf = self;
-    
-    [self
-     loadJsonFromUrl:BUCUrlLogin
-     json:json
-     onSuccess:^(NSDictionary *map) {
-         weakSelf.session = [map objectForKey:BUCJsonSessionKey];
-         voidBlock();
-     }
-     onError:errorBlock];
 }
 
 
@@ -234,21 +225,69 @@ static NSString * const BUCJsonActionNewReply = @"newreply";
 }
 
 
-- (void)getImageFromUrl:(NSURL *)url size:(CGSize)size onSuccess:(BUCImageBlock)imageBlock {
+- (void)getImageWithUrl:(NSURL *)url size:(CGSize)size onSuccess:(BUCImageBlock)imageBlock {
+    NSString *key = [NSString stringWithFormat:@"%@%@", url.absoluteString, NSStringFromCGSize(size)];
+    NSCache *cache = self.defaultCache;
+    UIImage *image = [cache objectForKey:key];
+    if (image) {
+        imageBlock(image);
+        return;
+    }
+    
     NSURLRequest *request = [NSURLRequest requestWithURL:url];
     
     [self.networkEngine
      fetchDataFromUrl:request
      
      onResult:^(NSData *data) {
-         imageBlock([UIImage imageWithData:data size:size]);
+         UIImage *image = [UIImage imageWithData:data size:size];
+         if (image) {
+             [cache setObject:image forKey:key];
+         }
+         imageBlock(image);
      }
      
      onError:nil];
 }
 
 
-#pragma mark - networking
+- (UIImage *)getImageWithPath:(NSString *)path {
+    NSCache *cache = self.defaultCache;
+    UIImage *image = [cache objectForKey:path];
+    if (image) {
+        return image;
+    } else {
+        image = [UIImage imageWithData:[NSData dataWithContentsOfFile:path] size:CGSizeZero];
+        if (image) {
+            [cache setObject:image forKey:path];
+            return image;
+        }
+    }
+    
+    return nil;
+}
+
+
+#pragma mark - private methods
+- (void)updateSessionOnSuccess:(BUCVoidBlock)voidBlock onError:(BUCErrorBlock)errorBlock {
+    NSMutableDictionary *json = [[NSMutableDictionary alloc] init];
+    
+    [json setObject:BUCJsonActionLogin forKey:BUCJsonActionKey];
+    [json setObject:self.username forKey:BUCJsonUsernameKey];
+    [json setObject:self.password forKey:BUCJsonPasswordKey];
+    BUCDataManager * __weak weakSelf = self;
+    
+    [self
+     loadJsonFromUrl:BUCUrlLogin
+     json:json
+     onSuccess:^(NSDictionary *map) {
+         weakSelf.session = [map objectForKey:BUCJsonSessionKey];
+         voidBlock();
+     }
+     onError:errorBlock];
+}
+
+
 - (void)loadJsonFromUrl:(NSString *)url json:(NSMutableDictionary *)json onSuccess:(BUCMapBlock)mapBlock onError:(BUCErrorBlock)errorBlock {
     BUCDataManager * __weak weakSelf = self;
     
@@ -336,7 +375,7 @@ static NSString * const BUCJsonActionNewReply = @"newreply";
         
         post.avatar = [self.htmlScraper avatarUrlFromHtml:[self urldecode:[rawPost objectForKey:BUCJsonAvatarKey]]];
         
-
+        
         if ([listKey isEqualToString:BUCJsonNewListKey]) {
             post.title = [self.htmlScraper richTextFromHtml:[self urldecode:[rawPost objectForKey:BUCJsonPostNameKey]]];
             NSString *lastPostDateline = [self parseDateline:[self urldecode:[[rawPost objectForKey:BUCJsonLastReplyKey] objectForKey:BUCJsonLastReplyDateKey]]];

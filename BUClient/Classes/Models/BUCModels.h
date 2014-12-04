@@ -35,7 +35,7 @@
 
 @property (nonatomic) NSUInteger glyphIndex;
 @property (nonatomic) NSURL *url;
-@property (nonatomic) UIImage *gif;
+@property (nonatomic) NSString *path;
 
 @end
 

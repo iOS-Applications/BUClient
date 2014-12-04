@@ -65,9 +65,8 @@
 
 @interface BUCLayoutManager ()
 
-@property (nonatomic) UIColor *backgroundColor;
 @property (nonatomic) UIColor *borderColor;
-
+@property (nonatomic) UIColor *backgroundColor;
 @end
 
 
@@ -78,8 +77,8 @@
     self = [super init];
     
     if (self) {
-        _backgroundColor = [UIColor colorWithWhite:0.95f alpha:1.0f];
         _borderColor = [UIColor lightGrayColor];
+        _backgroundColor = [UIColor whiteColor];
     }
     
     return self;
@@ -98,6 +97,9 @@
         if (blockAttribute.noBackground) {
             continue;
         }
+        
+        CGRect frame = [self boundingRectForGlyphRange:blockAttribute.range inTextContainer:textContainer];
+        frame = CGRectInset(frame, -BUCDefaultMargin, -BUCDefaultMargin);
 
         if (blockAttribute.backgroundColor) {
             [blockAttribute.backgroundColor setFill];
@@ -105,8 +107,6 @@
             [self.backgroundColor setFill];
         }
         
-        CGRect frame = [self boundingRectForGlyphRange:blockAttribute.range inTextContainer:textContainer];
-        frame = CGRectInset(frame, -BUCDefaultMargin, -BUCDefaultMargin);
         CGContextFillRect(context, frame);
         CGContextStrokeRect(context, frame);
     }

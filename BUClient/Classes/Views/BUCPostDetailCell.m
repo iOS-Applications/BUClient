@@ -15,4 +15,17 @@
     return UIEdgeInsetsZero;
 }
 
+
+- (void)prepareForReuse {
+    [super prepareForReuse];
+    
+    if (self.imageViewList && self.imageViewList.count > 0) {
+        for (UIImageView *imageView in self.imageViewList) {
+            [imageView removeFromSuperview];
+        }
+        self.imageViewList = nil;
+    }
+}
+
+
 @end

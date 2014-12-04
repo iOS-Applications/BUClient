@@ -3,20 +3,13 @@
 
 
 // user default keys
-extern NSString * const BUCAppLaunchStateDefaultKey;
 extern NSString * const BUCCurrentUserDefaultKey;
 extern NSString * const BUCUserLoginStateDefaultKey;
 
-
 // storyboard identifier of controllers
 extern NSString * const BUCLoginControllerStoryboardID;
-extern NSString * const BUCRootControllerStoryboardID;
-extern NSString * const BUCContentControllerStoryboardID;
 extern NSString * const BUCPostListControllerStoryboardID;
 extern NSString * const BUCPostDetailControllerStoryboardID;
-
-// storyboard identifier of segues
-extern NSString * const BUCUnwindToRootStoryboardID;
 
 // geometry constants
 extern CGFloat const BUCTopBarHeight;
@@ -27,9 +20,6 @@ extern CGFloat const BUCDefaultPadding;
 extern CGFloat const BUCDefaultMargin;
 
 extern CGFloat const BUCBorderWidth;
-
-// settings
-extern int const BUCMaxImageCountSinglePost;
 
 // rich text attirbute keys
 extern NSString * const BUCLinkAttributeName;

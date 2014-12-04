@@ -207,18 +207,14 @@ static NSUInteger const BUCPostDetailMinPostCount = 20;
 }
 
 - (void)configureCell:(BUCPostDetailCell *)cell post:(BUCPost *)post {
-    UIImage *defaultAvatar = self.defaultAvatar;
+    cell.avatar.image = self.defaultAvatar;
     // avatar
     if (post.avatar) {
-        [[BUCDataManager sharedInstance] getImageFromUrl:post.avatar size:cell.avatar.frame.size onSuccess:^(UIImage *image) {
+        [[BUCDataManager sharedInstance] getImageWithUrl:post.avatar size:cell.avatar.frame.size onSuccess:^(UIImage *image) {
             if (image) {
                 cell.avatar.image = image;
-            } else {
-                cell.avatar.image = defaultAvatar;
             }
         }];
-    } else {
-        cell.avatar.image = self.defaultAvatar;
     }
     
     // username
@@ -238,20 +234,45 @@ static NSUInteger const BUCPostDetailMinPostCount = 20;
     UITextView *textView;
     if (cell.content) {
         textView = cell.content;
-        for (UIImageView *imageView in textView.subviews) {
-            if ([imageView isKindOfClass:[UIImageView class]]) {
-                [imageView removeFromSuperview];
-            }
-        }
-        
         [textView.textStorage setAttributedString:post.content];
-
-        [self layoutImagesForTextView:textView];
         textView.frame = post.textFrame;
     } else {
         textView = [self textViewWithRichText:post.content frame:post.textFrame];
         [cell.contentView addSubview:textView];
         cell.content = textView;
+        textView.backgroundColor = cell.contentView.backgroundColor;
+    }
+    
+    NSArray *attachmentList = [post.content attribute:BUCAttachmentListAttributeName atIndex:0 effectiveRange:NULL];
+    if (attachmentList) {
+        if (!cell.imageViewList) {
+            cell.imageViewList = [[NSMutableArray alloc] init];
+        }
+        [self layoutImages:attachmentList textView:textView imageViewList:cell.imageViewList];
+    }
+}
+
+
+- (void)layoutImages:(NSArray *)imageList textView:(UITextView *)textView imageViewList:(NSMutableArray *)imageViewList {
+    CGSize size = CGSizeMake(CGRectGetWidth(textView.frame), BUCImageThumbnailHeight);
+
+    for (BUCImageAttachment *attachment in imageList) {
+        CGRect frame = [textView.layoutManager boundingRectForGlyphRange:NSMakeRange(attachment.glyphIndex, 1) inTextContainer:textView.textContainer];
+        UIImageView *imageView = [[UIImageView alloc] initWithFrame:frame];;
+        [imageViewList addObject:imageView];
+        imageView.contentMode = UIViewContentModeCenter;
+        imageView.backgroundColor = textView.backgroundColor;
+        [textView addSubview:imageView];
+        
+        if (attachment.path) {
+            imageView.image = [[BUCDataManager sharedInstance] getImageWithPath:attachment.path];
+        } else {
+            [[BUCDataManager sharedInstance] getImageWithUrl:attachment.url size:size onSuccess:^(UIImage *image) {
+                if (image) {
+                    imageView.image = image;
+                }
+            }];
+        }
     }
 }
 
@@ -269,32 +290,7 @@ static NSUInteger const BUCPostDetailMinPostCount = 20;
     textView.editable = NO;
     textView.scrollEnabled = NO;
     
-    [self layoutImagesForTextView:textView];
-    
     return textView;
-}
-
-
-- (void)layoutImagesForTextView:(UITextView *)textView {
-    NSArray *attachmentList = [textView.textStorage attribute:BUCAttachmentListAttributeName atIndex:0 effectiveRange:NULL];
-    if (attachmentList) {
-        CGSize size = CGSizeMake(CGRectGetWidth(textView.frame), BUCImageThumbnailHeight);
-        for (BUCImageAttachment *attachment in attachmentList) {
-            CGRect frame = [textView.layoutManager boundingRectForGlyphRange:NSMakeRange(attachment.glyphIndex, 1) inTextContainer:textView.textContainer];
-            UIImageView *imageView = [[UIImageView alloc] initWithFrame:frame];
-            imageView.contentMode = UIViewContentModeCenter;
-            imageView.backgroundColor = [UIColor whiteColor];
-            [textView addSubview:imageView];
-            
-            if (attachment.gif) {
-                imageView.image = attachment.gif;
-            } else {
-                [[BUCDataManager sharedInstance] getImageFromUrl:attachment.url size:size onSuccess:^(UIImage *image) {
-                    imageView.image = image;
-                }];
-            }
-        }
-    }
 }
 
 

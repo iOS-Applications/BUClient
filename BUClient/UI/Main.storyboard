@@ -250,7 +250,7 @@
                                     <subviews>
                                         <imageView autoresizesSubviews="NO" clipsSubviews="YES" contentMode="center" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="avatar.png" translatesAutoresizingMaskIntoConstraints="NO" id="HBS-9e-srw">
                                             <rect key="frame" x="5" y="5" width="40" height="40"/>
-                                            <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                                            <color key="backgroundColor" red="0.97254901959999995" green="0.97254901959999995" blue="0.97254901959999995" alpha="0.59999999999999998" colorSpace="calibratedRGB"/>
                                             <constraints>
                                                 <constraint firstAttribute="width" constant="40" id="QEg-HP-NUA"/>
                                                 <constraint firstAttribute="height" constant="40" id="tUs-pg-7xw"/>
@@ -258,7 +258,7 @@
                                         </imageView>
                                         <button autoresizesSubviews="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="KXz-SA-KFd" userLabel="username">
                                             <rect key="frame" x="50" y="5" width="48" height="26"/>
-                                            <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                                            <color key="backgroundColor" red="0.97254901959999995" green="0.97254901959999995" blue="0.97254901959999995" alpha="0.59999999999999998" colorSpace="calibratedRGB"/>
                                             <constraints>
                                                 <constraint firstAttribute="height" constant="26" id="RoV-Si-lXz"/>
                                             </constraints>
@@ -272,14 +272,14 @@
                                         </button>
                                         <label autoresizesSubviews="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" preferredMaxLayoutWidth="1000" translatesAutoresizingMaskIntoConstraints="NO" id="aDl-QG-7gh" userLabel="index">
                                             <rect key="frame" x="562" y="5" width="33" height="16"/>
-                                            <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                                            <color key="backgroundColor" red="0.97254901959999995" green="0.97254901959999995" blue="0.97254901959999995" alpha="0.59999999999999998" colorSpace="calibratedRGB"/>
                                             <fontDescription key="fontDescription" type="system" pointSize="13"/>
                                             <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
                                             <nil key="highlightedColor"/>
                                         </label>
                                         <label autoresizesSubviews="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" preferredMaxLayoutWidth="1000" translatesAutoresizingMaskIntoConstraints="NO" id="GsA-iQ-jYT" userLabel="dateline">
                                             <rect key="frame" x="50" y="31" width="33" height="14"/>
-                                            <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                                            <color key="backgroundColor" red="0.97254901959999995" green="0.97254901959999995" blue="0.97254901959999995" alpha="0.59999999999999998" colorSpace="calibratedRGB"/>
                                             <constraints>
                                                 <constraint firstAttribute="height" constant="14" id="u1K-Tt-u2T"/>
                                             </constraints>
@@ -288,7 +288,7 @@
                                             <nil key="highlightedColor"/>
                                         </label>
                                     </subviews>
-                                    <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                                    <color key="backgroundColor" red="0.97254901959999995" green="0.97254901959999995" blue="0.97254901959999995" alpha="0.59999999999999998" colorSpace="calibratedRGB"/>
                                     <constraints>
                                         <constraint firstItem="KXz-SA-KFd" firstAttribute="leading" secondItem="HBS-9e-srw" secondAttribute="trailing" constant="5" id="3Qm-20-6HI"/>
                                         <constraint firstItem="HBS-9e-srw" firstAttribute="top" secondItem="nrW-mj-TlB" secondAttribute="top" constant="5" id="3vz-Fh-mJE"/>
@@ -300,7 +300,7 @@
                                         <constraint firstItem="aDl-QG-7gh" firstAttribute="top" secondItem="nrW-mj-TlB" secondAttribute="top" constant="5" id="oYc-7x-hW3"/>
                                     </constraints>
                                 </tableViewCellContentView>
-                                <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                                <color key="backgroundColor" red="0.97254901959999995" green="0.97254901959999995" blue="0.97254901959999995" alpha="0.59999999999999998" colorSpace="calibratedRGB"/>
                                 <connections>
                                     <outlet property="avatar" destination="HBS-9e-srw" id="BmR-u5-eCz"/>
                                     <outlet property="dateline" destination="GsA-iQ-jYT" id="qLB-pS-9e4"/>

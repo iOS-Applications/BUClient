@@ -30,7 +30,8 @@
 
 - (void)childCountOfForum:(NSString *)fid post:(NSString *)pid onSuccess:(BUCNumberBlock)numberBlock onError:(BUCErrorBlock)errorBlock;
 
-- (void)getImageFromUrl:(NSURL *)url size:(CGSize)size onSuccess:(BUCImageBlock)imageBlock;
+- (void)getImageWithUrl:(NSURL *)url size:(CGSize)size onSuccess:(BUCImageBlock)imageBlock;
 
+- (UIImage *)getImageWithPath:(NSString *)path;
 
 @end

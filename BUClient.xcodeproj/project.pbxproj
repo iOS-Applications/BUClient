@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		1B5E79E61A303B40004BCAE6 /* avatar.png in Resources */ = {isa = PBXBuildFile; fileRef = 1B78AD511A2B0BE500E949E0 /* avatar.png */; };
 		1B78AD4E1A2AF0E500E949E0 /* BUCPostDetailCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 1B78AD4D1A2AF0E500E949E0 /* BUCPostDetailCell.m */; };
 		1BDE21C91A2EC724009F82C9 /* UIImage+BUCImageCategory.m in Sources */ = {isa = PBXBuildFile; fileRef = 1BDE21C81A2EC724009F82C9 /* UIImage+BUCImageCategory.m */; };
 		D803C6911A1782DB00D26604 /* BUCTextStack.m in Sources */ = {isa = PBXBuildFile; fileRef = D803C6901A1782DB00D26604 /* BUCTextStack.m */; };
@@ -418,6 +419,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1B5E79E61A303B40004BCAE6 /* avatar.png in Resources */,
 				D85EA9571A0DAF26000BE12A /* BUCLoadingView.xib in Resources */,
 				D8A2461718910A9A00AFD27A /* Main.storyboard in Resources */,
 				D8A3BFA2187C895E006CBF64 /* InfoPlist.strings in Resources */,
