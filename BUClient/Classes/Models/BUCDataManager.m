@@ -243,8 +243,8 @@ static NSString * const BUCJsonActionNewReply = @"newreply";
          UIImage *image = [UIImage imageWithData:data size:size];
          if (image) {
              [cache setObject:image forKey:key];
+             imageBlock(image);
          }
-         imageBlock(image);
      }
      
      onError:nil];

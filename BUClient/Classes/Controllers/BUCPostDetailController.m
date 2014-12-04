@@ -268,9 +268,7 @@ static NSUInteger const BUCPostDetailMinPostCount = 20;
             imageView.image = [[BUCDataManager sharedInstance] getImageWithPath:attachment.path];
         } else {
             [[BUCDataManager sharedInstance] getImageWithUrl:attachment.url size:size onSuccess:^(UIImage *image) {
-                if (image) {
-                    imageView.image = image;
-                }
+                imageView.image = image;
             }];
         }
     }

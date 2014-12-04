@@ -38,6 +38,7 @@ static NSString * const BUCCellNib = @"BUCPostListCell";
 @property (nonatomic) NSUInteger length;
 
 @property (nonatomic) BOOL isRefresh;
+@property (nonatomic) BOOL isLoading;
 
 @end
 
@@ -161,7 +162,8 @@ static NSString * const BUCCellNib = @"BUCPostListCell";
     unsigned long from = 0;
 
     if (self.length < BUCPostListMaxPostCount) {
-        from = self.location + self.length;
+        [self loadMore];
+        return;
     } else {
         from = self.location + BUCPostListMaxPostCount;
     }
@@ -169,35 +171,48 @@ static NSString * const BUCCellNib = @"BUCPostListCell";
     unsigned long to = from + BUCPostListMinPostCount;
     self.from = [NSString stringWithFormat:@"%lu", from];
     self.to = [NSString stringWithFormat:@"%lu", to];
+    [self refresh];
+}
+
+- (void)loadMore {
+    unsigned long from = self.location + self.length;
+    unsigned long to = from + BUCPostListMinPostCount;
+    self.from = [NSString stringWithFormat:@"%lu", from];
+    self.to = [NSString stringWithFormat:@"%lu", to];
     
-    if (self.length < BUCPostListMaxPostCount) {
-        [self.moreIndicator startAnimating];
-        [self loadList];
-    } else {
-        [self refresh];
-    }
+    [self.moreIndicator startAnimating];
+    self.isLoading = YES;
+    [self loadList];
 }
 
 
 #pragma mark - scroll view delegate
 - (void)scrollViewDidEndDragging:(UIScrollView *)scrollView willDecelerate:(BOOL)decelerate {
+    if (self.isLoading || self.isRefresh || decelerate) {
+        return;
+    }
+    
     CGFloat refreshFireHeight = 40.0f;
     if (scrollView.contentOffset.y <= -refreshFireHeight) {
         [self refresh];
-    } else if (self.fid && !decelerate && self.length != BUCPostListMaxPostCount && self.postCount >= self.location + self.length) {
+    } else if (self.fid && self.length != BUCPostListMaxPostCount && self.postCount >= self.location + self.length) {
         CGFloat loadMoreHeight = ceilf(CGRectGetHeight(self.listWrapper.frame) / 2);
         if (scrollView.contentOffset.y >= loadMoreHeight) {
-            [self loadMoreOrNext];
+            [self loadMore];
         }
     }
 }
 
 
 - (void)scrollViewDidEndDecelerating:(UIScrollView *)scrollView {
+    if (self.isLoading || self.isRefresh) {
+        return;
+    }
+    
     if (self.fid && self.length != BUCPostListMaxPostCount && self.postCount >= self.location + self.length) {
         CGFloat loadMoreHeight = ceilf(CGRectGetHeight(self.listWrapper.frame) / 2);
         if (scrollView.contentOffset.y >= loadMoreHeight) {
-            [self loadMoreOrNext];
+            [self loadMore];
         }
     }
 }
@@ -223,6 +238,7 @@ static NSString * const BUCCellNib = @"BUCPostListCell";
         self.isRefresh = NO;
         [self.scrollView setContentOffset:CGPointZero];
     } else {
+        self.isLoading = NO;
         postList = self.postList;
         listHeight = CGRectGetHeight(self.listWrapper.frame) + BUCDefaultMargin;
     }
