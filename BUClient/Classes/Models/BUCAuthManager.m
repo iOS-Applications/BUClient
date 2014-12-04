@@ -6,7 +6,6 @@ static NSString *kKeychainItemIdentifer = @"org.bitunion.buc.%@.KeychainUI";
 
 @interface BUCAuthManager ()
 
-@property (nonatomic) NSString *keychainItemIDString;
 @property (nonatomic) NSMutableDictionary *keychainData;
 @property (nonatomic) NSMutableDictionary *genericPasswordQuery;
 
@@ -33,30 +32,37 @@ static NSString *kKeychainItemIdentifer = @"org.bitunion.buc.%@.KeychainUI";
 
 
 - (NSString *)getPasswordWithUsername:(NSString *)username {
-    self.keychainItemIDString = [NSString stringWithFormat:kKeychainItemIdentifer, username];
-    [self.genericPasswordQuery setObject:[self.keychainItemIDString dataUsingEncoding:NSUTF8StringEncoding] forKey:(__bridge id)kSecAttrGeneric];
+    [self.genericPasswordQuery setObject:[[NSString stringWithFormat:kKeychainItemIdentifer, username] dataUsingEncoding:NSUTF8StringEncoding] forKey:(__bridge id)kSecAttrGeneric];
     
     CFDataRef resultCF = NULL;
-    SecItemCopyMatching((__bridge CFDictionaryRef)self.genericPasswordQuery, (CFTypeRef *)&resultCF);
-    NSData *passwordData = (__bridge NSData *)resultCF;
-    NSString *password = [[NSString alloc] initWithBytes:[passwordData bytes] length:[passwordData length] encoding:NSUTF8StringEncoding];
+    if (SecItemCopyMatching((__bridge CFDictionaryRef)self.genericPasswordQuery, (CFTypeRef *)&resultCF) == noErr) {
+        NSData *passwordData = (__bridge NSData *)resultCF;
+        if (resultCF) {
+            CFRelease(resultCF);
+            resultCF = NULL;
+        }
+        NSString *password = [[NSString alloc] initWithData:passwordData encoding:NSUTF8StringEncoding];
+        if (password) {
+            return password;
+        }
+    }
+    
     if (resultCF) {
         CFRelease(resultCF);
     }
     
-    return password;
+    return nil;
 }
 
 
 - (void)savePassword:(NSString *)password username:(NSString *)username {
-    self.keychainItemIDString = [NSString stringWithFormat:kKeychainItemIdentifer, username];
-    [self.genericPasswordQuery setObject:[self.keychainItemIDString dataUsingEncoding:NSUTF8StringEncoding] forKey:(__bridge id)kSecAttrGeneric];
-    
-    NSData *keychainItemID = [self.keychainItemIDString dataUsingEncoding:NSUTF8StringEncoding];
+    NSData *keychainItemID = [[NSString stringWithFormat:kKeychainItemIdentifer, username] dataUsingEncoding:NSUTF8StringEncoding];
+    [self.genericPasswordQuery setObject:keychainItemID forKey:(__bridge id)kSecAttrGeneric];
     [self.keychainData setObject:keychainItemID forKey:(__bridge id)kSecAttrGeneric];
     [self.keychainData setObject:[password dataUsingEncoding:NSUTF8StringEncoding] forKey:(__bridge id)kSecValueData];
     [self writeToKeychain];
 }
+
 
 #pragma mark - key chain stuff
 - (void)writeToKeychain {

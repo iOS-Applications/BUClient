@@ -71,23 +71,16 @@ static NSString * const BUCJsonProfileUsernameKey = @"queryusername";
 static NSString * const BUCJsonActionNewPost = @"newthread";
 static NSString * const BUCJsonActionNewReply = @"newreply";
 
-// handy string patterns
-static NSString * const BUCPostTitleTemplate = @"<b>%@</b>\n\n";
-static NSString * const BUCPostAttachmentTemplate = @"\n\n本帖包含图片附件:\n\n<img src='http://out.bitunion.org/%@'>";
-static NSString * const BUCImageFileTypePrefix = @"image/";
-
 
 @interface BUCDataManager ()
 
-@property (nonatomic, readwrite) BUCAuthManager *authManager;
+@property (nonatomic) BUCAuthManager *authManager;
 @property (nonatomic) BUCHTMLScraper *htmlScraper;
 @property (nonatomic) BUCNetworkEngine *networkEngine;
 
 @property (nonatomic) NSString *username;
 @property (nonatomic) NSString *password;
 @property (nonatomic) NSString *session;
-
-@property (nonatomic, readwrite) BOOL loggedIn;
 
 @property (nonatomic) NSError *loginError;
 
@@ -116,7 +109,6 @@ static NSString * const BUCImageFileTypePrefix = @"image/";
         _htmlScraper = [[BUCHTMLScraper alloc] init];
         _authManager = [[BUCAuthManager alloc] init];
         
-        _loggedIn = NO;
         _loginError = [NSError errorWithDomain:@"BUClient.ErrorDomain" code:1 userInfo:@{NSLocalizedDescriptionKey:@"帐号与密码不符，请检查帐号状态"}];
     }
     
@@ -129,12 +121,11 @@ static NSString * const BUCImageFileTypePrefix = @"image/";
     self.username = [defaults stringForKey:BUCCurrentUserDefaultKey];
     self.password = [self.authManager getPasswordWithUsername:self.username];
     
-    if (!self.username || self.username.length == 0 || !self.password || self.password.length == 0) {
+    if (!self.username || !self.password) {
         return NO;
     }
 
-    _loggedIn = [defaults boolForKey:BUCUserLoginStateDefaultKey];
-    return _loggedIn;
+    return [defaults boolForKey:BUCUserLoginStateDefaultKey];
 }
 
 
@@ -178,8 +169,7 @@ static NSString * const BUCImageFileTypePrefix = @"image/";
      loadJsonFromUrl:BUCUrlLogin
      json:json
      onSuccess:^(NSDictionary *map) {
-         weakSelf.session = [map objectForKey:@"session"];
-         weakSelf.loggedIn = YES;
+         weakSelf.session = [map objectForKey:BUCJsonSessionKey];
          voidBlock();
      }
      onError:errorBlock];
@@ -322,6 +312,12 @@ static NSString * const BUCImageFileTypePrefix = @"image/";
 
 
 - (void)successListHandler:(NSDictionary *)map listKey:(NSString *)listKey onSuccess:(BUCListBlock)listBlock onError:(BUCErrorBlock)errorBlock {
+    static NSString * const BUCPostTitleTemplate = @"<b>%@</b>\n\n";
+    static NSString * const BUCPostAttachmentTemplate = @"\n\n本帖包含图片附件:\n\n<img src='http://out.bitunion.org/%@'>";
+    static NSString * const BUCImageFileTypePrefix = @"image/";
+    static NSString * const BUCLastPosterTemplate = @"最后回复: %@ by";
+    static NSString * const BUCPostStaticsTemplate1 = @"• %@回复";
+    static NSString * const BUCPostStaticsTemplate2 = @"• %@回复/%@查看";
     
     NSMutableArray *list = [[NSMutableArray alloc] init];
     NSArray *rawArray = [map objectForKey:listKey];
@@ -345,8 +341,8 @@ static NSString * const BUCImageFileTypePrefix = @"image/";
             post.title = [self.htmlScraper richTextFromHtml:[self urldecode:[rawMap objectForKey:BUCJsonPostNameKey]]];
             NSString *lastPostDateline = [self parseDateline:[self urldecode:[[rawMap objectForKey:BUCJsonLastReplyKey] objectForKey:BUCJsonLastReplyDateKey]]];
             post.lastPoster = [self urldecode:[[rawMap objectForKey:BUCJsonLastReplyKey] objectForKey:BUCJsonLastReplyUserKey]];
-            post.lastPostDateline = [NSString stringWithFormat:@"最后回复: %@ by", lastPostDateline];
-            post.statistic = [NSString stringWithFormat:@"• %@回复", [rawMap objectForKey:BUCJsonPostChildCountKey]];
+            post.lastPostDateline = [NSString stringWithFormat:BUCLastPosterTemplate, lastPostDateline];
+            post.statistic = [NSString stringWithFormat:BUCPostStaticsTemplate1, [rawMap objectForKey:BUCJsonPostChildCountKey]];
         } else if ([listKey isEqualToString:BUCJsonDetailListKey]) {
             NSMutableString *content = [[NSMutableString alloc] init];
             NSString *title = [self urldecode:[rawMap objectForKey:BUCJsonPostTitleKey]];
@@ -374,9 +370,9 @@ static NSString * const BUCImageFileTypePrefix = @"image/";
             post.title = [self.htmlScraper richTextFromHtml:[self urldecode:[rawMap objectForKey:BUCJsonPostTitleKey]]];
             NSString *viewCount = [rawMap objectForKey:BUCJsonViewCountKey];
             NSString *childCount = [rawMap objectForKey:BUCJsonChildCountKey];
-            post.statistic = [NSString stringWithFormat:@"• %@回复/%@查看", childCount, viewCount];
+            post.statistic = [NSString stringWithFormat:BUCPostStaticsTemplate2, childCount, viewCount];
             NSString *lastPostDateline = [self parseDateline:[rawMap objectForKey:BUCJsonLastPostDateKey]];
-            post.lastPostDateline = [NSString stringWithFormat:@"最后回复: %@ by", lastPostDateline];
+            post.lastPostDateline = [NSString stringWithFormat:BUCLastPosterTemplate, lastPostDateline];
             post.lastPoster = [self urldecode:[rawMap objectForKey:BUCJsonLastPostUserKey]];
         }
         

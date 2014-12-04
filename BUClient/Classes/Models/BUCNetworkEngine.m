@@ -87,9 +87,9 @@
 
 #pragma mark - private methods
 - (NSURLRequest *)requestFromURL:(NSString *)url json:(NSDictionary *)json error:(NSError **)error {
-    NSString *baseURL = @"http://out.bitunion.org/open_api/bu_%@.php";
+    static NSString * const baseURL = @"http://out.bitunion.org/open_api/bu_%@.php";
 //    baseURL = @"http://0.0.0.0/open_api/bu_%@.php";
-    NSString *HTTPMethod = @"POST";
+    static NSString * const HTTPMethod = @"POST";
     NSMutableURLRequest *req = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:[NSString stringWithFormat:baseURL, url]]];
     NSMutableDictionary *dataJSON = [[NSMutableDictionary alloc] init];
     NSData *data;
@@ -135,35 +135,36 @@
 
 
 - (NSError *)checkErr:(NSError *)error response:(NSURLResponse *)response {
-    NSString *serverERROR =     @"服务器错误，请稍候再试";
-    NSString *notFoundERROR = @"服务器404错误，请稍候再试";
-    NSString *timeoutERROR =    @"服务器连接超时";
-    NSString *connenctionERROR =    @"无法连接至服务器";
-    NSString *noInternetERROR = @"无网络连接，请检查网络连接";
-    NSString *unknownERROR =    @"未知错误";
+    static NSString * const BUCServerERROR =     @"服务器错误，请稍候再试";
+    static NSString * const BUC404ERROR = @"服务器404错误，请稍候再试";
+    static NSString * const BUCTimeoutERROR =    @"服务器连接超时";
+    static NSString * const BUCConnenctionERROR =    @"无法连接至服务器";
+    static NSString * const BUCInternetERROR = @"无网络连接，请检查网络连接";
+    static NSString * const BUCUnknownERROR =    @"未知错误";
+    static NSString * const BUCErrorDomain = @"buc.http.errorDomain";
     
     NSDictionary *errorInfo;
     
     if ([response isKindOfClass:[NSHTTPURLResponse class]]) {
         NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse *)response;
         if (httpResponse.statusCode == 500) {
-            errorInfo = @{NSLocalizedDescriptionKey:serverERROR};
+            errorInfo = @{NSLocalizedDescriptionKey:BUCServerERROR};
         } else if (httpResponse.statusCode == 404) {
-            errorInfo = @{NSLocalizedDescriptionKey:notFoundERROR};
+            errorInfo = @{NSLocalizedDescriptionKey:BUC404ERROR};
         } else {
-            errorInfo = @{NSLocalizedDescriptionKey:unknownERROR};
+            errorInfo = @{NSLocalizedDescriptionKey:BUCUnknownERROR};
         }
         
-        return [NSError errorWithDomain:@"buc.http.errorDomain" code:0 userInfo:errorInfo];
+        return [NSError errorWithDomain:BUCErrorDomain code:0 userInfo:errorInfo];
 
     } else if (error.code == NSURLErrorTimedOut) {
-        errorInfo = @{NSLocalizedDescriptionKey:timeoutERROR};
+        errorInfo = @{NSLocalizedDescriptionKey:BUCTimeoutERROR};
     } else if (error.code == NSURLErrorCannotConnectToHost) {
-        errorInfo = @{NSLocalizedDescriptionKey:connenctionERROR};
+        errorInfo = @{NSLocalizedDescriptionKey:BUCConnenctionERROR};
     } else if(error.code == NSURLErrorNotConnectedToInternet) {
-        errorInfo = @{NSLocalizedDescriptionKey:noInternetERROR};
+        errorInfo = @{NSLocalizedDescriptionKey:BUCInternetERROR};
     } else {
-        errorInfo = @{NSLocalizedDescriptionKey:unknownERROR};
+        errorInfo = @{NSLocalizedDescriptionKey:BUCUnknownERROR};
     }
         
     return [NSError errorWithDomain:error.domain code:error.code userInfo:errorInfo];
