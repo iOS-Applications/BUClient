@@ -4,31 +4,15 @@
 #import "BUCPostListCell.h"
 #import "BUCDataManager.h"
 #import "BUCModels.h"
+#import "UIImage+BUCImageCategory.h"
 
 static CGFloat const BUCPostListSupplementaryViewHeight = 40.0f;
 static NSUInteger const BUCPostListMinPostCount = 20;
 static NSUInteger const BUCPostListMaxPostCount = 40;
 
-static NSString * const BUCCellNib = @"BUCPostListCell";
-
-@interface BUCPostListController () <UIScrollViewDelegate>
-
-@property (weak, nonatomic) IBOutlet NSLayoutConstraint *listTopToHeader;
-@property (weak, nonatomic) IBOutlet NSLayoutConstraint *listBottomToFooter;
-
-@property (weak, nonatomic) IBOutlet NSLayoutConstraint *listWidth;
-@property (weak, nonatomic) IBOutlet NSLayoutConstraint *listHeight;
-
-@property (weak, nonatomic) IBOutlet BUCPostListCell *previousHolder;
-@property (weak, nonatomic) IBOutlet BUCPostListCell *nextHolder;
-@property (weak, nonatomic) IBOutlet UILabel *moreOrNext;
-@property (weak, nonatomic) IBOutlet UIActivityIndicatorView *moreIndicator;
-
-@property (nonatomic, weak) IBOutlet UIScrollView *scrollView;
-@property (nonatomic, weak) IBOutlet UIView *listWrapper;
+@interface BUCPostListController () <UITableViewDataSource, UITableViewDelegate>
 
 @property (nonatomic) NSMutableArray *postList;
-@property (nonatomic) NSMutableArray *cellList;
 
 @property (nonatomic) NSString *from;
 @property (nonatomic) NSString *to;
@@ -37,27 +21,33 @@ static NSString * const BUCCellNib = @"BUCPostListCell";
 @property (nonatomic) NSUInteger location;
 @property (nonatomic) NSUInteger length;
 
-@property (nonatomic) BOOL isRefresh;
-@property (nonatomic) BOOL isLoading;
+@property (nonatomic) BOOL flush;
+@property (nonatomic) BOOL loading;
+@property (nonatomic) IBOutlet UITableView *tableView;
+@property (nonatomic) IBOutlet UIButton *previous;
+@property (nonatomic) IBOutlet UIButton *next;
+@property (nonatomic) IBOutlet UIActivityIndicatorView *loadingIndicator;
 
 @end
 
 
 @implementation BUCPostListController
-
-
 #pragma mark - setup
 - (void)viewDidLoad {
     [super viewDidLoad];
     
-    self.cellList = [[NSMutableArray alloc] init];
-
     self.navigationItem.backBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"" style:UIBarButtonItemStylePlain target:nil action:nil];
-
-    self.listWidth.constant = CGRectGetWidth(self.view.frame) - 2 * BUCDefaultPadding;
+    
+    UIImage *background = [UIImage imageWithColor:[UIColor lightGrayColor]];
+    [self.previous setBackgroundImage:background forState:UIControlStateHighlighted];
+    self.previous.layer.borderColor = [UIColor lightGrayColor].CGColor;
+    self.previous.layer.borderWidth = BUCBorderWidth;
+    
+    [self.next setBackgroundImage:background forState:UIControlStateHighlighted];
+    self.next.layer.borderColor = [UIColor lightGrayColor].CGColor;
+    self.next.layer.borderWidth = BUCBorderWidth;
     
     if (self.fname) {
-        self.navigationItem.title = [NSString stringWithFormat:@"%@[1]", self.fname];
         self.from = @"0";
         self.to = @"20";
         self.location = 0;
@@ -66,16 +56,20 @@ static NSString * const BUCCellNib = @"BUCPostListCell";
         self.navigationItem.title = @"最新主题";
     }
     
+    self.tableView.sectionFooterHeight = 0.0f;
+    self.tableView.sectionHeaderHeight = BUCDefaultMargin;
+    
     [self refresh];
 }
 
 
-#pragma mark - actions
+#pragma mark - data management
 - (void)refresh {
     [self displayLoading];
 
-    self.isRefresh = YES;
+    self.flush = YES;
     if (self.fid) {
+        self.loading = YES;
         BUCPostListController * __weak weakSelf = self;
         [[BUCDataManager sharedInstance]
          childCountOfForum:self.fid
@@ -84,8 +78,7 @@ static NSString * const BUCCellNib = @"BUCPostListCell";
              weakSelf.postCount = count;
              [weakSelf loadList];
          } onError:^(NSError *error) {
-             [weakSelf hideLoading];
-             [weakSelf alertMessage:error.localizedDescription];
+             [weakSelf loadFailed:error];
          }];
         
     } else {
@@ -94,48 +87,80 @@ static NSString * const BUCCellNib = @"BUCPostListCell";
 }
 
 
+- (void)didFinishedLoadList:(NSArray *)list {
+    if (self.fid) {
+        NSUInteger from = self.from.integerValue;
+        if (self.flush) {
+            self.location = from;
+            self.length = BUCPostListMinPostCount;
+        } else {
+            self.length = self.length + BUCPostListMinPostCount;
+        }
+    }
+    
+    [self buildList:list];
+    [self hideLoading];
+    [self.loadingIndicator stopAnimating];
+    self.loading = NO;
+}
+
+
+- (void)loadFailed:(NSError *)error {
+    [self hideLoading];
+    [self.loadingIndicator stopAnimating];
+    [self alertMessage:error.localizedDescription];
+    self.loading = NO;
+}
+
+
 - (void)loadList {
     BUCPostListController * __weak weakSelf = self;
     BUCDataManager *dataManager = [BUCDataManager sharedInstance];
     
-    void (^listBlock)(NSArray *) = ^(NSArray *list) {
-        if (weakSelf.fid) {
-            NSUInteger from = weakSelf.from.integerValue;
-            if (weakSelf.isRefresh) {
-                weakSelf.location = from;
-                weakSelf.length = BUCPostListMinPostCount;
-            } else {
-                weakSelf.length = weakSelf.length + BUCPostListMinPostCount;
-            }
-        }
-        
-        [weakSelf buildList:list];
-        [weakSelf hideLoading];
-        [weakSelf.moreIndicator stopAnimating];
+    void (^successBlock)(NSArray *) = ^(NSArray *list) {
+        [weakSelf didFinishedLoadList:list];
     };
     
     void (^errorBlock)(NSError *) = ^(NSError *error) {
-        [weakSelf hideLoading];
-        [weakSelf.moreIndicator stopAnimating];
-        [weakSelf alertMessage:error.localizedDescription];
+        [weakSelf loadFailed:error];
     };
 
+    self.loading = YES;
     if (self.fid) {
-        [dataManager listOfForum:self.fid from:self.from to:self.to onSuccess:listBlock onError:errorBlock];
+        [dataManager listOfForum:self.fid from:self.from to:self.to onSuccess:successBlock onError:errorBlock];
     } else {
-        [dataManager listOfFrontOnSuccess:listBlock onError:errorBlock];
+        [dataManager listOfFrontOnSuccess:successBlock onError:errorBlock];
     }
 }
 
 
-- (void)jumpToPost:(id)sender {
-    BUCPostDetailController *postDetailController = [self.storyboard instantiateViewControllerWithIdentifier:BUCPostDetailControllerStoryboardID];
-    BUCPostListCell *cell = (BUCPostListCell *)sender;
-    postDetailController.post = [self.postList objectAtIndex:cell.tag];
-    [(UINavigationController *)self.parentViewController pushViewController:postDetailController animated:YES];
+- (IBAction)loadPrevious {
+    self.from = [NSString stringWithFormat:@"%lu", (unsigned long)(self.location - BUCPostListMaxPostCount)];
+    self.to = [NSString stringWithFormat:@"%lu", (unsigned long)(self.location - BUCPostListMaxPostCount + BUCPostListMinPostCount)];
+    [self refresh];
+}
+
+- (IBAction)loadNext {
+    unsigned long from = self.location + self.length;
+    unsigned long to = from + BUCPostListMinPostCount;
+    self.from = [NSString stringWithFormat:@"%lu", from];
+    self.to = [NSString stringWithFormat:@"%lu", to];
+    [self refresh];
+}
+
+- (void)loadMore {
+    [self.next setTitle:@"More..." forState:UIControlStateNormal];
+    unsigned long from = self.location + self.length;
+    unsigned long to = from + BUCPostListMinPostCount;
+    self.from = [NSString stringWithFormat:@"%lu", from];
+    self.to = [NSString stringWithFormat:@"%lu", to];
+    
+    [self.loadingIndicator startAnimating];
+    [self loadList];
 }
 
 
+#pragma mark - navigation
 - (void)jumpToForum:(id)sender {
     BUCPostListController *postListController = [self.storyboard instantiateViewControllerWithIdentifier:BUCPostListControllerStoryboardID];
     UIButton *forumName = (UIButton *)sender;
@@ -152,161 +177,143 @@ static NSString * const BUCCellNib = @"BUCPostListCell";
 }
 
 
-- (IBAction)loadPrevious {
-    self.from = [NSString stringWithFormat:@"%lu", (unsigned long)(self.location - BUCPostListMaxPostCount)];
-    self.to = [NSString stringWithFormat:@"%lu", (unsigned long)(self.location - BUCPostListMaxPostCount + BUCPostListMinPostCount)];
-    [self refresh];
+#pragma mark - table view data source and delegate
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
+    return self.postList.count;
 }
 
-- (IBAction)loadMoreOrNext {
-    unsigned long from = 0;
 
-    if (self.length < BUCPostListMaxPostCount) {
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
+    return 1;
+}
+
+
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+    static NSString * const cellIdentifier = @"BUCPostListCell";
+    BUCPostListCell *cell = [self.tableView dequeueReusableCellWithIdentifier:cellIdentifier forIndexPath:indexPath];
+    [self configureCell:cell post:[self.postList objectAtIndex:indexPath.section]];
+    
+    
+    if (!self.loading && indexPath.section == self.postList.count - 1 && self.postCount > self.location + self.length && self.length < BUCPostListMaxPostCount) {
         [self loadMore];
-        return;
-    } else {
-        from = self.location + BUCPostListMaxPostCount;
     }
     
-    unsigned long to = from + BUCPostListMinPostCount;
-    self.from = [NSString stringWithFormat:@"%lu", from];
-    self.to = [NSString stringWithFormat:@"%lu", to];
-    [self refresh];
+    return cell;
 }
 
-- (void)loadMore {
-    unsigned long from = self.location + self.length;
-    unsigned long to = from + BUCPostListMinPostCount;
-    self.from = [NSString stringWithFormat:@"%lu", from];
-    self.to = [NSString stringWithFormat:@"%lu", to];
-    
-    [self.moreIndicator startAnimating];
-    self.isLoading = YES;
-    [self loadList];
+- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {
+    BUCPost *post = [self.postList objectAtIndex:indexPath.section];
+    return post.cellHeight;
 }
 
-
-#pragma mark - scroll view delegate
-- (void)scrollViewDidEndDragging:(UIScrollView *)scrollView willDecelerate:(BOOL)decelerate {
-    if (self.isLoading || self.isRefresh) {
-        return;
-    }
-    
-    CGFloat refreshFireHeight = 40.0f;
-    if (scrollView.contentOffset.y <= -refreshFireHeight) {
-        [self refresh];
-    } else if (self.fid && !decelerate && self.length != BUCPostListMaxPostCount && self.postCount >= self.location + self.length) {
-        CGFloat loadMoreHeight = ceilf(CGRectGetHeight(self.listWrapper.frame) / 2);
-        if (scrollView.contentOffset.y >= loadMoreHeight) {
-            [self loadMore];
-        }
-    }
-}
-
-
-- (void)scrollViewDidEndDecelerating:(UIScrollView *)scrollView {
-    if (self.isLoading || self.isRefresh) {
-        return;
-    }
-    
-    if (self.fid && self.length != BUCPostListMaxPostCount && self.postCount >= self.location + self.length) {
-        CGFloat loadMoreHeight = ceilf(CGRectGetHeight(self.listWrapper.frame) / 2);
-        if (scrollView.contentOffset.y >= loadMoreHeight) {
-            [self loadMore];
-        }
-    }
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
+    [tableView deselectRowAtIndexPath:indexPath animated:NO];
+    BUCPostDetailController *postDetailController = [self.storyboard instantiateViewControllerWithIdentifier:BUCPostDetailControllerStoryboardID];
+    postDetailController.post = [self.postList objectAtIndex:indexPath.section];
+    [(UINavigationController *)self.parentViewController pushViewController:postDetailController animated:YES];
 }
 
 
 #pragma mark - private methods
-- (void)buildList:(NSArray *)list {
-    // header
-    if (self.location >= BUCPostListMaxPostCount) {
-        self.previousHolder.hidden = NO;
-        self.listTopToHeader.constant = BUCDefaultMargin;
+- (void)updateNavigation {
+    UIView *view = self.tableView.tableHeaderView;;
+    CGRect frame = view.frame;
+    if (!self.fid || self.location == 0) {
+        frame.size.height = BUCDefaultPadding;
+        view.hidden = YES;
     } else {
-        self.previousHolder.hidden = YES;
-        self.listTopToHeader.constant = -BUCPostListSupplementaryViewHeight;
+        frame.size.height = BUCPostListSupplementaryViewHeight + BUCDefaultPadding + BUCDefaultMargin;
+        view.hidden = NO;
     }
+    view.frame = frame;
+    [self.tableView setTableHeaderView:view];
     
-    CGFloat listHeight = 0.0f;
-    CGFloat listWidth = self.listWidth.constant;
-    // list content
-    NSMutableArray *postList;
-    if (self.isRefresh) {
-        postList = [[NSMutableArray alloc] init];
-        self.isRefresh = NO;
-        [self.scrollView setContentOffset:CGPointZero];
+    view = self.tableView.tableFooterView;
+    frame = view.frame;
+    if (!self.fid || self.postCount <= self.location + self.length) {
+        frame.size.height = BUCDefaultPadding;
+        view.hidden = YES;
     } else {
-        self.isLoading = NO;
+        frame.size.height = BUCPostListSupplementaryViewHeight + BUCDefaultPadding + BUCDefaultMargin;
+        view.hidden = NO;
+        [self.next setTitle:@"下一页" forState:UIControlStateNormal];
+    }
+    view.frame = frame;
+    [self.tableView setTableFooterView:view];
+    
+    if (self.fid) {
+        unsigned long from = self.location + 1;
+        unsigned long to = self.location + self.length;
+        self.navigationItem.title = [NSString stringWithFormat:@"%@[%lu-%lu]", self.fname, from, to];
+    }
+}
+
+
+- (void)buildList:(NSArray *)list {
+    [self updateNavigation];
+    
+    NSMutableArray *postList;
+    if (self.flush) {
+        postList = [[NSMutableArray alloc] init];
+        [self.tableView setContentOffset:CGPointZero];
+    } else {
         postList = self.postList;
-        listHeight = CGRectGetHeight(self.listWrapper.frame) + BUCDefaultMargin;
     }
 
-    NSInteger index = postList.count;
-    NSInteger cellCount = self.cellList.count;
-
+    NSInteger count = postList.count;
     for (BUCPost *post in list) {
         if ([self isLoadedBefore:post against:postList]) {
             continue;
         }
         
-        BUCPostListCell *cell;
-        if (index >= cellCount) {
-            cell = [[[NSBundle mainBundle] loadNibNamed:BUCCellNib owner:nil options:nil] lastObject];
-            [self.cellList addObject:cell];
-            [self.listWrapper addSubview:cell];
-        } else {
-            cell = [self.cellList objectAtIndex:index];
-        }
-        
-        cell.frame = CGRectMake(0, listHeight, listWidth, 0);
-        cell.tag = index;
-        cell.hidden = NO;
-        [self configureCell:cell post:post];
-        
+        [self calculateFrameOfPost:post];
         [postList addObject:post];
-        index = index + 1;
-        listHeight = listHeight + CGRectGetHeight(cell.frame) + BUCDefaultMargin;
-    }
-    
-    for (; index < cellCount; index = index + 1) {
-        BUCPostListCell *cell = [self.cellList objectAtIndex:index];
-        cell.hidden = YES;
     }
     
     self.postList = postList;
-    self.listHeight.constant = listHeight - BUCDefaultMargin;
     
-    // footer
-    if (self.postCount > 0 && self.postCount >= self.location + self.length) {
-        self.nextHolder.hidden = NO;
-        self.listBottomToFooter.constant = BUCDefaultMargin;
-        
-        if (self.length < BUCPostListMaxPostCount) {
-            self.moreOrNext.text = @"More...";
-        } else {
-            self.moreOrNext.text = @"下一页";
-        }
+    if (!self.flush) {
+        [self.tableView insertSections:[NSIndexSet indexSetWithIndexesInRange:NSMakeRange(count, postList.count - count)] withRowAnimation:UITableViewRowAnimationNone];
     } else {
-        self.nextHolder.hidden = YES;
-        self.listBottomToFooter.constant = -BUCPostListSupplementaryViewHeight;
+        self.flush = NO;
+        [self.tableView reloadData];
     }
+}
+
+
+- (void)calculateFrameOfPost:(BUCPost *)post {
+    static NSTextStorage *textStorage;
+    static NSTextContainer *textContainer;
+    static NSLayoutManager *layoutManager;;
+    static CGFloat contentWidth;
+    static dispatch_once_t onceSecurePredicate;
     
-    // update title of top bar
-    if (self.fid) {
-        self.navigationItem.title = [NSString stringWithFormat:@"%@[%lu]", self.fname, (unsigned long)(self.location / BUCPostListMaxPostCount + 1)];
-    }
+    BUCPostListController * __weak weakSelf = self;
+    dispatch_once(&onceSecurePredicate, ^{
+        contentWidth = CGRectGetWidth(weakSelf.tableView.frame) - 2 * BUCDefaultMargin - 2 * BUCDefaultPadding;
+        textStorage = [[NSTextStorage alloc] init];
+        layoutManager = [[NSLayoutManager alloc] init];
+        [textStorage addLayoutManager:layoutManager];
+        textContainer = [[NSTextContainer alloc] initWithSize:CGSizeMake(contentWidth, FLT_MAX)];
+        textContainer.lineFragmentPadding = 0;
+        [layoutManager addTextContainer:textContainer];
+    });
+    
+    [textStorage setAttributedString:post.title];
+    [layoutManager ensureLayoutForTextContainer:textContainer];
+    
+    CGRect frame = [layoutManager usedRectForTextContainer:textContainer];
+    post.cellHeight = ceilf(frame.size.height) + 72.0f;
 }
 
 
 - (void)configureCell:(BUCPostListCell *)cell post:(BUCPost *)post {
     // title
-    cell.title.preferredMaxLayoutWidth = self.listWidth.constant - 2 * BUCDefaultMargin;
+    cell.title.preferredMaxLayoutWidth = CGRectGetWidth(self.tableView.frame) - 2 * BUCDefaultMargin - 2 * BUCDefaultPadding;
     cell.title.attributedText = post.title;
     
     // username
-    [cell.username setTitle:post.user forState:UIControlStateNormal];
+    [cell.author setTitle:post.user forState:UIControlStateNormal];
     
     // forum name or dateline
     if (post.fname) {
@@ -328,18 +335,12 @@ static NSString * const BUCCellNib = @"BUCPostListCell";
     
     [cell.lastPoster setTitle:post.lastPoster forState:UIControlStateNormal];
     [cell.lastPoster addTarget:self action:@selector(jumpToPoster:) forControlEvents:UIControlEventTouchUpInside];
-    
-    [cell addTarget:self action:@selector(jumpToPost:) forControlEvents:UIControlEventTouchUpInside];
-    [cell layoutIfNeeded];
-    CGRect frame = cell.frame;
-    frame.size.height = cell.lastPoster.frame.origin.y + CGRectGetHeight(cell.lastPoster.frame);
-    cell.frame = frame;
 }
 
 
 - (BOOL)isLoadedBefore:(BUCPost *)newpost against:(NSArray *)list{
     for (BUCPost *post in list) {
-        if ([post.pid isEqualToString:newpost.pid]) {
+        if ([post.tid isEqualToString:newpost.tid]) {
             return YES;
         }
     }

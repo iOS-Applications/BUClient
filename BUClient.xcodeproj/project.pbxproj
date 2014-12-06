@@ -16,7 +16,6 @@
 		D8114CD8189012BC00F0E1A7 /* BUCLoginController.m in Sources */ = {isa = PBXBuildFile; fileRef = D8114CB3189012BC00F0E1A7 /* BUCLoginController.m */; };
 		D81ED3661A122FBD00D10243 /* icons in Resources */ = {isa = PBXBuildFile; fileRef = D81ED3651A122FBD00D10243 /* icons */; };
 		D81ED3681A122FE300D10243 /* etc in Resources */ = {isa = PBXBuildFile; fileRef = D81ED3671A122FE300D10243 /* etc */; };
-		D83AE4DF1A25B5D700BAF871 /* BUCPostListCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = D83AE4DE1A25B5D700BAF871 /* BUCPostListCell.xib */; };
 		D848C0481A13BA8D0037F429 /* BUCImageController.m in Sources */ = {isa = PBXBuildFile; fileRef = D848C0471A13BA8D0037F429 /* BUCImageController.m */; };
 		D853E7EB1A1594490003C284 /* TFHpple.m in Sources */ = {isa = PBXBuildFile; fileRef = D853E7E31A1594490003C284 /* TFHpple.m */; };
 		D853E7EC1A1594490003C284 /* TFHppleElement.m in Sources */ = {isa = PBXBuildFile; fileRef = D853E7E51A1594490003C284 /* TFHppleElement.m */; };
@@ -73,7 +72,6 @@
 		D8114CB3189012BC00F0E1A7 /* BUCLoginController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BUCLoginController.m; sourceTree = "<group>"; };
 		D81ED3651A122FBD00D10243 /* icons */ = {isa = PBXFileReference; lastKnownFileType = folder; path = icons; sourceTree = "<group>"; };
 		D81ED3671A122FE300D10243 /* etc */ = {isa = PBXFileReference; lastKnownFileType = folder; path = etc; sourceTree = "<group>"; };
-		D83AE4DE1A25B5D700BAF871 /* BUCPostListCell.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = BUCPostListCell.xib; sourceTree = "<group>"; };
 		D848C0461A13BA8D0037F429 /* BUCImageController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BUCImageController.h; sourceTree = "<group>"; };
 		D848C0471A13BA8D0037F429 /* BUCImageController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BUCImageController.m; sourceTree = "<group>"; };
 		D853E7E21A1594490003C284 /* TFHpple.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TFHpple.h; sourceTree = "<group>"; };
@@ -247,7 +245,6 @@
 			children = (
 				D8A2461518910A9A00AFD27A /* Main.storyboard */,
 				D85EA9561A0DAF26000BE12A /* BUCLoadingView.xib */,
-				D83AE4DE1A25B5D700BAF871 /* BUCPostListCell.xib */,
 			);
 			path = UI;
 			sourceTree = "<group>";
@@ -425,7 +422,6 @@
 				D8A3BFA2187C895E006CBF64 /* InfoPlist.strings in Resources */,
 				D8A3BFAA187C895E006CBF64 /* Images.xcassets in Resources */,
 				D81ED3661A122FBD00D10243 /* icons in Resources */,
-				D83AE4DF1A25B5D700BAF871 /* BUCPostListCell.xib in Resources */,
 				D872DE601A0FB46A00450E0B /* images in Resources */,
 				D81ED3681A122FE300D10243 /* etc in Resources */,
 			);

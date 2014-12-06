@@ -43,10 +43,12 @@ static NSString * const BUCLoadingView = @"BUCLoadingView";
 #pragma mark - public methods
 - (void)displayLoading {
     [self.activityIndicator startAnimating];
-    [self.view bringSubviewToFront:self.loadingView];
-    CGRect frame = [UIScreen mainScreen].bounds;
-    self.loadingView.center = CGPointMake(CGRectGetMidX(frame), CGRectGetMidY(frame) - 64.0f);
+    CGRect frame = self.view.bounds;
+    CGFloat x = CGRectGetMidX([UIScreen mainScreen].bounds);
+    CGFloat y = frame.origin.y + CGRectGetMidY([UIScreen mainScreen].bounds) - 64.0f;
+    self.loadingView.center = CGPointMake(x, y);
     self.loadingView.hidden = NO;
+    [self.view bringSubviewToFront:self.loadingView];
 }
 
 

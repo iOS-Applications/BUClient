@@ -10,43 +10,37 @@
     self = [super initWithCoder:aDecoder];
     
     if (self) {
-        self.layer.borderWidth = 0.3f;
+        self.layer.borderWidth = 0.5f;
         self.layer.borderColor = [UIColor lightGrayColor].CGColor;
-        self.layer.backgroundColor = [UIColor whiteColor].CGColor;
-        self.layer.cornerRadius = 4.0f;
+//        self.layer.cornerRadius = 4.0f;
+//        self.layer.masksToBounds = YES;
     }
     
     return self;
 }
 
-
-- (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
-    self.backgroundColor = [UIColor lightGrayColor];
-    [super touchesBegan:touches withEvent:event];
+- (void)setFrame:(CGRect)frame {
+    frame.origin.x = 8.0f;
+    frame.size.width = [UIScreen mainScreen].bounds.size.width - 2 * 8.0f;
+    [super setFrame:frame];
 }
 
 
-- (void)touchesCancelled:(NSSet *)touches withEvent:(UIEvent *)event {
-    self.backgroundColor = [UIColor whiteColor];
-    [super touchesCancelled:touches withEvent:event];
-}
-
-
-- (void)touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event {
-    [super touchesMoved:touches withEvent:event];
-}
-
-
-- (void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event {
-    BUCPostListCell * __weak weakSelf = self;
-    [UIView animateWithDuration:0.3 animations:^{
-        weakSelf.backgroundColor = [UIColor whiteColor];
-    }];
+- (void)awakeFromNib {
+    self.author.titleLabel.backgroundColor = [UIColor whiteColor];
+    self.author.titleLabel.opaque = YES;
+    self.author.titleLabel.clearsContextBeforeDrawing = NO;
+    self.author.titleLabel.autoresizesSubviews = NO;
     
-    CGPoint location = [[touches anyObject] locationInView:self];
-    if ([self pointInside:location withEvent:event]) {
-        [super touchesEnded:touches withEvent:event];
-    }
+    self.forum.titleLabel.backgroundColor = [UIColor whiteColor];
+    self.forum.titleLabel.opaque = YES;
+    self.forum.titleLabel.clearsContextBeforeDrawing = NO;
+    self.forum.titleLabel.autoresizesSubviews = NO;
+    
+    self.lastPoster.titleLabel.backgroundColor = [UIColor whiteColor];
+    self.lastPoster.titleLabel.opaque = YES;
+    self.lastPoster.titleLabel.clearsContextBeforeDrawing = NO;
+    self.lastPoster.titleLabel.autoresizesSubviews = NO;
 }
 
 

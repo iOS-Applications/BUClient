@@ -6,7 +6,7 @@
 #import "BUCPostDetailCell.h"
 
 
-@interface BUCPostDetailController () <UIScrollViewDelegate, UITableViewDataSource, UITableViewDelegate, UITextViewDelegate>
+@interface BUCPostDetailController () <UITableViewDataSource, UITableViewDelegate>
 
 @property (strong, nonatomic) IBOutlet UITableView *tableView;
 
@@ -331,6 +331,7 @@ static NSUInteger const BUCPostDetailMinPostCount = 20;
     textView.textContainerInset = UIEdgeInsetsZero;
     textView.editable = NO;
     textView.scrollEnabled = NO;
+    textView.opaque = YES;
     
     return textView;
 }

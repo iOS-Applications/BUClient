@@ -20,6 +20,7 @@ extern CGFloat const BUCDefaultPadding;
 extern CGFloat const BUCDefaultMargin;
 
 extern CGFloat const BUCBorderWidth;
+extern CGFloat const BUCCornerRadius;
 
 // rich text attirbute keys
 extern NSString * const BUCLinkAttributeName;
