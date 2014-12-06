@@ -202,7 +202,7 @@ static NSUInteger const BUCPostDetailMinPostCount = 20;
     }
 
     if (self.length >= self.postCount) {
-        self.footLabel.text = @"已无更多";
+        self.footLabel.text = @"End of list";
     }
     self.footer.hidden = NO;
 
@@ -269,7 +269,7 @@ static NSUInteger const BUCPostDetailMinPostCount = 20;
     [cell.poster setTitle:username forState:UIControlStateNormal];
     
     // index
-    cell.index.text = [NSString stringWithFormat:@"%ld楼", (long)(post.index + 1)];
+    cell.index.text = [NSString stringWithFormat:@"%ldL", (long)(post.index + 1)];
     
     // dateline
     cell.dateline.text = post.dateline;
@@ -284,7 +284,6 @@ static NSUInteger const BUCPostDetailMinPostCount = 20;
         textView = [self textViewWithRichText:post.content frame:post.textFrame];
         [cell.contentView addSubview:textView];
         cell.content = textView;
-        textView.backgroundColor = cell.contentView.backgroundColor;
     }
     
     NSArray *attachmentList = [post.content attribute:BUCAttachmentListAttributeName atIndex:0 effectiveRange:NULL];
@@ -302,10 +301,11 @@ static NSUInteger const BUCPostDetailMinPostCount = 20;
 
     for (BUCImageAttachment *attachment in imageList) {
         CGRect frame = [textView.layoutManager boundingRectForGlyphRange:NSMakeRange(attachment.glyphIndex, 1) inTextContainer:textView.textContainer];
-        UIImageView *imageView = [[UIImageView alloc] initWithFrame:frame];;
+        UIImageView *imageView = [[UIImageView alloc] initWithFrame:frame];
+        imageView.opaque = YES;
+        imageView.backgroundColor = [UIColor whiteColor];
         [imageViewList addObject:imageView];
         imageView.contentMode = UIViewContentModeCenter;
-        imageView.backgroundColor = textView.backgroundColor;
         [textView addSubview:imageView];
         
         if (attachment.path) {
@@ -332,6 +332,7 @@ static NSUInteger const BUCPostDetailMinPostCount = 20;
     textView.editable = NO;
     textView.scrollEnabled = NO;
     textView.opaque = YES;
+    textView.backgroundColor = [UIColor whiteColor];
     
     return textView;
 }

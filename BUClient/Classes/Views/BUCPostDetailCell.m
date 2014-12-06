@@ -16,6 +16,14 @@
 }
 
 
+- (void)awakeFromNib {
+    self.poster.titleLabel.opaque = YES;
+    self.poster.titleLabel.backgroundColor = [UIColor whiteColor];
+    self.poster.titleLabel.clearsContextBeforeDrawing = NO;
+    self.poster.titleLabel.autoresizesSubviews = NO;
+}
+
+
 - (void)prepareForReuse {
     [super prepareForReuse];
     

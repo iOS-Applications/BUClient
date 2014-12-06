@@ -354,9 +354,9 @@ static NSString * const BUCJsonActionNewReply = @"newreply";
     static NSString * const BUCPostTitleTemplate = @"<b>%@</b>\n\n";
     static NSString * const BUCPostAttachmentTemplate = @"\n\n本帖包含图片附件:\n\n<img src='http://out.bitunion.org/%@'>";
     static NSString * const BUCImageFileTypePrefix = @"image/";
-    static NSString * const BUCLastPosterTemplate = @"最后回复: %@ by";
-    static NSString * const BUCPostStaticsTemplate1 = @"• %@回复";
-    static NSString * const BUCPostStaticsTemplate2 = @"• %@回复/%@查看";
+    static NSString * const BUCLastPosterTemplate = @"Last reply: %@ by";
+    static NSString * const BUCPostStaticsTemplate1 = @"• %@ replies";
+    static NSString * const BUCPostStaticsTemplate2 = @"• %@ replies/%@ views";
     
     NSMutableArray *list = [[NSMutableArray alloc] init];
     NSArray *rawList = [map objectForKey:listKey];
@@ -471,15 +471,15 @@ static NSString * const BUCJsonActionNewReply = @"newreply";
     
     NSTimeInterval timeInterval = abs(date.timeIntervalSinceNow);
     if (timeInterval <= 60) {
-        output = @"刚刚";
+        output = @"just now";
     } else if (timeInterval <= 60 * 60) {
-        output = [NSString stringWithFormat:@"%d分钟前", (int)timeInterval / 60];
+        output = [NSString stringWithFormat:@"%d minutes ago", (int)timeInterval / 60];
     } else if (timeInterval <= 60 * 60 * 24) {
-        output = [NSString stringWithFormat:@"%d小时前", (int)timeInterval / (60 * 60)];
+        output = [NSString stringWithFormat:@"%d hours ago", (int)timeInterval / (60 * 60)];
     } else if (timeInterval <= 60 * 60 * 24 * 30) {
-        output = [NSString stringWithFormat:@"%d天前", (int)timeInterval / (60 * 60 * 24)];
+        output = [NSString stringWithFormat:@"%d days ago", (int)timeInterval / (60 * 60 * 24)];
     } else if (timeInterval <= 60 * 60 * 24 * 30 * 12) {
-        output = [NSString stringWithFormat:@"%d个月前", (int)timeInterval / (60 * 60 * 24 * 30)];
+        output = [NSString stringWithFormat:@"%d months ago", (int)timeInterval / (60 * 60 * 24 * 30)];
     } else {
         [dateFormatter setDateFormat:@"yyyy/MM/dd"];
         output = [dateFormatter stringFromDate:date];

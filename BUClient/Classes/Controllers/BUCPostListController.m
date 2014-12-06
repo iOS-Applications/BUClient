@@ -42,10 +42,18 @@ static NSUInteger const BUCPostListMaxPostCount = 40;
     [self.previous setBackgroundImage:background forState:UIControlStateHighlighted];
     self.previous.layer.borderColor = [UIColor lightGrayColor].CGColor;
     self.previous.layer.borderWidth = BUCBorderWidth;
+    self.previous.titleLabel.backgroundColor = [UIColor whiteColor];
+    self.previous.titleLabel.opaque = YES;
+    self.previous.titleLabel.clearsContextBeforeDrawing = NO;
+    self.previous.titleLabel.autoresizesSubviews = NO;
     
     [self.next setBackgroundImage:background forState:UIControlStateHighlighted];
     self.next.layer.borderColor = [UIColor lightGrayColor].CGColor;
     self.next.layer.borderWidth = BUCBorderWidth;
+    self.next.titleLabel.backgroundColor = [UIColor whiteColor];
+    self.next.titleLabel.opaque = YES;
+    self.next.titleLabel.clearsContextBeforeDrawing = NO;
+    self.next.titleLabel.autoresizesSubviews = NO;
     
     if (self.fname) {
         self.from = @"0";
@@ -53,7 +61,7 @@ static NSUInteger const BUCPostListMaxPostCount = 40;
         self.location = 0;
         self.length = 0;
     } else {
-        self.navigationItem.title = @"最新主题";
+        self.navigationItem.title = @"Home";
     }
     
     self.tableView.sectionFooterHeight = 0.0f;
@@ -236,7 +244,7 @@ static NSUInteger const BUCPostListMaxPostCount = 40;
     } else {
         frame.size.height = BUCPostListSupplementaryViewHeight + BUCDefaultPadding + BUCDefaultMargin;
         view.hidden = NO;
-        [self.next setTitle:@"下一页" forState:UIControlStateNormal];
+        [self.next setTitle:@"Next" forState:UIControlStateNormal];
     }
     view.frame = frame;
     [self.tableView setTableFooterView:view];

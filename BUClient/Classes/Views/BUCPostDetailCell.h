@@ -10,8 +10,6 @@
 
 @interface BUCPostDetailCell : UITableViewCell
 
-
-
 @property (weak, nonatomic) IBOutlet UIImageView *avatar;
 @property (weak, nonatomic) IBOutlet UIButton *poster;
 @property (weak, nonatomic) IBOutlet UILabel *dateline;

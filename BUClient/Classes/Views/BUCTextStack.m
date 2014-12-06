@@ -16,17 +16,6 @@
 @implementation BUCTextContainer
 
 
-- (instancetype)initWithSize:(CGSize)size {
-    self = [super initWithSize:size];
-    
-    if (self) {
-        _isBlock = NO;
-    }
-    
-    return self;
-}
-
-
 - (CGRect)lineFragmentRectForProposedRect:(CGRect)proposedRect
                                   atIndex:(NSUInteger)characterIndex
                          writingDirection:(NSWritingDirection)baseWritingDirection
@@ -63,31 +52,10 @@
 @end
 
 
-@interface BUCLayoutManager ()
-
-@property (nonatomic) UIColor *borderColor;
-@property (nonatomic) UIColor *backgroundColor;
-@end
-
-
 @implementation BUCLayoutManager
 
 
-- (instancetype)init {
-    self = [super init];
-    
-    if (self) {
-        _borderColor = [UIColor lightGrayColor];
-        _backgroundColor = [UIColor whiteColor];
-    }
-    
-    return self;
-}
-
-
-- (void)drawBackgroundForGlyphRange:(NSRange)glyphsToShow atPoint:(CGPoint)origin {
-    [self.borderColor setStroke];
-    
+- (void)drawBackgroundForGlyphRange:(NSRange)glyphsToShow atPoint:(CGPoint)origin {    
     NSArray *blockList = [self.textStorage attribute:BUCTextBlockListAttributeName atIndex:0 effectiveRange:NULL];
     CGContextRef context = UIGraphicsGetCurrentContext();
     CGContextSetLineWidth(context, BUCBorderWidth);
@@ -103,11 +71,9 @@
 
         if (blockAttribute.backgroundColor) {
             [blockAttribute.backgroundColor setFill];
-        } else {
-            [self.backgroundColor setFill];
+            CGContextFillRect(context, frame);
         }
-        
-        CGContextFillRect(context, frame);
+
         CGContextStrokeRect(context, frame);
     }
 }

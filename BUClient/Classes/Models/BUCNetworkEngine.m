@@ -87,7 +87,7 @@
 
 #pragma mark - private methods
 - (NSURLRequest *)requestFromURL:(NSString *)url json:(NSDictionary *)json error:(NSError **)error {
-    static NSString * const baseURL = @"http://out.bitunion.org/open_api/bu_%@.php";
+    static NSString * baseURL = @"http://out.bitunion.org/open_api/bu_%@.php";
 //    baseURL = @"http://0.0.0.0/open_api/bu_%@.php";
     static NSString * const HTTPMethod = @"POST";
     NSMutableURLRequest *req = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:[NSString stringWithFormat:baseURL, url]]];
