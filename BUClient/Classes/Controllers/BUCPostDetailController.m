@@ -19,9 +19,14 @@
 @property (nonatomic) NSUInteger location;
 @property (nonatomic) NSUInteger length;
 
-@property (nonatomic) BOOL isRefresh;
+@property (nonatomic) BOOL isRefreshing;
+@property (nonatomic) BOOL isLoading;
 
 @property (nonatomic) UIImage *defaultAvatar;
+
+@property (weak, nonatomic) IBOutlet UIView *footer;
+@property (weak, nonatomic) IBOutlet UILabel *footLabel;
+@property (weak, nonatomic) IBOutlet UIActivityIndicatorView *loadingMoreIndicator;
 
 @end
 
@@ -61,7 +66,7 @@ static NSUInteger const BUCPostDetailMinPostCount = 20;
 - (void)refresh {
     [self displayLoading];
     
-    self.isRefresh = YES;
+    self.isRefreshing = YES;
 
     BUCPostDetailController * __weak weakSelf = self;
     [[BUCDataManager sharedInstance]
@@ -89,7 +94,7 @@ static NSUInteger const BUCPostDetailMinPostCount = 20;
      
      onSuccess:^(NSArray *list) {
          NSUInteger from = weakSelf.from.integerValue;
-         if (weakSelf.isRefresh) {
+         if (weakSelf.isRefreshing) {
              weakSelf.location = from;
              weakSelf.length = BUCPostDetailMinPostCount;
          } else {
@@ -98,17 +103,26 @@ static NSUInteger const BUCPostDetailMinPostCount = 20;
          
          [weakSelf buildList:list];
          [weakSelf hideLoading];
+         [weakSelf.loadingMoreIndicator stopAnimating];
      }
      
      onError:^(NSError *error) {
          [weakSelf hideLoading];
+         [weakSelf.loadingMoreIndicator stopAnimating];
          [weakSelf alertMessage:error.localizedDescription];
      }];
 }
 
 
 - (void)loadMore {
-    
+    self.footLabel.text = @"More...";
+    unsigned long from = self.location + self.length;
+    unsigned long to = from + BUCPostDetailMinPostCount;
+    self.from = [NSString stringWithFormat:@"%lu", from];
+    self.to = [NSString stringWithFormat:@"%lu", to];
+    self.isLoading = YES;
+    [self.loadingMoreIndicator startAnimating];
+    [self loadList];
 }
 
 
@@ -130,6 +144,10 @@ static NSUInteger const BUCPostDetailMinPostCount = 20;
     static NSString * const cellIdentifier = @"cell";
     BUCPostDetailCell *cell = [self.tableView dequeueReusableCellWithIdentifier:cellIdentifier forIndexPath:indexPath];
     [self configureCell:cell post:[self.postList objectAtIndex:indexPath.row]];
+    
+    if (indexPath.row == self.postList.count - 1 && self.postCount > self.location + self.length) {
+        [self loadMore];
+    }
 
     return cell;
 }
@@ -142,20 +160,17 @@ static NSUInteger const BUCPostDetailMinPostCount = 20;
 }
 
 
-#pragma mark - scroll view delegate
-//- (void)scrollViewDidEndDragging:(UIScrollView *)scrollView willDecelerate:(BOOL)decelerate {
-//    
-//}
-
 #pragma mark - private methods
 - (void)buildList:(NSArray *)list {
     NSMutableArray *postList;
-    if (self.isRefresh) {
+    NSMutableArray *insertRows;
+    if (self.isRefreshing) {
         postList = [[NSMutableArray alloc] init];
-        self.isRefresh = NO;
+        self.isRefreshing = NO;
         [self.tableView setContentOffset:CGPointZero];
     } else {
         postList = self.postList;
+        insertRows = [[NSMutableArray alloc] init];
     }
     
     NSInteger index = postList.count;
@@ -168,11 +183,39 @@ static NSUInteger const BUCPostDetailMinPostCount = 20;
         post.index = index;
         [self calculateFrameOfPost:post];
         [postList addObject:post];
+        
+        if (self.isLoading) {
+            NSIndexPath *indexPath = [NSIndexPath indexPathForRow:index inSection:0];
+            [insertRows addObject:indexPath];
+        }
+
         index = index + 1;
     }
     
     self.postList = postList;
-    [self.tableView reloadData];
+    
+    if (self.isLoading) {
+        [self.tableView insertRowsAtIndexPaths:insertRows withRowAnimation:UITableViewRowAnimationNone];
+        self.isLoading = NO;
+    } else {
+        [self.tableView reloadData];
+    }
+
+    if (self.length >= self.postCount) {
+        self.footLabel.text = @"已无更多";
+    }
+    self.footer.hidden = NO;
+
+    NSString *title;
+    if (self.post.title.length > 10) {
+        title = [NSString stringWithFormat:@"%@...", [self.post.title.string substringToIndex:10]];
+    } else {
+        title = self.post.title.string;
+    }
+    
+    unsigned long from = self.location + 1;
+    unsigned long to = self.location + self.postList.count;
+    self.navigationItem.title = [NSString stringWithFormat:@"%@[%lu-%lu]", title, from, to];
 }
 
 
@@ -205,6 +248,7 @@ static NSUInteger const BUCPostDetailMinPostCount = 20;
     post.textFrame = frame;
     post.cellHeight = CGRectGetMaxY(frame);
 }
+
 
 - (void)configureCell:(BUCPostDetailCell *)cell post:(BUCPost *)post {
     cell.avatar.image = self.defaultAvatar;

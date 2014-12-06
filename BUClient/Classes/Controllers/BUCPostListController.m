@@ -188,14 +188,14 @@ static NSString * const BUCCellNib = @"BUCPostListCell";
 
 #pragma mark - scroll view delegate
 - (void)scrollViewDidEndDragging:(UIScrollView *)scrollView willDecelerate:(BOOL)decelerate {
-    if (self.isLoading || self.isRefresh || decelerate) {
+    if (self.isLoading || self.isRefresh) {
         return;
     }
     
     CGFloat refreshFireHeight = 40.0f;
     if (scrollView.contentOffset.y <= -refreshFireHeight) {
         [self refresh];
-    } else if (self.fid && self.length != BUCPostListMaxPostCount && self.postCount >= self.location + self.length) {
+    } else if (self.fid && !decelerate && self.length != BUCPostListMaxPostCount && self.postCount >= self.location + self.length) {
         CGFloat loadMoreHeight = ceilf(CGRectGetHeight(self.listWrapper.frame) / 2);
         if (scrollView.contentOffset.y >= loadMoreHeight) {
             [self loadMore];

@@ -232,17 +232,35 @@
         <scene sceneID="PEe-cG-dxn">
             <objects>
                 <viewController storyboardIdentifier="BUCPostDetailController" autoresizesArchivedViewToFullSize="NO" automaticallyAdjustsScrollViewInsets="NO" id="oiG-Nc-ZDP" customClass="BUCPostDetailController" sceneMemberID="viewController">
-                    <tableView key="view" clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" showsHorizontalScrollIndicator="NO" canCancelContentTouches="NO" dataMode="prototypes" style="plain" separatorStyle="default" allowsSelection="NO" showsSelectionImmediatelyOnTouchBegin="NO" rowHeight="400" sectionHeaderHeight="1" sectionFooterHeight="1" id="Sik-0j-NGp">
+                    <tableView key="view" clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" showsHorizontalScrollIndicator="NO" canCancelContentTouches="NO" dataMode="prototypes" style="plain" separatorStyle="default" allowsSelection="NO" showsSelectionImmediatelyOnTouchBegin="NO" rowHeight="287" sectionHeaderHeight="1" sectionFooterHeight="1" id="Sik-0j-NGp">
                         <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                         <inset key="separatorInset" minX="0.0" minY="0.0" maxX="0.0" maxY="0.0"/>
-                        <view key="tableFooterView" contentMode="scaleToFill" id="hnt-O7-7kl" userLabel="footer">
+                        <view key="tableFooterView" hidden="YES" autoresizesSubviews="NO" contentMode="scaleToFill" id="hnt-O7-7kl" userLabel="footer">
+                            <rect key="frame" x="0.0" y="401" width="600" height="40"/>
                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                            <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                            <subviews>
+                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="IRX-Tn-bOq">
+                                    <rect key="frame" x="284" y="13" width="33" height="16"/>
+                                    <fontDescription key="fontDescription" type="system" pointSize="13"/>
+                                    <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
+                                    <nil key="highlightedColor"/>
+                                </label>
+                                <activityIndicatorView hidden="YES" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" hidesWhenStopped="YES" style="gray" translatesAutoresizingMaskIntoConstraints="NO" id="vvu-kU-qHM">
+                                    <rect key="frame" x="20" y="10" width="20" height="20"/>
+                                </activityIndicatorView>
+                            </subviews>
+                            <color key="backgroundColor" cocoaTouchSystemColor="groupTableViewBackgroundColor"/>
+                            <constraints>
+                                <constraint firstAttribute="centerX" secondItem="IRX-Tn-bOq" secondAttribute="centerX" id="DlR-5b-VRu"/>
+                                <constraint firstAttribute="centerY" secondItem="IRX-Tn-bOq" secondAttribute="centerY" constant="-0.5" id="Vvy-LW-1sV"/>
+                                <constraint firstAttribute="centerY" secondItem="vvu-kU-qHM" secondAttribute="centerY" id="lIu-pg-3u2"/>
+                                <constraint firstItem="vvu-kU-qHM" firstAttribute="leading" secondItem="hnt-O7-7kl" secondAttribute="leading" constant="20" id="rMY-wm-dim"/>
+                            </constraints>
                         </view>
                         <prototypes>
-                            <tableViewCell autoresizesSubviews="NO" contentMode="scaleToFill" selectionStyle="none" indentationWidth="10" shouldIndentWhileEditing="NO" reuseIdentifier="cell" id="mrz-4C-Ab1" customClass="BUCPostDetailCell">
+                            <tableViewCell autoresizesSubviews="NO" contentMode="scaleToFill" selectionStyle="none" indentationWidth="10" shouldIndentWhileEditing="NO" reuseIdentifier="cell" rowHeight="287" id="mrz-4C-Ab1" customClass="BUCPostDetailCell">
                                 <rect key="frame" x="0.0" y="0.0" width="600" height="44"/>
                                 <autoresizingMask key="autoresizingMask"/>
                                 <tableViewCellContentView key="contentView" autoresizesSubviews="NO" multipleTouchEnabled="YES" contentMode="center" tableViewCell="mrz-4C-Ab1" id="nrW-mj-TlB">
@@ -318,6 +336,9 @@
                     <toolbarItems/>
                     <navigationItem key="navigationItem" title="主题帖" id="BTH-jm-Xq6"/>
                     <connections>
+                        <outlet property="footLabel" destination="IRX-Tn-bOq" id="4Yt-sN-3aW"/>
+                        <outlet property="footer" destination="hnt-O7-7kl" id="4nk-20-B9t"/>
+                        <outlet property="loadingMoreIndicator" destination="vvu-kU-qHM" id="1Yj-oG-4QZ"/>
                         <outlet property="tableView" destination="Sik-0j-NGp" id="XC6-Z4-KOQ"/>
                     </connections>
                 </viewController>
