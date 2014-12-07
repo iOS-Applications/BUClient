@@ -6,7 +6,6 @@
 #import "BUCModels.h"
 #import "UIImage+BUCImageCategory.h"
 
-static CGFloat const BUCPostListSupplementaryViewHeight = 40.0f;
 static NSUInteger const BUCPostListMinPostCount = 20;
 static NSUInteger const BUCPostListMaxPostCount = 40;
 
@@ -61,7 +60,7 @@ static NSUInteger const BUCPostListMaxPostCount = 40;
         self.location = 0;
         self.length = 0;
     } else {
-        self.navigationItem.title = @"Home";
+        self.navigationItem.title = @"最新主题";
     }
     
     self.tableView.sectionFooterHeight = 0.0f;
@@ -81,7 +80,7 @@ static NSUInteger const BUCPostListMaxPostCount = 40;
         BUCPostListController * __weak weakSelf = self;
         [[BUCDataManager sharedInstance]
          childCountOfForum:self.fid
-         post:nil
+         thread:nil
          onSuccess:^(NSUInteger count) {
              weakSelf.postCount = count;
              [weakSelf loadList];
@@ -197,8 +196,7 @@ static NSUInteger const BUCPostListMaxPostCount = 40;
 
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
-    static NSString * const cellIdentifier = @"BUCPostListCell";
-    BUCPostListCell *cell = [self.tableView dequeueReusableCellWithIdentifier:cellIdentifier forIndexPath:indexPath];
+    BUCPostListCell *cell = [self.tableView dequeueReusableCellWithIdentifier:@"BUCPostListCell" forIndexPath:indexPath];
     [self configureCell:cell post:[self.postList objectAtIndex:indexPath.section]];
     
     
@@ -216,7 +214,7 @@ static NSUInteger const BUCPostListMaxPostCount = 40;
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     [tableView deselectRowAtIndexPath:indexPath animated:NO];
-    BUCPostDetailController *postDetailController = [self.storyboard instantiateViewControllerWithIdentifier:BUCPostDetailControllerStoryboardID];
+    BUCPostDetailController *postDetailController = [self.storyboard instantiateViewControllerWithIdentifier:@"BUCPostDetailController"];
     postDetailController.post = [self.postList objectAtIndex:indexPath.section];
     [(UINavigationController *)self.parentViewController pushViewController:postDetailController animated:YES];
 }
@@ -224,6 +222,8 @@ static NSUInteger const BUCPostListMaxPostCount = 40;
 
 #pragma mark - private methods
 - (void)updateNavigation {
+    static CGFloat const BUCPostListSupplementaryViewHeight = 40.0f;
+    
     UIView *view = self.tableView.tableHeaderView;;
     CGRect frame = view.frame;
     if (!self.fid || self.location == 0) {
@@ -307,11 +307,15 @@ static NSUInteger const BUCPostListMaxPostCount = 40;
         [layoutManager addTextContainer:textContainer];
     });
     
-    [textStorage setAttributedString:post.title];
-    [layoutManager ensureLayoutForTextContainer:textContainer];
-    
-    CGRect frame = [layoutManager usedRectForTextContainer:textContainer];
-    post.cellHeight = ceilf(frame.size.height) + 72.0f;
+    if (post.title) {
+        [textStorage setAttributedString:post.title];
+        [layoutManager ensureLayoutForTextContainer:textContainer];
+        
+        CGRect frame = [layoutManager usedRectForTextContainer:textContainer];
+        post.cellHeight = ceilf(frame.size.height) + 72.0f;
+    } else {
+        post.cellHeight = 72.0f;
+    }
 }
 
 
@@ -319,6 +323,12 @@ static NSUInteger const BUCPostListMaxPostCount = 40;
     // title
     cell.title.preferredMaxLayoutWidth = CGRectGetWidth(self.tableView.frame) - 2 * BUCDefaultMargin - 2 * BUCDefaultPadding;
     cell.title.attributedText = post.title;
+    
+    // dateline
+    cell.dateline.text = post.postListDateline;
+    
+    // statistic
+    cell.statistic.text = post.statistic;
     
     // username
     [cell.author setTitle:post.user forState:UIControlStateNormal];
@@ -328,15 +338,7 @@ static NSUInteger const BUCPostListMaxPostCount = 40;
         cell.forum.hidden = NO;
         [cell.forum setTitle:post.fname forState:UIControlStateNormal];
         [cell.forum addTarget:self action:@selector(jumpToForum:) forControlEvents:UIControlEventTouchUpInside];
-        cell.statisticLeftToPreposition.constant = BUCDefaultMargin + cell.forum.intrinsicContentSize.width;
-    } else {
-        cell.dateline.hidden = NO;
-        cell.dateline.text = post.dateline;
-        cell.statisticLeftToPreposition.constant = BUCDefaultMargin + cell.dateline.intrinsicContentSize.width;
     }
-    
-    // statistic
-    cell.statistic.text = post.statistic;
     
     // last reply
     cell.lastPostDate.text = post.lastPostDateline;

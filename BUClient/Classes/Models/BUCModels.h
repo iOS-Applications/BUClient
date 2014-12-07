@@ -18,6 +18,7 @@
 @property (nonatomic) NSAttributedString *title;
 @property (nonatomic) NSAttributedString *content;
 @property (nonatomic) NSString *dateline;
+@property (nonatomic) NSString *postListDateline;
 
 @property (nonatomic) NSString *statistic;
 
@@ -38,6 +39,18 @@
 @property (nonatomic) NSString *path;
 
 @end
+
+
+typedef NS_OPTIONS(uint32_t, BUCLinkType) {
+    BUCHomeLink = 1 << 0,
+    BUCForumListLink = 1 << 1,
+    BUCForumLink = 1 << 2,
+    BUCPostLink = 1 << 3,
+    BUCUserLink = 1 << 4,
+    
+    BUCMailLink = 1 << 5,
+    BUCUrlLink = 1 << 6
+};
 
 
 @interface BUCLinkAttribute : NSObject

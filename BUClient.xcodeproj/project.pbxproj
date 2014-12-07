@@ -7,15 +7,14 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		1B5E79E61A303B40004BCAE6 /* avatar.png in Resources */ = {isa = PBXBuildFile; fileRef = 1B78AD511A2B0BE500E949E0 /* avatar.png */; };
+		1B4714C31A33EBFF009AB55B /* BUCForumList.plist in Resources */ = {isa = PBXBuildFile; fileRef = 1B4714C21A33EBFF009AB55B /* BUCForumList.plist */; };
+		1B4714C61A33FADD009AB55B /* BUCForumListController.m in Sources */ = {isa = PBXBuildFile; fileRef = 1B4714C51A33FADD009AB55B /* BUCForumListController.m */; };
 		1B78AD4E1A2AF0E500E949E0 /* BUCPostDetailCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 1B78AD4D1A2AF0E500E949E0 /* BUCPostDetailCell.m */; };
 		1BDE21C91A2EC724009F82C9 /* UIImage+BUCImageCategory.m in Sources */ = {isa = PBXBuildFile; fileRef = 1BDE21C81A2EC724009F82C9 /* UIImage+BUCImageCategory.m */; };
 		D803C6911A1782DB00D26604 /* BUCTextStack.m in Sources */ = {isa = PBXBuildFile; fileRef = D803C6901A1782DB00D26604 /* BUCTextStack.m */; };
 		D8114CD4189012BC00F0E1A7 /* BUCAppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = D8114CAA189012BC00F0E1A7 /* BUCAppDelegate.m */; };
 		D8114CD6189012BC00F0E1A7 /* BUCPostListController.m in Sources */ = {isa = PBXBuildFile; fileRef = D8114CAF189012BC00F0E1A7 /* BUCPostListController.m */; };
 		D8114CD8189012BC00F0E1A7 /* BUCLoginController.m in Sources */ = {isa = PBXBuildFile; fileRef = D8114CB3189012BC00F0E1A7 /* BUCLoginController.m */; };
-		D81ED3661A122FBD00D10243 /* icons in Resources */ = {isa = PBXBuildFile; fileRef = D81ED3651A122FBD00D10243 /* icons */; };
-		D81ED3681A122FE300D10243 /* etc in Resources */ = {isa = PBXBuildFile; fileRef = D81ED3671A122FE300D10243 /* etc */; };
 		D848C0481A13BA8D0037F429 /* BUCImageController.m in Sources */ = {isa = PBXBuildFile; fileRef = D848C0471A13BA8D0037F429 /* BUCImageController.m */; };
 		D853E7EB1A1594490003C284 /* TFHpple.m in Sources */ = {isa = PBXBuildFile; fileRef = D853E7E31A1594490003C284 /* TFHpple.m */; };
 		D853E7EC1A1594490003C284 /* TFHppleElement.m in Sources */ = {isa = PBXBuildFile; fileRef = D853E7E51A1594490003C284 /* TFHppleElement.m */; };
@@ -57,9 +56,11 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		1B4714C21A33EBFF009AB55B /* BUCForumList.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = BUCForumList.plist; sourceTree = "<group>"; };
+		1B4714C41A33FADD009AB55B /* BUCForumListController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BUCForumListController.h; sourceTree = "<group>"; };
+		1B4714C51A33FADD009AB55B /* BUCForumListController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BUCForumListController.m; sourceTree = "<group>"; };
 		1B78AD4C1A2AF0E500E949E0 /* BUCPostDetailCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BUCPostDetailCell.h; sourceTree = "<group>"; };
 		1B78AD4D1A2AF0E500E949E0 /* BUCPostDetailCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BUCPostDetailCell.m; sourceTree = "<group>"; };
-		1B78AD511A2B0BE500E949E0 /* avatar.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = avatar.png; path = etc/avatar.png; sourceTree = "<group>"; };
 		1BDE21C71A2EC724009F82C9 /* UIImage+BUCImageCategory.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "UIImage+BUCImageCategory.h"; sourceTree = "<group>"; };
 		1BDE21C81A2EC724009F82C9 /* UIImage+BUCImageCategory.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "UIImage+BUCImageCategory.m"; sourceTree = "<group>"; };
 		D803C68F1A1782DB00D26604 /* BUCTextStack.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BUCTextStack.h; sourceTree = "<group>"; };
@@ -70,8 +71,6 @@
 		D8114CAF189012BC00F0E1A7 /* BUCPostListController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BUCPostListController.m; sourceTree = "<group>"; };
 		D8114CB2189012BC00F0E1A7 /* BUCLoginController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BUCLoginController.h; sourceTree = "<group>"; };
 		D8114CB3189012BC00F0E1A7 /* BUCLoginController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BUCLoginController.m; sourceTree = "<group>"; };
-		D81ED3651A122FBD00D10243 /* icons */ = {isa = PBXFileReference; lastKnownFileType = folder; path = icons; sourceTree = "<group>"; };
-		D81ED3671A122FE300D10243 /* etc */ = {isa = PBXFileReference; lastKnownFileType = folder; path = etc; sourceTree = "<group>"; };
 		D848C0461A13BA8D0037F429 /* BUCImageController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BUCImageController.h; sourceTree = "<group>"; };
 		D848C0471A13BA8D0037F429 /* BUCImageController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BUCImageController.m; sourceTree = "<group>"; };
 		D853E7E21A1594490003C284 /* TFHpple.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TFHpple.h; sourceTree = "<group>"; };
@@ -171,10 +170,12 @@
 			children = (
 				D85EA94F1A0DA943000BE12A /* BUCBaseController.h */,
 				D85EA9501A0DA943000BE12A /* BUCBaseController.m */,
-				D8DDF7E91A08C60000CEFBA9 /* BUCRootController.h */,
-				D8DDF7EA1A08C60000CEFBA9 /* BUCRootController.m */,
 				D8114CB2189012BC00F0E1A7 /* BUCLoginController.h */,
 				D8114CB3189012BC00F0E1A7 /* BUCLoginController.m */,
+				D8DDF7E91A08C60000CEFBA9 /* BUCRootController.h */,
+				D8DDF7EA1A08C60000CEFBA9 /* BUCRootController.m */,
+				1B4714C41A33FADD009AB55B /* BUCForumListController.h */,
+				1B4714C51A33FADD009AB55B /* BUCForumListController.m */,
 				D8114CAE189012BC00F0E1A7 /* BUCPostListController.h */,
 				D8114CAF189012BC00F0E1A7 /* BUCPostListController.m */,
 				D8E46E9C1A0327910061C8DA /* BUCPostDetailController.h */,
@@ -211,9 +212,6 @@
 		D8114CC4189012BC00F0E1A7 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
-				1B78AD511A2B0BE500E949E0 /* avatar.png */,
-				D81ED3671A122FE300D10243 /* etc */,
-				D81ED3651A122FBD00D10243 /* icons */,
 				D872DE5F1A0FB46A00450E0B /* images */,
 			);
 			path = Resources;
@@ -296,6 +294,7 @@
 			isa = PBXGroup;
 			children = (
 				D8A3BF9F187C895E006CBF64 /* BUClient-Info.plist */,
+				1B4714C21A33EBFF009AB55B /* BUCForumList.plist */,
 				D8A3BFA0187C895E006CBF64 /* InfoPlist.strings */,
 				D8A3BFA3187C895E006CBF64 /* main.m */,
 				D8A3BFA5187C895E006CBF64 /* BUClient-Prefix.pch */,
@@ -416,14 +415,12 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				1B5E79E61A303B40004BCAE6 /* avatar.png in Resources */,
 				D85EA9571A0DAF26000BE12A /* BUCLoadingView.xib in Resources */,
 				D8A2461718910A9A00AFD27A /* Main.storyboard in Resources */,
 				D8A3BFA2187C895E006CBF64 /* InfoPlist.strings in Resources */,
 				D8A3BFAA187C895E006CBF64 /* Images.xcassets in Resources */,
-				D81ED3661A122FBD00D10243 /* icons in Resources */,
+				1B4714C31A33EBFF009AB55B /* BUCForumList.plist in Resources */,
 				D872DE601A0FB46A00450E0B /* images in Resources */,
-				D81ED3681A122FE300D10243 /* etc in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -448,6 +445,7 @@
 				D853E7ED1A1594490003C284 /* XPathQuery.m in Sources */,
 				D8B792ED1A07A4950028D645 /* BUCConstants.m in Sources */,
 				D8E3A88919FB42940047531E /* BUCPostListCell.m in Sources */,
+				1B4714C61A33FADD009AB55B /* BUCForumListController.m in Sources */,
 				1B78AD4E1A2AF0E500E949E0 /* BUCPostDetailCell.m in Sources */,
 				D8B766F819F4FCA100EB63D2 /* BUCDataManager.m in Sources */,
 				D8A3BFA4187C895E006CBF64 /* main.m in Sources */,

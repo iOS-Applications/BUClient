@@ -13,9 +13,6 @@
 @end
 
 
-static NSString * const BUCLoadingView = @"BUCLoadingView";
-
-
 @implementation BUCBaseController
 
 
@@ -24,7 +21,7 @@ static NSString * const BUCLoadingView = @"BUCLoadingView";
     [super viewDidLoad];
 
     // set up loading view
-    [[NSBundle mainBundle] loadNibNamed:BUCLoadingView owner:self options:nil];
+    [[NSBundle mainBundle] loadNibNamed:@"BUCLoadingView" owner:self options:nil];
     
     self.loadingView.frame = CGRectMake(0, 0, 140.0f, 140.0f);
     self.loadingView.layer.cornerRadius = 10.0f;

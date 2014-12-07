@@ -197,9 +197,8 @@
     }
     
     NSMutableDictionary *attributes = [NSMutableDictionary dictionaryWithDictionary:superAttributes];
-    static NSString *pattern = @"\\s*\\[ Last edited by .+ on [0-9]{4}-[0-9]{1,2}-[0-9]{1,2} at [0-9]{2}:[0-9]{2} \\]";
     
-    if ([self matchString:tree.content withPattern:pattern match:NULL]) {
+    if ([self matchString:tree.content withPattern:@"\\s*\\[ Last edited by .+ on [0-9]{4}-[0-9]{1,2}-[0-9]{1,2} at [0-9]{2}:[0-9]{2} \\]" match:NULL]) {
         [attributes setObject:[UIFont preferredFontForTextStyle:UIFontTextStyleCaption1] forKeyedSubscript:NSFontAttributeName];
     }
     
@@ -214,9 +213,8 @@
     }
 
     BUCImageAttachment *attachment = [[BUCImageAttachment alloc] init];
-    static NSString *pattern = @"^\\.\\./images/.+$";
     
-    if ([self matchString:source withPattern:pattern match:NULL]) {
+    if ([self matchString:source withPattern:@"^\\.\\./images/.+$" match:NULL]) {
         NSString *resourcePath = [[NSBundle mainBundle] resourcePath];
         attachment.path = [NSString stringWithFormat:@"%@/%@", resourcePath, [source substringFromIndex:3]];
         UIImage *image = [self.dataManager getImageWithPath:attachment.path];
@@ -230,7 +228,7 @@
         if (!attachment.url) {
             return;
         } else {
-            attachment.bounds = CGRectMake(0, 0, self.imageWidth, BUCImageThumbnailHeight);
+            attachment.bounds = CGRectMake(0, 0, self.imageWidth, 100.0f);
         }
     }
     
@@ -272,8 +270,7 @@
 
 
 - (void)appendCode:(TFHppleElement *)tree superAttributes:(NSDictionary *)superAttributes {
-    static NSString *query = @"//div/ol/li";
-    NSArray *codeLines = [tree searchWithXPathQuery:query];
+    NSArray *codeLines = [tree searchWithXPathQuery:@"//div/ol/li"];
     
     if (!codeLines || codeLines.count == 0) {
         return;
@@ -388,9 +385,7 @@
         return output;
     }
     
-    static NSString *pattern = @"^#\\s*([a-z0-9]{3}|[a-z0-9]{6})$";
-    
-    if (![self matchString:color withPattern:pattern match:NULL]) {
+    if (![self matchString:color withPattern:@"^#\\s*([a-z0-9]{3}|[a-z0-9]{6})$" match:NULL]) {
         output = [UIColor blackColor];
     } else {
         NSString *cleanString = [color stringByReplacingOccurrencesOfString:@"#" withString:@""];
@@ -417,24 +412,16 @@
         return nil;
     }
     
-    static NSString *usernamePattern = @"^/profile-username-.+\\.html$";
-    static NSString *mailPattern = @"^mailto:.+$";
-    static NSString *buPattern  = @"^(http://)?(((www)|(out)|(us))\\.)?bitunion\\.org(/.*)?$";
-    static NSString *threadPattern = @"^/thread-([1-9][0-9]+)-[1-9]-[1-9]\\.html$";
-    static NSString *viewThreadPattern = @"^/viewthread\\.php\\?tid=([1-9][0-9]+).*$";
-    static NSString *forumPattern = @"^/forum-([1-9]{1,3})-[1-9]\\.html$";
-    static NSString *buDomanName = @"bitunion.org";
-    
     BUCLinkAttribute *linkAttribute = [[BUCLinkAttribute alloc] init];
     NSTextCheckingResult *match;
     UIColor *linkColor;
     
-    if ([self matchString:href withPattern:usernamePattern match:&match]) {
+    if ([self matchString:href withPattern:@"^/profile-username-.+\\.html$" match:&match]) {
         linkAttribute.linkType = BUCUserLink;
         linkAttribute.linkValue = htmlElement.firstChild.content;
         linkColor = [self colorAttribute:@"summon"];
-    } else if ([self matchString:href withPattern:buPattern match:&match]) {
-        NSRange hostRange = [href rangeOfString:buDomanName];
+    } else if ([self matchString:href withPattern:@"^(http://)?(((www)|(out)|(us))\\.)?bitunion\\.org(/.*)?$" match:&match]) {
+        NSRange hostRange = [href rangeOfString:@"bitunion.org"];
         NSUInteger pathIndex = hostRange.location + hostRange.length;
         NSString *path;
         if (pathIndex < href.length) {
@@ -447,11 +434,11 @@
             linkAttribute.linkType = BUCHomeLink;
         } else if ([path isEqualToString:@"/index.php"]) {
             linkAttribute.linkType = BUCForumListLink;
-        } else if ([self matchString:path withPattern:threadPattern match:&match]) {
+        } else if ([self matchString:path withPattern:@"^/thread-([1-9][0-9]+)-[1-9]-[1-9]\\.html$" match:&match]) {
             linkAttribute.linkType = BUCPostLink;
-        } else if ([self matchString:path withPattern:viewThreadPattern match:&match]) {
+        } else if ([self matchString:path withPattern:@"^/viewthread\\.php\\?tid=([1-9][0-9]+).*$" match:&match]) {
             linkAttribute.linkType = BUCPostLink;
-        } else if ([self matchString:path withPattern:forumPattern match:&match]) {
+        } else if ([self matchString:path withPattern:@"^/forum-([1-9]{1,3})-[1-9]\\.html$" match:&match]) {
             linkAttribute.linkType = BUCForumLink;
         } else {
             linkAttribute.linkType = BUCUrlLink;
@@ -463,7 +450,7 @@
         }
         linkColor = [self colorAttribute:@"url"];
         
-    } else if ([self matchString:href withPattern:mailPattern match:&match]) {
+    } else if ([self matchString:href withPattern:@"^mailto:.+$" match:&match]) {
         linkAttribute.linkType = BUCMailLink;
         linkAttribute.linkValue = [href substringFromIndex:7];
         linkColor = [self colorAttribute:@"mail"];
@@ -484,9 +471,8 @@
         return [UIColor whiteColor];
     }
     
-    static NSString *pattern = @"background-color:\\s*(#[0-9a-f]{6}|[0-9a-f]{3})";
     NSTextCheckingResult *match;
-    if ([self matchString:styleString withPattern:pattern match:&match]) {
+    if ([self matchString:styleString withPattern:@"background-color:\\s*(#[0-9a-f]{6}|[0-9a-f]{3})" match:&match]) {
         return [self colorAttribute:[styleString substringWithRange:[match rangeAtIndex:1]]];
     }
     
@@ -575,17 +561,14 @@
     NSString *baseUrl = @"http://out.bitunion.org";
     NSURL *url = [NSURL URLWithString:source];
     
-    static NSString *lanPattern = @"^http://www\\.bitunion\\.org/.+$";
-    static NSString *relativePattern = @"^images/.+$";
-    static NSString *attachmentPattern = @"^/attachments/.+$";
     
     if ([url.host isEqualToString:@"bitunion.org"]) {
         source = [NSString stringWithFormat:@"%@%@", baseUrl, url.path];
-    } else if ([self matchString:source withPattern:lanPattern match:NULL]) {
+    } else if ([self matchString:source withPattern:@"^http://www\\.bitunion\\.org/.+$" match:NULL]) {
         source = [source stringByReplacingOccurrencesOfString:@"www.bitunion.org" withString:@"out.bitunion.org"];
-    } else if ([self matchString:source withPattern:relativePattern match:NULL]) {
+    } else if ([self matchString:source withPattern:@"^images/.+$" match:NULL]) {
         source = [NSString stringWithFormat:@"%@/%@", baseUrl, source];
-    } else if ([self matchString:source withPattern:attachmentPattern match:NULL]) {
+    } else if ([self matchString:source withPattern:@"^/attachments/.+$" match:NULL]) {
         source = [NSString stringWithFormat:@"%@%@", baseUrl, source];
     }
     

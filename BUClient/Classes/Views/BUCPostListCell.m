@@ -25,21 +25,31 @@
 
 
 - (void)awakeFromNib {
-    self.author.titleLabel.backgroundColor = [UIColor whiteColor];
     self.author.titleLabel.opaque = YES;
+    self.author.titleLabel.backgroundColor = [UIColor whiteColor];
     self.author.titleLabel.clearsContextBeforeDrawing = NO;
     self.author.titleLabel.autoresizesSubviews = NO;
     
-    self.forum.titleLabel.backgroundColor = [UIColor whiteColor];
     self.forum.titleLabel.opaque = YES;
+    self.forum.titleLabel.backgroundColor = [UIColor whiteColor];
     self.forum.titleLabel.clearsContextBeforeDrawing = NO;
     self.forum.titleLabel.autoresizesSubviews = NO;
     
-    self.lastPoster.titleLabel.backgroundColor = [UIColor whiteColor];
     self.lastPoster.titleLabel.opaque = YES;
+    self.lastPoster.titleLabel.backgroundColor = [UIColor whiteColor];
     self.lastPoster.titleLabel.clearsContextBeforeDrawing = NO;
     self.lastPoster.titleLabel.autoresizesSubviews = NO;
 }
 
 
 @end
+
+
+
+
+
+
+
+
+
+

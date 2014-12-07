@@ -1,6 +1,5 @@
 #import "BUCRootController.h"
 #import "BUCConstants.h"
-#import "BUCLoginController.h"
 #import "BUCDataManager.h"
 
 
@@ -10,6 +9,10 @@
 
 
 @implementation BUCRootController
+- (IBAction)forumList:(id)sender {
+    UIViewController *forumListController = [self.storyboard instantiateViewControllerWithIdentifier:@"BUCForumListController"];
+    [self presentViewController:forumListController animated:YES completion:nil];
+}
 
 
 - (void)viewDidLoad {
@@ -23,7 +26,7 @@
     [super viewDidAppear:animated];
     
     if (![BUCDataManager sharedInstance].loggedIn) {
-        BUCLoginController *loginController = [self.storyboard instantiateViewControllerWithIdentifier:BUCLoginControllerStoryboardID];
+        UIViewController *loginController = [self.storyboard instantiateViewControllerWithIdentifier:@"BUCLoginController"];
         [self presentViewController:loginController animated:YES completion:nil];
     }
 }

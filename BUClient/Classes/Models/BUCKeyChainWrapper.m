@@ -3,7 +3,6 @@
 
 static NSString *kKeychainItemIdentifer = @"org.bitunion.buc.%@.KeychainUI";
 
-
 @interface BUCKeyChainWrapper ()
 
 @property (nonatomic) NSMutableDictionary *keychainData;

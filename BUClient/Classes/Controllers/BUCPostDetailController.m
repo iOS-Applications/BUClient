@@ -71,7 +71,7 @@ static NSUInteger const BUCPostDetailMinPostCount = 20;
     BUCPostDetailController * __weak weakSelf = self;
     [[BUCDataManager sharedInstance]
      childCountOfForum:nil
-     post:self.post.tid
+     thread:self.post.tid
      onSuccess:^(NSUInteger count) {
          weakSelf.postCount = count;
          [weakSelf loadList];
@@ -141,8 +141,7 @@ static NSUInteger const BUCPostDetailMinPostCount = 20;
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
-    static NSString * const cellIdentifier = @"cell";
-    BUCPostDetailCell *cell = [self.tableView dequeueReusableCellWithIdentifier:cellIdentifier forIndexPath:indexPath];
+    BUCPostDetailCell *cell = [self.tableView dequeueReusableCellWithIdentifier:@"cell" forIndexPath:indexPath];
     [self configureCell:cell post:[self.postList objectAtIndex:indexPath.row]];
     
     if (indexPath.row == self.postList.count - 1 && self.postCount > self.location + self.length) {
@@ -297,7 +296,6 @@ static NSUInteger const BUCPostDetailMinPostCount = 20;
 
 
 - (void)layoutImages:(NSArray *)imageList textView:(UITextView *)textView imageViewList:(NSMutableArray *)imageViewList {
-    CGSize size = CGSizeMake(CGRectGetWidth(textView.frame), BUCImageThumbnailHeight);
 
     for (BUCImageAttachment *attachment in imageList) {
         CGRect frame = [textView.layoutManager boundingRectForGlyphRange:NSMakeRange(attachment.glyphIndex, 1) inTextContainer:textView.textContainer];
@@ -311,7 +309,7 @@ static NSUInteger const BUCPostDetailMinPostCount = 20;
         if (attachment.path) {
             imageView.image = [[BUCDataManager sharedInstance] getImageWithPath:attachment.path];
         } else {
-            [[BUCDataManager sharedInstance] getImageWithUrl:attachment.url size:size onSuccess:^(UIImage *image) {
+            [[BUCDataManager sharedInstance] getImageWithUrl:attachment.url size:attachment.bounds.size onSuccess:^(UIImage *image) {
                 imageView.image = image;
             }];
         }
