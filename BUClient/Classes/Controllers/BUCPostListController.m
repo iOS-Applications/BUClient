@@ -142,8 +142,10 @@ static NSUInteger const BUCPostListMaxPostCount = 40;
 
 
 - (IBAction)loadPrevious {
-    self.from = [NSString stringWithFormat:@"%lu", (unsigned long)(self.location - BUCPostListMaxPostCount)];
-    self.to = [NSString stringWithFormat:@"%lu", (unsigned long)(self.location - BUCPostListMaxPostCount + BUCPostListMinPostCount)];
+    unsigned long from = self.location - BUCPostListMaxPostCount;
+    unsigned long to = from + BUCPostListMinPostCount;
+    self.from = [NSString stringWithFormat:@"%lu", from];
+    self.to = [NSString stringWithFormat:@"%lu", to];
     [self refresh];
 }
 
@@ -171,8 +173,8 @@ static NSUInteger const BUCPostListMaxPostCount = 40;
 - (void)jumpToForum:(id)sender {
     BUCPostListController *postListController = [self.storyboard instantiateViewControllerWithIdentifier:BUCPostListControllerStoryboardID];
     UIButton *forumName = (UIButton *)sender;
-    BUCPostListCell *listItem = (BUCPostListCell *)forumName.superview;
-    BUCPost *post = [self.postList objectAtIndex:listItem.tag];
+    UIView *contentView = forumName.superview;
+    BUCPost *post = [self.postList objectAtIndex:contentView.tag];
     postListController.fid = post.fid;
     postListController.fname = post.fname;
     [(UINavigationController *)self.parentViewController pushViewController:postListController animated:YES];
@@ -198,7 +200,7 @@ static NSUInteger const BUCPostListMaxPostCount = 40;
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     BUCPostListCell *cell = [self.tableView dequeueReusableCellWithIdentifier:@"BUCPostListCell" forIndexPath:indexPath];
     [self configureCell:cell post:[self.postList objectAtIndex:indexPath.section]];
-    
+    cell.contentView.tag = indexPath.section;
     
     if (!self.loading && indexPath.section == self.postList.count - 1 && self.postCount > self.location + self.length && self.length < BUCPostListMaxPostCount) {
         [self loadMore];
@@ -325,7 +327,7 @@ static NSUInteger const BUCPostListMaxPostCount = 40;
     cell.title.attributedText = post.title;
     
     // dateline
-    cell.dateline.text = post.postListDateline;
+    cell.dateline.text = post.dateline;
     
     // statistic
     cell.statistic.text = post.statistic;

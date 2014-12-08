@@ -1,5 +1,4 @@
 #import <Foundation/Foundation.h>
-#import "BUCConstants.h"
 
 #ifndef BUClient_BUCModels_h
 #define BUClient_BUCModels_h

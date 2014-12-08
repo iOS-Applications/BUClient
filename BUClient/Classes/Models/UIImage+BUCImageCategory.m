@@ -110,12 +110,7 @@ static int maxDimension(CFDictionaryRef properties, CGSize fitSize) {
     NSNumber *height;
     CGFloat scaledWidth;
     CGFloat scaledHeight;
-    CGFloat scale = 1.0f;
-#if TARGET_IPHONE_SIMULATOR
-    scale = 1.0f;
-#else
-    scale = 2.0f;
-#endif
+
     
     width = (NSNumber *)CFDictionaryGetValue(properties, kCGImagePropertyPixelWidth);
     height = (NSNumber *)CFDictionaryGetValue(properties, kCGImagePropertyPixelHeight);
@@ -131,7 +126,7 @@ static int maxDimension(CFDictionaryRef properties, CGSize fitSize) {
         scaledHeight = height.floatValue * fitSize.width / width.floatValue;
     }
     
-    return floorf(MAX(scaledWidth, scaledHeight)) * scale;
+    return floorf(MAX(scaledWidth, scaledHeight));
 }
 
 

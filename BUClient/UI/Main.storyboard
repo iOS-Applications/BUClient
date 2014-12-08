@@ -188,21 +188,21 @@
                                             <nil key="highlightedColor"/>
                                         </label>
                                         <button autoresizesSubviews="NO" clearsContextBeforeDrawing="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="QGB-cJ-KfN" userLabel="author">
-                                            <rect key="frame" x="161" y="36" width="39" height="28"/>
+                                            <rect key="frame" x="159" y="36" width="39" height="28"/>
                                             <fontDescription key="fontDescription" type="system" pointSize="13"/>
                                             <state key="normal" title="author">
                                                 <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
                                             </state>
                                         </button>
                                         <label autoresizesSubviews="NO" clearsContextBeforeDrawing="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="statistic" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" preferredMaxLayoutWidth="600" translatesAutoresizingMaskIntoConstraints="NO" id="IeE-Hu-HLT" userLabel="statistic">
-                                            <rect key="frame" x="202" y="42" width="47" height="16"/>
+                                            <rect key="frame" x="200" y="42" width="47" height="16"/>
                                             <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                                             <fontDescription key="fontDescription" type="system" pointSize="13"/>
                                             <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
                                             <nil key="highlightedColor"/>
                                         </label>
                                         <button hidden="YES" autoresizesSubviews="NO" clearsContextBeforeDrawing="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="59Z-Hr-XFQ" userLabel="forum">
-                                            <rect key="frame" x="251" y="36" width="35" height="28"/>
+                                            <rect key="frame" x="249" y="36" width="35" height="28"/>
                                             <fontDescription key="fontDescription" type="system" pointSize="13"/>
                                             <state key="normal" title="forum">
                                                 <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
@@ -234,7 +234,7 @@
                                     <constraints>
                                         <constraint firstItem="1ur-nn-Hbi" firstAttribute="leading" secondItem="nA3-9f-Nqs" secondAttribute="leading" constant="5" id="2zv-ZW-2lc"/>
                                         <constraint firstAttribute="trailing" secondItem="Tds-gL-KvK" secondAttribute="trailing" constant="5" id="Ed9-VA-mE6"/>
-                                        <constraint firstItem="QGB-cJ-KfN" firstAttribute="leading" secondItem="gKF-HW-HcP" secondAttribute="trailing" constant="2" id="Fh1-A9-bP3"/>
+                                        <constraint firstItem="QGB-cJ-KfN" firstAttribute="leading" secondItem="gKF-HW-HcP" secondAttribute="trailing" id="Fh1-A9-bP3"/>
                                         <constraint firstItem="QGB-cJ-KfN" firstAttribute="centerY" secondItem="59Z-Hr-XFQ" secondAttribute="centerY" id="I79-1m-wLk"/>
                                         <constraint firstItem="1ur-nn-Hbi" firstAttribute="centerY" secondItem="Ogy-4c-ZXr" secondAttribute="centerY" id="IJY-TR-3G7"/>
                                         <constraint firstItem="gKF-HW-HcP" firstAttribute="centerY" secondItem="QGB-cJ-KfN" secondAttribute="centerY" id="Jmy-KS-Knd"/>
@@ -283,7 +283,7 @@
             </objects>
             <point key="canvasLocation" x="5289" y="118"/>
         </scene>
-        <!--主题帖-->
+        <!--Post Detail Controller-->
         <scene sceneID="PEe-cG-dxn">
             <objects>
                 <viewController storyboardIdentifier="BUCPostDetailController" autoresizesArchivedViewToFullSize="NO" automaticallyAdjustsScrollViewInsets="NO" id="oiG-Nc-ZDP" customClass="BUCPostDetailController" sceneMemberID="viewController">
@@ -355,7 +355,7 @@
                                             </connections>
                                         </button>
                                         <label autoresizesSubviews="NO" clearsContextBeforeDrawing="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" preferredMaxLayoutWidth="1000" translatesAutoresizingMaskIntoConstraints="NO" id="aDl-QG-7gh" userLabel="index">
-                                            <rect key="frame" x="562" y="5" width="33" height="16"/>
+                                            <rect key="frame" x="562" y="10" width="33" height="16"/>
                                             <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                                             <fontDescription key="fontDescription" type="system" pointSize="13"/>
                                             <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
@@ -381,7 +381,7 @@
                                         <constraint firstAttribute="trailing" secondItem="aDl-QG-7gh" secondAttribute="trailing" constant="5" id="Kzt-dd-cki"/>
                                         <constraint firstItem="KXz-SA-KFd" firstAttribute="top" secondItem="nrW-mj-TlB" secondAttribute="top" constant="5" id="Wjy-G6-mzY"/>
                                         <constraint firstItem="GsA-iQ-jYT" firstAttribute="leading" secondItem="KXz-SA-KFd" secondAttribute="leading" id="kzb-Fv-2az"/>
-                                        <constraint firstItem="aDl-QG-7gh" firstAttribute="top" secondItem="nrW-mj-TlB" secondAttribute="top" constant="5" id="oYc-7x-hW3"/>
+                                        <constraint firstItem="KXz-SA-KFd" firstAttribute="centerY" secondItem="aDl-QG-7gh" secondAttribute="centerY" id="oK6-ha-oDo"/>
                                     </constraints>
                                 </tableViewCellContentView>
                                 <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
@@ -400,7 +400,7 @@
                     </tableView>
                     <extendedEdge key="edgesForExtendedLayout"/>
                     <toolbarItems/>
-                    <navigationItem key="navigationItem" title="主题帖" id="BTH-jm-Xq6"/>
+                    <navigationItem key="navigationItem" id="BTH-jm-Xq6"/>
                     <connections>
                         <outlet property="footLabel" destination="IRX-Tn-bOq" id="4Yt-sN-3aW"/>
                         <outlet property="footer" destination="hnt-O7-7kl" id="4nk-20-B9t"/>

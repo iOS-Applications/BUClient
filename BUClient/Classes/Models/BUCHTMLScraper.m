@@ -128,7 +128,6 @@
                 location = self.output.length;
                 [self appendQuote:content superAttributes:thisAttributes];
             } else if ([header rangeOfString:@"代码"].length > 0) {
-                [self.output appendAttributedString:[[NSAttributedString alloc] initWithString:@"代码:\n" attributes:superAttributes]];
                 location = self.output.length;
                 [self appendCode:content superAttributes:thisAttributes];
             }

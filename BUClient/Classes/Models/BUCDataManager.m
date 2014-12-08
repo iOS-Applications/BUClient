@@ -3,7 +3,6 @@
 #import "BUCHTMLScraper.h"
 #import "UIImage+BUCImageCategory.h"
 #import "BUCModels.h"
-#import "BUCKeyChainWrapper.h"
 
 static NSString * const BUCJsonNewListKey = @"newlist";
 static NSString * const BUCJsonDetailListKey = @"postlist";
@@ -19,11 +18,11 @@ static NSString * const BUCJsonListFromKey = @"from";
 static NSString * const BUCJsonListToKey = @"to";
 static NSString * const BUCCurrentUserDefaultKey = @"CurrentUser";
 static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
+static NSString * const BUCUserPasswordDefaultKey = @"UserPassword";
 
 
 @interface BUCDataManager ()
 
-@property (nonatomic) BUCKeyChainWrapper *authManager;
 @property (nonatomic) BUCHTMLScraper *htmlScraper;
 @property (nonatomic) BUCNetworkEngine *networkEngine;
 
@@ -60,7 +59,6 @@ static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
         _networkEngine = [[BUCNetworkEngine alloc] init];
         _htmlScraper = [[BUCHTMLScraper alloc] init];
         _htmlScraper.dataManager = self;
-        _authManager = [[BUCKeyChainWrapper alloc] init];
         _defaultCache = [[NSCache alloc] init];
         
         _loginError = [NSError errorWithDomain:@"BUClient.ErrorDomain" code:1 userInfo:@{NSLocalizedDescriptionKey:@"帐号与密码不符，请检查帐号状态"}];
@@ -77,7 +75,7 @@ static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
     
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
     self.username = [defaults stringForKey:BUCCurrentUserDefaultKey];
-    self.password = [self.authManager getPasswordWithUsername:self.username];
+    self.password = [defaults stringForKey:BUCUserPasswordDefaultKey];
     
     if (!self.username || !self.password) {
         return NO;
@@ -88,8 +86,6 @@ static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
 
 
 -(void)loginWithUsername:(NSString *)username password:(NSString *)password onSuccess:(BUCVoidBlock)voidBlock onFail:(BUCErrorBlock)errorBlock {
-    NSString *savedUsername = self.username;
-    NSString *savedPassword = self.password;
     self.username = username;
     self.password = password;
     BUCDataManager * __weak weakSelf = self;
@@ -98,19 +94,13 @@ static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
      updateSessionOnSuccess:^{
          NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
          [defaults setObject:username forKey:BUCCurrentUserDefaultKey];
+         [defaults setObject:password forKey:BUCUserPasswordDefaultKey];
          [defaults setBool:YES forKey:BUCUserLoginStateDefaultKey];
          [defaults synchronize];
-         
-         if (![savedUsername isEqualToString:username] || ![savedPassword isEqualToString:password]) {
-             [weakSelf.authManager savePassword:password username:username];
-         }
-         
          weakSelf.loggedIn = YES;
          voidBlock();
      }
      onError:^(NSError *error) {
-         weakSelf.username = savedUsername;
-         weakSelf.password = savedPassword;
          errorBlock(error);
      }];
 }
@@ -301,7 +291,7 @@ static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
 
 - (void)successListHandler:(NSDictionary *)map listKey:(NSString *)listKey onSuccess:(BUCListBlock)listBlock onError:(BUCErrorBlock)errorBlock {
     static NSString * const BUCJsonPostTitleKey = @"subject";
-    static NSString * const BUCLastPosterTemplate = @"last reply: %@by";
+    static NSString * const BUCLastPosterTemplate = @"Last reply: %@by";
     
     NSMutableArray *list = [[NSMutableArray alloc] init];
     NSArray *rawList = [map objectForKey:listKey];
@@ -367,11 +357,6 @@ static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
         }
         
         post.dateline = [self parseDateline:[rawPost objectForKey:@"dateline"]];
-        if (post.dateline) {
-            post.postListDateline = [NSString stringWithFormat:@"submitted %@by", post.dateline];
-        } else {
-            post.postListDateline = @"submitted by";
-        }
         
         [list addObject:post];
     }
@@ -422,15 +407,15 @@ static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
     }
     
     NSTimeInterval timeInterval = abs(date.timeIntervalSinceNow);
-    if (timeInterval <= 60) {
-        output = @"just now";
-    } else if (timeInterval <= 60 * 60) {
+    if (timeInterval < 60 * 2) {
+        output = @"just now ";
+    } else if (timeInterval < 60 * 60 * 2) {
         output = [NSString stringWithFormat:@"%d minutes ago ", (int)timeInterval / 60];
-    } else if (timeInterval <= 60 * 60 * 24) {
+    } else if (timeInterval < 60 * 60 * 24 * 2) {
         output = [NSString stringWithFormat:@"%d hours ago ", (int)timeInterval / (60 * 60)];
-    } else if (timeInterval <= 60 * 60 * 24 * 30) {
+    } else if (timeInterval < 60 * 60 * 24 * 30 * 2) {
         output = [NSString stringWithFormat:@"%d days ago ", (int)timeInterval / (60 * 60 * 24)];
-    } else if (timeInterval <= 60 * 60 * 24 * 30 * 12) {
+    } else if (timeInterval < 60 * 60 * 24 * 30 * 12) {
         output = [NSString stringWithFormat:@"%d months ago ", (int)timeInterval / (60 * 60 * 24 * 30)];
     } else {
         [dateFormatter setDateFormat:@"yyyy/MM/dd "];
