@@ -9,13 +9,6 @@
 #import "BUCPostDetailCell.h"
 
 @implementation BUCPostDetailCell
-
-- (UIEdgeInsets)layoutMargins
-{
-    return UIEdgeInsetsZero;
-}
-
-
 - (void)awakeFromNib {
     self.poster.titleLabel.opaque = YES;
     self.poster.titleLabel.backgroundColor = [UIColor whiteColor];

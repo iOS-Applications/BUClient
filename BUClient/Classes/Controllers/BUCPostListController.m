@@ -54,15 +54,13 @@ static NSUInteger const BUCPostListMaxPostCount = 40;
     self.next.titleLabel.clearsContextBeforeDrawing = NO;
     self.next.titleLabel.autoresizesSubviews = NO;
     
-    if (self.fname) {
+    if (self.fid) {
         self.from = @"0";
         self.to = @"20";
         self.location = 0;
         self.length = 0;
-    } else {
-        self.navigationItem.title = @"最新主题";
     }
-    
+
     self.tableView.sectionFooterHeight = 0.0f;
     self.tableView.sectionHeaderHeight = BUCDefaultMargin;
     
@@ -214,11 +212,12 @@ static NSUInteger const BUCPostListMaxPostCount = 40;
     return post.cellHeight;
 }
 
-- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
-    [tableView deselectRowAtIndexPath:indexPath animated:NO];
-    BUCPostDetailController *postDetailController = [self.storyboard instantiateViewControllerWithIdentifier:@"BUCPostDetailController"];
-    postDetailController.post = [self.postList objectAtIndex:indexPath.section];
-    [(UINavigationController *)self.parentViewController pushViewController:postDetailController animated:YES];
+
+- (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
+    NSIndexPath *indexPath = self.tableView.indexPathForSelectedRow;
+    [self.tableView deselectRowAtIndexPath:indexPath animated:NO];
+    BUCPostDetailController *postDetail = (BUCPostDetailController *)segue.destinationViewController;
+    postDetail.post = [self.postList objectAtIndex:indexPath.section];
 }
 
 
@@ -228,7 +227,7 @@ static NSUInteger const BUCPostListMaxPostCount = 40;
     
     UIView *view = self.tableView.tableHeaderView;;
     CGRect frame = view.frame;
-    if (!self.fid || self.location == 0) {
+    if (self.location == 0) {
         frame.size.height = BUCDefaultPadding;
         view.hidden = YES;
     } else {
@@ -240,7 +239,7 @@ static NSUInteger const BUCPostListMaxPostCount = 40;
     
     view = self.tableView.tableFooterView;
     frame = view.frame;
-    if (!self.fid || self.postCount <= self.location + self.length) {
+    if (self.postCount <= self.location + self.length) {
         frame.size.height = BUCDefaultPadding;
         view.hidden = YES;
     } else {
@@ -255,13 +254,15 @@ static NSUInteger const BUCPostListMaxPostCount = 40;
         unsigned long from = self.location + 1;
         unsigned long to = self.location + self.length;
         self.navigationItem.title = [NSString stringWithFormat:@"%@[%lu-%lu]", self.fname, from, to];
+    } else {
+        self.navigationItem.title = self.fname;
     }
 }
 
 
 - (void)buildList:(NSArray *)list {
     [self updateNavigation];
-    
+
     NSMutableArray *postList;
     if (self.flush) {
         postList = [[NSMutableArray alloc] init];

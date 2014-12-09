@@ -9,5 +9,5 @@
 #import <UIKit/UIKit.h>
 
 @interface BUCForumListController : UITableViewController
-
+@property (nonatomic) NSDictionary *selected;
 @end

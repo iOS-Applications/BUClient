@@ -3,6 +3,8 @@
 
 @interface BUCForumListController ()
 @property (nonatomic) NSArray *sectionList;
+@property (weak, nonatomic) IBOutlet UIBarButtonItem *done;
+
 @end
 
 @implementation BUCForumListController
@@ -11,16 +13,10 @@
     [super viewDidLoad];
     
     self.tableView.sectionFooterHeight = 0.0f;
-    self.navigationItem.backBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"" style:UIBarButtonItemStylePlain target:nil action:nil];
     
     NSString *path = [[NSBundle mainBundle] pathForResource:@"BUCForumList" ofType:@"plist"];
     self.sectionList = [NSArray arrayWithContentsOfFile:path];
     [self.tableView reloadData];
-}
-
-
-- (IBAction)cancel:(id)sender {
-    [self.presentingViewController dismissViewControllerAnimated:YES completion:nil];
 }
 
 
@@ -56,15 +52,17 @@
 }
 
 
-- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
-    [tableView deselectRowAtIndexPath:indexPath animated:NO];
-    BUCPostListController *postListController = [self.storyboard instantiateViewControllerWithIdentifier:@"BUCPostListController"];
-    NSDictionary *forumSction = [self.sectionList objectAtIndex:indexPath.section];
-    NSArray *forumList = [forumSction objectForKey:@"list"];
-    NSDictionary *forum = [forumList objectAtIndex:indexPath.row];
-    postListController.fid = [forum objectForKey:@"fid"];
-    postListController.fname = [forum objectForKey:@"name"];
-    [(UINavigationController *)self.parentViewController pushViewController:postListController animated:YES];
+- (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
+    if (sender != self.done) {
+        return;
+    }
+    
+    NSIndexPath *indexPath = self.tableView.indexPathForSelectedRow;
+    if (indexPath) {
+        NSDictionary *forumSction = [self.sectionList objectAtIndex:indexPath.section];
+        NSArray *forumList = [forumSction objectForKey:@"list"];
+        self.selected = [forumList objectAtIndex:indexPath.row];
+    }
 }
 
 

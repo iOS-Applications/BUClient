@@ -130,6 +130,22 @@ static int maxDimension(CFDictionaryRef properties, CGSize fitSize) {
 }
 
 
+//static void decompress(UIImage *image) {
+//    if (image.images) {
+//        for (UIImage *frame in image.images) {
+//            UIGraphicsBeginImageContext(CGSizeMake(1, 1));
+//            [frame drawAtPoint:CGPointZero];
+//            UIGraphicsEndImageContext();
+//        }
+//        return;
+//    }
+//    
+//    UIGraphicsBeginImageContext(CGSizeMake(1, 1));
+//    [image drawAtPoint:CGPointZero];
+//    UIGraphicsEndImageContext();
+//}
+
+
 + (UIImage *)imageWithData:(NSData *)data size:(CGSize)size {
     UIImage *output;
     CGImageRef image = NULL;

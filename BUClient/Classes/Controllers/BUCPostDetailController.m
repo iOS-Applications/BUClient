@@ -6,9 +6,10 @@
 #import "BUCPostDetailCell.h"
 
 
-@interface BUCPostDetailController () <UITableViewDataSource, UITableViewDelegate>
+@interface BUCPostDetailController () <UITableViewDataSource, UITableViewDelegate, UIScrollViewDelegate>
 
-@property (strong, nonatomic) IBOutlet UITableView *tableView;
+@property (nonatomic) IBOutlet UITableView *tableView;
+@property (weak, nonatomic) IBOutlet NSLayoutConstraint *menuPosition;
 
 @property (nonatomic) NSMutableArray *postList;
 
@@ -23,10 +24,17 @@
 @property (nonatomic) BOOL isLoading;
 
 @property (nonatomic) UIImage *defaultAvatar;
+@property (nonatomic) UIImage *defaultImage;
 
 @property (weak, nonatomic) IBOutlet UIView *footer;
 @property (weak, nonatomic) IBOutlet UILabel *footLabel;
 @property (weak, nonatomic) IBOutlet UIActivityIndicatorView *loadingMoreIndicator;
+
+
+@property (weak, nonatomic) IBOutlet UIView *menu;
+@property (weak, nonatomic) IBOutlet UITextField *pageInput;
+@property (weak, nonatomic) IBOutlet UILabel *pageInfo;
+@property (weak, nonatomic) IBOutlet NSLayoutConstraint *pageInputBottomSpace;
 
 @end
 
@@ -35,7 +43,32 @@ static NSUInteger const BUCPostDetailMinPostCount = 20;
 
 
 @implementation BUCPostDetailController
-
+#pragma mark - setup
+- (IBAction)bookmark:(id)sender {
+    UIButton *button = (UIButton *)sender;
+    button.selected = !button.selected;
+}
+- (IBAction)showPageInput {
+    [self.pageInput becomeFirstResponder];
+    [self toggleMenu];
+}
+- (IBAction)reverse:(id)sender {
+    UIButton *button = (UIButton *)sender;
+    button.selected = !button.selected;
+}
+- (IBAction)opFilter:(id)sender {
+    UIButton *button = (UIButton *)sender;
+    button.selected = !button.selected;
+}
+- (IBAction)cancelPageSelection {
+}
+- (IBAction)donePageSelection {
+}
+- (void)keyboardWasShown:(NSNotification *)notification {
+    NSDictionary *info = notification.userInfo;
+    CGSize kbSize = [[info objectForKey:UIKeyboardFrameBeginUserInfoKey] CGRectValue].size;
+    self.pageInputBottomSpace.constant = kbSize.height;
+}
 
 - (void)viewDidLoad {
     [super viewDidLoad];
@@ -43,16 +76,44 @@ static NSUInteger const BUCPostDetailMinPostCount = 20;
     self.from = @"0";
     self.to = @"20";
     
-    if ([self.tableView respondsToSelector:@selector(layoutMargins)]) {
-        self.tableView.layoutMargins = UIEdgeInsetsZero;
-    }
-    
     self.defaultAvatar = [UIImage imageNamed:@"avatar"];
+    self.defaultImage = [UIImage imageNamed:@"loading"];
     
-    self.tableView.backgroundView = nil;
-    self.tableView.backgroundColor = [UIColor groupTableViewBackgroundColor];
+    NSMutableArray *barButtons = [NSMutableArray arrayWithArray:self.navigationItem.rightBarButtonItems];
+    UIBarButtonItem *button = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemReply target:self action:@selector(reply)];
+    [barButtons addObject:button];
+    self.navigationItem.rightBarButtonItems = barButtons;
+    
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(keyboardWasShown:)
+                                                 name:UIKeyboardDidShowNotification object:nil];
     
     [self refresh];
+}
+
+
+- (void)dealloc {
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
+}
+
+
+- (void)reply {
+    
+}
+
+
+- (IBAction)toggleMenu {
+    BUCPostDetailController * __weak weakSelf = self;
+    [weakSelf.view layoutIfNeeded];
+    if (self.menuPosition.constant == 0) {
+        self.menuPosition.constant = -200;
+    } else {
+        self.menuPosition.constant = 0;
+    }
+
+    [UIView animateWithDuration:0.3 animations:^{
+        [weakSelf.view layoutIfNeeded];
+    }];
 }
 
 
@@ -126,15 +187,6 @@ static NSUInteger const BUCPostDetailMinPostCount = 20;
 }
 
 
-- (void)jumpPage {
-    
-}
-
-
-- (IBAction)jumpToPoster:(id)sender {
-}
-
-
 #pragma mark - table view data source
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
     return self.postList.count;
@@ -154,8 +206,27 @@ static NSUInteger const BUCPostDetailMinPostCount = 20;
 
 #pragma mark - table view delegate
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {
-    CGFloat height = ((BUCPost *)[self.postList objectAtIndex:indexPath.row]).cellHeight;
-    return height;
+    BUCPost *post = (BUCPost *)[self.postList objectAtIndex:indexPath.row];
+
+    if (post.cellHeight > 0) {
+        return post.cellHeight;
+    } else {
+        [self calculateFrameOfPost:post];
+    }
+    
+    return post.cellHeight;
+}
+
+
+- (void)scrollViewDidEndDragging:(UIScrollView *)scrollView willDecelerate:(BOOL)decelerate {
+    if (!decelerate) {
+        
+    }
+}
+
+
+- (void)scrollViewDidEndDecelerating:(UIScrollView *)scrollView {
+
 }
 
 
@@ -180,7 +251,6 @@ static NSUInteger const BUCPostDetailMinPostCount = 20;
         }
         
         post.index = index;
-        [self calculateFrameOfPost:post];
         [postList addObject:post];
         
         if (self.isLoading) {
@@ -206,8 +276,8 @@ static NSUInteger const BUCPostDetailMinPostCount = 20;
     self.footer.hidden = NO;
 
     NSString *title;
-    if (self.post.title.length > 10) {
-        title = [NSString stringWithFormat:@"%@...", [self.post.title.string substringToIndex:10]];
+    if (self.post.title.length > 5) {
+        title = [NSString stringWithFormat:@"%@...", [self.post.title.string substringToIndex:5]];
     } else {
         title = self.post.title.string;
     }
@@ -284,7 +354,7 @@ static NSUInteger const BUCPostDetailMinPostCount = 20;
         [cell.contentView addSubview:textView];
         cell.content = textView;
     }
-    
+
     NSArray *attachmentList = [post.content attribute:BUCAttachmentListAttributeName atIndex:0 effectiveRange:NULL];
     if (attachmentList) {
         if (!cell.imageViewList) {
@@ -296,21 +366,29 @@ static NSUInteger const BUCPostDetailMinPostCount = 20;
 
 
 - (void)layoutImages:(NSArray *)imageList textView:(UITextView *)textView imageViewList:(NSMutableArray *)imageViewList {
-
+    CGFloat defaultWidth = CGRectGetWidth(self.tableView.frame) - 2 * BUCDefaultPadding - 2 * BUCDefaultMargin;
     for (BUCImageAttachment *attachment in imageList) {
         CGRect frame = [textView.layoutManager boundingRectForGlyphRange:NSMakeRange(attachment.glyphIndex, 1) inTextContainer:textView.textContainer];
+        frame.origin.x = ceilf(frame.origin.x);
+        frame.origin.y = ceilf(frame.origin.y);
         UIImageView *imageView = [[UIImageView alloc] initWithFrame:frame];
         imageView.opaque = YES;
-        imageView.backgroundColor = [UIColor whiteColor];
-        [imageViewList addObject:imageView];
         imageView.contentMode = UIViewContentModeCenter;
+        imageView.image = self.defaultImage;
+        [imageViewList addObject:imageView];
         [textView addSubview:imageView];
         
         if (attachment.path) {
             imageView.image = [[BUCDataManager sharedInstance] getImageWithPath:attachment.path];
         } else {
+            frame.size.width = 100.0f;
+            frame.origin.x = defaultWidth / 2 - 50.0f;
             [[BUCDataManager sharedInstance] getImageWithUrl:attachment.url size:attachment.bounds.size onSuccess:^(UIImage *image) {
                 imageView.image = image;
+                CGRect frame = imageView.frame;
+                frame.size = image.size;
+                frame.origin.x = defaultWidth / 2 - frame.size.width / 2;
+                imageView.frame = frame;
             }];
         }
     }
@@ -329,6 +407,7 @@ static NSUInteger const BUCPostDetailMinPostCount = 20;
     textView.textContainerInset = UIEdgeInsetsZero;
     textView.editable = NO;
     textView.scrollEnabled = NO;
+    textView.selectable = NO;
     textView.opaque = YES;
     textView.backgroundColor = [UIColor whiteColor];
     
