@@ -6,8 +6,6 @@
 
 @interface BUCRootController () <UITableViewDataSource, UITableViewDelegate>
 
-@property (strong, nonatomic) IBOutlet UITableView *tableView;
-
 @property (nonatomic) NSString *path;
 @property (nonatomic) NSMutableArray *list;
 
@@ -22,8 +20,10 @@
 
     self.navigationItem.backBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"" style:UIBarButtonItemStylePlain target:nil action:nil];
     
-    self.path = [[NSBundle mainBundle] pathForResource:@"BUCFavouriteList" ofType:@"plist"];
+    self.path = [self.nibBundle pathForResource:@"BUCFavouriteList" ofType:@"plist"];
     self.list = [NSMutableArray arrayWithContentsOfFile:self.path];
+    
+    self.navigationItem.rightBarButtonItem = self.editButtonItem;
     
     [self.tableView reloadData];
 }
@@ -34,6 +34,26 @@
     
     if (![BUCDataManager sharedInstance].loggedIn) {
         [self performSegueWithIdentifier:@"segueToLogin" sender:nil];
+    }
+}
+
+
+- (void)viewWillAppear:(BOOL)animated
+{
+    [self.navigationController setToolbarHidden:NO animated:YES];
+}
+
+
+- (void)viewWillDisappear:(BOOL)animated
+{
+    [self.navigationController setToolbarHidden:YES animated:YES];
+}
+
+
+- (void)setEditing:(BOOL)editing animated:(BOOL)animated {
+    [super setEditing:editing animated:animated];
+    if (!editing) {
+        [self.list writeToFile:self.path atomically:YES];
     }
 }
 
@@ -117,13 +137,6 @@
     }
     
     return NO;
-}
-
-
-- (IBAction)edit:(id)sender {
-    UIButton *button = (UIButton *)sender;
-    button.selected = !button.selected;
-    [self.tableView setEditing:button.selected animated:YES];
 }
 
 

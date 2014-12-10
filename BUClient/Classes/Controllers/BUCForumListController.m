@@ -14,7 +14,7 @@
     
     self.tableView.sectionFooterHeight = 0.0f;
     
-    NSString *path = [[NSBundle mainBundle] pathForResource:@"BUCForumList" ofType:@"plist"];
+    NSString *path = [self.nibBundle pathForResource:@"BUCForumList" ofType:@"plist"];
     self.sectionList = [NSArray arrayWithContentsOfFile:path];
     [self.tableView reloadData];
 }

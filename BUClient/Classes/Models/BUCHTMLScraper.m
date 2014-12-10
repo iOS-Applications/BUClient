@@ -560,8 +560,7 @@
     NSString *baseUrl = @"http://out.bitunion.org";
     NSURL *url = [NSURL URLWithString:source];
     
-    
-    if ([url.host isEqualToString:@"bitunion.org"]) {
+    if ([url.host isEqualToString:@"bitunion.org"] || [url.host isEqualToString:@"v6.bitunion.org"]) {
         source = [NSString stringWithFormat:@"%@%@", baseUrl, url.path];
     } else if ([self matchString:source withPattern:@"^http://www\\.bitunion\\.org/.+$" match:NULL]) {
         source = [source stringByReplacingOccurrencesOfString:@"www.bitunion.org" withString:@"out.bitunion.org"];

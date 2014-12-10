@@ -28,6 +28,9 @@
 @property (nonatomic) CGFloat cellHeight;
 @property (nonatomic) CGRect textFrame;
 
+@property (nonatomic) BOOL bookmarked;
+@property (nonatomic) NSInteger bookmarkIndex;
+
 @end
 
 

@@ -26,6 +26,7 @@ static NSUInteger const BUCPostListMaxPostCount = 40;
 @property (nonatomic) IBOutlet UIButton *previous;
 @property (nonatomic) IBOutlet UIButton *next;
 @property (nonatomic) IBOutlet UIActivityIndicatorView *loadingIndicator;
+@property (nonatomic) UIRefreshControl *refreshControl;
 
 @end
 
@@ -64,14 +65,17 @@ static NSUInteger const BUCPostListMaxPostCount = 40;
     self.tableView.sectionFooterHeight = 0.0f;
     self.tableView.sectionHeaderHeight = BUCDefaultMargin;
     
+    self.refreshControl = [[UIRefreshControl alloc] init];
+    [self.refreshControl addTarget:self action:@selector(refresh) forControlEvents:UIControlEventValueChanged];
+    [self.tableView addSubview:self.refreshControl];
+    
+    [self displayLoading];
     [self refresh];
 }
 
 
 #pragma mark - data management
 - (void)refresh {
-    [self displayLoading];
-
     self.flush = YES;
     if (self.fid) {
         self.loading = YES;
@@ -105,6 +109,7 @@ static NSUInteger const BUCPostListMaxPostCount = 40;
     
     [self buildList:list];
     [self hideLoading];
+    [self.refreshControl endRefreshing];
     [self.loadingIndicator stopAnimating];
     self.loading = NO;
 }
@@ -112,6 +117,7 @@ static NSUInteger const BUCPostListMaxPostCount = 40;
 
 - (void)loadFailed:(NSError *)error {
     [self hideLoading];
+    [self.refreshControl endRefreshing];
     [self.loadingIndicator stopAnimating];
     [self alertMessage:error.localizedDescription];
     self.loading = NO;
@@ -144,6 +150,7 @@ static NSUInteger const BUCPostListMaxPostCount = 40;
     unsigned long to = from + BUCPostListMinPostCount;
     self.from = [NSString stringWithFormat:@"%lu", from];
     self.to = [NSString stringWithFormat:@"%lu", to];
+    [self displayLoading];
     [self refresh];
 }
 
@@ -152,6 +159,7 @@ static NSUInteger const BUCPostListMaxPostCount = 40;
     unsigned long to = from + BUCPostListMinPostCount;
     self.from = [NSString stringWithFormat:@"%lu", from];
     self.to = [NSString stringWithFormat:@"%lu", to];
+    [self displayLoading];
     [self refresh];
 }
 
@@ -196,7 +204,7 @@ static NSUInteger const BUCPostListMaxPostCount = 40;
 
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
-    BUCPostListCell *cell = [self.tableView dequeueReusableCellWithIdentifier:@"BUCPostListCell" forIndexPath:indexPath];
+    BUCPostListCell *cell = [self.tableView dequeueReusableCellWithIdentifier:@"cell" forIndexPath:indexPath];
     [self configureCell:cell post:[self.postList objectAtIndex:indexPath.section]];
     cell.contentView.tag = indexPath.section;
     

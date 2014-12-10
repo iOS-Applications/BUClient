@@ -12,6 +12,10 @@
 
 @property (nonatomic) NSMutableArray *postList;
 
+@property (nonatomic) NSMutableArray *bookmarkList;
+@property (nonatomic) NSString *bookmarkListPath;
+@property (nonatomic) NSInteger bookmarkIndex;
+
 @property (nonatomic) NSUInteger from;
 @property (nonatomic) NSUInteger to;
 @property (nonatomic) NSUInteger postCount;
@@ -22,7 +26,6 @@
 @property (nonatomic) BOOL loading;
 @property (nonatomic) BOOL opOnly;
 @property (nonatomic) BOOL reverse;
-@property (nonatomic) BOOL bookmarked;
 
 @property (nonatomic) UIImage *defaultAvatar;
 @property (nonatomic) UIImage *defaultImage;
@@ -30,16 +33,13 @@
 @property (nonatomic) IBOutlet UITableView *tableView;
 @property (weak, nonatomic) IBOutlet NSLayoutConstraint *menuPosition;
 
-@property (weak, nonatomic) IBOutlet UIView *footer;
 @property (weak, nonatomic) IBOutlet UILabel *footLabel;
 @property (weak, nonatomic) IBOutlet UIActivityIndicatorView *loadingMoreIndicator;
 
 @property (weak, nonatomic) IBOutlet UIView *menu;
 @property (weak, nonatomic) IBOutlet UIButton *descend;
 @property (weak, nonatomic) IBOutlet UIButton *user;
-
-
-
+@property (weak, nonatomic) IBOutlet UIButton *star;
 
 @property (weak, nonatomic) IBOutlet UITextField *pageInput;
 @property (weak, nonatomic) IBOutlet UILabel *pageInfo;
@@ -63,6 +63,23 @@ static NSUInteger const BUCPostDetailMinListLength = 20;
     
     self.defaultAvatar = [UIImage imageNamed:@"avatar"];
     self.defaultImage = [UIImage imageNamed:@"loading"];
+    
+    self.bookmarkListPath = [self.nibBundle pathForResource:@"BUCBookmarkList" ofType:@"plist"];
+    self.bookmarkList = [NSMutableArray arrayWithContentsOfFile:self.bookmarkListPath];
+    
+    if (self.bookmarkList && self.bookmarkList.count > 0 && !self.post.bookmarked) {
+        NSInteger index;
+        for (NSDictionary *bookmark in self.bookmarkList) {
+            NSString *tid = [bookmark objectForKey:@"tid"];
+            if ([tid isEqualToString:self.post.tid]) {
+                self.post.bookmarked = YES;
+                self.post.bookmarkIndex = index;
+                break;
+            }
+            index = index + 1;
+        }
+    }
+    self.star.selected = self.post.bookmarked;
     
     NSString *title = self.post.title.string;
     if (title.length > 5) {
@@ -96,6 +113,7 @@ static NSUInteger const BUCPostDetailMinListLength = 20;
     [self displayLoading];
     
     self.flush = YES;
+    self.loading = YES;
     
     BUCPostDetailController * __weak weakSelf = self;
     [[BUCDataManager sharedInstance]
@@ -215,12 +233,12 @@ static NSUInteger const BUCPostDetailMinListLength = 20;
     
     if ((!self.reverse && self.to >= self.postCount) || (self.reverse && self.from == 0)) {
         self.footLabel.text = @"End of list";
-        self.footer.userInteractionEnabled = NO;
+        self.tableView.tableFooterView.userInteractionEnabled = NO;
     } else {
-        self.footer.hidden = NO;
-        self.footer.userInteractionEnabled = YES;
+        self.tableView.tableFooterView.userInteractionEnabled = YES;
         self.footLabel.text = @"More...";
     }
+    self.tableView.tableFooterView.hidden = NO;
 }
 
 
@@ -456,8 +474,18 @@ static NSUInteger const BUCPostDetailMinListLength = 20;
 
 
 - (IBAction)bookmark:(id)sender {
-    UIButton *button = (UIButton *)sender;
-    button.selected = !button.selected;
+    if (self.post.bookmarked) {
+        self.post.bookmarked = NO;
+        [self.bookmarkList removeObjectAtIndex:self.post.bookmarkIndex];
+    } else {
+        self.post.bookmarked = YES;
+        self.post.bookmarkIndex = self.bookmarkList.count;
+        NSDictionary *post = @{@"tid":self.post.tid, @"title":self.post.title.string};
+        [self.bookmarkList addObject:post];
+    }
+    [self.bookmarkList writeToFile:self.bookmarkListPath atomically:YES];
+    
+    self.star.selected = !self.star.selected;
 }
 
 
@@ -543,11 +571,14 @@ static NSUInteger const BUCPostDetailMinListLength = 20;
     CGSize kbSize = [[info objectForKey:UIKeyboardFrameBeginUserInfoKey] CGRectValue].size;
     self.pageInputBottomSpace.constant = kbSize.height;
     self.tableView.userInteractionEnabled = NO;
-    self.pageInfo.text = [NSString stringWithFormat:@"当前%ld/%ld页", self.currentPage, self.pageCount];
+    self.pageInfo.text = [NSString stringWithFormat:@"当前%ld/%ld页", (unsigned long)self.currentPage, (unsigned long)self.pageCount];
 }
 
 
 - (void)reply {
+    if (self.loading) {
+        return;
+    }
     
 }
 

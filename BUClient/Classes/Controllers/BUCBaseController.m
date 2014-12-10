@@ -21,7 +21,7 @@
     [super viewDidLoad];
 
     // set up loading view
-    [[NSBundle mainBundle] loadNibNamed:@"BUCLoadingView" owner:self options:nil];
+    [self.nibBundle loadNibNamed:@"BUCLoadingView" owner:self options:nil];
     
     self.loadingView.frame = CGRectMake(0, 0, 140.0f, 140.0f);
     self.loadingView.layer.cornerRadius = 10.0f;
