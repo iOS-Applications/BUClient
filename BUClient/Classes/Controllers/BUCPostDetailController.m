@@ -8,30 +8,39 @@
 
 @interface BUCPostDetailController () <UITableViewDataSource, UITableViewDelegate, UIScrollViewDelegate>
 
-@property (nonatomic) IBOutlet UITableView *tableView;
-@property (weak, nonatomic) IBOutlet NSLayoutConstraint *menuPosition;
+@property (nonatomic) NSString *postTitle;
 
 @property (nonatomic) NSMutableArray *postList;
 
-@property (nonatomic) NSString *from;
-@property (nonatomic) NSString *to;
-
+@property (nonatomic) NSUInteger from;
+@property (nonatomic) NSUInteger to;
 @property (nonatomic) NSUInteger postCount;
-@property (nonatomic) NSUInteger location;
-@property (nonatomic) NSUInteger length;
+@property (nonatomic) NSUInteger pageCount;
+@property (nonatomic) NSUInteger currentPage;
 
-@property (nonatomic) BOOL isRefreshing;
-@property (nonatomic) BOOL isLoading;
+@property (nonatomic) BOOL flush;
+@property (nonatomic) BOOL loading;
+@property (nonatomic) BOOL opOnly;
+@property (nonatomic) BOOL reverse;
+@property (nonatomic) BOOL bookmarked;
 
 @property (nonatomic) UIImage *defaultAvatar;
 @property (nonatomic) UIImage *defaultImage;
+
+@property (nonatomic) IBOutlet UITableView *tableView;
+@property (weak, nonatomic) IBOutlet NSLayoutConstraint *menuPosition;
 
 @property (weak, nonatomic) IBOutlet UIView *footer;
 @property (weak, nonatomic) IBOutlet UILabel *footLabel;
 @property (weak, nonatomic) IBOutlet UIActivityIndicatorView *loadingMoreIndicator;
 
-
 @property (weak, nonatomic) IBOutlet UIView *menu;
+@property (weak, nonatomic) IBOutlet UIButton *descend;
+@property (weak, nonatomic) IBOutlet UIButton *user;
+
+
+
+
 @property (weak, nonatomic) IBOutlet UITextField *pageInput;
 @property (weak, nonatomic) IBOutlet UILabel *pageInfo;
 @property (weak, nonatomic) IBOutlet NSLayoutConstraint *pageInputBottomSpace;
@@ -39,56 +48,37 @@
 @end
 
 
-static NSUInteger const BUCPostDetailMinPostCount = 20;
+static NSUInteger const BUCPostDetailMinListLength = 20;
 
 
 @implementation BUCPostDetailController
 #pragma mark - setup
-- (IBAction)bookmark:(id)sender {
-    UIButton *button = (UIButton *)sender;
-    button.selected = !button.selected;
-}
-- (IBAction)showPageInput {
-    [self.pageInput becomeFirstResponder];
-    [self toggleMenu];
-}
-- (IBAction)reverse:(id)sender {
-    UIButton *button = (UIButton *)sender;
-    button.selected = !button.selected;
-}
-- (IBAction)opFilter:(id)sender {
-    UIButton *button = (UIButton *)sender;
-    button.selected = !button.selected;
-}
-- (IBAction)cancelPageSelection {
-}
-- (IBAction)donePageSelection {
-}
-- (void)keyboardWasShown:(NSNotification *)notification {
-    NSDictionary *info = notification.userInfo;
-    CGSize kbSize = [[info objectForKey:UIKeyboardFrameBeginUserInfoKey] CGRectValue].size;
-    self.pageInputBottomSpace.constant = kbSize.height;
-}
-
 - (void)viewDidLoad {
     [super viewDidLoad];
     
-    self.from = @"0";
-    self.to = @"20";
+    self.from = 0;
+    self.to = 20;
+    self.opOnly = NO;
+    self.reverse = NO;
     
     self.defaultAvatar = [UIImage imageNamed:@"avatar"];
     self.defaultImage = [UIImage imageNamed:@"loading"];
+    
+    NSString *title = self.post.title.string;
+    if (title.length > 5) {
+        self.postTitle = [NSString stringWithFormat:@"%@...", [title substringToIndex:5]];
+    } else {
+        self.postTitle = title;
+    }
     
     NSMutableArray *barButtons = [NSMutableArray arrayWithArray:self.navigationItem.rightBarButtonItems];
     UIBarButtonItem *button = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemReply target:self action:@selector(reply)];
     [barButtons addObject:button];
     self.navigationItem.rightBarButtonItems = barButtons;
     
-    [[NSNotificationCenter defaultCenter] addObserver:self
-                                             selector:@selector(keyboardWasShown:)
-                                                 name:UIKeyboardDidShowNotification object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(keyboardWasShown:) name:UIKeyboardDidShowNotification object:nil];
     
-    [self refresh];
+    [self refreshFrom:self.from to:self.to];
 }
 
 
@@ -97,197 +87,217 @@ static NSUInteger const BUCPostDetailMinPostCount = 20;
 }
 
 
-- (void)reply {
-    
-}
-
-
-- (IBAction)toggleMenu {
-    BUCPostDetailController * __weak weakSelf = self;
-    [weakSelf.view layoutIfNeeded];
-    if (self.menuPosition.constant == 0) {
-        self.menuPosition.constant = -200;
-    } else {
-        self.menuPosition.constant = 0;
+#pragma mark - data management
+- (void)refreshFrom:(NSInteger)from to:(NSInteger)to {
+    if (self.loading) {
+        return;
     }
-
-    [UIView animateWithDuration:0.3 animations:^{
-        [weakSelf.view layoutIfNeeded];
-    }];
-}
-
-
-- (void)imageTapHandler:(BUCImageAttachment *)attachment {
-    BUCImageController *imageController = [[UIStoryboard storyboardWithName:@"Main" bundle:nil] instantiateViewControllerWithIdentifier:@"BUCImageController"];
-    imageController.url = attachment.url;
-    [self presentViewController:imageController animated:YES completion:nil];
-}
-
-
-- (void)refresh {
+    
     [self displayLoading];
     
-    self.isRefreshing = YES;
-
+    self.flush = YES;
+    
     BUCPostDetailController * __weak weakSelf = self;
     [[BUCDataManager sharedInstance]
      childCountOfForum:nil
      thread:self.post.tid
+     
      onSuccess:^(NSUInteger count) {
-         weakSelf.postCount = count;
-         [weakSelf loadList];
-     } onError:^(NSError *error) {
-         [weakSelf hideLoading];
-         [weakSelf alertMessage:error.localizedDescription];
-     }];
-}
+         NSUInteger postCount = count + 1;
+         NSInteger newFrom = from;
+         NSInteger newTo = to;
+         if (weakSelf.reverse) {
+             if (from == 0) {
+                 newFrom = postCount - BUCPostDetailMinListLength;
+                 newTo = postCount;
+             } else {
+                 newFrom = newFrom + postCount - weakSelf.postCount;
+                 newTo = newTo + postCount - weakSelf.postCount;
+             }
 
-
-- (void)loadList {
-    BUCPostDetailController * __weak weakSelf = self;
-    
-    [[BUCDataManager sharedInstance]
-     listOfPost:self.post.tid
-     
-     from:self.from
-     
-     to:self.to
-     
-     onSuccess:^(NSArray *list) {
-         NSUInteger from = weakSelf.from.integerValue;
-         if (weakSelf.isRefreshing) {
-             weakSelf.location = from;
-             weakSelf.length = BUCPostDetailMinPostCount;
-         } else {
-             weakSelf.length = weakSelf.length + BUCPostDetailMinPostCount;
+             if (newFrom < 0) {
+                 newFrom = 0;
+             }
          }
-         
-         [weakSelf buildList:list];
-         [weakSelf hideLoading];
-         [weakSelf.loadingMoreIndicator stopAnimating];
+         [weakSelf loadListFrom:newFrom to:newTo postCount:postCount];
      }
      
      onError:^(NSError *error) {
-         [weakSelf hideLoading];
-         [weakSelf.loadingMoreIndicator stopAnimating];
+         [weakSelf endLoading];
          [weakSelf alertMessage:error.localizedDescription];
      }];
 }
 
 
-- (void)loadMore {
-    self.footLabel.text = @"More...";
-    unsigned long from = self.location + self.length;
-    unsigned long to = from + BUCPostDetailMinPostCount;
-    self.from = [NSString stringWithFormat:@"%lu", from];
-    self.to = [NSString stringWithFormat:@"%lu", to];
-    self.isLoading = YES;
+- (IBAction)loadMore {
+    if (self.loading) {
+        return;
+    }
+
     [self.loadingMoreIndicator startAnimating];
-    [self loadList];
-}
-
-
-#pragma mark - table view data source
-- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
-    return self.postList.count;
-}
-
-- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
-    BUCPostDetailCell *cell = [self.tableView dequeueReusableCellWithIdentifier:@"cell" forIndexPath:indexPath];
-    [self configureCell:cell post:[self.postList objectAtIndex:indexPath.row]];
-    
-    if (indexPath.row == self.postList.count - 1 && self.postCount > self.location + self.length) {
-        [self loadMore];
-    }
-
-    return cell;
-}
-
-
-#pragma mark - table view delegate
-- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {
-    BUCPost *post = (BUCPost *)[self.postList objectAtIndex:indexPath.row];
-
-    if (post.cellHeight > 0) {
-        return post.cellHeight;
+    NSInteger from;
+    NSInteger to;
+    if (self.reverse) {
+        from = self.from - BUCPostDetailMinListLength;
+        if (from < 0) {
+            from = 0;
+        }
+        to = self.from;
     } else {
-        [self calculateFrameOfPost:post];
+        from = self.to;
+        to = self.to + BUCPostDetailMinListLength;
+    }
+
+    [self loadListFrom:from to:to postCount:self.postCount];
+}
+
+
+- (void)loadListFrom:(NSUInteger)from to:(NSUInteger)to postCount:(NSUInteger)postCount {
+    BUCPostDetailController * __weak weakSelf = self;
+    self.loading = YES;
+    [[BUCDataManager sharedInstance]
+     listOfPost:self.post.tid
+     
+     from:[NSString stringWithFormat:@"%lu", (unsigned long)from]
+     
+     to:[NSString stringWithFormat:@"%lu", (unsigned long)to]
+     
+     onSuccess:^(NSArray *list) {
+         [weakSelf updateNavigationStateWithFrom:from to:to postCount:postCount];
+         [weakSelf buildList:list];
+         [weakSelf updateUI];
+         [weakSelf endLoading];
+     }
+     
+     onError:^(NSError *error) {
+         [weakSelf endLoading];
+         [weakSelf alertMessage:error.localizedDescription];
+     }];
+}
+
+
+- (void)updateNavigationStateWithFrom:(NSInteger)from to:(NSInteger)to postCount:(NSInteger)count {
+    if (self.flush) {
+        self.from = from;
+        self.to = to;
+        self.postCount = count;
+        self.pageCount = [self pageCountWithPostCount:count];
+    } else {
+        if (self.reverse) {
+            self.from = from;
+        } else {
+            self.to = to;
+        }
     }
     
-    return post.cellHeight;
-}
-
-
-- (void)scrollViewDidEndDragging:(UIScrollView *)scrollView willDecelerate:(BOOL)decelerate {
-    if (!decelerate) {
-        
+    if (self.reverse) {
+        self.currentPage = (count - to) / 40 + 1;
+    } else {
+        self.currentPage = from / 40 + 1;
     }
 }
 
 
-- (void)scrollViewDidEndDecelerating:(UIScrollView *)scrollView {
-
+- (void)updateUI {
+    unsigned long from;
+    unsigned long to;
+    if (self.reverse) {
+        from = self.to;
+        to = self.from + 1;
+    } else {
+        from = self.from + 1;
+        to = self.to;
+        if (self.to >= self.postCount) {
+            to = self.postCount;
+        }
+    }
+    self.navigationItem.title = [NSString stringWithFormat:@"%@[%lu-%lu]", self.postTitle, from, to];
+    
+    if ((!self.reverse && self.to >= self.postCount) || (self.reverse && self.from == 0)) {
+        self.footLabel.text = @"End of list";
+        self.footer.userInteractionEnabled = NO;
+    } else {
+        self.footer.hidden = NO;
+        self.footer.userInteractionEnabled = YES;
+        self.footLabel.text = @"More...";
+    }
 }
 
 
-#pragma mark - private methods
 - (void)buildList:(NSArray *)list {
     NSMutableArray *postList;
     NSMutableArray *insertRows;
-    if (self.isRefreshing) {
+    if (self.flush) {
         postList = [[NSMutableArray alloc] init];
-        self.isRefreshing = NO;
         [self.tableView setContentOffset:CGPointZero];
     } else {
         postList = self.postList;
-        insertRows = [[NSMutableArray alloc] init];
     }
     
     NSInteger index = postList.count;
+    NSEnumerator *listEnumerator;
+    if (self.reverse) {
+        listEnumerator = [list reverseObjectEnumerator];
+    } else {
+        listEnumerator = [list objectEnumerator];
+    }
     
-    for (BUCPost *post in list) {
-        if ([self isLoadedBefore:post against:postList]) {
+    for (BUCPost *post in listEnumerator) {
+        if ((self.opOnly &&  ![post.user isEqualToString:self.post.user]) ||
+            [self isLoadedBefore:post against:postList]) {
             continue;
         }
         
-        post.index = index;
+        if (self.reverse) {
+            post.index = self.to - 1 - index;
+        } else {
+            post.index = self.from + index;
+        }
+        
         [postList addObject:post];
         
-        if (self.isLoading) {
+        if (!self.flush) {
             NSIndexPath *indexPath = [NSIndexPath indexPathForRow:index inSection:0];
+            if (!insertRows) {
+                insertRows = [[NSMutableArray alloc] init];
+            }
             [insertRows addObject:indexPath];
         }
-
+        
         index = index + 1;
     }
     
     self.postList = postList;
     
-    if (self.isLoading) {
-        [self.tableView insertRowsAtIndexPaths:insertRows withRowAnimation:UITableViewRowAnimationNone];
-        self.isLoading = NO;
-    } else {
+    if (self.flush) {
         [self.tableView reloadData];
+    } else if (insertRows && insertRows.count > 0) {
+        [self.tableView beginUpdates];
+        [self.tableView insertRowsAtIndexPaths:insertRows withRowAnimation:UITableViewRowAnimationNone];
+        [self.tableView endUpdates];
     }
-
-    if (self.length >= self.postCount) {
-        self.footLabel.text = @"End of list";
-    }
-    self.footer.hidden = NO;
-
-    NSString *title;
-    if (self.post.title.length > 5) {
-        title = [NSString stringWithFormat:@"%@...", [self.post.title.string substringToIndex:5]];
-    } else {
-        title = self.post.title.string;
-    }
-    
-    unsigned long from = self.location + 1;
-    unsigned long to = self.location + self.postList.count;
-    self.navigationItem.title = [NSString stringWithFormat:@"%@[%lu-%lu]", title, from, to];
 }
 
 
+- (void)endLoading {
+    [self hideLoading];
+    [self.loadingMoreIndicator stopAnimating];
+    self.loading = NO;
+    self.flush = NO;
+}
+
+
+- (NSUInteger)pageCountWithPostCount:(NSUInteger)postCount {
+    NSUInteger pageCount = 0;
+    for (NSUInteger count = 0; count < postCount; count = count + 40) {
+        pageCount = pageCount + 1;
+    }
+    
+    return pageCount;
+}
+
+
+#pragma mark - layout
 - (void)calculateFrameOfPost:(BUCPost *)post {
     static NSTextStorage *textStorage;
     static BUCTextContainer *textContainer;
@@ -307,7 +317,7 @@ static NSUInteger const BUCPostDetailMinPostCount = 20;
         [layoutManager addTextContainer:textContainer];
         contentOrigin = CGPointMake(BUCDefaultMargin, 45.0f + BUCDefaultMargin);
     });
-
+    
     [textStorage setAttributedString:post.content];
     [layoutManager ensureLayoutForTextContainer:textContainer];
     CGRect frame = [layoutManager usedRectForTextContainer:textContainer];
@@ -354,7 +364,7 @@ static NSUInteger const BUCPostDetailMinPostCount = 20;
         [cell.contentView addSubview:textView];
         cell.content = textView;
     }
-
+    
     NSArray *attachmentList = [post.content attribute:BUCAttachmentListAttributeName atIndex:0 effectiveRange:NULL];
     if (attachmentList) {
         if (!cell.imageViewList) {
@@ -402,7 +412,7 @@ static NSUInteger const BUCPostDetailMinPostCount = 20;
     BUCTextContainer *textContainer = [[BUCTextContainer alloc] initWithSize:CGSizeMake(CGRectGetWidth(textFrame), FLT_MAX)];
     textContainer.lineFragmentPadding = 0;
     [layoutManager addTextContainer:textContainer];
-
+    
     UITextView *textView = [[UITextView alloc] initWithFrame:textFrame textContainer:textContainer];
     textView.textContainerInset = UIEdgeInsetsZero;
     textView.editable = NO;
@@ -423,6 +433,173 @@ static NSUInteger const BUCPostDetailMinPostCount = 20;
     }
     
     return NO;
+}
+
+
+#pragma mark - actions
+- (IBAction)toggleMenu {
+    if (self.loading) {
+        return;
+    }
+    BUCPostDetailController * __weak weakSelf = self;
+    [weakSelf.view layoutIfNeeded];
+    if (self.menuPosition.constant == 0) {
+        self.menuPosition.constant = -200;
+    } else {
+        self.menuPosition.constant = 0;
+    }
+    
+    [UIView animateWithDuration:0.3 animations:^{
+        [weakSelf.view layoutIfNeeded];
+    }];
+}
+
+
+- (IBAction)bookmark:(id)sender {
+    UIButton *button = (UIButton *)sender;
+    button.selected = !button.selected;
+}
+
+
+- (IBAction)showPageInput {
+    [self.pageInput becomeFirstResponder];
+    [self toggleMenu];
+}
+
+
+- (IBAction)reverse:(id)sender {
+    self.reverse = !self.reverse;
+    self.opOnly = NO;
+    self.user.selected = NO;
+    UIButton *button = (UIButton *)sender;
+    button.selected = self.reverse;
+    
+    [self toggleMenu];
+    [self refreshFrom:0 to:BUCPostDetailMinListLength];
+}
+
+
+- (IBAction)opFilter:(id)sender {
+    self.opOnly = !self.opOnly;
+    self.reverse = NO;
+    self.descend.selected = NO;
+    UIButton *button = (UIButton *)sender;
+    button.selected = self.opOnly;
+
+    [self toggleMenu];
+    [self refreshFrom:0 to:BUCPostDetailMinListLength];
+}
+
+
+- (IBAction)dismissPageSelection {
+    [self.pageInput resignFirstResponder];
+    self.pageInputBottomSpace.constant = -50.0f;
+    self.tableView.userInteractionEnabled = YES;
+    self.pageInput.text = @"";
+}
+
+
+- (IBAction)donePageSelection {
+    NSString *page = self.pageInput.text;
+    if (page.length == 0) {
+        [self alertMessage:@"请输入页数"];
+        return;
+    }
+    
+    NSUInteger pageNumber = [self validPageNumber:page];
+    if (pageNumber == 0) {
+        [self alertMessage:@"页数无效，请重新输入"];
+        return;
+    }
+    
+    NSInteger from = (pageNumber - 1) * 40;
+    NSInteger to = from + BUCPostDetailMinListLength;
+    if (self.reverse) {
+        to = self.postCount - from;
+        from = to - BUCPostDetailMinListLength;
+        if (from < 0) {
+            from = 0;
+        }
+    }
+    [self dismissPageSelection];
+    self.opOnly = NO;
+    self.user.selected = NO;
+    [self refreshFrom:from to:to];
+}
+
+
+- (NSUInteger)validPageNumber:(NSString *)page {
+    NSUInteger pageNumber = page.integerValue;
+    if (pageNumber <= 0 || pageNumber > self.pageCount) {
+        return 0;
+    }
+    
+    return pageNumber;
+}
+
+
+- (void)keyboardWasShown:(NSNotification *)notification {
+    NSDictionary *info = notification.userInfo;
+    CGSize kbSize = [[info objectForKey:UIKeyboardFrameBeginUserInfoKey] CGRectValue].size;
+    self.pageInputBottomSpace.constant = kbSize.height;
+    self.tableView.userInteractionEnabled = NO;
+    self.pageInfo.text = [NSString stringWithFormat:@"当前%ld/%ld页", self.currentPage, self.pageCount];
+}
+
+
+- (void)reply {
+    
+}
+
+
+- (void)imageTapHandler:(BUCImageAttachment *)attachment {
+    BUCImageController *imageController = [[UIStoryboard storyboardWithName:@"Main" bundle:nil] instantiateViewControllerWithIdentifier:@"BUCImageController"];
+    imageController.url = attachment.url;
+    [self presentViewController:imageController animated:YES completion:nil];
+}
+
+
+#pragma mark - table view data source
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
+    return self.postList.count;
+}
+
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+    BUCPostDetailCell *cell = [self.tableView dequeueReusableCellWithIdentifier:@"cell" forIndexPath:indexPath];
+    [self configureCell:cell post:[self.postList objectAtIndex:indexPath.row]];
+    
+    if (indexPath.row == self.postList.count - 1 &&
+        ((self.reverse && self.from > 0) || (!self.reverse && self.postCount > self.to))) {
+        [self loadMore];
+    }
+
+    return cell;
+}
+
+
+#pragma mark - table view delegate
+- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {
+    BUCPost *post = (BUCPost *)[self.postList objectAtIndex:indexPath.row];
+
+    if (post.cellHeight > 0) {
+        return post.cellHeight;
+    } else {
+        [self calculateFrameOfPost:post];
+    }
+    
+    return post.cellHeight;
+}
+
+
+- (void)scrollViewDidEndDragging:(UIScrollView *)scrollView willDecelerate:(BOOL)decelerate {
+    if (!decelerate) {
+        
+    }
+}
+
+
+- (void)scrollViewDidEndDecelerating:(UIScrollView *)scrollView {
+
 }
 
 

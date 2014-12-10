@@ -304,7 +304,7 @@
                                 <rect key="frame" x="0.0" y="0.0" width="600" height="536"/>
                                 <color key="backgroundColor" cocoaTouchSystemColor="groupTableViewBackgroundColor"/>
                                 <inset key="separatorInset" minX="0.0" minY="0.0" maxX="0.0" maxY="0.0"/>
-                                <view key="tableFooterView" autoresizesSubviews="NO" clearsContextBeforeDrawing="NO" contentMode="scaleToFill" id="sfh-sU-AGO" userLabel="footer">
+                                <view key="tableFooterView" hidden="YES" autoresizesSubviews="NO" clearsContextBeforeDrawing="NO" contentMode="scaleToFill" id="sfh-sU-AGO" userLabel="footer">
                                     <rect key="frame" x="0.0" y="288" width="600" height="40"/>
                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                     <subviews>
@@ -320,12 +320,16 @@
                                         </activityIndicatorView>
                                     </subviews>
                                     <color key="backgroundColor" cocoaTouchSystemColor="groupTableViewBackgroundColor"/>
+                                    <gestureRecognizers/>
                                     <constraints>
                                         <constraint firstAttribute="centerY" secondItem="dDI-uM-d8E" secondAttribute="centerY" id="AaV-GH-vhz"/>
                                         <constraint firstItem="mfC-kU-YMT" firstAttribute="leading" secondItem="sfh-sU-AGO" secondAttribute="leading" constant="20" id="W8A-Tl-AHT"/>
                                         <constraint firstAttribute="centerY" secondItem="mfC-kU-YMT" secondAttribute="centerY" id="WhD-s4-OrR"/>
                                         <constraint firstAttribute="centerX" secondItem="dDI-uM-d8E" secondAttribute="centerX" id="sxQ-9r-uk9"/>
                                     </constraints>
+                                    <connections>
+                                        <outletCollection property="gestureRecognizers" destination="jFP-Mz-zwH" appends="YES" id="jUi-7z-ilC"/>
+                                    </connections>
                                 </view>
                                 <prototypes>
                                     <tableViewCell autoresizesSubviews="NO" clearsContextBeforeDrawing="NO" contentMode="scaleToFill" selectionStyle="none" indentationWidth="10" shouldIndentWhileEditing="NO" reuseIdentifier="cell" rowHeight="287" id="BXX-5X-0Nb" customClass="BUCPostDetailCell">
@@ -517,7 +521,7 @@
                                         <color key="backgroundColor" cocoaTouchSystemColor="groupTableViewBackgroundColor"/>
                                         <state key="normal" title="Cancel"/>
                                         <connections>
-                                            <action selector="cancelPageSelection" destination="oiG-Nc-ZDP" eventType="touchUpInside" id="qer-f5-AL7"/>
+                                            <action selector="dismissPageSelection" destination="oiG-Nc-ZDP" eventType="touchUpInside" id="xpC-4m-iTA"/>
                                         </connections>
                                     </button>
                                     <button autoresizesSubviews="NO" clearsContextBeforeDrawing="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="PC9-mM-lVO">
@@ -584,6 +588,7 @@
                         </barButtonItem>
                     </navigationItem>
                     <connections>
+                        <outlet property="descend" destination="ILZ-oQ-l7k" id="ulv-Xi-LgN"/>
                         <outlet property="footLabel" destination="dDI-uM-d8E" id="IxY-V6-OVI"/>
                         <outlet property="footer" destination="sfh-sU-AGO" id="CLa-lG-a03"/>
                         <outlet property="loadingMoreIndicator" destination="mfC-kU-YMT" id="rlI-w3-bvX"/>
@@ -593,9 +598,15 @@
                         <outlet property="pageInput" destination="Qal-Bl-1rw" id="a51-Xw-QQx"/>
                         <outlet property="pageInputBottomSpace" destination="wf9-DQ-QbF" id="Y2y-lP-waA"/>
                         <outlet property="tableView" destination="ZJh-te-T7l" id="kBh-A2-ZuL"/>
+                        <outlet property="user" destination="6uk-bw-8hc" id="KEa-Ef-bbp"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="RuH-kQ-6fg" userLabel="First Responder" sceneMemberID="firstResponder"/>
+                <tapGestureRecognizer id="jFP-Mz-zwH">
+                    <connections>
+                        <action selector="loadMore" destination="oiG-Nc-ZDP" id="Jrh-8B-Ldt"/>
+                    </connections>
+                </tapGestureRecognizer>
             </objects>
             <point key="canvasLocation" x="5970" y="116"/>
         </scene>

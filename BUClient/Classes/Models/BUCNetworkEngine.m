@@ -88,7 +88,7 @@
 #pragma mark - private methods
 - (NSURLRequest *)requestFromURL:(NSString *)url json:(NSDictionary *)json error:(NSError **)error {
     NSString * baseURL = @"http://out.bitunion.org/open_api/bu_%@.php";
-    baseURL = @"http://192.168.1.100/open_api/bu_%@.php";
+//    baseURL = @"http://192.168.1.100/open_api/bu_%@.php";
     NSMutableURLRequest *req = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:[NSString stringWithFormat:baseURL, url]]];
     NSMutableDictionary *dataJSON = [[NSMutableDictionary alloc] init];
     NSData *data;
@@ -152,8 +152,10 @@
         errorInfo = @{NSLocalizedDescriptionKey:@"服务器连接超时"};
     } else if (error.code == NSURLErrorCannotConnectToHost) {
         errorInfo = @{NSLocalizedDescriptionKey:@"无法连接至服务器"};
-    } else if(error.code == NSURLErrorNotConnectedToInternet) {
+    } else if (error.code == NSURLErrorNotConnectedToInternet) {
         errorInfo = @{NSLocalizedDescriptionKey:@"无网络连接，请检查网络连接"};
+    } else if (error.code == NSURLErrorCannotFindHost) {
+        errorInfo = @{NSLocalizedDescriptionKey:@"域名解析失败，请检查网络"};
     } else {
         errorInfo = @{NSLocalizedDescriptionKey:@"未知错误"};
     }
