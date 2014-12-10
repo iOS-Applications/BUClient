@@ -1,11 +1,10 @@
 #import <UIKit/UIKit.h>
-#import "BUCBaseController.h"
 
 
 @class BUCPost;
 
 
-@interface BUCPostDetailController : BUCBaseController
+@interface BUCPostDetailController : UIViewController
 
 
 @property (nonatomic) BUCPost *post;

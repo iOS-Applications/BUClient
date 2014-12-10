@@ -5,11 +5,12 @@
 #import "BUCDataManager.h"
 #import "BUCModels.h"
 #import "UIImage+BUCImageCategory.h"
+#import "BUCAppDelegate.h"
 
 static NSUInteger const BUCPostListMinPostCount = 20;
 static NSUInteger const BUCPostListMaxPostCount = 40;
 
-@interface BUCPostListController () <UITableViewDataSource, UITableViewDelegate>
+@interface BUCPostListController ()
 
 @property (nonatomic) NSMutableArray *postList;
 
@@ -26,7 +27,8 @@ static NSUInteger const BUCPostListMaxPostCount = 40;
 @property (nonatomic) IBOutlet UIButton *previous;
 @property (nonatomic) IBOutlet UIButton *next;
 @property (nonatomic) IBOutlet UIActivityIndicatorView *loadingIndicator;
-@property (nonatomic) UIRefreshControl *refreshControl;
+
+@property (nonatomic) BUCAppDelegate *appDelegate;
 
 @end
 
@@ -69,7 +71,8 @@ static NSUInteger const BUCPostListMaxPostCount = 40;
     [self.refreshControl addTarget:self action:@selector(refresh) forControlEvents:UIControlEventValueChanged];
     [self.tableView addSubview:self.refreshControl];
     
-    [self displayLoading];
+    self.appDelegate = [UIApplication sharedApplication].delegate;
+    [self.appDelegate displayLoading];
     [self refresh];
 }
 
@@ -108,7 +111,7 @@ static NSUInteger const BUCPostListMaxPostCount = 40;
     }
     
     [self buildList:list];
-    [self hideLoading];
+    [self.appDelegate hideLoading];
     [self.refreshControl endRefreshing];
     [self.loadingIndicator stopAnimating];
     self.loading = NO;
@@ -116,10 +119,10 @@ static NSUInteger const BUCPostListMaxPostCount = 40;
 
 
 - (void)loadFailed:(NSError *)error {
-    [self hideLoading];
+    [self.appDelegate hideLoading];
     [self.refreshControl endRefreshing];
     [self.loadingIndicator stopAnimating];
-    [self alertMessage:error.localizedDescription];
+    [self.appDelegate alertWithMessage:error.localizedDescription];
     self.loading = NO;
 }
 
@@ -150,7 +153,7 @@ static NSUInteger const BUCPostListMaxPostCount = 40;
     unsigned long to = from + BUCPostListMinPostCount;
     self.from = [NSString stringWithFormat:@"%lu", from];
     self.to = [NSString stringWithFormat:@"%lu", to];
-    [self displayLoading];
+    [self.appDelegate displayLoading];
     [self refresh];
 }
 
@@ -159,7 +162,7 @@ static NSUInteger const BUCPostListMaxPostCount = 40;
     unsigned long to = from + BUCPostListMinPostCount;
     self.from = [NSString stringWithFormat:@"%lu", from];
     self.to = [NSString stringWithFormat:@"%lu", to];
-    [self displayLoading];
+    [self.appDelegate displayLoading];
     [self refresh];
 }
 

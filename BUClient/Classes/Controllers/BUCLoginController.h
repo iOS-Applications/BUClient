@@ -1,8 +1,7 @@
 #import <UIKit/UIKit.h>
-#import "BUCBaseController.h"
 
 
-@interface BUCLoginController : BUCBaseController 
+@interface BUCLoginController : UIViewController
 
 
 @end

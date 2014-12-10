@@ -1,5 +1,6 @@
 #import "BUCLoginController.h"
 #import "BUCDataManager.h"
+#import "BUCAppDelegate.h"
 
 
 @interface BUCLoginController () <UITextFieldDelegate>
@@ -13,6 +14,8 @@
 @property (strong, nonatomic) IBOutlet UITapGestureRecognizer *viewTapRecognizer;
 
 @property (weak, nonatomic) UITextField *currentTextField;
+
+@property (nonatomic) BUCAppDelegate *appDelegate;
 
 
 @end
@@ -30,6 +33,8 @@
     
     self.loginButton.layer.cornerRadius = 3;
     self.loginButton.layer.masksToBounds = YES;
+    
+    self.appDelegate = [UIApplication sharedApplication].delegate;
 }
 
 
@@ -41,11 +46,10 @@
     [self.currentTextField resignFirstResponder];
     
     if ([username length] == 0 || [password length] == 0) {
-        [self alertMessage:@"请输入用户名与密码"];
+        [self.appDelegate alertWithMessage:@"请输入用户名与密码"];
         return;
     }
     
-
     [[BUCDataManager sharedInstance]
      
      loginWithUsername:username
@@ -53,16 +57,16 @@
      password:password
      
      onSuccess:^(void) {
-         [weakSelf hideLoading];
+         [weakSelf.appDelegate hideLoading];
          [weakSelf.presentingViewController dismissViewControllerAnimated:YES completion:nil];
      }
      
      onFail:^(NSError *error) {
-         [weakSelf hideLoading];
-         [weakSelf alertMessage:error.localizedDescription];
+         [weakSelf.appDelegate hideLoading];
+         [weakSelf.appDelegate alertWithMessage:error.localizedDescription];
      }];
     
-    [self displayLoading];
+    [self.appDelegate displayLoading];
 }
 
 

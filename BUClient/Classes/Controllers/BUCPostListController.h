@@ -1,9 +1,7 @@
 #import <UIKit/UIKit.h>
-#import "BUCBaseController.h"
 
 
-@interface BUCPostListController : BUCBaseController
-
+@interface BUCPostListController : UITableViewController
 
 @property (nonatomic) NSString *fid;
 @property (nonatomic) NSString *fname;

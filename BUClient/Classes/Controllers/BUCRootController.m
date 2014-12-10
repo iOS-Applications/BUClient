@@ -2,12 +2,20 @@
 #import "BUCDataManager.h"
 #import "BUCPostListController.h"
 #import "BUCForumListController.h"
+#import "BUCAppDelegate.h"
 
 
 @interface BUCRootController () <UITableViewDataSource, UITableViewDelegate>
 
 @property (nonatomic) NSString *path;
 @property (nonatomic) NSMutableArray *list;
+@property (strong, nonatomic) IBOutlet UIView *loadingView;
+@property (weak, nonatomic) IBOutlet UIActivityIndicatorView *activityIndicator;
+
+@property (strong, nonatomic) IBOutlet UIView *alertWindow;
+@property (weak, nonatomic) IBOutlet UIView *alertView;
+@property (weak, nonatomic) IBOutlet UILabel *alertLabel;
+@property (weak, nonatomic) IBOutlet UIButton *alertButton;
 
 
 @end
@@ -19,6 +27,25 @@
     [super viewDidLoad];
 
     self.navigationItem.backBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"" style:UIBarButtonItemStylePlain target:nil action:nil];
+    
+    BUCAppDelegate *appDelegate = (BUCAppDelegate *)[UIApplication sharedApplication].delegate;
+    
+    self.loadingView.layer.cornerRadius = 10.0f;
+    self.loadingView.layer.masksToBounds = YES;
+    self.loadingView.translatesAutoresizingMaskIntoConstraints = YES;
+    self.loadingView.center = appDelegate.window.center;
+    appDelegate.loadingView = self.loadingView;
+    appDelegate.activityIndicator = self.activityIndicator;
+    [appDelegate.window addSubview:self.loadingView];
+    
+    self.alertWindow.translatesAutoresizingMaskIntoConstraints = YES;
+    self.alertWindow.frame = appDelegate.window.frame;
+    self.alertView.layer.cornerRadius = 8.0f;
+    self.alertView.layer.masksToBounds = YES;
+    appDelegate.alertView = self.alertWindow;
+    appDelegate.alertLabel = self.alertLabel;
+    [self.alertButton addTarget:appDelegate action:@selector(hideAlert) forControlEvents:UIControlEventTouchUpInside];
+    [appDelegate.window addSubview:self.alertWindow];
     
     self.path = [self.nibBundle pathForResource:@"BUCFavouriteList" ofType:@"plist"];
     self.list = [NSMutableArray arrayWithContentsOfFile:self.path];

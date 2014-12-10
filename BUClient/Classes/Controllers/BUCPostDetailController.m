@@ -4,6 +4,7 @@
 #import "BUCImageController.h"
 #import "BUCTextStack.h"
 #import "BUCPostDetailCell.h"
+#import "BUCAppDelegate.h"
 
 
 @interface BUCPostDetailController () <UITableViewDataSource, UITableViewDelegate, UIScrollViewDelegate>
@@ -44,6 +45,8 @@
 @property (weak, nonatomic) IBOutlet UITextField *pageInput;
 @property (weak, nonatomic) IBOutlet UILabel *pageInfo;
 @property (weak, nonatomic) IBOutlet NSLayoutConstraint *pageInputBottomSpace;
+
+@property (nonatomic) BUCAppDelegate *appDelegate;
 
 @end
 
@@ -95,6 +98,8 @@ static NSUInteger const BUCPostDetailMinListLength = 20;
     
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(keyboardWasShown:) name:UIKeyboardDidShowNotification object:nil];
     
+    self.appDelegate = [UIApplication sharedApplication].delegate;
+    
     [self refreshFrom:self.from to:self.to];
 }
 
@@ -110,7 +115,7 @@ static NSUInteger const BUCPostDetailMinListLength = 20;
         return;
     }
     
-    [self displayLoading];
+    [self.appDelegate displayLoading];
     
     self.flush = YES;
     self.loading = YES;
@@ -142,7 +147,7 @@ static NSUInteger const BUCPostDetailMinListLength = 20;
      
      onError:^(NSError *error) {
          [weakSelf endLoading];
-         [weakSelf alertMessage:error.localizedDescription];
+         [weakSelf.appDelegate alertWithMessage:error.localizedDescription];
      }];
 }
 
@@ -189,7 +194,7 @@ static NSUInteger const BUCPostDetailMinListLength = 20;
      
      onError:^(NSError *error) {
          [weakSelf endLoading];
-         [weakSelf alertMessage:error.localizedDescription];
+         [weakSelf.appDelegate alertWithMessage:error.localizedDescription];
      }];
 }
 
@@ -298,7 +303,7 @@ static NSUInteger const BUCPostDetailMinListLength = 20;
 
 
 - (void)endLoading {
-    [self hideLoading];
+    [self.appDelegate hideLoading];
     [self.loadingMoreIndicator stopAnimating];
     self.loading = NO;
     self.flush = NO;
@@ -530,13 +535,13 @@ static NSUInteger const BUCPostDetailMinListLength = 20;
 - (IBAction)donePageSelection {
     NSString *page = self.pageInput.text;
     if (page.length == 0) {
-        [self alertMessage:@"请输入页数"];
+        [self.appDelegate alertWithMessage:@"请输入页数"];
         return;
     }
     
     NSUInteger pageNumber = [self validPageNumber:page];
     if (pageNumber == 0) {
-        [self alertMessage:@"页数无效，请重新输入"];
+        [self.appDelegate alertWithMessage:@"页数无效，请重新输入"];
         return;
     }
     
