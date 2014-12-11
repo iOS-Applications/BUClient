@@ -77,11 +77,11 @@ static NSUInteger const BUCPostListMaxPostCount = 40;
 }
 
 
-- (void)viewWillDisappear:(BOOL)animated {
-    [super viewWillDisappear:animated];
-    [self.appDelegate hideLoading];
+- (void)dealloc {
+    if (self.loading) {
+        [self.appDelegate hideLoading];
+    }
 }
-
 
 #pragma mark - data management
 - (void)refresh {
