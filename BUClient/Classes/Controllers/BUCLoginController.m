@@ -22,8 +22,6 @@
 
 
 @implementation BUCLoginController
-
-
 - (void)viewDidLoad {
     [super viewDidLoad];
     
@@ -33,6 +31,9 @@
     
     self.loginButton.layer.cornerRadius = 3;
     self.loginButton.layer.masksToBounds = YES;
+    
+    self.username.text = [[NSUserDefaults standardUserDefaults] stringForKey:BUCCurrentUserDefaultKey];
+    [self.password becomeFirstResponder];
     
     self.appDelegate = [UIApplication sharedApplication].delegate;
 }
@@ -58,7 +59,11 @@
      
      onSuccess:^(void) {
          [weakSelf.appDelegate hideLoading];
-         [weakSelf.presentingViewController dismissViewControllerAnimated:YES completion:nil];
+         if (weakSelf.presentingViewController) {
+             [weakSelf.presentingViewController dismissViewControllerAnimated:YES completion:nil];
+         } else {
+             [weakSelf performSegueWithIdentifier:@"addNewAccount" sender:nil];
+         }
      }
      
      onFail:^(NSError *error) {

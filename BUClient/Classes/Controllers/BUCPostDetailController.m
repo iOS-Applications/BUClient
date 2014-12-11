@@ -71,7 +71,7 @@ static NSUInteger const BUCPostDetailMinListLength = 20;
     self.bookmarkList = [NSMutableArray arrayWithContentsOfFile:self.bookmarkListPath];
     
     if (self.bookmarkList && self.bookmarkList.count > 0 && !self.post.bookmarked) {
-        NSInteger index;
+        NSInteger index = 0;
         for (NSDictionary *bookmark in self.bookmarkList) {
             NSString *tid = [bookmark objectForKey:@"tid"];
             if ([tid isEqualToString:self.post.tid]) {
@@ -99,8 +99,13 @@ static NSUInteger const BUCPostDetailMinListLength = 20;
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(keyboardWasShown:) name:UIKeyboardDidShowNotification object:nil];
     
     self.appDelegate = [UIApplication sharedApplication].delegate;
-    
     [self refreshFrom:self.from to:self.to];
+}
+
+
+- (void)viewWillDisappear:(BOOL)animated {
+    [super viewWillDisappear:animated];
+    [self.appDelegate hideLoading];
 }
 
 

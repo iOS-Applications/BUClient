@@ -6,6 +6,7 @@
 
 @property (nonatomic) NSMutableArray *list;
 @property (nonatomic) NSString *path;
+@property (nonatomic) BOOL listChanged;
 
 @end
 
@@ -22,8 +23,9 @@
 
 - (void)setEditing:(BOOL)editing animated:(BOOL)animated {
     [super setEditing:editing animated:animated];
-    if (!editing) {
+    if (!editing && self.listChanged) {
         [self.list writeToFile:self.path atomically:YES];
+        self.listChanged = NO;
     }
 }
 
@@ -50,8 +52,8 @@
 - (void)tableView:(UITableView *)tableView commitEditingStyle:(UITableViewCellEditingStyle)editingStyle forRowAtIndexPath:(NSIndexPath *)indexPath {
     if (editingStyle == UITableViewCellEditingStyleDelete) {
         [self.list removeObjectAtIndex:indexPath.row];
+        self.listChanged = YES;
         [tableView deleteRowsAtIndexPaths:@[indexPath] withRowAnimation:UITableViewRowAnimationFade];
-        [self.list writeToFile:self.path atomically:YES];
     }
 }
 
@@ -60,7 +62,7 @@
     NSDictionary *post = [self.list objectAtIndex:fromIndexPath.row];
     [self.list removeObjectAtIndex:fromIndexPath.row];
     [self.list insertObject:post atIndex:toIndexPath.row];
-    [self.list writeToFile:self.path atomically:YES];
+    self.listChanged = YES;
 }
 
 

@@ -9,9 +9,9 @@
 /* Begin PBXBuildFile section */
 		1B03C5A01A3876C7001BD341 /* BUCBookmarkController.m in Sources */ = {isa = PBXBuildFile; fileRef = 1B03C59F1A3876C7001BD341 /* BUCBookmarkController.m */; };
 		1B03C5A21A387A38001BD341 /* data in Resources */ = {isa = PBXBuildFile; fileRef = 1B03C5A11A387A38001BD341 /* data */; };
-		1B03C5A41A387A61001BD341 /* BUCBookmarkList.plist in Resources */ = {isa = PBXBuildFile; fileRef = 1B03C5A31A387A61001BD341 /* BUCBookmarkList.plist */; };
 		1B4362C61A353F2E00A95E14 /* Entitlements.plist in Resources */ = {isa = PBXBuildFile; fileRef = 1B4362C51A353F2E00A95E14 /* Entitlements.plist */; };
 		1B4714C61A33FADD009AB55B /* BUCForumListController.m in Sources */ = {isa = PBXBuildFile; fileRef = 1B4714C51A33FADD009AB55B /* BUCForumListController.m */; };
+		1B63FA271A39505200AA2244 /* BUCSettingsController.m in Sources */ = {isa = PBXBuildFile; fileRef = 1B63FA261A39505200AA2244 /* BUCSettingsController.m */; };
 		1B78AD4E1A2AF0E500E949E0 /* BUCPostDetailCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 1B78AD4D1A2AF0E500E949E0 /* BUCPostDetailCell.m */; };
 		1BDE21C91A2EC724009F82C9 /* UIImage+BUCImageCategory.m in Sources */ = {isa = PBXBuildFile; fileRef = 1BDE21C81A2EC724009F82C9 /* UIImage+BUCImageCategory.m */; };
 		D803C6911A1782DB00D26604 /* BUCTextStack.m in Sources */ = {isa = PBXBuildFile; fileRef = D803C6901A1782DB00D26604 /* BUCTextStack.m */; };
@@ -45,10 +45,11 @@
 		1B03C59E1A3876C7001BD341 /* BUCBookmarkController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BUCBookmarkController.h; sourceTree = "<group>"; };
 		1B03C59F1A3876C7001BD341 /* BUCBookmarkController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BUCBookmarkController.m; sourceTree = "<group>"; };
 		1B03C5A11A387A38001BD341 /* data */ = {isa = PBXFileReference; lastKnownFileType = folder; path = data; sourceTree = "<group>"; };
-		1B03C5A31A387A61001BD341 /* BUCBookmarkList.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = BUCBookmarkList.plist; path = BUClient/Resources/data/BUCBookmarkList.plist; sourceTree = "<group>"; };
 		1B4362C51A353F2E00A95E14 /* Entitlements.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Entitlements.plist; sourceTree = "<group>"; };
 		1B4714C41A33FADD009AB55B /* BUCForumListController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BUCForumListController.h; sourceTree = "<group>"; };
 		1B4714C51A33FADD009AB55B /* BUCForumListController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BUCForumListController.m; sourceTree = "<group>"; };
+		1B63FA251A39505200AA2244 /* BUCSettingsController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BUCSettingsController.h; sourceTree = "<group>"; };
+		1B63FA261A39505200AA2244 /* BUCSettingsController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BUCSettingsController.m; sourceTree = "<group>"; };
 		1B78AD4C1A2AF0E500E949E0 /* BUCPostDetailCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BUCPostDetailCell.h; sourceTree = "<group>"; };
 		1B78AD4D1A2AF0E500E949E0 /* BUCPostDetailCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BUCPostDetailCell.m; sourceTree = "<group>"; };
 		1BDE21C71A2EC724009F82C9 /* UIImage+BUCImageCategory.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "UIImage+BUCImageCategory.h"; sourceTree = "<group>"; };
@@ -148,6 +149,8 @@
 				1B4714C51A33FADD009AB55B /* BUCForumListController.m */,
 				1B03C59E1A3876C7001BD341 /* BUCBookmarkController.h */,
 				1B03C59F1A3876C7001BD341 /* BUCBookmarkController.m */,
+				1B63FA251A39505200AA2244 /* BUCSettingsController.h */,
+				1B63FA261A39505200AA2244 /* BUCSettingsController.m */,
 				D8114CAE189012BC00F0E1A7 /* BUCPostListController.h */,
 				D8114CAF189012BC00F0E1A7 /* BUCPostListController.m */,
 				D8E46E9C1A0327910061C8DA /* BUCPostDetailController.h */,
@@ -222,7 +225,6 @@
 		D8A3BF8B187C895E006CBF64 = {
 			isa = PBXGroup;
 			children = (
-				1B03C5A31A387A61001BD341 /* BUCBookmarkList.plist */,
 				D8A3BF9D187C895E006CBF64 /* BUClient */,
 				D8A3BF96187C895E006CBF64 /* Frameworks */,
 				D8A3BF95187C895E006CBF64 /* Products */,
@@ -344,7 +346,6 @@
 			files = (
 				1B03C5A21A387A38001BD341 /* data in Resources */,
 				D8A2461718910A9A00AFD27A /* Main.storyboard in Resources */,
-				1B03C5A41A387A61001BD341 /* BUCBookmarkList.plist in Resources */,
 				D8A3BFA2187C895E006CBF64 /* InfoPlist.strings in Resources */,
 				D8A3BFAA187C895E006CBF64 /* Images.xcassets in Resources */,
 				1B4362C61A353F2E00A95E14 /* Entitlements.plist in Resources */,
@@ -368,6 +369,7 @@
 				1B03C5A01A3876C7001BD341 /* BUCBookmarkController.m in Sources */,
 				1B4714C61A33FADD009AB55B /* BUCForumListController.m in Sources */,
 				1B78AD4E1A2AF0E500E949E0 /* BUCPostDetailCell.m in Sources */,
+				1B63FA271A39505200AA2244 /* BUCSettingsController.m in Sources */,
 				D8B766F819F4FCA100EB63D2 /* BUCDataManager.m in Sources */,
 				D8A3BFA4187C895E006CBF64 /* main.m in Sources */,
 				D8DDF7EB1A08C60000CEFBA9 /* BUCRootController.m in Sources */,

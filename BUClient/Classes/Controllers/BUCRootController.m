@@ -9,6 +9,8 @@
 
 @property (nonatomic) NSString *path;
 @property (nonatomic) NSMutableArray *list;
+@property (nonatomic) BOOL listChanged;
+
 @property (strong, nonatomic) IBOutlet UIView *loadingView;
 @property (weak, nonatomic) IBOutlet UIActivityIndicatorView *activityIndicator;
 
@@ -17,6 +19,13 @@
 @property (weak, nonatomic) IBOutlet UILabel *alertLabel;
 @property (weak, nonatomic) IBOutlet UIButton *alertButton;
 
+@property (strong, nonatomic) IBOutlet UIView *actionSheetWindow;
+@property (weak, nonatomic) IBOutlet UIView *actionSheet;
+@property (weak, nonatomic) IBOutlet NSLayoutConstraint *actionSheetBottomSpace;
+@property (weak, nonatomic) IBOutlet UIButton *logOut;
+@property (weak, nonatomic) IBOutlet UIButton *cancel;
+
+@property (nonatomic) BUCAppDelegate *appDelegate;
 
 @end
 
@@ -28,24 +37,37 @@
 
     self.navigationItem.backBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"" style:UIBarButtonItemStylePlain target:nil action:nil];
     
-    BUCAppDelegate *appDelegate = (BUCAppDelegate *)[UIApplication sharedApplication].delegate;
+    self.appDelegate = (BUCAppDelegate *)[UIApplication sharedApplication].delegate;
     
     self.loadingView.layer.cornerRadius = 10.0f;
     self.loadingView.layer.masksToBounds = YES;
     self.loadingView.translatesAutoresizingMaskIntoConstraints = YES;
-    self.loadingView.center = appDelegate.window.center;
-    appDelegate.loadingView = self.loadingView;
-    appDelegate.activityIndicator = self.activityIndicator;
-    [appDelegate.window addSubview:self.loadingView];
+    self.loadingView.center = self.appDelegate.window.center;
+    self.appDelegate.loadingView = self.loadingView;
+    self.appDelegate.activityIndicator = self.activityIndicator;
+    [self.appDelegate.window addSubview:self.loadingView];
     
     self.alertWindow.translatesAutoresizingMaskIntoConstraints = YES;
-    self.alertWindow.frame = appDelegate.window.frame;
+    self.alertWindow.frame = self.appDelegate.window.frame;
     self.alertView.layer.cornerRadius = 8.0f;
     self.alertView.layer.masksToBounds = YES;
-    appDelegate.alertView = self.alertWindow;
-    appDelegate.alertLabel = self.alertLabel;
-    [self.alertButton addTarget:appDelegate action:@selector(hideAlert) forControlEvents:UIControlEventTouchUpInside];
-    [appDelegate.window addSubview:self.alertWindow];
+    self.appDelegate.alertViewWindow = self.alertWindow;
+    self.appDelegate.alertLabel = self.alertLabel;
+    [self.alertButton addTarget:self.appDelegate action:@selector(hideAlert) forControlEvents:UIControlEventTouchUpInside];
+    [self.appDelegate.window addSubview:self.alertWindow];
+    
+    self.logOut.layer.cornerRadius = 4.0f;
+    self.logOut.layer.masksToBounds = YES;
+    [self.logOut addTarget:self action:@selector(commitLogOut) forControlEvents:UIControlEventTouchUpInside];
+    self.cancel.layer.cornerRadius = 4.0f;
+    self.cancel.layer.masksToBounds = YES;
+    [self.cancel addTarget:self action:@selector(cancelLogout) forControlEvents:UIControlEventTouchUpInside];
+    self.actionSheetWindow.translatesAutoresizingMaskIntoConstraints = YES;
+    self.actionSheetWindow.frame = self.appDelegate.window.frame;
+    self.appDelegate.actionSheetWindow = self.actionSheetWindow;
+    self.appDelegate.actionSheet = self.actionSheet;
+    self.appDelegate.actionSheetBottomSpace = self.actionSheetBottomSpace;
+    [self.appDelegate.window addSubview:self.actionSheetWindow];
     
     self.path = [self.nibBundle pathForResource:@"BUCFavouriteList" ofType:@"plist"];
     self.list = [NSMutableArray arrayWithContentsOfFile:self.path];
@@ -65,22 +87,23 @@
 }
 
 
-- (void)viewWillAppear:(BOOL)animated
-{
-    [self.navigationController setToolbarHidden:NO animated:YES];
+- (void)viewWillAppear:(BOOL)animated {
+    [super viewWillAppear:animated];
+    [self.navigationController setToolbarHidden:NO animated:NO];
 }
 
 
-- (void)viewWillDisappear:(BOOL)animated
-{
-    [self.navigationController setToolbarHidden:YES animated:YES];
+- (void)viewWillDisappear:(BOOL)animated {
+    [super viewWillDisappear:animated];
+    [self.navigationController setToolbarHidden:YES animated:NO];
 }
 
 
 - (void)setEditing:(BOOL)editing animated:(BOOL)animated {
     [super setEditing:editing animated:animated];
-    if (!editing) {
+    if (!editing && self.listChanged) {
         [self.list writeToFile:self.path atomically:YES];
+        self.listChanged = NO;
     }
 }
 
@@ -111,8 +134,8 @@
 - (void)tableView:(UITableView *)tableView commitEditingStyle:(UITableViewCellEditingStyle)editingStyle forRowAtIndexPath:(NSIndexPath *)indexPath {
     if (editingStyle == UITableViewCellEditingStyleDelete) {
         [self.list removeObjectAtIndex:indexPath.row];
-        [self.tableView deleteRowsAtIndexPaths:@[indexPath] withRowAnimation:UITableViewRowAnimationFade];
-        [self.list writeToFile:self.path atomically:YES];
+        self.listChanged = YES;
+        [tableView deleteRowsAtIndexPaths:@[indexPath] withRowAnimation:UITableViewRowAnimationFade];
     }
 }
 
@@ -138,6 +161,7 @@
     NSDictionary *forum = [self.list objectAtIndex:fromIndexPath.row];
     [self.list removeObjectAtIndex:fromIndexPath.row];
     [self.list insertObject:forum atIndex:toIndexPath.row];
+    self.listChanged = YES;
 }
 
 
@@ -148,9 +172,22 @@
         if (forumList.selected && ![self duplicate:forumList.selected]) {
             [self.list addObject:forumList.selected];
             [self.list writeToFile:self.path atomically:YES];
-            [self.tableView reloadData];
+            [self.tableView insertRowsAtIndexPaths:@[[NSIndexPath indexPathWithIndex:self.list.count]] withRowAnimation:UITableViewRowAnimationNone];
         }
     }
+}
+
+
+- (void)commitLogOut {
+    [[BUCDataManager sharedInstance] logOut];
+    [self.navigationController popViewControllerAnimated:NO];
+    [self performSegueWithIdentifier:@"segueToLogin" sender:nil];
+    [self.appDelegate hideActionSheet];
+}
+
+
+- (void)cancelLogout {
+    [self.appDelegate hideActionSheet];
 }
 
 

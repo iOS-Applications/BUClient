@@ -11,15 +11,12 @@ static NSString * const BUCJsonPostChildCountKey = @"tid_sum";
 static NSString * const BUCJsonFidKey = @"fid";
 static NSString * const BUCJsonTidKey = @"tid";
 static NSString * const BUCUrlLogin = @"logging";
-static NSString * const BUCJsonUsernameKey = @"username";
 static NSString * const BUCJsonSessionKey = @"session";
 static NSString * const BUCJsonActionKey = @"action";
 static NSString * const BUCJsonListFromKey = @"from";
 static NSString * const BUCJsonListToKey = @"to";
-static NSString * const BUCCurrentUserDefaultKey = @"CurrentUser";
 static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
-static NSString * const BUCUserPasswordDefaultKey = @"UserPassword";
-
+static NSString * const BUCUserPasswordDefaultKey = @"password";
 
 @interface BUCDataManager ()
 
@@ -29,6 +26,7 @@ static NSString * const BUCUserPasswordDefaultKey = @"UserPassword";
 @property (nonatomic) NSCache *defaultCache;
 
 @property (nonatomic) NSString *username;
+@property (nonatomic) NSString *uid;
 @property (nonatomic) NSString *password;
 @property (nonatomic) NSString *session;
 @property (nonatomic, readwrite) BOOL loggedIn;
@@ -62,9 +60,18 @@ static NSString * const BUCUserPasswordDefaultKey = @"UserPassword";
         _defaultCache = [[NSCache alloc] init];
         
         _loginError = [NSError errorWithDomain:@"BUClient.ErrorDomain" code:1 userInfo:@{NSLocalizedDescriptionKey:@"帐号与密码不符，请检查帐号状态"}];
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(userChanged) name:@"BUCUserChangedNotification" object:nil];
     }
     
     return self;
+}
+
+
+- (void)userChanged {
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    self.username = [defaults stringForKey:BUCCurrentUserDefaultKey];
+    self.password = [defaults stringForKey:BUCUserPasswordDefaultKey];
+    _loggedIn = [defaults boolForKey:BUCUserLoginStateDefaultKey];
 }
 
 #pragma mark - public methods
@@ -73,15 +80,20 @@ static NSString * const BUCUserPasswordDefaultKey = @"UserPassword";
         return _loggedIn;
     }
     
-    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-    self.username = [defaults stringForKey:BUCCurrentUserDefaultKey];
-    self.password = [defaults stringForKey:BUCUserPasswordDefaultKey];
+    [self userChanged];
     
     if (!self.username || !self.password) {
         return NO;
     }
     
-    return [defaults boolForKey:BUCUserLoginStateDefaultKey];
+    return _loggedIn;
+}
+
+
+- (void)logOut {
+    self.loggedIn = NO;
+    [[NSUserDefaults standardUserDefaults] setBool:NO forKey:BUCUserLoginStateDefaultKey];
+    [[NSUserDefaults standardUserDefaults] synchronize];
 }
 
 
@@ -95,7 +107,25 @@ static NSString * const BUCUserPasswordDefaultKey = @"UserPassword";
          NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
          [defaults setObject:username forKey:BUCCurrentUserDefaultKey];
          [defaults setObject:password forKey:BUCUserPasswordDefaultKey];
+         [defaults setObject:weakSelf.uid forKey:BUCUidDefaultKey];
          [defaults setBool:YES forKey:BUCUserLoginStateDefaultKey];
+         NSMutableDictionary *userList = [NSMutableDictionary dictionaryWithDictionary:[defaults dictionaryForKey:BUCUserListDefaultKey]];
+         if (!userList) {
+             userList = [[NSMutableDictionary alloc] init];
+         }
+         NSString *usernameKey = [username lowercaseString];
+         NSDictionary *userDictionary = [userList objectForKey:usernameKey];
+         NSMutableDictionary *updateUserDictionary;
+         if (userDictionary) {
+             updateUserDictionary = [NSMutableDictionary dictionaryWithDictionary:userDictionary];
+         } else {
+             updateUserDictionary = [[NSMutableDictionary alloc] init];
+         }
+         [updateUserDictionary setObject:username forKey:BUCUserNameDefaultKey];
+         [updateUserDictionary setObject:password forKey:BUCUserPasswordDefaultKey];
+         [updateUserDictionary setObject:weakSelf.uid forKey:BUCUidDefaultKey];
+         [userList setObject:updateUserDictionary forKey:usernameKey];
+         [defaults setObject:userList forKey:BUCUserListDefaultKey];
          [defaults synchronize];
          weakSelf.loggedIn = YES;
          voidBlock();
@@ -212,8 +242,8 @@ static NSString * const BUCUserPasswordDefaultKey = @"UserPassword";
     NSMutableDictionary *json = [[NSMutableDictionary alloc] init];
     
     [json setObject:@"login" forKey:BUCJsonActionKey];
-    [json setObject:self.username forKey:BUCJsonUsernameKey];
-    [json setObject:self.password forKey:@"password"];
+    [json setObject:self.username forKey:BUCUserNameDefaultKey];
+    [json setObject:self.password forKey:BUCUserPasswordDefaultKey];
     BUCDataManager * __weak weakSelf = self;
     
     [self
@@ -221,6 +251,7 @@ static NSString * const BUCUserPasswordDefaultKey = @"UserPassword";
      json:json
      onSuccess:^(NSDictionary *map) {
          weakSelf.session = [map objectForKey:BUCJsonSessionKey];
+         weakSelf.uid = [map objectForKey:BUCUidDefaultKey];
          voidBlock();
      }
      onError:errorBlock];
@@ -241,7 +272,7 @@ static NSString * const BUCUserPasswordDefaultKey = @"UserPassword";
             
             return;
         } else {
-            [json setObject:weakSelf.username forKey:BUCJsonUsernameKey];
+            [json setObject:weakSelf.username forKey:BUCUserNameDefaultKey];
             [json setObject:weakSelf.session forKey:BUCJsonSessionKey];
         }
     }
