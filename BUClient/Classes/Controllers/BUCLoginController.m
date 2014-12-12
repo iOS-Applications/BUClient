@@ -29,11 +29,15 @@
         self.topSpace.constant = 100.0f;
     }
     
-    self.loginButton.layer.cornerRadius = 3;
+    self.loginButton.layer.cornerRadius = 4.0f;
     self.loginButton.layer.masksToBounds = YES;
     
-    self.username.text = [[NSUserDefaults standardUserDefaults] stringForKey:BUCCurrentUserDefaultKey];
-    [self.password becomeFirstResponder];
+    if (self.navigationController) {
+        [self.username becomeFirstResponder];
+    } else {
+        self.username.text = [[NSUserDefaults standardUserDefaults] stringForKey:BUCCurrentUserDefaultKey];
+        [self.password becomeFirstResponder];
+    }
     
     self.appDelegate = [UIApplication sharedApplication].delegate;
 }

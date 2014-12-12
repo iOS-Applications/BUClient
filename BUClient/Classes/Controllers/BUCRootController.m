@@ -187,7 +187,6 @@
 - (void)commitLogOut {
     [[BUCDataManager sharedInstance] logOut];
     [self.navigationController popViewControllerAnimated:NO];
-    [self performSegueWithIdentifier:@"segueToLogin" sender:nil];
     [self.appDelegate hideActionSheet];
 }
 
