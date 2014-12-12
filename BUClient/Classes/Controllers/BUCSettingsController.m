@@ -223,6 +223,7 @@
         BUCEditorController *editor = (BUCEditorController *)segue.destinationViewController;
         editor.content = self.signature;
         editor.unwindIdentifier = @"newSignature";
+        editor.lengthLimit = 100;
     }
 }
 

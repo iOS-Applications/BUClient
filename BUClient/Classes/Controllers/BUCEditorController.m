@@ -5,12 +5,15 @@
 @property (weak, nonatomic) IBOutlet UITextView *textView;
 @property (nonatomic) BOOL textChanged;
 @property (weak, nonatomic) IBOutlet NSLayoutConstraint *textViewBottomSpace;
+@property (nonatomic) BUCAppDelegate *appDelegate;
 @end
 
 @implementation BUCEditorController
 #pragma mark - setup
 - (void)viewDidLoad {
     [super viewDidLoad];
+    
+    self.appDelegate = (BUCAppDelegate *)[UIApplication sharedApplication].delegate;
     
     self.textChanged = NO;
     
@@ -50,6 +53,20 @@
 
 
 #pragma mark - text view delegate
+- (BOOL)textView:(UITextView *)textView shouldChangeTextInRange:(NSRange)range replacementText:(NSString *)text {
+    if(range.length + range.location > textView.text.length) {
+        return NO;
+    }
+    
+    NSUInteger newLength = textView.text.length + text.length - range.length;
+    if (newLength > self.lengthLimit) {
+        return NO;
+    }
+    
+    return YES;
+}
+
+
 - (void)textViewDidChange:(UITextView *)textView {
     self.textChanged = YES;
 }
