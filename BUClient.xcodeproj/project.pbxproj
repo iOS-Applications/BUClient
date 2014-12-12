@@ -13,6 +13,7 @@
 		1B4714C61A33FADD009AB55B /* BUCForumListController.m in Sources */ = {isa = PBXBuildFile; fileRef = 1B4714C51A33FADD009AB55B /* BUCForumListController.m */; };
 		1B63FA271A39505200AA2244 /* BUCSettingsController.m in Sources */ = {isa = PBXBuildFile; fileRef = 1B63FA261A39505200AA2244 /* BUCSettingsController.m */; };
 		1B711DF81A3ABA8600C9DB8F /* BUCEditorController.m in Sources */ = {isa = PBXBuildFile; fileRef = 1B711DF71A3ABA8600C9DB8F /* BUCEditorController.m */; };
+		1B711DFB1A3B3CF400C9DB8F /* BUCNewPostController.m in Sources */ = {isa = PBXBuildFile; fileRef = 1B711DFA1A3B3CF400C9DB8F /* BUCNewPostController.m */; };
 		1B78AD4E1A2AF0E500E949E0 /* BUCPostDetailCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 1B78AD4D1A2AF0E500E949E0 /* BUCPostDetailCell.m */; };
 		1BDE21C91A2EC724009F82C9 /* UIImage+BUCImageCategory.m in Sources */ = {isa = PBXBuildFile; fileRef = 1BDE21C81A2EC724009F82C9 /* UIImage+BUCImageCategory.m */; };
 		D803C6911A1782DB00D26604 /* BUCTextStack.m in Sources */ = {isa = PBXBuildFile; fileRef = D803C6901A1782DB00D26604 /* BUCTextStack.m */; };
@@ -53,6 +54,8 @@
 		1B63FA261A39505200AA2244 /* BUCSettingsController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BUCSettingsController.m; sourceTree = "<group>"; };
 		1B711DF61A3ABA8600C9DB8F /* BUCEditorController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BUCEditorController.h; sourceTree = "<group>"; };
 		1B711DF71A3ABA8600C9DB8F /* BUCEditorController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BUCEditorController.m; sourceTree = "<group>"; };
+		1B711DF91A3B3CF400C9DB8F /* BUCNewPostController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BUCNewPostController.h; sourceTree = "<group>"; };
+		1B711DFA1A3B3CF400C9DB8F /* BUCNewPostController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BUCNewPostController.m; sourceTree = "<group>"; };
 		1B78AD4C1A2AF0E500E949E0 /* BUCPostDetailCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BUCPostDetailCell.h; sourceTree = "<group>"; };
 		1B78AD4D1A2AF0E500E949E0 /* BUCPostDetailCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BUCPostDetailCell.m; sourceTree = "<group>"; };
 		1BDE21C71A2EC724009F82C9 /* UIImage+BUCImageCategory.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "UIImage+BUCImageCategory.h"; sourceTree = "<group>"; };
@@ -156,6 +159,8 @@
 				1B63FA261A39505200AA2244 /* BUCSettingsController.m */,
 				1B711DF61A3ABA8600C9DB8F /* BUCEditorController.h */,
 				1B711DF71A3ABA8600C9DB8F /* BUCEditorController.m */,
+				1B711DF91A3B3CF400C9DB8F /* BUCNewPostController.h */,
+				1B711DFA1A3B3CF400C9DB8F /* BUCNewPostController.m */,
 				D8114CAE189012BC00F0E1A7 /* BUCPostListController.h */,
 				D8114CAF189012BC00F0E1A7 /* BUCPostListController.m */,
 				D8E46E9C1A0327910061C8DA /* BUCPostDetailController.h */,
@@ -372,6 +377,7 @@
 				D8B792ED1A07A4950028D645 /* BUCConstants.m in Sources */,
 				1B711DF81A3ABA8600C9DB8F /* BUCEditorController.m in Sources */,
 				D8E3A88919FB42940047531E /* BUCPostListCell.m in Sources */,
+				1B711DFB1A3B3CF400C9DB8F /* BUCNewPostController.m in Sources */,
 				1B03C5A01A3876C7001BD341 /* BUCBookmarkController.m in Sources */,
 				1B4714C61A33FADD009AB55B /* BUCForumListController.m in Sources */,
 				1B78AD4E1A2AF0E500E949E0 /* BUCPostDetailCell.m in Sources */,

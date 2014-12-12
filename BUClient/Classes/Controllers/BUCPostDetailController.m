@@ -265,8 +265,12 @@ static NSUInteger const BUCPostDetailMinListLength = 20;
         listEnumerator = [list objectEnumerator];
     }
     
+    if (index == 0) {
+        self.post = [list objectAtIndex:index];
+    }
+    
     for (BUCPost *post in listEnumerator) {
-        if ((self.opOnly &&  ![post.user isEqualToString:self.post.user]) ||
+        if ((self.opOnly &&  ![post.uid isEqualToString:self.post.uid]) ||
             [self isLoadedBefore:post against:postList]) {
             continue;
         }

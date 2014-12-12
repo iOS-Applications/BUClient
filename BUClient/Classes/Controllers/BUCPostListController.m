@@ -6,6 +6,7 @@
 #import "BUCModels.h"
 #import "UIImage+BUCImageCategory.h"
 #import "BUCAppDelegate.h"
+#import "BUCNewPostController.h"
 
 static NSUInteger const BUCPostListMinPostCount = 20;
 static NSUInteger const BUCPostListMaxPostCount = 40;
@@ -13,6 +14,7 @@ static NSUInteger const BUCPostListMaxPostCount = 40;
 @interface BUCPostListController ()
 
 @property (nonatomic) NSMutableArray *postList;
+@property (nonatomic) BUCPost *postNew;
 
 @property (nonatomic) NSUInteger from;
 @property (nonatomic) NSUInteger to;
@@ -71,6 +73,13 @@ static NSUInteger const BUCPostListMaxPostCount = 40;
     self.appDelegate = [UIApplication sharedApplication].delegate;
     [self.appDelegate displayLoading];
     [self refreshFrom:self.from to:self.to];
+}
+
+
+- (void)viewDidAppear:(BOOL)animated {
+    if (self.postNew) {
+        [self performSegueWithIdentifier:@"postListToPostDetail" sender:nil];
+    }
 }
 
 
@@ -350,11 +359,43 @@ static NSUInteger const BUCPostListMaxPostCount = 40;
 
 
 #pragma mark - navigation
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
+    [self performSegueWithIdentifier:@"postListToPostDetail" sender:nil];
+}
+
+
 - (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
-    NSIndexPath *indexPath = self.tableView.indexPathForSelectedRow;
-    [self.tableView deselectRowAtIndexPath:indexPath animated:NO];
-    BUCPostDetailController *postDetail = (BUCPostDetailController *)segue.destinationViewController;
-    postDetail.post = [self.postList objectAtIndex:indexPath.section];
+    if ([segue.identifier isEqualToString:@"postListToPostDetail"]) {
+        BUCPostDetailController *postDetail = (BUCPostDetailController *)segue.destinationViewController;
+        if (self.postNew) {
+            postDetail.post = self.postNew;
+            self.postNew = nil;
+        } else {
+            NSIndexPath *indexPath = self.tableView.indexPathForSelectedRow;
+            [self.tableView deselectRowAtIndexPath:indexPath animated:NO];
+            postDetail.post = [self.postList objectAtIndex:indexPath.section];
+        }
+    } else if ([segue.identifier isEqualToString:@"postListToNewPost"]) {
+        BUCNewPostController *newPost = (BUCNewPostController *)(((UINavigationController *)segue.destinationViewController).topViewController);
+        newPost.fid = self.fid;
+        if (self.fid) {
+            newPost.forumName = self.fname;
+        }
+        newPost.unwindIdentifier = @"newPostToPostList";
+        newPost.navigationItem.title = @"New Post";
+    }
+}
+
+
+- (IBAction)unwindToPostList:(UIStoryboardSegue *)segue {
+    if ([segue.identifier isEqualToString:@"newPostToPostList"]) {
+        BUCNewPostController *newPostController = (BUCNewPostController *)segue.sourceViewController;
+        self.postNew = [[BUCPost alloc] init];
+        self.postNew.tid = [(NSNumber *)newPostController.tid stringValue];
+        self.postNew.title = [[NSAttributedString alloc] initWithString:newPostController.postTitle];
+        self.postNew.user = [[NSUserDefaults standardUserDefaults] stringForKey:BUCCurrentUserDefaultKey];
+        self.postNew.uid = [[NSUserDefaults standardUserDefaults] stringForKey:BUCUidDefaultKey];
+    }
 }
 
 

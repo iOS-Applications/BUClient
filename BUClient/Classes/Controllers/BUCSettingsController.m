@@ -219,11 +219,12 @@
 
 #pragma mark - Navigation
 - (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
-    if ([segue.identifier isEqualToString:@"editSignature"]) {
+    if ([segue.identifier isEqualToString:@"settingsToEditor"]) {
         BUCEditorController *editor = (BUCEditorController *)segue.destinationViewController;
         editor.content = self.signature;
-        editor.unwindIdentifier = @"newSignature";
+        editor.unwindIdentifier = @"editorToSettings";
         editor.lengthLimit = 100;
+        editor.navigationItem.title = @"Signature";
     }
 }
 
@@ -233,7 +234,7 @@
         [self setup];
         [self updateAccountList];
         [self updateSignature];
-    } else if ([segue.identifier isEqualToString:@"newSignature"]) {
+    } else if ([segue.identifier isEqualToString:@"editorToSettings"]) {
         BUCEditorController *editor = (BUCEditorController *)segue.sourceViewController;
         self.signature = editor.content;
         self.signatureChanged = YES;

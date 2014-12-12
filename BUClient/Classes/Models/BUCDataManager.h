@@ -33,4 +33,6 @@
 
 - (UIImage *)getImageWithPath:(NSString *)path;
 
+- (void)newPostToForum:(NSString *)fid thread:(NSString *)tid subject:(NSString *)subject content:(NSString *)content attachment:(UIImage *)attachment onSuccess:(BUCStringBlock)stringBlock onError:(BUCErrorBlock)errorBlock;
+
 @end

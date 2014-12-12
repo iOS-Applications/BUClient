@@ -33,38 +33,22 @@
 #pragma mark - public methods
 - (void)fetchJsonFromUrl:(NSString *)url
                     json:(NSDictionary *)json
+              attachment:(UIImage *)attachment
+                  isForm:(BOOL)isForm
                 onResult:(BUCMapBlock)mapBlock
                  onError:(BUCErrorBlock)errorBlock {
     
     NSError *error;
-    NSURLRequest *request = [self requestFromURL:url json:json error:&error];
+    NSURLRequest *request = [self requestWithUrl:url json:json attachment:attachment isForm:isForm error:&error];
     if (!request) {
         errorBlock(error);
         return;
     }
     
     BUCNetworkEngine * __weak weakSelf = self;
-    
     void (^block)(NSData *, NSURLResponse *, NSError *);
     block = ^(NSData *data, NSURLResponse *response, NSError *error) {
-        NSDictionary *result;
-        if (error || ((NSHTTPURLResponse *)response).statusCode != 200) {
-            goto fail;
-        }
-        
-        result = [NSJSONSerialization JSONObjectWithData:data
-                                                     options:NSJSONReadingMutableContainers
-                                                       error:&error];
-        if (!result) {
-            goto fail;
-        }
-        
-        mapBlock(result);
-        
-        return;
-        
-    fail:
-        errorBlock([weakSelf checkErr:error response:response]);
+        [weakSelf callbackWithData:data response:response error:error mapBlock:mapBlock errorBlock:errorBlock];
     };
     
     [[self.defaultSession dataTaskWithRequest:request completionHandler:block] resume];
@@ -85,8 +69,32 @@
 }
 
 
+- (void)callbackWithData:(NSData *)data response:(NSURLResponse *)response error:(NSError *)error mapBlock:(BUCMapBlock)mapBlock errorBlock:(BUCErrorBlock)errorBlock {
+    
+    NSDictionary *result;
+    if (error || ((NSHTTPURLResponse *)response).statusCode != 200) {
+        goto fail;
+    }
+    
+    result = [NSJSONSerialization JSONObjectWithData:data
+                                             options:NSJSONReadingMutableContainers
+                                               error:&error];
+    if (!result) {
+        goto fail;
+    }
+    
+    mapBlock(result);
+    
+    return;
+    
+fail:
+    errorBlock([self checkErr:error response:response]);
+}
+
+
 #pragma mark - private methods
-- (NSURLRequest *)requestFromURL:(NSString *)url json:(NSDictionary *)json error:(NSError **)error {
+- (NSURLRequest *)requestWithUrl:(NSString *)url json:(NSDictionary *)json attachment:(UIImage *)attachment isForm:(BOOL)isForm error:(NSError **)error {
+    
     NSString * baseURL = @"http://out.bitunion.org/open_api/bu_%@.php";
 //    baseURL = @"http://192.168.1.100/open_api/bu_%@.php";
     NSMutableURLRequest *req = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:[NSString stringWithFormat:baseURL, url]]];
@@ -102,10 +110,36 @@
         return nil;
     }
     
+    static NSString * const boundary = @"0Xbooooooooooooooooundary0Xyeah!";
+    if (isForm) {
+        [req setValue:[NSString stringWithFormat:@"multipart/form-data;boundary=%@",boundary] forHTTPHeaderField:@"Content-type"];
+        data = [self formDataWithData:data attachment:attachment boundary:boundary];
+    }
+    
     req.HTTPMethod = @"POST";
     req.HTTPBody = data;
     
     return req;
+}
+
+
+- (NSData *)formDataWithData:(NSData *)data attachment:(UIImage *)attachment boundary:(NSString *)boundary {
+    NSMutableData * body=[NSMutableData data];
+    
+    [body appendData:[[NSString stringWithFormat:@"\r\n--%@\r\n",boundary] dataUsingEncoding:NSUTF8StringEncoding]];
+    [body appendData:[@"Content-Disposition: form-data; name=\"json\"\r\n\r\n" dataUsingEncoding:NSUTF8StringEncoding]];
+    [body appendData:data];
+    [body appendData:[[NSString stringWithFormat:@"\r\n--%@\r\n",boundary]dataUsingEncoding:NSUTF8StringEncoding]];
+    
+    if (attachment) {
+        [body appendData:[@"Content-Disposition: form-data;name=\"attach\"\r\n" dataUsingEncoding:NSUTF8StringEncoding]];
+        [body appendData:[@"Content-Type: image/png\r\n" dataUsingEncoding:NSUTF8StringEncoding]];
+        [body appendData:[@"Content-Transfer-Encoding: binary\r\n\r\n" dataUsingEncoding:NSUTF8StringEncoding]];
+        [body appendData:UIImagePNGRepresentation(attachment)];
+        [body appendData:[[NSString stringWithFormat:@"\r\n--%@--\r\n",boundary]dataUsingEncoding:NSUTF8StringEncoding]];
+    }
+    
+    return body;
 }
 
 
@@ -127,6 +161,7 @@
             [output appendFormat:@"%%%02X", thisChar];
         }
     }
+    
     return output;
 }
 
@@ -145,7 +180,7 @@
         }
         
         return [NSError errorWithDomain:@"buc.http.errorDomain" code:0 userInfo:errorInfo];
-
+        
     } else if (error.code == NSURLErrorTimedOut) {
         errorInfo = @{NSLocalizedDescriptionKey:@"服务器连接超时"};
     } else if (error.code == NSURLErrorCannotConnectToHost) {
@@ -157,7 +192,7 @@
     } else {
         errorInfo = @{NSLocalizedDescriptionKey:@"未知错误"};
     }
-        
+    
     return [NSError errorWithDomain:error.domain code:error.code userInfo:errorInfo];
 }
 

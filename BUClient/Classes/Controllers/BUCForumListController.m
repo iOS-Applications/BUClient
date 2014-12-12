@@ -3,7 +3,6 @@
 
 @interface BUCForumListController ()
 @property (nonatomic) NSArray *sectionList;
-@property (weak, nonatomic) IBOutlet UIBarButtonItem *done;
 
 @end
 
@@ -52,17 +51,17 @@
 }
 
 
-- (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
-    if (sender != self.done) {
-        return;
-    }
-    
-    NSIndexPath *indexPath = self.tableView.indexPathForSelectedRow;
-    if (indexPath) {
-        NSDictionary *forumSction = [self.sectionList objectAtIndex:indexPath.section];
-        NSArray *forumList = [forumSction objectForKey:@"list"];
-        self.selected = [forumList objectAtIndex:indexPath.row];
-    }
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
+    NSDictionary *forumSction = [self.sectionList objectAtIndex:indexPath.section];
+    NSArray *forumList = [forumSction objectForKey:@"list"];
+    self.selected = [forumList objectAtIndex:indexPath.row];
+    [self performSegueWithIdentifier:self.unwindIdentifier sender:nil];
+}
+
+
+#pragma mark - navigation
+- (IBAction)cancel {
+    [self.presentingViewController dismissViewControllerAnimated:NO completion:nil];
 }
 
 

@@ -35,6 +35,7 @@ typedef void(^BUCDataBlock)(NSData *data);
 typedef void(^BUCImageBlock)(UIImage *image);
 typedef void(^BUCNumberBlock)(NSUInteger number);
 typedef void(^BUCErrorBlock)(NSError *error);
+typedef void(^BUCStringBlock)(NSString *text);
 typedef void(^BUCVoidBlock)(void);
 #endif
 

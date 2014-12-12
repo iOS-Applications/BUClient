@@ -9,6 +9,7 @@
 
 @property (nonatomic) NSString *path;
 @property (nonatomic) NSMutableArray *list;
+@property (nonatomic) NSMutableSet *forumSet;
 @property (nonatomic) BOOL listChanged;
 
 @property (strong, nonatomic) IBOutlet UIView *loadingView;
@@ -34,7 +35,7 @@
 #pragma mark - setup
 - (void)viewDidLoad {
     [super viewDidLoad];
-
+    
     self.navigationItem.backBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"" style:UIBarButtonItemStylePlain target:nil action:nil];
     
     self.appDelegate = (BUCAppDelegate *)[UIApplication sharedApplication].delegate;
@@ -77,8 +78,12 @@
         readPath = [self.nibBundle pathForResource:@"data/BUCFavoriteList" ofType:@"plist"];
     }
     self.list = [NSMutableArray arrayWithContentsOfFile:readPath];
+    self.forumSet = [[NSMutableSet alloc] init];
+    for (NSDictionary *forum in self.list) {
+        [self.forumSet addObject:[forum objectForKey:@"name"]];
+    }
     
-    self.navigationItem.rightBarButtonItem = self.editButtonItem;
+    self.navigationItem.leftBarButtonItem = self.editButtonItem;
     
     [self.tableView reloadData];
 }
@@ -122,13 +127,15 @@
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     UITableViewCell *cell;
-
-    cell = [self.tableView dequeueReusableCellWithIdentifier:@"cell"];
+    NSString *cellIdentifier;
     if (indexPath.row == 0) {
-        cell.textLabel.textColor = [UIColor orangeColor];
-        cell.textLabel.font = [UIFont boldSystemFontOfSize:16.0f];
+        cellIdentifier = @"cell";
+    } else {
+        cellIdentifier = @"cell1";
     }
-
+    
+    cell = [self.tableView dequeueReusableCellWithIdentifier:cellIdentifier];
+    
     NSDictionary *forum = [self.list objectAtIndex:indexPath.row];
     NSString *name = [forum objectForKey:@"name"];
     cell.textLabel.text = name;
@@ -172,18 +179,6 @@
 
 
 #pragma mark - actions and transition
-- (IBAction)unwindToRoot:(UIStoryboardSegue*)sender {
-    if ([sender.identifier isEqualToString:@"addNewForum"]) {
-        BUCForumListController *forumList = (BUCForumListController *)sender.sourceViewController;
-        if (forumList.selected && ![self duplicate:forumList.selected]) {
-            [self.list addObject:forumList.selected];
-            [self.list writeToFile:self.path atomically:YES];
-            [self.tableView insertRowsAtIndexPaths:@[[NSIndexPath indexPathWithIndex:self.list.count]] withRowAnimation:UITableViewRowAnimationNone];
-        }
-    }
-}
-
-
 - (void)commitLogOut {
     [[BUCDataManager sharedInstance] logOut];
     [self.navigationController popViewControllerAnimated:NO];
@@ -196,32 +191,40 @@
 }
 
 
-- (BOOL)duplicate:(NSDictionary *)forum {
-    NSString *newFid = [forum objectForKey:@"fid"];
-    for (NSDictionary *item in self.list) {
-        NSString *fid = [item objectForKey:@"fid"];
-        if (fid && [fid isEqualToString:newFid]) {
-            return YES;
-        }
-    }
-    
-    return NO;
+#pragma mark - navigation
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
+    [self performSegueWithIdentifier:@"rootToPostList" sender:nil];
 }
 
 
 - (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
-    if (![segue.identifier isEqualToString:@"segueToPostList"]) {
-        return;
+    if ([segue.identifier isEqualToString:@"rootToForumList"]) {
+        BUCForumListController *forumList = (BUCForumListController *)(((UINavigationController *)segue.destinationViewController).topViewController);
+        forumList.unwindIdentifier = @"forumListToRoot";
+    } else if ([segue.identifier isEqualToString:@"rootToPostList"]) {
+        NSIndexPath *indexpath = self.tableView.indexPathForSelectedRow;
+        [self.tableView deselectRowAtIndexPath:indexpath animated:NO];
+        BUCPostListController *postList = (BUCPostListController *)segue.destinationViewController;
+        NSDictionary *forum = [self.list objectAtIndex:indexpath.row];
+        NSString *fid = [forum objectForKey:@"fid"];
+        NSString *name = [forum objectForKey:@"name"];
+        postList.fname = name;
+        postList.fid = fid;
     }
-    
-    NSIndexPath *indexpath = self.tableView.indexPathForSelectedRow;
-    [self.tableView deselectRowAtIndexPath:indexpath animated:NO];
-    BUCPostListController *listController = (BUCPostListController *)segue.destinationViewController;
-    NSDictionary *forum = [self.list objectAtIndex:indexpath.row];
-    NSString *fid = [forum objectForKey:@"fid"];
-    NSString *name = [forum objectForKey:@"name"];
-    listController.fname = name;
-    listController.fid = fid;
+}
+
+
+- (IBAction)unwindToRoot:(UIStoryboardSegue*)segue {
+    if ([segue.identifier isEqualToString:@"forumListToRoot"]) {
+        BUCForumListController *forumList = (BUCForumListController *)segue.sourceViewController;
+        NSString *name = [forumList.selected objectForKey:@"name"];
+        if (![self.forumSet containsObject:name]) {
+            [self.list addObject:forumList.selected];
+            [self.forumSet addObject:name];
+            [self.tableView insertRowsAtIndexPaths:@[[NSIndexPath indexPathForRow:self.list.count - 1 inSection:0]] withRowAnimation:UITableViewRowAnimationNone];
+            [self.list writeToFile:self.path atomically:YES];
+        }
+    }
 }
 
 

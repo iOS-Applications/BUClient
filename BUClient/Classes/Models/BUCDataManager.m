@@ -144,6 +144,9 @@ static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
     [self
      loadJsonFromUrl:@"fid_tid"
      json:json
+     attachment:nil
+     isForm:NO
+     
      onSuccess:^(NSDictionary *map) {
          NSString *count;
          if (fid) {
@@ -184,6 +187,42 @@ static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
 }
 
 
+- (void)newPostToForum:(NSString *)fid thread:(NSString *)tid subject:(NSString *)subject content:(NSString *)content attachment:(UIImage *)attachment onSuccess:(BUCStringBlock)stringBlock onError:(BUCErrorBlock)errorBlock {
+    
+    NSMutableDictionary *json = [[NSMutableDictionary alloc] init];
+    if (subject) {
+        [json setObject:subject forKey:@"subject"];
+    }
+    if (content) {
+        [json setObject:content forKey:@"message"];
+    }
+    if (attachment) {
+        [json setObject:@"1" forKey:@"attachment"];
+    } else {
+        [json setObject:@"0" forKey:@"attachment"];
+    }
+    if (fid) {
+        [json setObject:fid forKey:BUCJsonFidKey];
+        [json setObject:@"newthread" forKey:BUCJsonActionKey];
+    }
+    
+    if (tid) {
+        [json setObject:tid forKey:BUCJsonTidKey];
+        [json setObject:@"newreply" forKey:BUCJsonActionKey];
+    }
+    
+    [self
+     loadJsonFromUrl:@"newpost"
+     json:json
+     attachment:attachment
+     isForm:YES
+     onSuccess:^(NSDictionary *map) {
+         stringBlock([map objectForKey:@"tid"]);
+     }
+     onError:errorBlock];
+}
+
+
 - (void)getImageWithUrl:(NSURL *)url size:(CGSize)size onSuccess:(BUCImageBlock)imageBlock {
     NSString *key = [NSString stringWithFormat:@"%@%@", url.absoluteString, NSStringFromCGSize(size)];
     NSCache *cache = self.defaultCache;
@@ -193,10 +232,8 @@ static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
         return;
     }
     
-    NSURLRequest *request = [NSURLRequest requestWithURL:url];
-    
     [self.networkEngine
-     fetchDataFromUrl:request
+     fetchDataFromUrl:[NSURLRequest requestWithURL:url]
      
      onResult:^(NSData *data) {
          UIImage *image = [UIImage imageWithData:data size:size];
@@ -239,6 +276,8 @@ static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
     [self
      loadJsonFromUrl:BUCUrlLogin
      json:json
+     attachment:nil
+     isForm:NO
      onSuccess:^(NSDictionary *map) {
          weakSelf.session = [map objectForKey:BUCJsonSessionKey];
          weakSelf.uid = [map objectForKey:BUCUidDefaultKey];
@@ -248,14 +287,14 @@ static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
 }
 
 
-- (void)loadJsonFromUrl:(NSString *)url json:(NSMutableDictionary *)json onSuccess:(BUCMapBlock)mapBlock onError:(BUCErrorBlock)errorBlock {
+- (void)loadJsonFromUrl:(NSString *)url json:(NSMutableDictionary *)json attachment:(UIImage *)attachment isForm:(BOOL)isForm onSuccess:(BUCMapBlock)mapBlock onError:(BUCErrorBlock)errorBlock {
     BUCDataManager * __weak weakSelf = self;
     
     if (![url isEqualToString:BUCUrlLogin]) {
         if (!self.session) {
             [self
              updateSessionOnSuccess:^{
-                 [weakSelf loadJsonFromUrl:url json:json onSuccess:mapBlock onError:errorBlock];
+                 [weakSelf loadJsonFromUrl:url json:json attachment:(UIImage *)attachment isForm:(BOOL)isForm onSuccess:mapBlock onError:errorBlock];
              }
              
              onError:errorBlock];
@@ -270,6 +309,8 @@ static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
     [self.networkEngine
      fetchJsonFromUrl:url
      json:json
+     attachment:attachment
+     isForm:isForm
      
      onResult:^(NSDictionary *map) {
          if ([[map objectForKey:@"result"] isEqualToString:@"fail"]) {
@@ -282,7 +323,7 @@ static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
              }
              
              weakSelf.session = nil;
-             [weakSelf loadJsonFromUrl:url json:json onSuccess:mapBlock onError:errorBlock];
+             [weakSelf loadJsonFromUrl:url json:json attachment:attachment isForm:isForm onSuccess:mapBlock onError:errorBlock];
          done:
              return;
          }
@@ -306,7 +347,7 @@ static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
         [weakSelf successListHandler:map listKey:listKey onSuccess:listBlock onError:errorBlock];
     };
     
-    [self loadJsonFromUrl:url json:json onSuccess:block onError:errorBlock];
+    [self loadJsonFromUrl:url json:json attachment:nil isForm:NO onSuccess:block onError:errorBlock];
 }
 
 

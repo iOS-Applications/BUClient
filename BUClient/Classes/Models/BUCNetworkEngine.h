@@ -7,10 +7,14 @@
 
 - (void)fetchJsonFromUrl:(NSString *)url
                     json:(NSDictionary *)json
+              attachment:(UIImage *)attachment
+                  isForm:(BOOL)isForm
                 onResult:(BUCMapBlock)mapBlock
                  onError:(BUCErrorBlock)errorBlock;
 
-- (void)fetchDataFromUrl:(NSURLRequest *)request onResult:(BUCDataBlock)dataBlock onError:(BUCErrorBlock)errorBlock;
+- (void)fetchDataFromUrl:(NSURLRequest *)request
+                onResult:(BUCDataBlock)dataBlock
+                 onError:(BUCErrorBlock)errorBlock;
 
 
 @end
