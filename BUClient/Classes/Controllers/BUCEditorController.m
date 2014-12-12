@@ -5,7 +5,6 @@
 @property (weak, nonatomic) IBOutlet UITextView *textView;
 @property (nonatomic) BOOL textChanged;
 @property (weak, nonatomic) IBOutlet NSLayoutConstraint *textViewBottomSpace;
-@property (nonatomic) BUCAppDelegate *appDelegate;
 @end
 
 @implementation BUCEditorController
@@ -13,8 +12,6 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     
-    self.navigationItem.title = self.title;
-    self.appDelegate = (BUCAppDelegate *)[UIApplication sharedApplication].delegate;
     self.textChanged = NO;
     
     self.textView.text = self.content;
@@ -24,6 +21,14 @@
     
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(keyboardWasShown:) name:UIKeyboardDidShowNotification object:nil];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(keyboardWillBeHidden:) name:UIKeyboardWillHideNotification object:nil];
+}
+
+
+- (void)viewWillDisappear:(BOOL)animated {
+    if (self.textView.text && self.textChanged) {
+        self.content = self.textView.text;
+        [self performSegueWithIdentifier:self.unwindIdentifier sender:nil];
+    }
 }
 
 
@@ -47,29 +52,6 @@
 #pragma mark - text view delegate
 - (void)textViewDidChange:(UITextView *)textView {
     self.textChanged = YES;
-}
-
-
-#pragma mark - Navigation
-/*
-- (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
-    self.content = self.textView.text;
-}
- */
-
-- (IBAction)doneEditing:(id)sender {
-    if (self.textView.text && self.textChanged) {
-        self.content = self.textView.text;
-        if ([self.title isEqualToString:@"Signature"]) {
-            [self performSegueWithIdentifier:@"newSignature" sender:nil];
-        } else if ([self.title isEqualToString:@"Reply"]) {
-            [self performSegueWithIdentifier:@"newReply" sender:nil];
-        } else {
-            [self performSegueWithIdentifier:@"newPost" sender:nil];
-        }
-    } else {
-        [self.appDelegate alertWithMessage:@"请编辑文本"];
-    }
 }
 
 

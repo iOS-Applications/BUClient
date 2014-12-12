@@ -222,7 +222,7 @@
     if ([segue.identifier isEqualToString:@"editSignature"]) {
         BUCEditorController *editor = (BUCEditorController *)segue.destinationViewController;
         editor.content = self.signature;
-        editor.title = @"Signature";
+        editor.unwindIdentifier = @"newSignature";
     }
 }
 

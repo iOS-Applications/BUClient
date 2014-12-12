@@ -10,4 +10,5 @@
 
 @interface BUCEditorController : UIViewController
 @property (nonatomic) NSString *content;
+@property (nonatomic) NSString *unwindIdentifier;
 @end
