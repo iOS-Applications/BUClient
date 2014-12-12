@@ -12,6 +12,7 @@ NSString * const BUCCurrentUserDefaultKey = @"CurrentUser";
 NSString * const BUCUserSignatureDefaultKey = @"Signature";
 NSString * const BUCUserListDefaultKey = @"BUCUserList";
 NSString * const BUCUserNameDefaultKey = @"username";
+NSString * const BUCUserPasswordDefaultKey = @"password";
 NSString * const BUCUidDefaultKey = @"uid";
 
 // geometry constants

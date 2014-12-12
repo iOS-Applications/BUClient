@@ -3,6 +3,7 @@
     <dependencies>
         <deployment version="1792" identifier="iOS"/>
         <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="6247"/>
+        <capability name="Constraints to layout margins" minToolsVersion="6.0"/>
         <capability name="Constraints with non-1.0 multipliers" minToolsVersion="5.1"/>
     </dependencies>
     <scenes>
@@ -83,6 +84,7 @@
                         </connections>
                     </view>
                     <extendedEdge key="edgesForExtendedLayout"/>
+                    <simulatedNavigationBarMetrics key="simulatedTopBarMetrics" translucent="NO" prompted="NO"/>
                     <connections>
                         <outlet property="loginButton" destination="p6Q-ty-e5D" id="eIp-jb-F33"/>
                         <outlet property="password" destination="UH4-D8-KLE" id="3fX-A4-te9"/>
@@ -921,6 +923,64 @@
             </objects>
             <point key="canvasLocation" x="5289" y="856"/>
         </scene>
+        <!--Editor-->
+        <scene sceneID="NAz-Lj-fhv">
+            <objects>
+                <viewController id="WZc-FQ-sdj" customClass="BUCEditorController" sceneMemberID="viewController">
+                    <layoutGuides>
+                        <viewControllerLayoutGuide type="top" id="aU2-CU-8BH"/>
+                        <viewControllerLayoutGuide type="bottom" id="Cwj-xb-7Qv"/>
+                    </layoutGuides>
+                    <view key="view" autoresizesSubviews="NO" clearsContextBeforeDrawing="NO" contentMode="scaleToFill" id="ENH-Ma-cZc">
+                        <rect key="frame" x="0.0" y="0.0" width="600" height="536"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <textView autoresizesSubviews="NO" clearsContextBeforeDrawing="NO" contentMode="scaleToFill" alwaysBounceVertical="YES" showsHorizontalScrollIndicator="NO" canCancelContentTouches="NO" bouncesZoom="NO" keyboardDismissMode="interactive" translatesAutoresizingMaskIntoConstraints="NO" id="7KX-2C-zik">
+                                <rect key="frame" x="16" y="26" width="568" height="502"/>
+                                <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                                <string key="text">Lorem ipsum dolor sit er elit lamet, consectetaur cillium adipisicing pecu, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Nam liber te conscient to factor tum poen legum odioque civiuda.</string>
+                                <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                                <textInputTraits key="textInputTraits"/>
+                                <connections>
+                                    <outlet property="delegate" destination="WZc-FQ-sdj" id="9F8-OX-iBo"/>
+                                </connections>
+                            </textView>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="text (required)" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="s9i-GI-CqN">
+                                <rect key="frame" x="16" y="8" width="86" height="16"/>
+                                <fontDescription key="fontDescription" type="boldSystem" pointSize="13"/>
+                                <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                        </subviews>
+                        <color key="backgroundColor" cocoaTouchSystemColor="groupTableViewBackgroundColor"/>
+                        <constraints>
+                            <constraint firstAttribute="trailingMargin" secondItem="7KX-2C-zik" secondAttribute="trailing" id="2lB-N5-wzG"/>
+                            <constraint firstItem="7KX-2C-zik" firstAttribute="leading" secondItem="ENH-Ma-cZc" secondAttribute="leadingMargin" id="LjW-lE-JOC"/>
+                            <constraint firstItem="7KX-2C-zik" firstAttribute="top" secondItem="s9i-GI-CqN" secondAttribute="bottom" constant="2" id="PGF-fv-clR"/>
+                            <constraint firstItem="Cwj-xb-7Qv" firstAttribute="top" secondItem="7KX-2C-zik" secondAttribute="bottom" constant="8" id="Skn-k3-idL"/>
+                            <constraint firstItem="s9i-GI-CqN" firstAttribute="leading" secondItem="ENH-Ma-cZc" secondAttribute="leadingMargin" id="oG6-Jd-Fjv"/>
+                            <constraint firstItem="s9i-GI-CqN" firstAttribute="top" secondItem="aU2-CU-8BH" secondAttribute="bottom" constant="8" id="sVs-73-sPX"/>
+                        </constraints>
+                    </view>
+                    <toolbarItems/>
+                    <navigationItem key="navigationItem" title="Editor" id="qe5-bh-dtB">
+                        <barButtonItem key="rightBarButtonItem" systemItem="done" id="vRx-qi-WZJ">
+                            <connections>
+                                <action selector="doneEditing:" destination="WZc-FQ-sdj" id="o8Q-IH-aOv"/>
+                            </connections>
+                        </barButtonItem>
+                    </navigationItem>
+                    <connections>
+                        <outlet property="textView" destination="7KX-2C-zik" id="8ol-w0-WrQ"/>
+                        <outlet property="textViewBottomSpace" destination="Skn-k3-idL" id="b0j-fc-RQO"/>
+                        <segue destination="WKe-zb-vF9" kind="unwind" identifier="newSignature" unwindAction="unwindToSettings:" id="M3o-y9-0Ko"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="Bs0-eE-mJC" userLabel="First Responder" sceneMemberID="firstResponder"/>
+                <exit id="WKe-zb-vF9" userLabel="Exit" sceneMemberID="exit"/>
+            </objects>
+            <point key="canvasLocation" x="3242" y="856"/>
+        </scene>
         <!--Settings Controller-->
         <scene sceneID="QUH-bK-hwj">
             <objects>
@@ -980,6 +1040,9 @@
                                     <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                                 </tableViewCellContentView>
                                 <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                                <connections>
+                                    <segue destination="WZc-FQ-sdj" kind="show" identifier="editSignature" id="Ull-UE-Zpd"/>
+                                </connections>
                             </tableViewCell>
                             <tableViewCell autoresizesSubviews="NO" clearsContextBeforeDrawing="NO" contentMode="scaleToFill" selectionStyle="default" indentationWidth="10" reuseIdentifier="cell3" textLabel="OsX-gN-chD" style="IBUITableViewCellStyleDefault" id="TAO-ah-cy6">
                                 <autoresizingMask key="autoresizingMask"/>
@@ -1102,7 +1165,7 @@
         <image name="user" width="32" height="32"/>
     </resources>
     <inferredMetricsTieBreakers>
-        <segue reference="kDA-Um-msB"/>
+        <segue reference="OIX-qb-Jb3"/>
         <segue reference="1A0-re-pvy"/>
     </inferredMetricsTieBreakers>
 </document>

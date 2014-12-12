@@ -13,6 +13,7 @@ extern NSString * const BUCCurrentUserDefaultKey;
 extern NSString * const BUCUserSignatureDefaultKey;
 extern NSString * const BUCUserListDefaultKey;
 extern NSString * const BUCUserNameDefaultKey;
+extern NSString * const BUCUserPasswordDefaultKey;
 extern NSString * const BUCUidDefaultKey;
 
 // geometry constants

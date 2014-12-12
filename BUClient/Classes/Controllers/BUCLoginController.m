@@ -1,5 +1,6 @@
 #import "BUCLoginController.h"
 #import "BUCDataManager.h"
+#import "BUCConstants.h"
 #import "BUCAppDelegate.h"
 
 
@@ -14,6 +15,9 @@
 @property (strong, nonatomic) IBOutlet UITapGestureRecognizer *viewTapRecognizer;
 
 @property (weak, nonatomic) UITextField *currentTextField;
+
+@property (nonatomic) NSDictionary *userList;
+@property (nonatomic) NSString *currentUser;
 
 @property (nonatomic) BUCAppDelegate *appDelegate;
 
@@ -32,10 +36,13 @@
     self.loginButton.layer.cornerRadius = 4.0f;
     self.loginButton.layer.masksToBounds = YES;
     
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
     if (self.navigationController) {
         [self.username becomeFirstResponder];
+        self.currentUser = [defaults stringForKey:BUCCurrentUserDefaultKey];
+        self.userList = [defaults dictionaryForKey:BUCUserListDefaultKey];
     } else {
-        self.username.text = [[NSUserDefaults standardUserDefaults] stringForKey:BUCCurrentUserDefaultKey];
+        self.username.text = [defaults stringForKey:BUCCurrentUserDefaultKey];
         [self.password becomeFirstResponder];
     }
     
@@ -53,6 +60,12 @@
     if ([username length] == 0 || [password length] == 0) {
         [self.appDelegate alertWithMessage:@"请输入用户名与密码"];
         return;
+    } else if (self.currentUser) {
+        NSString *userKey = [username lowercaseString];
+        if ([userKey isEqualToString:self.currentUser] || [self.userList objectForKey:userKey]) {
+            [self.appDelegate alertWithMessage:@"该帐号已添加"];
+            return;
+        }
     }
     
     [[BUCDataManager sharedInstance]

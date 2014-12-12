@@ -16,7 +16,6 @@ static NSString * const BUCJsonActionKey = @"action";
 static NSString * const BUCJsonListFromKey = @"from";
 static NSString * const BUCJsonListToKey = @"to";
 static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
-static NSString * const BUCUserPasswordDefaultKey = @"password";
 
 @interface BUCDataManager ()
 
@@ -113,18 +112,13 @@ static NSString * const BUCUserPasswordDefaultKey = @"password";
          if (!userList) {
              userList = [[NSMutableDictionary alloc] init];
          }
-         NSString *usernameKey = [username lowercaseString];
-         NSDictionary *userDictionary = [userList objectForKey:usernameKey];
-         NSMutableDictionary *updateUserDictionary;
-         if (userDictionary) {
-             updateUserDictionary = [NSMutableDictionary dictionaryWithDictionary:userDictionary];
-         } else {
-             updateUserDictionary = [[NSMutableDictionary alloc] init];
-         }
-         [updateUserDictionary setObject:username forKey:BUCUserNameDefaultKey];
-         [updateUserDictionary setObject:password forKey:BUCUserPasswordDefaultKey];
-         [updateUserDictionary setObject:weakSelf.uid forKey:BUCUidDefaultKey];
-         [userList setObject:updateUserDictionary forKey:usernameKey];
+         NSMutableDictionary *userSettings = [[NSMutableDictionary alloc] init];
+         [userSettings setObject:username forKey:BUCUserNameDefaultKey];
+         [userSettings setObject:password forKey:BUCUserPasswordDefaultKey];
+         [userSettings setObject:weakSelf.uid forKey:BUCUidDefaultKey];
+         
+         NSString *userKey = [username lowercaseString];
+         [userList setObject:userSettings forKey:userKey];
          [defaults setObject:userList forKey:BUCUserListDefaultKey];
          [defaults synchronize];
          weakSelf.loggedIn = YES;

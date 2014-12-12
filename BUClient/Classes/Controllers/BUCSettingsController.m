@@ -1,16 +1,23 @@
 #import "BUCSettingsController.h"
 #import "BUCConstants.h"
 #import "BUCAppDelegate.h"
+#import "BUCEditorController.h"
 
 @interface BUCSettingsController ()
 
 @property (nonatomic) NSMutableDictionary *userList;
 @property (nonatomic) NSMutableArray *list;
+
 @property (nonatomic) NSString *currentUser;
+@property (nonatomic) NSString *password;
 @property (nonatomic) NSString *uid;
 @property (nonatomic) NSString *signature;
+@property (nonatomic) NSMutableDictionary *userSettings;
+
 @property (nonatomic) BOOL loginStateChanged;
 @property (nonatomic) BOOL userListChanged;
+@property (nonatomic) BOOL signatureChanged;
+@property (nonatomic) NSInteger currentUserRow;
 
 @property (nonatomic) BUCAppDelegate *appDelegate;
 
@@ -33,59 +40,66 @@
 
 - (void)setup {
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-    self.currentUser = [defaults stringForKey:BUCCurrentUserDefaultKey];
-    self.uid = [defaults stringForKey:BUCUidDefaultKey];
-    self.signature = [defaults stringForKey:BUCUserSignatureDefaultKey];
     NSDictionary *userList = [defaults objectForKey:BUCUserListDefaultKey];
     self.userList = [NSMutableDictionary dictionaryWithDictionary:userList];
     self.list = [NSMutableArray arrayWithArray:[userList allValues]];
-    [self.tableView reloadData];
+    self.currentUser = [defaults stringForKey:BUCCurrentUserDefaultKey];
+    self.password = [defaults stringForKey:BUCUserPasswordDefaultKey];
+    self.uid = [defaults stringForKey:BUCUidDefaultKey];
+    self.signature = [defaults stringForKey:BUCUserSignatureDefaultKey];
+    self.userSettings = [NSMutableDictionary dictionaryWithDictionary:[self.userList objectForKey:[self.currentUser lowercaseString]]];
 }
 
 
-- (void)updateState {
+#pragma mark - editing
+- (void)setEditing:(BOOL)editing animated:(BOOL)animated {
+    [super setEditing:editing animated:animated];
+    if (!editing) {
+        if (self.userListChanged || self.loginStateChanged) {
+            [self updateUserSettings];
+            [self updateAccountList];
+        }
+    }
+}
+
+
+- (void)updateUserSettings {
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
     if (self.loginStateChanged) {
         [defaults setObject:self.currentUser forKey:BUCCurrentUserDefaultKey];
+        [defaults setObject:self.password forKey:BUCUserPasswordDefaultKey];
         [defaults setObject:self.uid forKey:BUCUidDefaultKey];
         if (self.signature) {
             [defaults setObject:self.signature forKey:BUCUserSignatureDefaultKey];
         }
         [[NSNotificationCenter defaultCenter] postNotificationName:BUCLoginStateNotification object:nil];
         self.loginStateChanged = NO;
-        [self updateUI];
     }
     
     if (self.userListChanged) {
+        if (self.signatureChanged) {
+            [defaults setObject:self.signature forKey:BUCUserSignatureDefaultKey];
+            [self.userSettings setObject:self.signature forKey:BUCUserSignatureDefaultKey];
+            [self.userList setObject:self.userSettings forKey:[self.currentUser lowercaseString]];
+            self.signatureChanged = NO;
+        }
         [defaults setObject:self.userList forKey:BUCUserListDefaultKey];
         self.userListChanged = NO;
     }
+    
     [defaults synchronize];
 }
 
 
-- (IBAction)unwindToSettings:(UIStoryboardSegue *)segue {
-    if ([segue.identifier isEqualToString:@"addNewAccount"]) {
-        [self setup];
-    }
-    [self.tableView reloadData];
+- (void)updateAccountList {
+    NSIndexSet *index = [NSIndexSet indexSetWithIndex:0];
+    [self.tableView reloadSections:index withRowAnimation:UITableViewRowAnimationNone];
 }
 
 
-- (void)setEditing:(BOOL)editing animated:(BOOL)animated {
-    [super setEditing:editing animated:animated];
-    if (!editing) {
-        if (self.userListChanged || self.loginStateChanged) {
-            [self updateState];
-        }
-    }
-}
-
-
-- (void)updateUI {
-    NSMutableIndexSet *indexSet = [NSMutableIndexSet indexSetWithIndex:0];
-    [indexSet addIndex:2];
-    [self.tableView reloadSections:indexSet withRowAnimation:UITableViewRowAnimationNone];
+- (void)updateSignature {
+    NSIndexSet *index = [NSIndexSet indexSetWithIndex:2];
+    [self.tableView reloadSections:index withRowAnimation:UITableViewRowAnimationNone];
 }
 
 
@@ -109,12 +123,13 @@
     if (indexPath.section == 0) {
         cellIdentifier = @"cell";
         cell = [tableView dequeueReusableCellWithIdentifier:cellIdentifier forIndexPath:indexPath];
-        NSDictionary *userDiction = [self.list objectAtIndex:indexPath.row];
-        cell.textLabel.text = [userDiction objectForKey:BUCUserNameDefaultKey];
-        NSNumber *uidNumber = [userDiction objectForKey:BUCUidDefaultKey];
+        NSDictionary *userSettings = [self.list objectAtIndex:indexPath.row];
+        cell.textLabel.text = [userSettings objectForKey:BUCUserNameDefaultKey];
+        NSNumber *uidNumber = [userSettings objectForKey:BUCUidDefaultKey];
         NSString *uid = [uidNumber stringValue];
         if ([uid isEqualToString:self.uid]) {
             cell.accessoryType = UITableViewCellAccessoryCheckmark;
+            self.currentUserRow = indexPath.row;
         } else {
             cell.accessoryType = UITableViewCellAccessoryNone;
         }
@@ -158,21 +173,23 @@
 - (void)tableView:(UITableView *)tableView commitEditingStyle:(UITableViewCellEditingStyle)editingStyle forRowAtIndexPath:(NSIndexPath *)indexPath {
     if (editingStyle == UITableViewCellEditingStyleDelete) {
         NSDictionary *user = [self.list objectAtIndex:indexPath.row];
-        NSString *usernameKey = [[user objectForKey:BUCUserNameDefaultKey] lowercaseString];
+        NSString *userKey = [[user objectForKey:BUCUserNameDefaultKey] lowercaseString];
         NSString *uid = ((NSNumber *)[user objectForKey:BUCUidDefaultKey]).stringValue;
-        [self.userList removeObjectForKey:usernameKey];
+        [self.userList removeObjectForKey:userKey];
         [self.list removeObjectAtIndex:indexPath.row];
         if ([uid isEqualToString:self.uid]) {
             NSDictionary *newUser = [self.list firstObject];
             self.currentUser = [newUser objectForKey:BUCUserNameDefaultKey];
+            self.password = [newUser objectForKey:BUCUserPasswordDefaultKey];
             self.uid = ((NSNumber *)[newUser objectForKey:BUCUidDefaultKey]).stringValue;
             self.signature = [newUser objectForKey:BUCUserSignatureDefaultKey];
             self.loginStateChanged = YES;
+            [self updateAccountList];
         } else {
             [tableView deleteRowsAtIndexPaths:@[indexPath] withRowAnimation:UITableViewRowAnimationFade];
         }
         self.userListChanged = YES;
-        [self updateState];
+        [self updateUserSettings];
     }
 }
 
@@ -180,12 +197,19 @@
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     if (indexPath.section == 0) {
         [tableView deselectRowAtIndexPath:indexPath animated:NO];
+        if (indexPath.row == self.currentUserRow) {
+            return;
+        }
+        
         NSDictionary *user = [self.list objectAtIndex:indexPath.row];
         self.currentUser = [user objectForKey:BUCUserNameDefaultKey];
+        self.password = [user objectForKey:BUCUserPasswordDefaultKey];
         self.uid = ((NSNumber *)[user objectForKey:BUCUidDefaultKey]).stringValue;
         self.signature = [user objectForKey:BUCUserSignatureDefaultKey];
         self.loginStateChanged = YES;
-        [self updateState];
+        [self updateUserSettings];
+        [self updateAccountList];
+        [self updateSignature];
     } else if (indexPath.section == 3) {
         [tableView deselectRowAtIndexPath:indexPath animated:NO];
         [self.appDelegate displayActionSheet];
@@ -195,8 +219,27 @@
 
 #pragma mark - Navigation
 - (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
+    if ([segue.identifier isEqualToString:@"editSignature"]) {
+        BUCEditorController *editor = (BUCEditorController *)segue.destinationViewController;
+        editor.content = self.signature;
+        editor.title = @"Signature";
+    }
+}
 
 
+- (IBAction)unwindToSettings:(UIStoryboardSegue *)segue {
+    if ([segue.identifier isEqualToString:@"addNewAccount"]) {
+        [self setup];
+        [self updateAccountList];
+        [self updateSignature];
+    } else if ([segue.identifier isEqualToString:@"newSignature"]) {
+        BUCEditorController *editor = (BUCEditorController *)segue.sourceViewController;
+        self.signature = editor.content;
+        self.signatureChanged = YES;
+        self.userListChanged = YES;
+        [self updateUserSettings];
+        [self updateSignature];
+    }
 }
 
 
