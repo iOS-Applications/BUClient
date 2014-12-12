@@ -157,10 +157,6 @@ static NSUInteger const BUCPostDetailMinListLength = 20;
 
 
 - (IBAction)loadMore {
-    if (self.loading) {
-        return;
-    }
-
     [self.loadingMoreIndicator startAnimating];
     NSInteger from;
     NSInteger to;
@@ -612,7 +608,7 @@ static NSUInteger const BUCPostDetailMinListLength = 20;
     BUCPostDetailCell *cell = [self.tableView dequeueReusableCellWithIdentifier:@"cell" forIndexPath:indexPath];
     [self configureCell:cell post:[self.postList objectAtIndex:indexPath.row]];
     
-    if (indexPath.row == self.postList.count - 1 &&
+    if (!self.loading && indexPath.row == self.postList.count - 1 &&
         ((self.reverse && self.from > 0) || (!self.reverse && self.postCount > self.to))) {
         [self loadMore];
     }

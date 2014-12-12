@@ -282,7 +282,6 @@
                         <outlet property="loadingIndicator" destination="Iqk-L8-B2u" id="ylE-D5-kXd"/>
                         <outlet property="next" destination="DR6-Dn-0yJ" id="5cp-IP-dRM"/>
                         <outlet property="previous" destination="aEj-KL-oWr" id="HWR-tp-HaZ"/>
-                        <outlet property="tableView" destination="GRG-7K-swt" id="BPf-TP-3Q6"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="HEC-pf-Zqc" userLabel="First Responder" sceneMemberID="firstResponder"/>
