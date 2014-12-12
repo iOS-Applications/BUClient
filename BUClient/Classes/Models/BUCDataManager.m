@@ -136,13 +136,6 @@ static NSString * const BUCUserPasswordDefaultKey = @"password";
 }
 
 
-- (void)listOfFrontOnSuccess:(BUCListBlock)listBlock onError:(BUCErrorBlock)errorBlock {
-    NSMutableDictionary *json = [[NSMutableDictionary alloc] init];
-    
-    [self loadListFromUrl:@"home" json:json listKey:BUCJsonNewListKey onSuccess:listBlock onError:errorBlock];
-}
-
-
 - (void)childCountOfForum:(NSString *)fid thread:(NSString *)tid onSuccess:(BUCNumberBlock)numberBlock onError:(BUCErrorBlock)errorBlock {
     NSMutableDictionary *json = [[NSMutableDictionary alloc] init];
     
@@ -173,12 +166,15 @@ static NSString * const BUCUserPasswordDefaultKey = @"password";
 - (void)listOfForum:(NSString *)fid from:(NSString *)from to:(NSString *)to onSuccess:(BUCListBlock)listBlock onError:(BUCErrorBlock)errorBlock {
     
     NSMutableDictionary *json = [[NSMutableDictionary alloc] init];
-    [json setObject:@"thread" forKey:BUCJsonActionKey];
-    [json setObject:fid forKey:BUCJsonFidKey];
-    [json setObject:from forKey:BUCJsonListFromKey];
-    [json setObject:to forKey:BUCJsonListToKey];
-    
-    [self loadListFromUrl:@"thread" json:json listKey:@"threadlist" onSuccess:listBlock onError:errorBlock];
+    if (fid) {
+        [json setObject:@"thread" forKey:BUCJsonActionKey];
+        [json setObject:fid forKey:BUCJsonFidKey];
+        [json setObject:from forKey:BUCJsonListFromKey];
+        [json setObject:to forKey:BUCJsonListToKey];
+        [self loadListFromUrl:@"thread" json:json listKey:@"threadlist" onSuccess:listBlock onError:errorBlock];
+    } else {
+        [self loadListFromUrl:@"home" json:json listKey:BUCJsonNewListKey onSuccess:listBlock onError:errorBlock];
+    }
 }
 
 

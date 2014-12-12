@@ -15,8 +15,6 @@
 
 - (void)logOut;
 
-- (void)listOfFrontOnSuccess:(BUCListBlock)listBlock onError:(BUCErrorBlock)errorBlock;
-
 - (void)listOfForum:(NSString *)fid
                 from:(NSString *)from
                   to:(NSString *)to

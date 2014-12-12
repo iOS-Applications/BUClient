@@ -137,6 +137,7 @@ static NSUInteger const BUCPostListMaxPostCount = 40;
 - (void)loadListFrom:(NSUInteger)from to:(NSUInteger)to  postCount:(NSInteger)count{
     BUCPostListController * __weak weakSelf = self;
     self.loading = YES;
+    
     [[BUCDataManager sharedInstance]
      listOfForum:self.fid
      
