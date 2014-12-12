@@ -15,8 +15,11 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     
-    self.path = [self.nibBundle pathForResource:@"BUCBookmarkList" ofType:@"plist"];
-    self.list = [NSMutableArray arrayWithContentsOfFile:self.path];
+    self.path = [[NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) firstObject] stringByAppendingString:@"/BUCBookmarkList.plist"];
+    if ([[NSFileManager defaultManager] fileExistsAtPath:self.path]) {
+        self.list = [NSMutableArray arrayWithContentsOfFile:self.path];
+    }
+
     self.navigationItem.rightBarButtonItem = self.editButtonItem;
 }
 

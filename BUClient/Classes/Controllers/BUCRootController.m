@@ -69,8 +69,14 @@
     self.appDelegate.actionSheetBottomSpace = self.actionSheetBottomSpace;
     [self.appDelegate.window addSubview:self.actionSheetWindow];
     
-    self.path = [self.nibBundle pathForResource:@"BUCFavouriteList" ofType:@"plist"];
-    self.list = [NSMutableArray arrayWithContentsOfFile:self.path];
+    self.path = [[NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) firstObject] stringByAppendingString:@"/BUCFavoriteList.plist"];
+    NSString *readPath;
+    if ([[NSFileManager defaultManager] fileExistsAtPath:self.path]) {
+        readPath = self.path;
+    } else {
+        readPath = [self.nibBundle pathForResource:@"data/BUCFavoriteList" ofType:@"plist"];
+    }
+    self.list = [NSMutableArray arrayWithContentsOfFile:readPath];
     
     self.navigationItem.rightBarButtonItem = self.editButtonItem;
     

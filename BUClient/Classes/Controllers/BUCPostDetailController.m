@@ -67,8 +67,10 @@ static NSUInteger const BUCPostDetailMinListLength = 20;
     self.defaultAvatar = [UIImage imageNamed:@"avatar"];
     self.defaultImage = [UIImage imageNamed:@"loading"];
     
-    self.bookmarkListPath = [self.nibBundle pathForResource:@"BUCBookmarkList" ofType:@"plist"];
-    self.bookmarkList = [NSMutableArray arrayWithContentsOfFile:self.bookmarkListPath];
+    self.bookmarkListPath = [[NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) firstObject] stringByAppendingString:@"/BUCBookmarkList.plist"];
+    if ([[NSFileManager defaultManager] fileExistsAtPath:self.bookmarkListPath]) {
+        self.bookmarkList = [NSMutableArray arrayWithContentsOfFile:self.bookmarkListPath];
+    }
     
     if (self.bookmarkList && self.bookmarkList.count > 0 && !self.post.bookmarked) {
         NSInteger index = 0;
@@ -103,14 +105,11 @@ static NSUInteger const BUCPostDetailMinListLength = 20;
 }
 
 
-- (void)viewWillDisappear:(BOOL)animated {
-    [super viewWillDisappear:animated];
-    [self.appDelegate hideLoading];
-}
-
-
 - (void)dealloc {
     [[NSNotificationCenter defaultCenter] removeObserver:self];
+    if (self.loading) {
+        [self.appDelegate hideLoading];
+    }
 }
 
 
@@ -491,11 +490,15 @@ static NSUInteger const BUCPostDetailMinListLength = 20;
         self.post.bookmarked = YES;
         self.post.bookmarkIndex = self.bookmarkList.count;
         NSDictionary *post = @{@"tid":self.post.tid, @"title":self.post.title.string};
+        if (!self.bookmarkList) {
+            self.bookmarkList  = [[NSMutableArray alloc] init];
+        }
         [self.bookmarkList addObject:post];
     }
     [self.bookmarkList writeToFile:self.bookmarkListPath atomically:YES];
     
     self.star.selected = !self.star.selected;
+    [self toggleMenu];
 }
 
 
