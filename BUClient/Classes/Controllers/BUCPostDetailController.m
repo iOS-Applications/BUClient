@@ -41,6 +41,7 @@
 @property (weak, nonatomic) IBOutlet UIActivityIndicatorView *loadingMoreIndicator;
 
 @property (weak, nonatomic) IBOutlet UIView *menu;
+@property (nonatomic) BOOL menuWasShown;
 @property (weak, nonatomic) IBOutlet UIButton *descend;
 @property (weak, nonatomic) IBOutlet UIButton *user;
 @property (weak, nonatomic) IBOutlet UIButton *star;
@@ -100,8 +101,6 @@ static NSUInteger const BUCPostDetailMinListLength = 20;
     UIBarButtonItem *button = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemReply target:self action:@selector(reply)];
     [barButtons addObject:button];
     self.navigationItem.rightBarButtonItems = barButtons;
-    
-    
     
     self.appDelegate = [UIApplication sharedApplication].delegate;
     [self refreshFrom:self.from to:self.to];
@@ -488,17 +487,32 @@ static NSUInteger const BUCPostDetailMinListLength = 20;
     if (self.loading) {
         return;
     }
+    [self dismissPageSelection];
     BUCPostDetailController * __weak weakSelf = self;
     [weakSelf.view layoutIfNeeded];
     if (self.menuPosition.constant == 0) {
         self.menuPosition.constant = -200;
+        self.menuWasShown = NO;
+        self.tableView.userInteractionEnabled = YES;
     } else {
         self.menuPosition.constant = 0;
+        self.menuWasShown = YES;
+        self.tableView.userInteractionEnabled = NO;
     }
     
     [UIView animateWithDuration:0.3 animations:^{
         [weakSelf.view layoutIfNeeded];
     }];
+}
+
+
+- (IBAction)dismissMenu:(UIGestureRecognizer *)sender {
+    CGPoint location = [sender locationInView:self.menu];
+    if ([self.menu pointInside:location withEvent:nil]) {
+        return;
+    } else if (self.menuWasShown) {
+        [self toggleMenu];
+    }
 }
 
 
@@ -524,8 +538,8 @@ static NSUInteger const BUCPostDetailMinListLength = 20;
 
 #pragma mark - managing keyboard
 - (IBAction)showPageInput {
-    [self.pageInput becomeFirstResponder];
     [self toggleMenu];
+    [self.pageInput becomeFirstResponder];
 }
 
 

@@ -267,7 +267,7 @@
                                         <tableViewCellContentView key="contentView" autoresizesSubviews="NO" clearsContextBeforeDrawing="NO" contentMode="center" tableViewCell="m9k-sj-1e5" id="Bp8-6j-PWd">
                                             <autoresizingMask key="autoresizingMask"/>
                                             <subviews>
-                                                <textView autoresizesSubviews="NO" clearsContextBeforeDrawing="NO" contentMode="scaleToFill" bounces="NO" scrollEnabled="NO" showsHorizontalScrollIndicator="NO" showsVerticalScrollIndicator="NO" delaysContentTouches="NO" canCancelContentTouches="NO" bouncesZoom="NO" keyboardDismissMode="interactive" editable="NO" text="content" selectable="NO" translatesAutoresizingMaskIntoConstraints="NO" id="aG4-2B-t1D">
+                                                <textView autoresizesSubviews="NO" clearsContextBeforeDrawing="NO" contentMode="scaleToFill" bounces="NO" scrollEnabled="NO" showsHorizontalScrollIndicator="NO" showsVerticalScrollIndicator="NO" delaysContentTouches="NO" canCancelContentTouches="NO" bouncesZoom="NO" keyboardDismissMode="interactive" editable="NO" selectable="NO" translatesAutoresizingMaskIntoConstraints="NO" id="aG4-2B-t1D">
                                                     <rect key="frame" x="15" y="30" width="570" height="304"/>
                                                     <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                                                     <gestureRecognizers/>
@@ -807,6 +807,7 @@
                             </view>
                         </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                        <gestureRecognizers/>
                         <constraints>
                             <constraint firstItem="ZJh-te-T7l" firstAttribute="leading" secondItem="d3g-10-KPD" secondAttribute="leading" id="6vN-hi-ibk"/>
                             <constraint firstAttribute="centerX" secondItem="Emg-R5-dT2" secondAttribute="centerX" id="PXr-EV-ooW"/>
@@ -819,6 +820,11 @@
                             <constraint firstItem="Emg-R5-dT2" firstAttribute="top" secondItem="iCg-MY-T2g" secondAttribute="bottom" constant="-200" id="u6e-qy-oAx" userLabel="Vertical Space - menu - Container"/>
                             <constraint firstItem="HRu-kK-amO" firstAttribute="top" secondItem="d7E-T9-DLZ" secondAttribute="bottom" constant="-50" id="wf9-DQ-QbF"/>
                         </constraints>
+                        <connections>
+                            <outletCollection property="gestureRecognizers" destination="9Ub-Oi-3ra" appends="YES" id="YNm-38-37P"/>
+                            <outletCollection property="gestureRecognizers" destination="VUC-nD-Gy5" appends="YES" id="0rq-Kj-x3a"/>
+                            <outletCollection property="gestureRecognizers" destination="1dp-Xk-LMF" appends="YES" id="rlw-ZA-87v"/>
+                        </connections>
                     </view>
                     <extendedEdge key="edgesForExtendedLayout"/>
                     <toolbarItems/>
@@ -833,7 +839,7 @@
                         <outlet property="descend" destination="ILZ-oQ-l7k" id="ulv-Xi-LgN"/>
                         <outlet property="footLabel" destination="dDI-uM-d8E" id="IxY-V6-OVI"/>
                         <outlet property="loadingMoreIndicator" destination="mfC-kU-YMT" id="rlI-w3-bvX"/>
-                        <outlet property="menu" destination="Emg-R5-dT2" id="RuU-xW-5XK"/>
+                        <outlet property="menu" destination="Emg-R5-dT2" id="SPU-Wq-pdg"/>
                         <outlet property="menuPosition" destination="u6e-qy-oAx" id="YS6-8J-o7m"/>
                         <outlet property="pageInfo" destination="hj1-3D-bbD" id="SVG-8j-m0O"/>
                         <outlet property="pageInput" destination="Qal-Bl-1rw" id="a51-Xw-QQx"/>
@@ -850,6 +856,21 @@
                         <action selector="loadMore" destination="oiG-Nc-ZDP" id="Jrh-8B-Ldt"/>
                     </connections>
                 </tapGestureRecognizer>
+                <panGestureRecognizer minimumNumberOfTouches="1" id="9Ub-Oi-3ra">
+                    <connections>
+                        <action selector="dismissMenu:" destination="oiG-Nc-ZDP" id="bxg-0K-KIH"/>
+                    </connections>
+                </panGestureRecognizer>
+                <tapGestureRecognizer id="VUC-nD-Gy5">
+                    <connections>
+                        <action selector="dismissMenu:" destination="oiG-Nc-ZDP" id="VbJ-dZ-qfr"/>
+                    </connections>
+                </tapGestureRecognizer>
+                <pongPressGestureRecognizer allowableMovement="10" minimumPressDuration="0.5" id="1dp-Xk-LMF">
+                    <connections>
+                        <action selector="dismissMenu:" destination="oiG-Nc-ZDP" id="opt-LG-Weq"/>
+                    </connections>
+                </pongPressGestureRecognizer>
             </objects>
             <point key="canvasLocation" x="6040" y="118"/>
         </scene>
@@ -1198,7 +1219,6 @@
                             <textView autoresizesSubviews="NO" clearsContextBeforeDrawing="NO" contentMode="scaleToFill" alwaysBounceVertical="YES" showsHorizontalScrollIndicator="NO" canCancelContentTouches="NO" bouncesZoom="NO" keyboardDismissMode="interactive" translatesAutoresizingMaskIntoConstraints="NO" id="B8l-tv-s5h">
                                 <rect key="frame" x="8" y="93" width="584" height="499"/>
                                 <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
-                                <string key="text">Lorem ipsum dolor sit er elit lamet, consectetaur cillium adipisicing pecu, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Nam liber te conscient to factor tum poen legum odioque civiuda.</string>
                                 <fontDescription key="fontDescription" style="UICTFontTextStyleBody"/>
                                 <textInputTraits key="textInputTraits" autocapitalizationType="sentences"/>
                                 <connections>
