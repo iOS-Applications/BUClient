@@ -315,6 +315,7 @@
                         <outlet property="subject" destination="c2c-iC-HFh" id="IdE-eJ-neT"/>
                         <outlet property="thread" destination="9o8-cW-ZLC" id="j1b-E8-lVa"/>
                         <segue destination="Phb-4O-Irc" kind="unwind" identifier="newPostToPostList" unwindAction="unwindToPostList:" id="LBt-aW-SQp"/>
+                        <segue destination="Phb-4O-Irc" kind="unwind" identifier="newPostToPostDetail" unwindAction="unwindToPostDetail:" id="eo6-5E-joc"/>
                     </connections>
                 </tableViewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="lyK-rh-ODe" userLabel="First Responder" sceneMemberID="firstResponder"/>
@@ -827,6 +828,7 @@
                         <outlet property="star" destination="oHJ-Sy-mEh" id="Dyk-kr-3hQ"/>
                         <outlet property="tableView" destination="ZJh-te-T7l" id="kBh-A2-ZuL"/>
                         <outlet property="user" destination="6uk-bw-8hc" id="KEa-Ef-bbp"/>
+                        <segue destination="Um8-f9-jMx" kind="presentation" identifier="postDetailToNewPost" id="9l9-8d-2uH"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="RuH-kQ-6fg" userLabel="First Responder" sceneMemberID="firstResponder"/>
@@ -1422,8 +1424,9 @@
     </resources>
     <inferredMetricsTieBreakers>
         <segue reference="NLt-hK-OQ5"/>
-        <segue reference="kDA-Um-msB"/>
+        <segue reference="9l9-8d-2uH"/>
         <segue reference="LlL-LF-ROM"/>
+        <segue reference="kDA-Um-msB"/>
         <segue reference="c6N-cX-tJy"/>
     </inferredMetricsTieBreakers>
 </document>

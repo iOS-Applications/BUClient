@@ -647,6 +647,12 @@ static NSUInteger const BUCPostDetailMinListLength = 20;
 }
 
 
+#pragma mark - navigation
+- (IBAction)unwindToPostDetail:(UIStoryboardSegue *)segue {
+    
+}
+
+
 @end
 
 
