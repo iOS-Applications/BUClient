@@ -3,6 +3,7 @@
 
 @implementation BUCAppDelegate
 - (void)displayLoading {
+    self.loadingView.center = self.window.center;
     self.loadingView.hidden = NO;
     [self.activityIndicator startAnimating];
 }

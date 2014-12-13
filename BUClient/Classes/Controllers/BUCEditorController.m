@@ -32,6 +32,8 @@
 
 - (void)viewWillDisappear:(BOOL)animated {
     [super viewWillDisappear:animated];
+    
+    [self.textView resignFirstResponder];
     if (self.textView.text && self.textChanged) {
         self.content = self.textView.text;
         [self performSegueWithIdentifier:self.unwindIdentifier sender:nil];

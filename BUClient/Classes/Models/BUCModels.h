@@ -8,7 +8,7 @@
 @property (nonatomic) NSString *pid;
 @property (nonatomic) NSString *tid;
 @property (nonatomic) NSString *fid;
-@property (nonatomic) NSString *fname;
+@property (nonatomic) NSString *forumName;
 
 @property (nonatomic) NSString *user;
 @property (nonatomic) NSString *uid;

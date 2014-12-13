@@ -347,9 +347,9 @@ static NSUInteger const BUCPostListMaxPostCount = 40;
     [cell.author setTitle:post.user forState:UIControlStateNormal];
     
     // forum name or dateline
-    if (post.fname) {
+    if (post.forumName) {
         cell.forum.hidden = NO;
-        [cell.forum setTitle:post.fname forState:UIControlStateNormal];
+        [cell.forum setTitle:post.forumName forState:UIControlStateNormal];
     }
     
     // last reply
@@ -392,7 +392,7 @@ static NSUInteger const BUCPostListMaxPostCount = 40;
     if ([segue.identifier isEqualToString:@"newPostToPostList"]) {
         BUCNewPostController *newPostController = (BUCNewPostController *)segue.sourceViewController;
         self.postNew = [[BUCPost alloc] init];
-        self.postNew.tid = [(NSNumber *)newPostController.tid stringValue];
+        self.postNew.tid = newPostController.tid;
         self.postNew.title = [[NSAttributedString alloc] initWithString:newPostController.postTitle];
         self.postNew.user = [[NSUserDefaults standardUserDefaults] stringForKey:BUCCurrentUserDefaultKey];
         self.postNew.uid = [[NSUserDefaults standardUserDefaults] stringForKey:BUCUidDefaultKey];

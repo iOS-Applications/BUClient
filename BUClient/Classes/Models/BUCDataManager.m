@@ -190,10 +190,10 @@ static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
 - (void)newPostToForum:(NSString *)fid thread:(NSString *)tid subject:(NSString *)subject content:(NSString *)content attachment:(UIImage *)attachment onSuccess:(BUCStringBlock)stringBlock onError:(BUCErrorBlock)errorBlock {
     
     NSMutableDictionary *json = [[NSMutableDictionary alloc] init];
-    if (subject) {
+    if (subject && subject.length > 0) {
         [json setObject:subject forKey:@"subject"];
     }
-    if (content) {
+    if (content && content.length > 0) {
         [json setObject:content forKey:@"message"];
     }
     if (attachment) {
@@ -217,7 +217,8 @@ static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
      attachment:attachment
      isForm:YES
      onSuccess:^(NSDictionary *map) {
-         stringBlock([map objectForKey:@"tid"]);
+         NSNumber *tid = [map objectForKey:@"tid"];
+         stringBlock(tid.stringValue);
      }
      onError:errorBlock];
 }
@@ -365,7 +366,7 @@ static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
         post.tid = [rawPost objectForKey:BUCJsonTidKey];
         post.fid = [rawPost objectForKey:BUCJsonFidKey];
         
-        post.fname = [self urldecode:[rawPost objectForKey:@"fname"]];
+        post.forumName = [self urldecode:[rawPost objectForKey:@"fname"]];
         
         post.user = [self urldecode:[rawPost objectForKey:@"author"]];
         post.uid = [rawPost objectForKey:@"authorid"];

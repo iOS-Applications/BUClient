@@ -32,7 +32,7 @@
     self.forum.text = self.forumName;
     NSString *signature = [[NSUserDefaults standardUserDefaults] stringForKey:BUCUserSignatureDefaultKey];
     if (signature) {
-        self.content.text = [NSString stringWithFormat:@"\n\n------\n%@", signature];
+        self.content.text = [NSString stringWithFormat:@"%@", signature];
     }
     
     if (self.fid) {
@@ -46,7 +46,8 @@
 
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {
     if (indexPath.row == 4) {
-        return 1000.f;
+        CGSize size = self.content.intrinsicContentSize;
+        return size.height + 38.0f;
     }
     
     return 44.f;

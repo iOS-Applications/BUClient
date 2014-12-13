@@ -5,6 +5,7 @@
 #import "BUCTextStack.h"
 #import "BUCPostDetailCell.h"
 #import "BUCAppDelegate.h"
+#import "BUCNewPostController.h"
 
 
 @interface BUCPostDetailController () <UITableViewDataSource, UITableViewDelegate, UIScrollViewDelegate>
@@ -27,6 +28,8 @@
 @property (nonatomic) BOOL loading;
 @property (nonatomic) BOOL opOnly;
 @property (nonatomic) BOOL reverse;
+
+@property (nonatomic) BOOL newReply;
 
 @property (nonatomic) UIImage *defaultAvatar;
 @property (nonatomic) UIImage *defaultImage;
@@ -98,10 +101,28 @@ static NSUInteger const BUCPostDetailMinListLength = 20;
     [barButtons addObject:button];
     self.navigationItem.rightBarButtonItems = barButtons;
     
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(keyboardWasShown:) name:UIKeyboardDidShowNotification object:nil];
+    
     
     self.appDelegate = [UIApplication sharedApplication].delegate;
     [self refreshFrom:self.from to:self.to];
+}
+
+
+- (void)viewDidAppear:(BOOL)animated {
+    [super viewDidAppear:animated];
+    
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(keyboardWasShown:) name:UIKeyboardWillShowNotification object:nil];
+    
+    if (self.newReply) {
+        [self reverse:nil];
+    }
+}
+
+
+- (void)viewWillDisappear:(BOOL)animated {
+    [super viewWillDisappear:animated];
+    
+    [self dismissPageSelection];
 }
 
 
@@ -266,7 +287,7 @@ static NSUInteger const BUCPostDetailMinListLength = 20;
     }
     
     if (index == 0) {
-        self.post = [list objectAtIndex:index];
+        self.post.uid = ((BUCPost *)[list objectAtIndex:index]).uid;
     }
     
     for (BUCPost *post in listEnumerator) {
@@ -330,12 +351,10 @@ static NSUInteger const BUCPostDetailMinListLength = 20;
     static BUCTextContainer *textContainer;
     static BUCLayoutManager *layoutManager;;
     static CGPoint contentOrigin;
-    static CGFloat contentWidth;
     static dispatch_once_t onceSecurePredicate;
     
-    BUCPostDetailController * __weak weakSelf = self;
+    CGFloat contentWidth = CGRectGetWidth(self.tableView.frame) - 2 * BUCDefaultMargin;
     dispatch_once(&onceSecurePredicate, ^{
-        contentWidth = CGRectGetWidth(weakSelf.tableView.frame) - 2 * BUCDefaultMargin;
         textStorage = [[NSTextStorage alloc] init];
         layoutManager = [[BUCLayoutManager alloc] init];
         [textStorage addLayoutManager:layoutManager];
@@ -345,6 +364,7 @@ static NSUInteger const BUCPostDetailMinListLength = 20;
         contentOrigin = CGPointMake(BUCDefaultMargin, 45.0f + BUCDefaultMargin);
     });
     
+    textContainer.size = CGSizeMake(contentWidth, FLT_MAX);
     [textStorage setAttributedString:post.content];
     [layoutManager ensureLayoutForTextContainer:textContainer];
     CGRect frame = [layoutManager usedRectForTextContainer:textContainer];
@@ -502,33 +522,10 @@ static NSUInteger const BUCPostDetailMinListLength = 20;
 }
 
 
+#pragma mark - managing keyboard
 - (IBAction)showPageInput {
     [self.pageInput becomeFirstResponder];
     [self toggleMenu];
-}
-
-
-- (IBAction)reverse:(id)sender {
-    self.reverse = !self.reverse;
-    self.opOnly = NO;
-    self.user.selected = NO;
-    UIButton *button = (UIButton *)sender;
-    button.selected = self.reverse;
-    
-    [self toggleMenu];
-    [self refreshFrom:0 to:BUCPostDetailMinListLength];
-}
-
-
-- (IBAction)opFilter:(id)sender {
-    self.opOnly = !self.opOnly;
-    self.reverse = NO;
-    self.descend.selected = NO;
-    UIButton *button = (UIButton *)sender;
-    button.selected = self.opOnly;
-
-    [self toggleMenu];
-    [self refreshFrom:0 to:BUCPostDetailMinListLength];
 }
 
 
@@ -540,6 +537,19 @@ static NSUInteger const BUCPostDetailMinListLength = 20;
 }
 
 
+- (void)keyboardWasShown:(NSNotification *)notification {
+    if (![self.pageInput isFirstResponder]) {
+        return;
+    }
+    NSDictionary *info = notification.userInfo;
+    CGSize kbSize = [[info objectForKey:UIKeyboardFrameBeginUserInfoKey] CGRectValue].size;
+    self.pageInputBottomSpace.constant = kbSize.height;
+    self.tableView.userInteractionEnabled = NO;
+    self.pageInfo.text = [NSString stringWithFormat:@"当前%ld/%ld页", (unsigned long)self.currentPage, (unsigned long)self.pageCount];
+}
+
+
+#pragma mark - list manipulation
 - (IBAction)donePageSelection {
     NSString *page = self.pageInput.text;
     if (page.length == 0) {
@@ -579,27 +589,28 @@ static NSUInteger const BUCPostDetailMinListLength = 20;
 }
 
 
-- (void)keyboardWasShown:(NSNotification *)notification {
-    NSDictionary *info = notification.userInfo;
-    CGSize kbSize = [[info objectForKey:UIKeyboardFrameBeginUserInfoKey] CGRectValue].size;
-    self.pageInputBottomSpace.constant = kbSize.height;
-    self.tableView.userInteractionEnabled = NO;
-    self.pageInfo.text = [NSString stringWithFormat:@"当前%ld/%ld页", (unsigned long)self.currentPage, (unsigned long)self.pageCount];
-}
-
-
-- (void)reply {
-    if (self.loading) {
-        return;
-    }
+- (IBAction)opFilter:(id)sender {
+    self.opOnly = !self.opOnly;
+    self.reverse = NO;
+    self.descend.selected = NO;
+    UIButton *button = (UIButton *)sender;
+    button.selected = self.opOnly;
     
+    [self toggleMenu];
+    [self refreshFrom:0 to:BUCPostDetailMinListLength];
 }
 
 
-- (void)imageTapHandler:(BUCImageAttachment *)attachment {
-    BUCImageController *imageController = [[UIStoryboard storyboardWithName:@"Main" bundle:nil] instantiateViewControllerWithIdentifier:@"BUCImageController"];
-    imageController.url = attachment.url;
-    [self presentViewController:imageController animated:YES completion:nil];
+- (IBAction)reverse:(id)sender {
+    self.reverse = !self.reverse;
+    self.opOnly = NO;
+    self.user.selected = NO;
+    self.descend.selected = self.reverse;
+    
+    if (!self.newReply) {
+        [self toggleMenu];
+    }
+    [self refreshFrom:0 to:BUCPostDetailMinListLength];
 }
 
 
@@ -648,8 +659,33 @@ static NSUInteger const BUCPostDetailMinListLength = 20;
 
 
 #pragma mark - navigation
+- (void)reply {
+    [self performSegueWithIdentifier:@"postDetailToNewPost" sender:nil];
+}
+
+
 - (IBAction)unwindToPostDetail:(UIStoryboardSegue *)segue {
-    
+    if ([segue.identifier isEqualToString:@"newPostToPostDetail"]) {
+        self.newReply = YES;
+    }
+}
+
+
+- (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
+    if ([segue.identifier isEqualToString:@"postDetailToNewPost"]) {
+        BUCNewPostController *newPost = (BUCNewPostController *)(((UINavigationController *)segue.destinationViewController).topViewController);
+        newPost.tid = self.post.tid;
+        newPost.parentTitle = self.post.title.string;
+        newPost.forumName = self.post.forumName;
+        newPost.unwindIdentifier = @"newPostToPostDetail";
+    }
+}
+
+
+- (void)imageTapHandler:(BUCImageAttachment *)attachment {
+    BUCImageController *imageController = [[UIStoryboard storyboardWithName:@"Main" bundle:nil] instantiateViewControllerWithIdentifier:@"BUCImageController"];
+    imageController.url = attachment.url;
+    [self presentViewController:imageController animated:YES completion:nil];
 }
 
 
