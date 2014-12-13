@@ -394,8 +394,8 @@ static NSUInteger const BUCPostListMaxPostCount = 40;
         self.postNew = [[BUCPost alloc] init];
         self.postNew.tid = newPostController.tid;
         self.postNew.title = [[NSAttributedString alloc] initWithString:newPostController.postTitle];
-        self.postNew.user = [[NSUserDefaults standardUserDefaults] stringForKey:BUCCurrentUserDefaultKey];
-        self.postNew.uid = [[NSUserDefaults standardUserDefaults] stringForKey:BUCUidDefaultKey];
+        self.postNew.user = [[NSUserDefaults standardUserDefaults] stringForKey:@"username"];
+        self.postNew.uid = [[NSUserDefaults standardUserDefaults] stringForKey:@"uid"];
     }
 }
 

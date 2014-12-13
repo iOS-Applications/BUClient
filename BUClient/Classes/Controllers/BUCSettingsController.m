@@ -40,13 +40,13 @@
 
 - (void)setup {
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-    NSDictionary *userList = [defaults objectForKey:BUCUserListDefaultKey];
+    NSDictionary *userList = [defaults objectForKey:@"userList"];
     self.userList = [NSMutableDictionary dictionaryWithDictionary:userList];
     self.list = [NSMutableArray arrayWithArray:[userList allValues]];
-    self.currentUser = [defaults stringForKey:BUCCurrentUserDefaultKey];
-    self.password = [defaults stringForKey:BUCUserPasswordDefaultKey];
-    self.uid = [defaults stringForKey:BUCUidDefaultKey];
-    self.signature = [defaults stringForKey:BUCUserSignatureDefaultKey];
+    self.currentUser = [defaults stringForKey:@"username"];
+    self.password = [defaults stringForKey:@"password"];
+    self.uid = [defaults stringForKey:@"uid"];
+    self.signature = [defaults stringForKey:@"signature"];
     self.userSettings = [NSMutableDictionary dictionaryWithDictionary:[self.userList objectForKey:[self.currentUser lowercaseString]]];
 }
 
@@ -66,11 +66,11 @@
 - (void)updateUserSettings {
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
     if (self.loginStateChanged) {
-        [defaults setObject:self.currentUser forKey:BUCCurrentUserDefaultKey];
-        [defaults setObject:self.password forKey:BUCUserPasswordDefaultKey];
-        [defaults setObject:self.uid forKey:BUCUidDefaultKey];
+        [defaults setObject:self.currentUser forKey:@"username"];
+        [defaults setObject:self.password forKey:@"password"];
+        [defaults setObject:self.uid forKey:@"uid"];
         if (self.signature) {
-            [defaults setObject:self.signature forKey:BUCUserSignatureDefaultKey];
+            [defaults setObject:self.signature forKey:@"signature"];
         }
         [[NSNotificationCenter defaultCenter] postNotificationName:BUCLoginStateNotification object:nil];
         self.loginStateChanged = NO;
@@ -78,12 +78,12 @@
     
     if (self.userListChanged) {
         if (self.signatureChanged) {
-            [defaults setObject:self.signature forKey:BUCUserSignatureDefaultKey];
-            [self.userSettings setObject:self.signature forKey:BUCUserSignatureDefaultKey];
+            [defaults setObject:self.signature forKey:@"signature"];
+            [self.userSettings setObject:self.signature forKey:@"signature"];
             [self.userList setObject:self.userSettings forKey:[self.currentUser lowercaseString]];
             self.signatureChanged = NO;
         }
-        [defaults setObject:self.userList forKey:BUCUserListDefaultKey];
+        [defaults setObject:self.userList forKey:@"userList"];
         self.userListChanged = NO;
     }
     
@@ -124,8 +124,8 @@
         cellIdentifier = @"cell";
         cell = [tableView dequeueReusableCellWithIdentifier:cellIdentifier forIndexPath:indexPath];
         NSDictionary *userSettings = [self.list objectAtIndex:indexPath.row];
-        cell.textLabel.text = [userSettings objectForKey:BUCUserNameDefaultKey];
-        NSNumber *uidNumber = [userSettings objectForKey:BUCUidDefaultKey];
+        cell.textLabel.text = [userSettings objectForKey:@"username"];
+        NSNumber *uidNumber = [userSettings objectForKey:@"uid"];
         NSString *uid = [uidNumber stringValue];
         if ([uid isEqualToString:self.uid]) {
             cell.accessoryType = UITableViewCellAccessoryCheckmark;
@@ -173,16 +173,16 @@
 - (void)tableView:(UITableView *)tableView commitEditingStyle:(UITableViewCellEditingStyle)editingStyle forRowAtIndexPath:(NSIndexPath *)indexPath {
     if (editingStyle == UITableViewCellEditingStyleDelete) {
         NSDictionary *user = [self.list objectAtIndex:indexPath.row];
-        NSString *userKey = [[user objectForKey:BUCUserNameDefaultKey] lowercaseString];
-        NSString *uid = ((NSNumber *)[user objectForKey:BUCUidDefaultKey]).stringValue;
+        NSString *userKey = [[user objectForKey:@"username"] lowercaseString];
+        NSString *uid = ((NSNumber *)[user objectForKey:@"uid"]).stringValue;
         [self.userList removeObjectForKey:userKey];
         [self.list removeObjectAtIndex:indexPath.row];
         if ([uid isEqualToString:self.uid]) {
             NSDictionary *newUser = [self.list firstObject];
-            self.currentUser = [newUser objectForKey:BUCUserNameDefaultKey];
-            self.password = [newUser objectForKey:BUCUserPasswordDefaultKey];
-            self.uid = ((NSNumber *)[newUser objectForKey:BUCUidDefaultKey]).stringValue;
-            self.signature = [newUser objectForKey:BUCUserSignatureDefaultKey];
+            self.currentUser = [newUser objectForKey:@"username"];
+            self.password = [newUser objectForKey:@"password"];
+            self.uid = ((NSNumber *)[newUser objectForKey:@"uid"]).stringValue;
+            self.signature = [newUser objectForKey:@"signature"];
             self.loginStateChanged = YES;
             [self updateAccountList];
         } else {
@@ -202,10 +202,10 @@
         }
         
         NSDictionary *user = [self.list objectAtIndex:indexPath.row];
-        self.currentUser = [user objectForKey:BUCUserNameDefaultKey];
-        self.password = [user objectForKey:BUCUserPasswordDefaultKey];
-        self.uid = ((NSNumber *)[user objectForKey:BUCUidDefaultKey]).stringValue;
-        self.signature = [user objectForKey:BUCUserSignatureDefaultKey];
+        self.currentUser = [user objectForKey:@"username"];
+        self.password = [user objectForKey:@"password"];
+        self.uid = ((NSNumber *)[user objectForKey:@"uid"]).stringValue;
+        self.signature = [user objectForKey:@"signature"];
         self.loginStateChanged = YES;
         [self updateUserSettings];
         [self updateAccountList];

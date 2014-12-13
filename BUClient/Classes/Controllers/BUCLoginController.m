@@ -39,10 +39,10 @@
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
     if (self.navigationController) {
         [self.username becomeFirstResponder];
-        self.currentUser = [defaults stringForKey:BUCCurrentUserDefaultKey];
-        self.userList = [defaults dictionaryForKey:BUCUserListDefaultKey];
+        self.currentUser = [defaults stringForKey:@"username"];
+        self.userList = [defaults dictionaryForKey:@"userList"];
     } else {
-        self.username.text = [defaults stringForKey:BUCCurrentUserDefaultKey];
+        self.username.text = [defaults stringForKey:@"username"];
         [self.password becomeFirstResponder];
     }
     

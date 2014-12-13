@@ -30,7 +30,7 @@
     
     self.thread.text = self.parentTitle;
     self.forum.text = self.forumName;
-    NSString *signature = [[NSUserDefaults standardUserDefaults] stringForKey:BUCUserSignatureDefaultKey];
+    NSString *signature = [[NSUserDefaults standardUserDefaults] stringForKey:@"signature"];
     if (signature) {
         self.content.text = [NSString stringWithFormat:@"%@", signature];
     }

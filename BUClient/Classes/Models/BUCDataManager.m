@@ -4,17 +4,6 @@
 #import "UIImage+BUCImageCategory.h"
 #import "BUCModels.h"
 
-static NSString * const BUCJsonNewListKey = @"newlist";
-static NSString * const BUCJsonDetailListKey = @"postlist";
-static NSString * const BUCJsonForumChildCountKey = @"fid_sum";
-static NSString * const BUCJsonPostChildCountKey = @"tid_sum";
-static NSString * const BUCJsonFidKey = @"fid";
-static NSString * const BUCJsonTidKey = @"tid";
-static NSString * const BUCUrlLogin = @"logging";
-static NSString * const BUCJsonSessionKey = @"session";
-static NSString * const BUCJsonActionKey = @"action";
-static NSString * const BUCJsonListFromKey = @"from";
-static NSString * const BUCJsonListToKey = @"to";
 static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
 
 @interface BUCDataManager ()
@@ -63,7 +52,7 @@ static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
         _loginError = [NSError errorWithDomain:@"BUClient.ErrorDomain" code:1 userInfo:@{NSLocalizedDescriptionKey:@"帐号与密码不符，请检查帐号状态"}];
         _postError = [NSError errorWithDomain:@"BUClient.ErrorDomain" code:1 userInfo:@{NSLocalizedDescriptionKey:@"发帖失败，请检查内容是否只含有emoj字符"}];
         _unknownError = [NSError errorWithDomain:@"BUClient.ErrorDomain" code:1 userInfo:@{NSLocalizedDescriptionKey:@"未知错误"}];
-        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(userChanged) name:@"BUCUserChangedNotification" object:nil];
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(userChanged) name:BUCLoginStateNotification object:nil];
     }
     
     return self;
@@ -72,8 +61,8 @@ static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
 
 - (void)userChanged {
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-    self.username = [defaults stringForKey:BUCCurrentUserDefaultKey];
-    self.password = [defaults stringForKey:BUCUserPasswordDefaultKey];
+    self.username = [defaults stringForKey:@"username"];
+    self.password = [defaults stringForKey:@"password"];
     _loggedIn = [defaults boolForKey:BUCUserLoginStateDefaultKey];
 }
 
@@ -108,22 +97,22 @@ static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
     [self
      updateSessionOnSuccess:^{
          NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-         [defaults setObject:username forKey:BUCCurrentUserDefaultKey];
-         [defaults setObject:password forKey:BUCUserPasswordDefaultKey];
-         [defaults setObject:weakSelf.uid forKey:BUCUidDefaultKey];
+         [defaults setObject:username forKey:@"username"];
+         [defaults setObject:password forKey:@"password"];
+         [defaults setObject:weakSelf.uid forKey:@"uid"];
          [defaults setBool:YES forKey:BUCUserLoginStateDefaultKey];
-         NSMutableDictionary *userList = [NSMutableDictionary dictionaryWithDictionary:[defaults dictionaryForKey:BUCUserListDefaultKey]];
+         NSMutableDictionary *userList = [NSMutableDictionary dictionaryWithDictionary:[defaults dictionaryForKey:@"userList"]];
          if (!userList) {
              userList = [[NSMutableDictionary alloc] init];
          }
          NSMutableDictionary *userSettings = [[NSMutableDictionary alloc] init];
-         [userSettings setObject:username forKey:BUCUserNameDefaultKey];
-         [userSettings setObject:password forKey:BUCUserPasswordDefaultKey];
-         [userSettings setObject:weakSelf.uid forKey:BUCUidDefaultKey];
+         [userSettings setObject:username forKey:@"username"];
+         [userSettings setObject:password forKey:@"password"];
+         [userSettings setObject:weakSelf.uid forKey:@"uid"];
          
          NSString *userKey = [username lowercaseString];
          [userList setObject:userSettings forKey:userKey];
-         [defaults setObject:userList forKey:BUCUserListDefaultKey];
+         [defaults setObject:userList forKey:@"userList"];
          [defaults synchronize];
          weakSelf.loggedIn = YES;
          voidBlock();
@@ -138,11 +127,11 @@ static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
     NSMutableDictionary *json = [[NSMutableDictionary alloc] init];
     
     if (fid) {
-        [json setObject:fid forKey:BUCJsonFidKey];
+        [json setObject:fid forKey:@"fid"];
     }
     
     if (tid) {
-        [json setObject:tid forKey:BUCJsonTidKey];
+        [json setObject:tid forKey:@"tid"];
     }
     
     [self
@@ -154,9 +143,9 @@ static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
      onSuccess:^(NSDictionary *map) {
          NSString *count;
          if (fid) {
-             count = [map objectForKey:BUCJsonForumChildCountKey];
+             count = [map objectForKey:@"fid_sum"];
          } else {
-             count = [map objectForKey:BUCJsonPostChildCountKey];
+             count = [map objectForKey:@"tid_sum"];
          }
          numberBlock(count.integerValue);
      }
@@ -171,13 +160,13 @@ static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
     
     NSMutableDictionary *json = [[NSMutableDictionary alloc] init];
     if (fid) {
-        [json setObject:@"thread" forKey:BUCJsonActionKey];
-        [json setObject:fid forKey:BUCJsonFidKey];
-        [json setObject:from forKey:BUCJsonListFromKey];
-        [json setObject:to forKey:BUCJsonListToKey];
+        [json setObject:@"thread" forKey:@"action"];
+        [json setObject:fid forKey:@"fid"];
+        [json setObject:from forKey:@"from"];
+        [json setObject:to forKey:@"to"];
         [self loadListFromUrl:@"thread" json:json listKey:@"threadlist" onSuccess:listBlock onError:errorBlock];
     } else {
-        [self loadListFromUrl:@"home" json:json listKey:BUCJsonNewListKey onSuccess:listBlock onError:errorBlock];
+        [self loadListFromUrl:@"home" json:json listKey:@"newlist" onSuccess:listBlock onError:errorBlock];
     }
 }
 
@@ -185,12 +174,12 @@ static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
 - (void)listOfPost:(NSString *)postID from:(NSString *)from to:(NSString *)to onSuccess:(BUCListBlock)listBlock onError:(BUCErrorBlock)errorBlock {
     
     NSMutableDictionary *json = [[NSMutableDictionary alloc] init];
-    [json setObject:@"post" forKey:BUCJsonActionKey];
-    [json setObject:postID forKey:BUCJsonTidKey];
-    [json setObject:from forKey:BUCJsonListFromKey];
-    [json setObject:to forKey:BUCJsonListToKey];
+    [json setObject:@"post" forKey:@"action"];
+    [json setObject:postID forKey:@"tid"];
+    [json setObject:from forKey:@"from"];
+    [json setObject:to forKey:@"to"];
     
-    [self loadListFromUrl:@"post" json:json listKey:BUCJsonDetailListKey onSuccess:listBlock onError:errorBlock];
+    [self loadListFromUrl:@"post" json:json listKey:@"postlist" onSuccess:listBlock onError:errorBlock];
 }
 
 
@@ -209,13 +198,13 @@ static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
         [json setObject:@"0" forKey:@"attachment"];
     }
     if (fid) {
-        [json setObject:fid forKey:BUCJsonFidKey];
-        [json setObject:@"newthread" forKey:BUCJsonActionKey];
+        [json setObject:fid forKey:@"fid"];
+        [json setObject:@"newthread" forKey:@"action"];
     }
     
     if (tid) {
-        [json setObject:tid forKey:BUCJsonTidKey];
-        [json setObject:@"newreply" forKey:BUCJsonActionKey];
+        [json setObject:tid forKey:@"tid"];
+        [json setObject:@"newreply" forKey:@"action"];
     }
     
     [self
@@ -277,19 +266,19 @@ static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
 - (void)updateSessionOnSuccess:(BUCVoidBlock)voidBlock onError:(BUCErrorBlock)errorBlock {
     NSMutableDictionary *json = [[NSMutableDictionary alloc] init];
     
-    [json setObject:@"login" forKey:BUCJsonActionKey];
-    [json setObject:self.username forKey:BUCUserNameDefaultKey];
-    [json setObject:self.password forKey:BUCUserPasswordDefaultKey];
+    [json setObject:@"login" forKey:@"action"];
+    [json setObject:self.username forKey:@"username"];
+    [json setObject:self.password forKey:@"password"];
     BUCDataManager * __weak weakSelf = self;
     
     [self
-     loadJsonFromUrl:BUCUrlLogin
+     loadJsonFromUrl:@"logging"
      json:json
      attachment:nil
      isForm:NO
      onSuccess:^(NSDictionary *map) {
-         weakSelf.session = [map objectForKey:BUCJsonSessionKey];
-         weakSelf.uid = [map objectForKey:BUCUidDefaultKey];
+         weakSelf.session = [map objectForKey:@"session"];
+         weakSelf.uid = [map objectForKey:@"uid"];
          voidBlock();
      }
      onError:errorBlock
@@ -300,7 +289,7 @@ static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
 - (void)loadJsonFromUrl:(NSString *)url json:(NSMutableDictionary *)json attachment:(UIImage *)attachment isForm:(BOOL)isForm onSuccess:(BUCMapBlock)mapBlock onError:(BUCErrorBlock)errorBlock count:(NSInteger)count {
     BUCDataManager * __weak weakSelf = self;
     
-    if (![url isEqualToString:BUCUrlLogin]) {
+    if (![url isEqualToString:@"logging"]) {
         if (!self.session) {
             [self
              updateSessionOnSuccess:^{
@@ -311,8 +300,8 @@ static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
             
             return;
         } else {
-            [json setObject:weakSelf.username forKey:BUCUserNameDefaultKey];
-            [json setObject:weakSelf.session forKey:BUCJsonSessionKey];
+            [json setObject:weakSelf.username forKey:@"username"];
+            [json setObject:weakSelf.session forKey:@"session"];
         }
     }
     
@@ -328,7 +317,7 @@ static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
              if ([msg isEqualToString:@"thread_nopermission"]) {
                  errorBlock([weakSelf noPermissionError]);
                  goto done;
-             } else if ([url isEqualToString:BUCUrlLogin]) {
+             } else if ([url isEqualToString:@"logging"]) {
                  errorBlock(weakSelf.loginError);
                  goto done;
              } else if ([msg isEqualToString:@"post_sm_isnull"]) {
@@ -369,7 +358,6 @@ static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
 
 
 - (void)successListHandler:(NSDictionary *)map listKey:(NSString *)listKey onSuccess:(BUCListBlock)listBlock onError:(BUCErrorBlock)errorBlock {
-    static NSString * const BUCJsonPostTitleKey = @"subject";
     static NSString * const BUCLastPosterTemplate = @"Last reply: %@by";
     
     NSMutableArray *list = [[NSMutableArray alloc] init];
@@ -379,8 +367,8 @@ static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
         BUCPost *post = [[BUCPost alloc] init];
         
         post.pid = [rawPost objectForKey:@"pid"];
-        post.tid = [rawPost objectForKey:BUCJsonTidKey];
-        post.fid = [rawPost objectForKey:BUCJsonFidKey];
+        post.tid = [rawPost objectForKey:@"tid"];
+        post.fid = [rawPost objectForKey:@"fid"];
         
         post.forumName = [self urldecode:[rawPost objectForKey:@"fname"]];
         
@@ -390,21 +378,21 @@ static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
         post.avatar = [self.htmlScraper avatarUrlFromHtml:[self urldecode:[rawPost objectForKey:@"avatar"]]];
         
         
-        if ([listKey isEqualToString:BUCJsonNewListKey]) {
+        if ([listKey isEqualToString:@"newlist"]) {
             post.title = [self.htmlScraper richTextFromHtml:[self urldecode:[rawPost objectForKey:@"pname"]]];
             NSString *lastPostDateline = [self parseDateline:[self urldecode:[[rawPost objectForKey:@"lastreply"] objectForKey:@"when"]]];
             post.lastPoster = [self urldecode:[[rawPost objectForKey:@"lastreply"] objectForKey:@"who"]];
             post.lastPostDateline = [NSString stringWithFormat:BUCLastPosterTemplate, lastPostDateline];
-            NSString *childCount = [rawPost objectForKey:BUCJsonPostChildCountKey];
+            NSString *childCount = [rawPost objectForKey:@"tid_sum"];
             if ([childCount isEqualToString:@"1"]) {
                 post.statistic = @"• 1 reply •";
             } else {
                 post.statistic = [NSString stringWithFormat:@"• %@ replies •", childCount];
             }
 
-        } else if ([listKey isEqualToString:BUCJsonDetailListKey]) {
+        } else if ([listKey isEqualToString:@"postlist"]) {
             NSMutableString *content = [[NSMutableString alloc] init];
-            NSString *title = [self urldecode:[rawPost objectForKey:BUCJsonPostTitleKey]];
+            NSString *title = [self urldecode:[rawPost objectForKey:@"subject"]];
             if (title) {
                 title = [NSString stringWithFormat:@"<b>%@</b>\n\n", title];
                 [content appendString:title];
@@ -426,7 +414,7 @@ static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
             
             post.content = [self.htmlScraper richTextFromHtml:content];
         } else {
-            post.title = [self.htmlScraper richTextFromHtml:[self urldecode:[rawPost objectForKey:BUCJsonPostTitleKey]]];
+            post.title = [self.htmlScraper richTextFromHtml:[self urldecode:[rawPost objectForKey:@"subject"]]];
             NSString *viewCount = [rawPost objectForKey:@"views"];
             NSString *childCount = [rawPost objectForKey:@"replies"];
             post.statistic = [NSString stringWithFormat:@"• %@/%@", childCount, viewCount];

@@ -1,20 +1,8 @@
 #ifndef BUClient_BUCConstants_h
 #define BUClient_BUCConstants_h
 
-
-// storyboard identifier of controllers
-extern NSString * const BUCPostListControllerStoryboardID;
-
 // global notifications
 extern NSString * const BUCLoginStateNotification;
-
-// user default keys
-extern NSString * const BUCCurrentUserDefaultKey;
-extern NSString * const BUCUserSignatureDefaultKey;
-extern NSString * const BUCUserListDefaultKey;
-extern NSString * const BUCUserNameDefaultKey;
-extern NSString * const BUCUserPasswordDefaultKey;
-extern NSString * const BUCUidDefaultKey;
 
 // geometry constants
 extern CGFloat const BUCDefaultPadding;
