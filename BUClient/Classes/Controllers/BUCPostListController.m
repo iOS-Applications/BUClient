@@ -77,6 +77,7 @@ static NSUInteger const BUCPostListMaxPostCount = 40;
 
 
 - (void)viewDidAppear:(BOOL)animated {
+    [super viewDidAppear:animated];
     if (self.postNew) {
         [self performSegueWithIdentifier:@"postListToPostDetail" sender:nil];
     }

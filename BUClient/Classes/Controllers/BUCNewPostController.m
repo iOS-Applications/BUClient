@@ -101,6 +101,28 @@
 
 - (IBAction)send {
     BUCNewPostController * __weak weakSelf = self;
+    BOOL invalid = NO;
+    if (self.fid) {
+        if (self.subject.text.length == 0) {
+            [self.appDelegate alertWithMessage:@"请输入标题"];
+            invalid = YES;
+        } else if (self.content.text.length == 0) {
+            [self.appDelegate alertWithMessage:@"请输入内容"];
+            invalid = YES;
+        }
+    } else if (self.tid) {
+        if (self.content.text.length == 0) {
+            [self.appDelegate alertWithMessage:@"请输入内容"];
+            invalid = YES;
+        }
+    } else {
+        [self.appDelegate alertWithMessage:@"请选择论坛"];
+        invalid = YES;
+    }
+    if (invalid) {
+        return;
+    }
+
     [self.appDelegate displayLoading];
     [[BUCDataManager sharedInstance] newPostToForum:self.fid thread:self.tid subject:self.subject.text content:self.content.text attachment:self.imageAttachment onSuccess:^(NSString *tid) {
         weakSelf.tid = tid;
