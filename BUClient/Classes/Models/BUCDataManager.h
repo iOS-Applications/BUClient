@@ -4,6 +4,7 @@
 
 @interface BUCDataManager : NSObject
 
+@property (nonatomic) NSString *host;;
 
 @property (nonatomic, readonly) BOOL loggedIn;
 

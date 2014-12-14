@@ -3,6 +3,7 @@
 
 // global notifications
 extern NSString * const BUCLoginStateNotification;
+extern NSString * const BUCHostChangedNotification;
 
 // geometry constants
 extern CGFloat const BUCDefaultPadding;

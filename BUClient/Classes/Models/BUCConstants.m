@@ -3,6 +3,7 @@
 
 // global notifications
 NSString * const BUCLoginStateNotification = @"BUCUserChangedNotification";
+NSString * const BUCHostChangedNotification = @"BUCHostChangedNotification";
 
 // geometry constants
 CGFloat const BUCDefaultPadding = 8.0f;

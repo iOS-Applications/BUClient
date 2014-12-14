@@ -10,6 +10,7 @@
 @property (weak, nonatomic) IBOutlet UITextField *password;
 
 @property (weak, nonatomic) IBOutlet UIButton *loginButton;
+@property (weak, nonatomic) IBOutlet UISwitch *campus;
 
 @property (strong, nonatomic) IBOutlet UITapGestureRecognizer *viewTapRecognizer;
 
@@ -102,6 +103,17 @@
      }];
 }
 
+- (IBAction)hostChanged:(id)sender {
+    NSString *host;
+    if (self.campus.on) {
+        host = @"http://www.bitunion.org";
+    } else {
+        host = @"http://out.bitunion.org";
+    }
+    
+    [[NSUserDefaults standardUserDefaults] setObject:host forKey:@"host"];
+    [[NSNotificationCenter defaultCenter] postNotificationName:BUCHostChangedNotification object:nil];
+}
 
 - (IBAction)dissmissTextfield:(id)sender {
     [self.currentTextField resignFirstResponder];

@@ -151,7 +151,6 @@
         [self insertNewLine:superAttributes];
     } else {
         NSDictionary *attributes;
-        NSMutableDictionary *thisAttributes = [NSMutableDictionary dictionaryWithDictionary:superAttributes];
         NSUInteger location = self.output.length;
         
         if ([tagName isEqualToString:@"a"]) {
@@ -166,8 +165,13 @@
             attributes = @{NSUnderlineStyleAttributeName:@1};
         }
         
-        for (NSString *key in attributes) {
-            [thisAttributes setObject:[attributes objectForKey:key] forKey:key];
+        NSMutableDictionary *thisAttributes;
+        if (attributes) {
+            thisAttributes = [superAttributes mutableCopy];
+            [thisAttributes addEntriesFromDictionary:attributes];
+            attributes = (NSDictionary *)thisAttributes;
+        } else {
+            attributes = superAttributes;
         }
         
         for (TFHppleElement *node in tree.children) {
@@ -175,7 +179,7 @@
                 continue;
             }
             
-            [self appendRichText:node superAttributes:thisAttributes];
+            [self appendRichText:node superAttributes:attributes];
         }
 
 
@@ -372,7 +376,6 @@
                        @"limegreen":  [UIColor colorWithRed:50.0f/255.0f green:205.0f/255.0f blue:50.0f/255.0f alpha:1.0f],
                        @"#cc3333":    [UIColor colorWithRed:204.0f/255.0f green:51.0f/255.0f blue:51.0f/255.0f alpha:1.0f],
                        @"#cc3333":    [UIColor colorWithRed:204.0f/255.0f green:51.0f/255.0f blue:51.0f/255.0f alpha:1.0f],
-                       @"summon":     [UIColor colorWithRed:0 green:102.0f/255.0f blue:153.0f/255.0f alpha:1.0f],
                        @"mail":       [UIColor colorWithRed:0 green:128.0f/255.0f blue:1.0f alpha:1.0f],
                        @"url":        [UIColor colorWithRed:0 green:122.0f/255.0f blue:1.0f alpha:1.0f]
                        };
@@ -416,9 +419,9 @@
     UIColor *linkColor;
     
     if ([self matchString:href withPattern:@"^/profile-username-.+\\.html$" match:&match]) {
-        linkAttribute.linkType = BUCUserLink;
-        linkAttribute.linkValue = htmlElement.firstChild.content;
-        linkColor = [self colorAttribute:@"summon"];
+        linkAttribute.linkType = BUCUrlLink;
+        linkAttribute.linkValue = [NSString stringWithFormat:@"%@%@", self.dataManager.host, href];
+        linkColor = [self colorAttribute:@"url"];
     } else if ([self matchString:href withPattern:@"^(http://)?(((www)|(out)|(us))\\.)?bitunion\\.org(/.*)?$" match:&match]) {
         NSRange hostRange = [href rangeOfString:@"bitunion.org"];
         NSUInteger pathIndex = hostRange.location + hostRange.length;
@@ -427,28 +430,16 @@
             path = [href substringFromIndex:pathIndex];
         }
         
-        NSTextCheckingResult *match;
-        
-        if (!path || [path isEqualToString:@"/"] || [path isEqualToString:@"/home.php"]) {
-            linkAttribute.linkType = BUCHomeLink;
-        } else if ([path isEqualToString:@"/index.php"]) {
-            linkAttribute.linkType = BUCForumListLink;
-        } else if ([self matchString:path withPattern:@"^/thread-([1-9][0-9]+)-[1-9]-[1-9]\\.html$" match:&match]) {
+        if ([self matchString:path withPattern:@"^/thread-([1-9][0-9]+)-[1-9]-[1-9]\\.html$" match:&match] ||
+            [self matchString:path withPattern:@"^/viewthread\\.php\\?tid=([1-9][0-9]+).*$" match:&match]) {
             linkAttribute.linkType = BUCPostLink;
-        } else if ([self matchString:path withPattern:@"^/viewthread\\.php\\?tid=([1-9][0-9]+).*$" match:&match]) {
-            linkAttribute.linkType = BUCPostLink;
-        } else if ([self matchString:path withPattern:@"^/forum-([1-9]{1,3})-[1-9]\\.html$" match:&match]) {
-            linkAttribute.linkType = BUCForumLink;
+            linkAttribute.linkValue = [path substringWithRange:[match rangeAtIndex:1]];
+            linkColor = [self colorAttribute:@"orange"];
         } else {
             linkAttribute.linkType = BUCUrlLink;
             linkAttribute.linkValue = href;
+            linkColor = [self colorAttribute:@"url"];
         }
-        
-        if (match) {
-            linkAttribute.linkValue = [path substringWithRange:[match rangeAtIndex:1]];
-        }
-        linkColor = [self colorAttribute:@"url"];
-        
     } else if ([self matchString:href withPattern:@"^mailto:.+$" match:&match]) {
         linkAttribute.linkType = BUCMailLink;
         linkAttribute.linkValue = [href substringFromIndex:7];
@@ -557,17 +548,16 @@
 
 
 - (NSURL *)parseImageUrl:(NSString *)source {
-    NSString *baseUrl = @"http://out.bitunion.org";
     NSURL *url = [NSURL URLWithString:source];
     
     if ([url.host isEqualToString:@"bitunion.org"] || [url.host isEqualToString:@"v6.bitunion.org"]) {
-        source = [NSString stringWithFormat:@"%@%@", baseUrl, url.path];
+        source = [NSString stringWithFormat:@"%@%@", self.dataManager.host, url.path];
     } else if ([self matchString:source withPattern:@"^http://www\\.bitunion\\.org/.+$" match:NULL]) {
-        source = [source stringByReplacingOccurrencesOfString:@"www.bitunion.org" withString:@"out.bitunion.org"];
+        source = [source stringByReplacingOccurrencesOfString:@"http://www.bitunion.org" withString:self.dataManager.host];
     } else if ([self matchString:source withPattern:@"^images/.+$" match:NULL]) {
-        source = [NSString stringWithFormat:@"%@/%@", baseUrl, source];
+        source = [NSString stringWithFormat:@"%@/%@", self.dataManager.host, source];
     } else if ([self matchString:source withPattern:@"^/attachments/.+$" match:NULL]) {
-        source = [NSString stringWithFormat:@"%@%@", baseUrl, source];
+        source = [NSString stringWithFormat:@"%@%@", self.dataManager.host, source];
     }
     
     return [NSURL URLWithString:source];

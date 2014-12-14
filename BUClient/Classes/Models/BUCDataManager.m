@@ -44,15 +44,20 @@ static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
     self = [super init];
     
     if (self) {
+        _host = [[NSUserDefaults standardUserDefaults] stringForKey:@"host"];
+        if (!_host) {
+            _host = @"http://out.bitunion.org";
+            [[NSUserDefaults standardUserDefaults] setObject:_host forKey:@"host"];
+        }
         _networkEngine = [[BUCNetworkEngine alloc] init];
         _htmlScraper = [[BUCHTMLScraper alloc] init];
         _htmlScraper.dataManager = self;
         _defaultCache = [[NSCache alloc] init];
-        
         _loginError = [NSError errorWithDomain:@"BUClient.ErrorDomain" code:1 userInfo:@{NSLocalizedDescriptionKey:@"帐号与密码不符，请检查帐号状态"}];
         _postError = [NSError errorWithDomain:@"BUClient.ErrorDomain" code:1 userInfo:@{NSLocalizedDescriptionKey:@"发帖失败，请检查内容是否只含有emoj字符"}];
         _unknownError = [NSError errorWithDomain:@"BUClient.ErrorDomain" code:1 userInfo:@{NSLocalizedDescriptionKey:@"未知错误"}];
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(userChanged) name:BUCLoginStateNotification object:nil];
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(hostChanged) name:BUCHostChangedNotification object:nil];
     }
     
     return self;
@@ -66,7 +71,21 @@ static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
     _loggedIn = [defaults boolForKey:BUCUserLoginStateDefaultKey];
 }
 
+- (void)hostChanged {
+    _host = [[NSUserDefaults standardUserDefaults] stringForKey:@"host"];
+}
+
 #pragma mark - public methods
+
+- (NSString *)host {
+    if (_host) {
+        return _host;
+    }
+    
+    [self hostChanged];
+    return _host;
+}
+
 - (BOOL)loggedIn {
     if (_loggedIn) {
         return _loggedIn;
