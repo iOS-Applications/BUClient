@@ -14,6 +14,7 @@
 
 @property (strong, nonatomic) IBOutlet UIView *logoutWindow;
 @property (weak, nonatomic) IBOutlet UIView *logoutSheet;
+@property (weak, nonatomic) IBOutlet NSLayoutConstraint *logoutBottomSpace;
 @property (weak, nonatomic) IBOutlet UIButton *logoutButton;
 @property (weak, nonatomic) IBOutlet UIButton *cancelLogout;
 
@@ -33,6 +34,7 @@
     self.cancelLogout.layer.cornerRadius = 4.0f;
     self.cancelLogout.layer.masksToBounds = YES;
     [self.cancelLogout setBackgroundImage:[UIImage imageWithColor:[UIColor darkGrayColor]] forState:UIControlStateHighlighted];
+    self.logoutBottomSpace.constant = -CGRectGetHeight(self.logoutSheet.frame);
     self.logoutWindow.translatesAutoresizingMaskIntoConstraints = NO;
     
     UIWindow *window = [UIApplication sharedApplication].delegate.window;
@@ -152,9 +154,10 @@
 #pragma mark - actions and transition
 - (void)displayLogout {
     BUCRootController * __weak weakSelf = self;
+    self.logoutBottomSpace.constant = 0;
     [UIView animateWithDuration:0.3 animations:^{
-        weakSelf.logoutSheet.transform = CGAffineTransformTranslate(weakSelf.logoutSheet.transform, 0, -CGRectGetHeight(weakSelf.logoutSheet.frame));
         weakSelf.logoutWindow.alpha = 1.0f;
+        [weakSelf.logoutWindow layoutIfNeeded];
     }];
 }
 
@@ -168,9 +171,10 @@
 
 - (IBAction)hideLogout {
     BUCRootController * __weak weakSelf = self;
+    self.logoutBottomSpace.constant = -CGRectGetHeight(self.logoutSheet.frame);
     [UIView animateWithDuration:0.3 animations:^{
-        weakSelf.logoutSheet.transform = CGAffineTransformIdentity;
         weakSelf.logoutWindow.alpha = 0.0f;
+        [weakSelf.logoutWindow layoutIfNeeded];
     }];
 }
 
