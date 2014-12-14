@@ -5,6 +5,7 @@
 
 
 @property (nonatomic) NSURLSession *defaultSession;
+@property (nonatomic) NSString *host;
 
 
 @end
@@ -18,15 +19,22 @@
     if (self) {
         NSURLSessionConfiguration *config = [NSURLSessionConfiguration defaultSessionConfiguration];
         NSString *cachePath = @"/MyCacheDirectory";
-
         NSURLCache *myCache = [[NSURLCache alloc] initWithMemoryCapacity: 16384 diskCapacity: 268435456 diskPath: cachePath];
         config.URLCache = myCache;
         config.requestCachePolicy = NSURLRequestUseProtocolCachePolicy;
         config.timeoutIntervalForResource = 30;
         _defaultSession = [NSURLSession sessionWithConfiguration: config delegate: nil delegateQueue: [NSOperationQueue mainQueue]];
+        
+        _host = [[NSUserDefaults standardUserDefaults] stringForKey:@"host"];
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(hostChanged) name:BUCHostChangedNotification object:nil];
     }
     
     return self;
+}
+
+
+- (void)hostChanged {
+    self.host = [[NSUserDefaults standardUserDefaults] stringForKey:@"host"];
 }
 
 
@@ -94,8 +102,7 @@ fail:
 
 #pragma mark - private methods
 - (NSURLRequest *)requestWithUrl:(NSString *)url json:(NSDictionary *)json attachment:(UIImage *)attachment isForm:(BOOL)isForm error:(NSError **)error {
-    
-    NSString * baseURL = @"http://out.bitunion.org/open_api/bu_%@.php";
+    NSString *baseURL = [NSString stringWithFormat:@"%@/open_api/bu_%%@.php", self.host];
 //    baseURL = @"http://192.168.1.100/open_api/bu_%@.php";
     NSMutableURLRequest *req = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:[NSString stringWithFormat:baseURL, url]]];
     NSMutableDictionary *dataJSON = [[NSMutableDictionary alloc] init];

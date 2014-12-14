@@ -44,6 +44,7 @@
     if (self.navigationController) {
         [self.username becomeFirstResponder];
         self.userList = [defaults dictionaryForKey:@"userList"];
+        self.navigationItem.title = @"Add Account";
     } else {
         self.currentUser = [defaults stringForKey:@"username"];
         self.username.text = self.currentUser;

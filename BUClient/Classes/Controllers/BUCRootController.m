@@ -165,7 +165,6 @@
     [self hideLogout];
     [[BUCDataManager sharedInstance] logout];
     [self.navigationController popViewControllerAnimated:NO];
-    [self.navigationController performSegueWithIdentifier:@"rootToLogin" sender:nil];
 }
 
 
