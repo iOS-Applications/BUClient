@@ -8,7 +8,6 @@
 
 @property (weak, nonatomic) IBOutlet UITextField *username;
 @property (weak, nonatomic) IBOutlet UITextField *password;
-@property (weak, nonatomic) IBOutlet NSLayoutConstraint *topSpace;
 
 @property (weak, nonatomic) IBOutlet UIButton *loginButton;
 
@@ -33,10 +32,6 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     
-    if ([[UIScreen mainScreen] bounds].size.height < 568.0f) {
-        self.topSpace.constant = 100.0f;
-    }
-    
     self.loginButton.layer.cornerRadius = 4.0f;
     self.loginButton.layer.masksToBounds = YES;
     
@@ -59,6 +54,11 @@
     }
     
     self.appDelegate = [UIApplication sharedApplication].delegate;
+}
+
+
+- (BOOL)shouldAutorotate {
+    return NO;
 }
 
 
