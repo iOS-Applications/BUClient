@@ -75,7 +75,6 @@
      password:password
      
      onSuccess:^(void) {
-         [weakSelf.appDelegate hideLoading];
          if (weakSelf.presentingViewController) {
              [weakSelf.presentingViewController dismissViewControllerAnimated:YES completion:nil];
          } else {
@@ -84,11 +83,8 @@
      }
      
      onFail:^(NSError *error) {
-         [weakSelf.appDelegate hideLoading];
          [weakSelf.appDelegate alertWithMessage:error.localizedDescription];
      }];
-    
-    [self.appDelegate displayLoading];
 }
 
 

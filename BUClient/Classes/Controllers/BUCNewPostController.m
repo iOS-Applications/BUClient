@@ -124,13 +124,10 @@
         return;
     }
 
-    [self.appDelegate displayLoading];
     [[BUCDataManager sharedInstance] newPostToForum:self.fid thread:self.tid subject:self.subject.text content:self.content.text attachment:self.imageAttachment onSuccess:^(NSString *tid) {
         weakSelf.tid = tid;
-        [weakSelf.appDelegate hideLoading];
         [weakSelf performSegueWithIdentifier:weakSelf.unwindIdentifier sender:nil];
     } onError:^(NSError *error) {
-        [weakSelf.appDelegate hideLoading];
         [weakSelf.appDelegate alertWithMessage:error.localizedDescription];
     }];
 }

@@ -127,9 +127,6 @@ static NSUInteger const BUCPostDetailMinListLength = 20;
 
 - (void)dealloc {
     [[NSNotificationCenter defaultCenter] removeObserver:self];
-    if (self.loading) {
-        [self.appDelegate hideLoading];
-    }
 }
 
 
@@ -138,8 +135,6 @@ static NSUInteger const BUCPostDetailMinListLength = 20;
     if (self.loading) {
         return;
     }
-    
-    [self.appDelegate displayLoading];
     
     self.flush = YES;
     self.loading = YES;
@@ -327,7 +322,6 @@ static NSUInteger const BUCPostDetailMinListLength = 20;
 
 
 - (void)endLoading {
-    [self.appDelegate hideLoading];
     [self.loadingMoreIndicator stopAnimating];
     self.loading = NO;
     self.flush = NO;

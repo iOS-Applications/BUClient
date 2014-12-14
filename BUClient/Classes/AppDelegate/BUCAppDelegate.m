@@ -1,46 +1,24 @@
 #import "BUCAppDelegate.h"
 
+@interface BUCAppDelegate ()
+
+@property (nonatomic) UIAlertView *alertView;
+
+@end
 
 @implementation BUCAppDelegate
-- (void)displayLoading {
-    self.loadingView.center = self.window.center;
-    self.loadingView.hidden = NO;
-    [self.activityIndicator startAnimating];
+- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
+    self.alertView = [[UIAlertView alloc] initWithTitle:nil message:nil delegate:nil cancelButtonTitle:@"OK" otherButtonTitles:nil];
+    
+    return YES;
 }
 
-- (void)hideLoading {
-    self.loadingView.hidden = YES;
-    [self.activityIndicator stopAnimating];
-}
-
-- (void)hideAlert {
-    self.alertViewWindow.hidden = YES;
-}
 
 - (void)alertWithMessage:(NSString *)message {
-    self.alertLabel.text = message;
-    self.alertViewWindow.hidden = NO;
+    self.alertView.message = message;
+    [self.alertView show];
 }
 
-- (void)displayActionSheet {
-    UIView *actionSheetWindow = self.actionSheetWindow;
-    [actionSheetWindow layoutIfNeeded];
-    self.actionSheetBottomSpace.constant = 0;
-    [UIView animateWithDuration:0.3 animations:^{
-        actionSheetWindow.alpha = 1.0f;
-        [actionSheetWindow layoutIfNeeded];
-    }];
-}
-
-- (void)hideActionSheet {
-    UIView *actionSheetWindow = self.actionSheetWindow;
-    [actionSheetWindow layoutIfNeeded];
-    self.actionSheetBottomSpace.constant = -self.actionSheet.frame.size.height;
-    [UIView animateWithDuration:0.3 animations:^{
-        actionSheetWindow.alpha = 0.0f;
-        [actionSheetWindow layoutIfNeeded];
-    }];
-}
 
 @end
 

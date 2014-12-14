@@ -82,7 +82,7 @@ static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
 }
 
 
-- (void)logOut {
+- (void)logout {
     self.loggedIn = NO;
     [[NSUserDefaults standardUserDefaults] setBool:NO forKey:BUCUserLoginStateDefaultKey];
     [[NSUserDefaults standardUserDefaults] synchronize];

@@ -2,7 +2,7 @@
 #import "BUCDataManager.h"
 #import "BUCPostListController.h"
 #import "BUCForumListController.h"
-#import "BUCAppDelegate.h"
+#import "UIImage+BUCImageCategory.h"
 
 
 @interface BUCRootController () <UITableViewDataSource, UITableViewDelegate>
@@ -12,21 +12,10 @@
 @property (nonatomic) NSMutableSet *forumSet;
 @property (nonatomic) BOOL listChanged;
 
-@property (strong, nonatomic) IBOutlet UIView *loadingView;
-@property (weak, nonatomic) IBOutlet UIActivityIndicatorView *activityIndicator;
-
-@property (strong, nonatomic) IBOutlet UIView *alertWindow;
-@property (weak, nonatomic) IBOutlet UIView *alertView;
-@property (weak, nonatomic) IBOutlet UILabel *alertLabel;
-@property (weak, nonatomic) IBOutlet UIButton *alertButton;
-
-@property (strong, nonatomic) IBOutlet UIView *actionSheetWindow;
-@property (weak, nonatomic) IBOutlet UIView *actionSheet;
-@property (weak, nonatomic) IBOutlet NSLayoutConstraint *actionSheetBottomSpace;
-@property (weak, nonatomic) IBOutlet UIButton *logOut;
-@property (weak, nonatomic) IBOutlet UIButton *cancel;
-
-@property (nonatomic) BUCAppDelegate *appDelegate;
+@property (strong, nonatomic) IBOutlet UIView *logoutWindow;
+@property (weak, nonatomic) IBOutlet UIView *logoutSheet;
+@property (weak, nonatomic) IBOutlet UIButton *logoutButton;
+@property (weak, nonatomic) IBOutlet UIButton *cancelLogout;
 
 @end
 
@@ -38,37 +27,19 @@
     
     self.navigationItem.backBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"" style:UIBarButtonItemStylePlain target:nil action:nil];
     
-    self.appDelegate = (BUCAppDelegate *)[UIApplication sharedApplication].delegate;
+    self.logoutButton.layer.cornerRadius = 4.0f;
+    self.logoutButton.layer.masksToBounds = YES;
+    [self.logoutButton setBackgroundImage:[UIImage imageWithColor:[UIColor darkGrayColor]] forState:UIControlStateHighlighted];
+    self.cancelLogout.layer.cornerRadius = 4.0f;
+    self.cancelLogout.layer.masksToBounds = YES;
+    [self.cancelLogout setBackgroundImage:[UIImage imageWithColor:[UIColor darkGrayColor]] forState:UIControlStateHighlighted];
+    self.logoutWindow.translatesAutoresizingMaskIntoConstraints = NO;
     
-    self.loadingView.layer.cornerRadius = 10.0f;
-    self.loadingView.layer.masksToBounds = YES;
-    self.loadingView.translatesAutoresizingMaskIntoConstraints = YES;
-    self.loadingView.center = self.appDelegate.window.center;
-    self.appDelegate.loadingView = self.loadingView;
-    self.appDelegate.activityIndicator = self.activityIndicator;
-    [self.appDelegate.window addSubview:self.loadingView];
-    
-    self.alertWindow.translatesAutoresizingMaskIntoConstraints = YES;
-    self.alertWindow.frame = self.appDelegate.window.frame;
-    self.alertView.layer.cornerRadius = 8.0f;
-    self.alertView.layer.masksToBounds = YES;
-    self.appDelegate.alertViewWindow = self.alertWindow;
-    self.appDelegate.alertLabel = self.alertLabel;
-    [self.alertButton addTarget:self.appDelegate action:@selector(hideAlert) forControlEvents:UIControlEventTouchUpInside];
-    [self.appDelegate.window addSubview:self.alertWindow];
-    
-    self.logOut.layer.cornerRadius = 4.0f;
-    self.logOut.layer.masksToBounds = YES;
-    [self.logOut addTarget:self action:@selector(commitLogOut) forControlEvents:UIControlEventTouchUpInside];
-    self.cancel.layer.cornerRadius = 4.0f;
-    self.cancel.layer.masksToBounds = YES;
-    [self.cancel addTarget:self action:@selector(cancelLogout) forControlEvents:UIControlEventTouchUpInside];
-    self.actionSheetWindow.translatesAutoresizingMaskIntoConstraints = YES;
-    self.actionSheetWindow.frame = self.appDelegate.window.frame;
-    self.appDelegate.actionSheetWindow = self.actionSheetWindow;
-    self.appDelegate.actionSheet = self.actionSheet;
-    self.appDelegate.actionSheetBottomSpace = self.actionSheetBottomSpace;
-    [self.appDelegate.window addSubview:self.actionSheetWindow];
+    UIWindow *window = [UIApplication sharedApplication].delegate.window;
+    [window addSubview:self.logoutWindow];
+    NSDictionary *views = @{@"logoutWindow": self.logoutWindow};
+    [window addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"|[logoutWindow]|" options:0 metrics:nil views:views]];
+    [window addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|[logoutWindow]|" options:0 metrics:nil views:views]];
     
     self.path = [[NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) firstObject] stringByAppendingString:@"/BUCFavoriteList.plist"];
     NSString *readPath;
@@ -89,18 +60,18 @@
 }
 
 
-- (void)viewDidAppear:(BOOL)animated {
-    [super viewDidAppear:animated];
+- (void)viewWillAppear:(BOOL)animated {
+    [super viewWillAppear:animated];
     
-    if (![BUCDataManager sharedInstance].loggedIn) {
-        [self performSegueWithIdentifier:@"segueToLogin" sender:nil];
-    }
+    [self.navigationController setToolbarHidden:NO animated:NO];
 }
 
 
-- (void)viewWillAppear:(BOOL)animated {
-    [super viewWillAppear:animated];
-    [self.navigationController setToolbarHidden:NO animated:NO];
+- (void)viewDidAppear:(BOOL)animated {
+    [super viewDidAppear:animated];
+    if (![BUCDataManager sharedInstance].loggedIn && !self.navigationController.presentedViewController) {
+        [self.navigationController performSegueWithIdentifier:@"rootToLogin" sender:nil];
+    }
 }
 
 
@@ -179,15 +150,37 @@
 
 
 #pragma mark - actions and transition
-- (void)commitLogOut {
-    [[BUCDataManager sharedInstance] logOut];
+- (void)displayLogout {
+    BUCRootController * __weak weakSelf = self;
+    [UIView animateWithDuration:0.3 animations:^{
+        weakSelf.logoutSheet.transform = CGAffineTransformTranslate(weakSelf.logoutSheet.transform, 0, -CGRectGetHeight(weakSelf.logoutSheet.frame));
+        weakSelf.logoutWindow.alpha = 1.0f;
+    }];
+}
+
+- (IBAction)logout {
+    [self hideLogout];
+    [[BUCDataManager sharedInstance] logout];
     [self.navigationController popViewControllerAnimated:NO];
-    [self.appDelegate hideActionSheet];
+    [self.navigationController performSegueWithIdentifier:@"rootToLogin" sender:nil];
 }
 
 
-- (void)cancelLogout {
-    [self.appDelegate hideActionSheet];
+- (IBAction)hideLogout {
+    BUCRootController * __weak weakSelf = self;
+    [UIView animateWithDuration:0.3 animations:^{
+        weakSelf.logoutSheet.transform = CGAffineTransformIdentity;
+        weakSelf.logoutWindow.alpha = 0.0f;
+    }];
+}
+
+- (IBAction)gestureHideLogout:(UIGestureRecognizer *)recognizer {
+    CGPoint location = [recognizer locationInView:self.logoutSheet];
+    if ([self.logoutSheet pointInside:location withEvent:nil]) {
+        return;
+    } else {
+        [self hideLogout];
+    }
 }
 
 

@@ -23,10 +23,6 @@ static NSUInteger const BUCPostListMaxPostCount = 40;
 @property (nonatomic) BOOL flush;
 @property (nonatomic) BOOL loading;
 
-@property (nonatomic) IBOutlet UIButton *previous;
-@property (nonatomic) IBOutlet UIButton *next;
-@property (nonatomic) IBOutlet UIActivityIndicatorView *loadingIndicator;
-
 @property (nonatomic) BUCAppDelegate *appDelegate;
 
 @end
@@ -38,23 +34,6 @@ static NSUInteger const BUCPostListMaxPostCount = 40;
     [super viewDidLoad];
     
     self.navigationItem.backBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"" style:UIBarButtonItemStylePlain target:nil action:nil];
-    
-    UIImage *background = [UIImage imageWithColor:[UIColor lightGrayColor]];
-    [self.previous setBackgroundImage:background forState:UIControlStateHighlighted];
-    self.previous.layer.borderColor = [UIColor lightGrayColor].CGColor;
-    self.previous.layer.borderWidth = BUCBorderWidth;
-    self.previous.titleLabel.backgroundColor = [UIColor whiteColor];
-    self.previous.titleLabel.opaque = YES;
-    self.previous.titleLabel.clearsContextBeforeDrawing = NO;
-    self.previous.titleLabel.autoresizesSubviews = NO;
-    
-    [self.next setBackgroundImage:background forState:UIControlStateHighlighted];
-    self.next.layer.borderColor = [UIColor lightGrayColor].CGColor;
-    self.next.layer.borderWidth = BUCBorderWidth;
-    self.next.titleLabel.backgroundColor = [UIColor whiteColor];
-    self.next.titleLabel.opaque = YES;
-    self.next.titleLabel.clearsContextBeforeDrawing = NO;
-    self.next.titleLabel.autoresizesSubviews = NO;
     
     self.from = 0;
     if (self.fid) {
@@ -71,7 +50,6 @@ static NSUInteger const BUCPostListMaxPostCount = 40;
     [self.tableView addSubview:self.refreshControl];
     
     self.appDelegate = [UIApplication sharedApplication].delegate;
-    [self.appDelegate displayLoading];
     [self refreshFrom:self.from to:self.to];
 }
 
@@ -83,12 +61,6 @@ static NSUInteger const BUCPostListMaxPostCount = 40;
     }
 }
 
-
-- (void)dealloc {
-    if (self.loading) {
-        [self.appDelegate hideLoading];
-    }
-}
 
 #pragma mark - data management
 - (void)refresh {
@@ -123,23 +95,18 @@ static NSUInteger const BUCPostListMaxPostCount = 40;
         from = 0;
     }
     long to = from + BUCPostListMinPostCount;
-    [self.appDelegate displayLoading];
     [self refreshFrom:from to:to];
 }
 
 - (IBAction)loadNext {
     unsigned long from = self.to;
     unsigned long to = from + BUCPostListMinPostCount;
-    [self.appDelegate displayLoading];
     [self refreshFrom:from to:to];
 }
 
 - (void)loadMore {
-    [self.next setTitle:@"More..." forState:UIControlStateNormal];
     unsigned long from = self.to;
     unsigned long to = from + BUCPostListMinPostCount;
-    
-    [self.loadingIndicator startAnimating];
     [self loadListFrom:from to:to postCount:self.postCount];
 }
 
@@ -178,9 +145,7 @@ static NSUInteger const BUCPostListMaxPostCount = 40;
 
 
 - (void)endLoading {
-    [self.appDelegate hideLoading];
     [self.refreshControl endRefreshing];
-    [self.loadingIndicator stopAnimating];
     self.loading = NO;
 }
 
@@ -290,33 +255,6 @@ static NSUInteger const BUCPostListMaxPostCount = 40;
 
 #pragma mark - update UI
 - (void)updateUI {
-    static CGFloat const BUCPostListSupplementaryViewHeight = 40.0f;
-    
-    UIView *view = self.tableView.tableHeaderView;;
-    CGRect frame = view.frame;
-    if (self.from == 0) {
-        frame.size.height = BUCDefaultPadding;
-        view.hidden = YES;
-    } else {
-        frame.size.height = BUCPostListSupplementaryViewHeight + BUCDefaultPadding + BUCDefaultMargin;
-        view.hidden = NO;
-    }
-    view.frame = frame;
-    [self.tableView setTableHeaderView:view];
-    
-    view = self.tableView.tableFooterView;
-    frame = view.frame;
-    if (self.postCount <= self.to) {
-        frame.size.height = BUCDefaultPadding;
-        view.hidden = YES;
-    } else {
-        frame.size.height = BUCPostListSupplementaryViewHeight + BUCDefaultPadding + BUCDefaultMargin;
-        view.hidden = NO;
-        [self.next setTitle:@"Next" forState:UIControlStateNormal];
-    }
-    view.frame = frame;
-    [self.tableView setTableFooterView:view];
-    
     if (self.fid) {
         unsigned long from = self.from + 1;
         unsigned long to;

@@ -13,7 +13,7 @@
 
 - (void)loginWithUsername:(NSString *)username password:(NSString *)password onSuccess:(BUCVoidBlock)voidBlock onFail:(BUCErrorBlock)errorBlock;
 
-- (void)logOut;
+- (void)logout;
 
 - (void)listOfForum:(NSString *)fid
                 from:(NSString *)from

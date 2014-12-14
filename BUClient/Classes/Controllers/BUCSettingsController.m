@@ -1,7 +1,7 @@
 #import "BUCSettingsController.h"
 #import "BUCConstants.h"
-#import "BUCAppDelegate.h"
 #import "BUCEditorController.h"
+#import "BUCRootController.h"
 
 @interface BUCSettingsController ()
 
@@ -19,7 +19,8 @@
 @property (nonatomic) BOOL signatureChanged;
 @property (nonatomic) NSInteger currentUserRow;
 
-@property (nonatomic) BUCAppDelegate *appDelegate;
+@property (nonatomic) BUCRootController *rootController;
+
 
 @end
 
@@ -31,7 +32,7 @@
     self.navigationItem.backBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"" style:UIBarButtonItemStylePlain target:nil action:nil];
     self.navigationItem.rightBarButtonItem = self.editButtonItem;
     
-    self.appDelegate = (BUCAppDelegate *)[UIApplication sharedApplication].delegate;
+    self.rootController = (BUCRootController *)[self.navigationController.viewControllers objectAtIndex:0];
     
     [self setup];
     [self.tableView reloadData];
@@ -212,7 +213,7 @@
         [self updateSignature];
     } else if (indexPath.section == 3) {
         [tableView deselectRowAtIndexPath:indexPath animated:NO];
-        [self.appDelegate displayActionSheet];
+        [self.rootController displayLogout];
     }
 }
 
@@ -230,7 +231,7 @@
 
 
 - (IBAction)unwindToSettings:(UIStoryboardSegue *)segue {
-    if ([segue.identifier isEqualToString:@"addNewAccount"]) {
+    if ([segue.identifier isEqualToString:@"loginToSettings"]) {
         [self setup];
         [self updateAccountList];
         [self updateSignature];
