@@ -90,12 +90,7 @@ static NSUInteger const BUCPostDetailMinListLength = 20;
     }
     self.star.selected = self.post.bookmarked;
     
-    NSString *title = self.post.title.string;
-    if (title.length > 5) {
-        self.postTitle = [NSString stringWithFormat:@"%@...", [title substringToIndex:5]];
-    } else {
-        self.postTitle = title;
-    }
+
     
     NSMutableArray *barButtons = [NSMutableArray arrayWithArray:self.navigationItem.rightBarButtonItems];
     UIBarButtonItem *button = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemReply target:self action:@selector(reply)];
@@ -285,8 +280,7 @@ static NSUInteger const BUCPostDetailMinListLength = 20;
     }
     
     for (BUCPost *post in listEnumerator) {
-        if ((self.opOnly &&  ![post.uid isEqualToString:self.post.uid]) ||
-            [self isLoadedBefore:post against:postList]) {
+        if (self.opOnly && ![post.uid isEqualToString:self.post.uid]) {
             continue;
         }
         
@@ -391,7 +385,6 @@ static NSUInteger const BUCPostDetailMinListLength = 20;
     cell.index.text = [NSString stringWithFormat:@"%ldL", (long)(post.index + 1)];
     
     // dateline
-    cell.dateline.text = post.dateline;
     
     // content
     UITextView *textView;
@@ -465,17 +458,6 @@ static NSUInteger const BUCPostDetailMinListLength = 20;
 }
 
 
-- (BOOL)isLoadedBefore:(BUCPost *)newpost against:(NSArray *)list{
-    for (BUCPost *post in list) {
-        if ([post.pid isEqualToString:newpost.pid]) {
-            return YES;
-        }
-    }
-    
-    return NO;
-}
-
-
 #pragma mark - actions
 - (IBAction)toggleMenu {
     if (self.loading) {
@@ -517,7 +499,7 @@ static NSUInteger const BUCPostDetailMinListLength = 20;
     } else {
         self.post.bookmarked = YES;
         self.post.bookmarkIndex = self.bookmarkList.count;
-        NSDictionary *post = @{@"tid":self.post.tid, @"title":self.post.title.string};
+        NSDictionary *post = @{@"tid":self.post.tid, @"title":self.post.title};
         if (!self.bookmarkList) {
             self.bookmarkList  = [[NSMutableArray alloc] init];
         }
@@ -683,8 +665,8 @@ static NSUInteger const BUCPostDetailMinListLength = 20;
     if ([segue.identifier isEqualToString:@"postDetailToNewPost"]) {
         BUCNewPostController *newPost = (BUCNewPostController *)(((UINavigationController *)segue.destinationViewController).topViewController);
         newPost.tid = self.post.tid;
-        newPost.parentTitle = self.post.title.string;
-        newPost.forumName = self.post.forumName;
+        newPost.parentTitle = self.post.title;
+        newPost.forumName = self.post.forumName.string;
         newPost.unwindIdentifier = @"newPostToPostDetail";
     }
 }

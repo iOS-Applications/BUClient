@@ -16,8 +16,6 @@
 
 
 @implementation BUCHTMLScraper
-
-
 #pragma mark - public interface
 - (instancetype)init {
     self = [super init];
@@ -46,7 +44,22 @@
 
 
 - (NSAttributedString *)richTextFromHtml:(NSString *)html { 
-    return [self richTextFromTree:[self treeFromHtml:html]];
+    return [self richTextFromHtml:html textStyle:UIFontTextStyleBody trait:0];
+}
+
+
+- (NSAttributedString *)richTextFromHtml:(NSString *)html attributes:(NSDictionary *)attributes {
+    return [self richTextFromTree:[self treeFromHtml:html] attributes:attributes];
+}
+
+
+- (NSAttributedString *)richTextFromHtml:(NSString *)html textStyle:(NSString *)style {
+    return [self richTextFromHtml:html textStyle:style trait:0];
+}
+
+
+- (NSAttributedString *)richTextFromHtml:(NSString *)html textStyle:(NSString *)style trait:(uint32_t)trait {
+    return [self richTextFromTree:[self treeFromHtml:html] attributes:[self attributesForFontStyle:style withTrait:trait]];
 }
 
 
@@ -67,12 +80,15 @@
 }
 
 
-- (NSAttributedString *)richTextFromTree:(TFHppleElement *)tree {
+- (NSAttributedString *)richTextFromTree:(TFHppleElement *)tree attributes:(NSDictionary *)attributes {
     if (!tree) {
         return nil;
     }
     
-    NSDictionary *baseAttribute = @{NSFontAttributeName:[UIFont preferredFontForTextStyle:UIFontTextStyleBody]};
+    if (!attributes) {
+        attributes = @{NSFontAttributeName:[UIFont preferredFontForTextStyle:UIFontTextStyleBody]};
+    }
+    
     self.output = [[NSMutableAttributedString alloc] init];
     
     for (TFHppleElement *node in tree.children) {
@@ -80,7 +96,7 @@
             continue;
         }
         
-        [self appendRichText:node superAttributes:baseAttribute];
+        [self appendRichText:node superAttributes:attributes];
     }
     
     if (self.output.length == 0) {
@@ -483,9 +499,11 @@
 - (NSDictionary *)attributesForFontStyle:(NSString*)style withTrait:(uint32_t)trait {
     UIFontDescriptor *fontDescriptor = [UIFontDescriptor preferredFontDescriptorWithTextStyle:style];
     
-    UIFontDescriptor *descriptorWithTrait = [fontDescriptor fontDescriptorWithSymbolicTraits:trait];
+    if (trait > 0) {
+        fontDescriptor = [fontDescriptor fontDescriptorWithSymbolicTraits:trait];
+    }
     
-    UIFont *font =  [UIFont fontWithDescriptor:descriptorWithTrait size: 0.0];
+    UIFont *font =  [UIFont fontWithDescriptor:fontDescriptor size: 0.0];
     
     return @{NSFontAttributeName:font};
 }

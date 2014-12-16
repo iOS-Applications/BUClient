@@ -137,7 +137,7 @@
     } else if (indexPath.section == 1) {
         cellIdentifier = @"cell1";
         cell = [tableView dequeueReusableCellWithIdentifier:cellIdentifier forIndexPath:indexPath];
-        cell.textLabel.text = @"Add Account";
+        cell.textLabel.text = @"添加帐号...";
     } else if (indexPath.section == 2) {
         cellIdentifier = @"cell2";
         cell = [tableView dequeueReusableCellWithIdentifier:cellIdentifier forIndexPath:indexPath];
@@ -145,7 +145,7 @@
     } else {
         cellIdentifier = @"cell3";
         cell = [tableView dequeueReusableCellWithIdentifier:cellIdentifier forIndexPath:indexPath];
-        cell.textLabel.text = @"Log Out";
+        cell.textLabel.text = @"登出";
     }
     
     return cell;
@@ -154,9 +154,9 @@
 
 - (NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section {
     if (section == 0) {
-        return @"Account List";
+        return @"帐号列表";
     } else if (section == 2) {
-        return @"Signature";
+        return @"个性签名";
     }
     
     return nil;
@@ -225,7 +225,7 @@
         editor.content = self.signature;
         editor.unwindIdentifier = @"editorToSettings";
         editor.lengthLimit = 100;
-        editor.navigationItem.title = @"Signature";
+        editor.navigationItem.title = @"个性签名";
     }
 }
 

@@ -21,14 +21,12 @@ static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
 
 @property (nonatomic) NSError *loginError;
 @property (nonatomic) NSError *postError;
+@property (nonatomic) NSError *permissionError;
 @property (nonatomic) NSError *unknownError;
 
 @end
 
-
 @implementation BUCDataManager
-
-
 #pragma mark - global access
 + (BUCDataManager *)sharedInstance {
     static BUCDataManager *sharedInstance;
@@ -56,6 +54,7 @@ static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
         _loginError = [NSError errorWithDomain:@"BUClient.ErrorDomain" code:1 userInfo:@{NSLocalizedDescriptionKey:@"帐号与密码不符，请检查帐号状态"}];
         _postError = [NSError errorWithDomain:@"BUClient.ErrorDomain" code:1 userInfo:@{NSLocalizedDescriptionKey:@"发帖失败，请检查内容是否只含有emoj字符"}];
         _unknownError = [NSError errorWithDomain:@"BUClient.ErrorDomain" code:1 userInfo:@{NSLocalizedDescriptionKey:@"未知错误"}];
+        _permissionError = [NSError errorWithDomain:@"BUClient.ErrorDomain" code:1 userInfo:@{NSLocalizedDescriptionKey:@"该帖设置了访问权限，无法访问"}];
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(userChanged) name:BUCLoginStateNotification object:nil];
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(hostChanged) name:BUCHostChangedNotification object:nil];
     }
@@ -333,27 +332,22 @@ static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
      onResult:^(NSDictionary *map) {
          if ([[map objectForKey:@"result"] isEqualToString:@"fail"]) {
              NSString *msg = [map objectForKey:@"msg"];
+             NSLog(@"%@", msg);
              if ([msg isEqualToString:@"thread_nopermission"]) {
-                 errorBlock([weakSelf noPermissionError]);
-                 goto done;
+                 errorBlock(weakSelf.permissionError);
              } else if ([url isEqualToString:@"logging"]) {
                  errorBlock(weakSelf.loginError);
-                 goto done;
              } else if ([msg isEqualToString:@"post_sm_isnull"]) {
                  errorBlock(weakSelf.postError);
-                 goto done;
              } else if (count > 1) {
                  errorBlock(weakSelf.unknownError);
-                 goto done;
+             } else {
+                 weakSelf.session = nil;
+                 [weakSelf loadJsonFromUrl:url json:json attachment:attachment isForm:isForm onSuccess:mapBlock onError:errorBlock count:count + 1];
              }
-             
-             weakSelf.session = nil;
-             [weakSelf loadJsonFromUrl:url json:json attachment:attachment isForm:isForm onSuccess:mapBlock onError:errorBlock count:count + 1];
-         done:
-             return;
+         } else {
+             mapBlock(map);
          }
-         
-         mapBlock(map);
      }
      
      onError:errorBlock];
@@ -377,39 +371,24 @@ static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
 
 
 - (void)successListHandler:(NSDictionary *)map listKey:(NSString *)listKey onSuccess:(BUCListBlock)listBlock onError:(BUCErrorBlock)errorBlock {
-    static NSString * const BUCLastPosterTemplate = @"Last reply: %@by";
+    static NSString * const BUCLastPosterTemplate = @"最后回复: %@ by %@";
     
     NSMutableArray *list = [[NSMutableArray alloc] init];
     NSArray *rawList = [map objectForKey:listKey];
+    NSDictionary *metaAttributes = @{NSFontAttributeName:[UIFont preferredFontForTextStyle:UIFontTextStyleCaption1]};
     
     for (NSDictionary *rawPost in rawList) {
         BUCPost *post = [[BUCPost alloc] init];
-        
+        post.uid = [rawPost objectForKey:@"authorid"];
+        post.avatar = [self.htmlScraper avatarUrlFromHtml:[self urldecode:[rawPost objectForKey:@"avatar"]]];
         post.pid = [rawPost objectForKey:@"pid"];
         post.tid = [rawPost objectForKey:@"tid"];
         post.fid = [rawPost objectForKey:@"fid"];
-        
-        post.forumName = [self urldecode:[rawPost objectForKey:@"fname"]];
-        
+        post.date = [self parseDateline:[rawPost objectForKey:@"dateline"]];;
         post.user = [self urldecode:[rawPost objectForKey:@"author"]];
-        post.uid = [rawPost objectForKey:@"authorid"];
-        
-        post.avatar = [self.htmlScraper avatarUrlFromHtml:[self urldecode:[rawPost objectForKey:@"avatar"]]];
-        
-        
-        if ([listKey isEqualToString:@"newlist"]) {
-            post.title = [self.htmlScraper richTextFromHtml:[self urldecode:[rawPost objectForKey:@"pname"]]];
-            NSString *lastPostDateline = [self parseDateline:[self urldecode:[[rawPost objectForKey:@"lastreply"] objectForKey:@"when"]]];
-            post.lastPoster = [self urldecode:[[rawPost objectForKey:@"lastreply"] objectForKey:@"who"]];
-            post.lastPostDateline = [NSString stringWithFormat:BUCLastPosterTemplate, lastPostDateline];
-            NSString *childCount = [rawPost objectForKey:@"tid_sum"];
-            if ([childCount isEqualToString:@"1"]) {
-                post.statistic = @"• 1 reply •";
-            } else {
-                post.statistic = [NSString stringWithFormat:@"• %@ replies •", childCount];
-            }
+        post.forumName = [self.htmlScraper richTextFromHtml:[self urldecode:[rawPost objectForKey:@"fname"]] attributes:metaAttributes];
 
-        } else if ([listKey isEqualToString:@"postlist"]) {
+        if ([listKey isEqualToString:@"postlist"]) {
             NSMutableString *content = [[NSMutableString alloc] init];
             NSString *title = [self urldecode:[rawPost objectForKey:@"subject"]];
             if (title) {
@@ -417,32 +396,55 @@ static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
                 [content appendString:title];
             }
             
-            NSString *body = [self urldecode:[rawPost objectForKey:@"message"]];
-            if (body) {
-                [content appendString:body];
+            NSString *postBody = [self urldecode:[rawPost objectForKey:@"message"]];
+            if (postBody) {
+                [content appendString:postBody];
             }
             
             NSString *attachment = [self urldecode:[rawPost objectForKey:@"attachment"]];
             if (attachment) {
                 NSString *filetype = [self urldecode:[rawPost objectForKey:@"filetype"]];
                 if (filetype && [filetype rangeOfString:@"image/"].length > 0) {
-                    attachment = [NSString stringWithFormat:@"\n\n本帖包含图片附件:\n\n<img src='http://out.bitunion.org/%@'>", attachment];
+                    attachment = [NSString stringWithFormat:@"\n\n本帖包含图片附件:\n\n<img src='%@/%@'>", self.host, attachment];
                     [content appendString:attachment];
                 }
             }
             
             post.content = [self.htmlScraper richTextFromHtml:content];
+        } else if ([listKey isEqualToString:@"newlist"]) {
+            NSMutableAttributedString *content = [[NSMutableAttributedString alloc] initWithAttributedString:[self.htmlScraper richTextFromHtml:[self urldecode:[[rawPost objectForKey:@"pname"] stringByAppendingString:@"\n\n"]]]];
+
+            if (content.length > 2) {
+                post.title = [content.string substringToIndex:content.length - 2];
+            }
+            
+            [content appendAttributedString:[[NSAttributedString alloc] initWithString:post.user attributes:metaAttributes]];
+            
+            NSString *childCount = [rawPost objectForKey:@"tid_sum"];
+            [content appendAttributedString:[[NSAttributedString alloc] initWithString:[NSString stringWithFormat:@" • %@ 回复 • ", childCount] attributes:metaAttributes]];
+            [content appendAttributedString:post.forumName];
+            
+            post.content = (NSAttributedString *)content;
+            post.meta = [[NSAttributedString alloc] initWithString:[NSString stringWithFormat:BUCLastPosterTemplate, [self parseDateline:[self urldecode:[[rawPost objectForKey:@"lastreply"] objectForKey:@"when"]]], [self urldecode:[[rawPost objectForKey:@"lastreply"] objectForKey:@"who"]]] attributes:metaAttributes];
         } else {
-            post.title = [self.htmlScraper richTextFromHtml:[self urldecode:[rawPost objectForKey:@"subject"]]];
+            NSMutableAttributedString *content = [[NSMutableAttributedString alloc] initWithAttributedString:[self.htmlScraper richTextFromHtml:[self urldecode:[[rawPost objectForKey:@"subject"] stringByAppendingString:@"\n\n"]]]];
+
+            if (content.length > 2) {
+                post.title = [content.string substringToIndex:content.length - 2];
+            }
+            
+            [content appendAttributedString:[[NSAttributedString alloc] initWithString:post.user attributes:metaAttributes]];
+            
+            [content appendAttributedString:[[NSAttributedString alloc] initWithString:[@" • " stringByAppendingString:post.date] attributes:metaAttributes]];
+
             NSString *viewCount = [rawPost objectForKey:@"views"];
+            viewCount = [NSString stringWithFormat:@"%@ 查看", viewCount];
             NSString *childCount = [rawPost objectForKey:@"replies"];
-            post.statistic = [NSString stringWithFormat:@"• %@/%@", childCount, viewCount];
-            NSString *lastPostDateline = [self parseDateline:[rawPost objectForKey:@"lastpost"]];
-            post.lastPostDateline = [NSString stringWithFormat:BUCLastPosterTemplate, lastPostDateline];
-            post.lastPoster = [self urldecode:[rawPost objectForKey:@"lastposter"]];
+            childCount = [NSString stringWithFormat:@"%@ 回复", childCount];
+            [content appendAttributedString:[[NSAttributedString alloc] initWithString:[NSString stringWithFormat:@" • %@ | %@", childCount, viewCount] attributes:metaAttributes]];
+            post.content = content;
+            post.meta = [[NSAttributedString alloc] initWithString:[NSString stringWithFormat:BUCLastPosterTemplate, [self parseDateline:[rawPost objectForKey:@"lastpost"]], [self urldecode:[rawPost objectForKey:@"lastposter"]]] attributes:metaAttributes];
         }
-        
-        post.dateline = [self parseDateline:[rawPost objectForKey:@"dateline"]];
         
         [list addObject:post];
     }
@@ -462,23 +464,20 @@ static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
 }
 
 
-- (NSError *)noPermissionError {
-    return [NSError errorWithDomain:@"BUClient.ErrorDomain" code:1 userInfo:@{NSLocalizedDescriptionKey:@"该帖设置了访问权限，无法访问"}];;
-}
-
-
 - (NSString *)parseDateline:(NSString *)dateline {
     if (!dateline || (id)dateline == [NSNull null] || dateline.length == 0) {
         return nil;
     }
     
     static NSDateFormatter *dateFormatter;
+    static NSDateFormatter *parsingFormatter;
     static dispatch_once_t onceEnsure;
     dispatch_once(&onceEnsure, ^{
         dateFormatter = [[NSDateFormatter alloc] init];
         dateFormatter.timeStyle = NSDateFormatterNoStyle;
-        dateFormatter.dateStyle = NSDateFormatterShortStyle;
-        
+        dateFormatter.dateStyle = NSDateFormatterMediumStyle;
+        parsingFormatter = [[NSDateFormatter alloc] init];
+        [parsingFormatter setDateFormat:@"yyyy-MM-dd HH:mm"];
     });
     
     NSString *output;
@@ -486,25 +485,23 @@ static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
     
     NSRegularExpression *regex = [NSRegularExpression regularExpressionWithPattern:@"^[0-9]+$" options:NSRegularExpressionCaseInsensitive error:NULL];
     if ([regex numberOfMatchesInString:dateline options:0 range:NSMakeRange(0, dateline.length)] == 0) {
-        [dateFormatter setDateFormat:@"yyyy-MM-dd HH:mm"];
         date = [dateFormatter dateFromString:dateline];
     } else {
         date = [NSDate dateWithTimeIntervalSince1970:dateline.doubleValue];
     }
     
     NSTimeInterval timeInterval = abs(date.timeIntervalSinceNow);
-    if (timeInterval < 60 * 2) {
-        output = @"just now ";
-    } else if (timeInterval < 60 * 60 * 2) {
-        output = [NSString stringWithFormat:@"%d minutes ago ", (int)timeInterval / 60];
-    } else if (timeInterval < 60 * 60 * 24 * 2) {
-        output = [NSString stringWithFormat:@"%d hours ago ", (int)timeInterval / (60 * 60)];
-    } else if (timeInterval < 60 * 60 * 24 * 30 * 2) {
-        output = [NSString stringWithFormat:@"%d days ago ", (int)timeInterval / (60 * 60 * 24)];
+    if (timeInterval < 60) {
+        output = @"刚刚";
+    } else if (timeInterval < 60 * 60) {
+        output = [NSString stringWithFormat:@"%d 分钟前", (int)timeInterval / 60];
+    } else if (timeInterval < 60 * 60 * 24) {
+        output = [NSString stringWithFormat:@"%d 小时前", (int)timeInterval / (60 * 60)];
+    } else if (timeInterval < 60 * 60 * 24 * 30) {
+        output = [NSString stringWithFormat:@"%d 天前", (int)timeInterval / (60 * 60 * 24)];
     } else if (timeInterval < 60 * 60 * 24 * 30 * 12) {
-        output = [NSString stringWithFormat:@"%d months ago ", (int)timeInterval / (60 * 60 * 24 * 30)];
+        output = [NSString stringWithFormat:@"%d 个月前", (int)timeInterval / (60 * 60 * 24 * 30)];
     } else {
-        [dateFormatter setDateFormat:@"yyyy/MM/dd "];
         output = [dateFormatter stringFromDate:date];
     }
     

@@ -78,7 +78,7 @@
     NSDictionary *item = [self.list objectAtIndex:indexPath.row];
     BUCPost *post = [[BUCPost alloc] init];
     post.tid = [item objectForKey:@"tid"];
-    post.title = [[NSAttributedString alloc] initWithString:[item objectForKey:@"title"]];
+//    post.title = [[NSAttributedString alloc] initWithString:[item objectForKey:@"title"]];
     post.bookmarked = YES;
     post.bookmarkIndex = indexPath.row;
     BUCPostDetailController *detailController = (BUCPostDetailController *)segue.destinationViewController;

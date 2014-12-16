@@ -53,8 +53,6 @@
 
 
 @implementation BUCLayoutManager
-
-
 - (void)drawBackgroundForGlyphRange:(NSRange)glyphsToShow atPoint:(CGPoint)origin {    
     NSArray *blockList = [self.textStorage attribute:BUCTextBlockListAttributeName atIndex:0 effectiveRange:NULL];
     CGContextRef context = UIGraphicsGetCurrentContext();

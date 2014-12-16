@@ -407,18 +407,19 @@
                                     <rect key="frame" x="0.0" y="-60" width="600" height="60"/>
                                     <subviews>
                                         <activityIndicatorView hidden="YES" autoresizesSubviews="NO" clearsContextBeforeDrawing="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" hidesWhenStopped="YES" style="gray" translatesAutoresizingMaskIntoConstraints="NO" id="jAt-lZ-9yh">
-                                            <rect key="frame" x="250" y="20" width="20" height="20"/>
+                                            <rect key="frame" x="158" y="20" width="20" height="20"/>
                                             <color key="backgroundColor" cocoaTouchSystemColor="groupTableViewBackgroundColor"/>
                                         </activityIndicatorView>
                                         <imageView autoresizesSubviews="NO" clearsContextBeforeDrawing="NO" userInteractionEnabled="NO" contentMode="center" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="arrow" translatesAutoresizingMaskIntoConstraints="NO" id="QDG-Rk-p5W">
-                                            <rect key="frame" x="248" y="18" width="24" height="24"/>
+                                            <rect key="frame" x="156" y="18" width="24" height="24"/>
+                                            <color key="backgroundColor" cocoaTouchSystemColor="groupTableViewBackgroundColor"/>
                                             <constraints>
                                                 <constraint firstAttribute="width" constant="24" id="fio-cn-J45"/>
                                                 <constraint firstAttribute="height" constant="24" id="jEQ-j9-Csr"/>
                                             </constraints>
                                         </imageView>
                                         <label autoresizesSubviews="NO" clearsContextBeforeDrawing="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Pull" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Bzr-dn-ybd">
-                                            <rect key="frame" x="282" y="21" width="26" height="18"/>
+                                            <rect key="frame" x="190" y="21" width="26" height="18"/>
                                             <color key="backgroundColor" cocoaTouchSystemColor="groupTableViewBackgroundColor"/>
                                             <fontDescription key="fontDescription" type="system" pointSize="15"/>
                                             <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
@@ -429,7 +430,7 @@
                                     <constraints>
                                         <constraint firstAttribute="centerY" secondItem="QDG-Rk-p5W" secondAttribute="centerY" id="BpP-Tq-OJB"/>
                                         <constraint firstItem="QDG-Rk-p5W" firstAttribute="centerX" secondItem="jAt-lZ-9yh" secondAttribute="centerX" id="K7W-zK-QcM"/>
-                                        <constraint firstAttribute="centerX" secondItem="QDG-Rk-p5W" secondAttribute="centerX" constant="40" id="LBa-xU-tVc"/>
+                                        <constraint firstItem="QDG-Rk-p5W" firstAttribute="centerX" secondItem="UyE-pt-X8S" secondAttribute="centerX" multiplier="5/9" constant="1" id="LBa-xU-tVc"/>
                                         <constraint firstAttribute="height" constant="60" id="Nno-Q4-mag"/>
                                         <constraint firstItem="Bzr-dn-ybd" firstAttribute="leading" secondItem="QDG-Rk-p5W" secondAttribute="trailing" constant="10" id="awL-Sz-YLP"/>
                                         <constraint firstItem="QDG-Rk-p5W" firstAttribute="centerY" secondItem="Bzr-dn-ybd" secondAttribute="centerY" id="cJK-bH-EQg"/>
@@ -452,18 +453,19 @@
                                     <rect key="frame" x="0.0" y="8" width="600" height="60"/>
                                     <subviews>
                                         <activityIndicatorView hidden="YES" autoresizesSubviews="NO" clearsContextBeforeDrawing="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" hidesWhenStopped="YES" style="gray" translatesAutoresizingMaskIntoConstraints="NO" id="usg-QC-kZD">
-                                            <rect key="frame" x="250" y="20" width="20" height="20"/>
+                                            <rect key="frame" x="158" y="20" width="20" height="20"/>
                                             <color key="backgroundColor" cocoaTouchSystemColor="groupTableViewBackgroundColor"/>
                                         </activityIndicatorView>
                                         <imageView autoresizesSubviews="NO" clearsContextBeforeDrawing="NO" userInteractionEnabled="NO" contentMode="center" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="arrow" translatesAutoresizingMaskIntoConstraints="NO" id="w7z-0F-Nsz">
-                                            <rect key="frame" x="248" y="18" width="24" height="24"/>
+                                            <rect key="frame" x="156" y="18" width="24" height="24"/>
+                                            <color key="backgroundColor" cocoaTouchSystemColor="groupTableViewBackgroundColor"/>
                                             <constraints>
                                                 <constraint firstAttribute="width" constant="24" id="6S4-iW-c86"/>
                                                 <constraint firstAttribute="height" constant="24" id="faA-tp-SDO"/>
                                             </constraints>
                                         </imageView>
                                         <label autoresizesSubviews="NO" clearsContextBeforeDrawing="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Pull" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="lof-EX-gWq">
-                                            <rect key="frame" x="282" y="21" width="26" height="18"/>
+                                            <rect key="frame" x="190" y="21" width="26" height="18"/>
                                             <color key="backgroundColor" cocoaTouchSystemColor="groupTableViewBackgroundColor"/>
                                             <fontDescription key="fontDescription" type="system" pointSize="15"/>
                                             <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
@@ -475,7 +477,7 @@
                                         <constraint firstAttribute="centerY" secondItem="w7z-0F-Nsz" secondAttribute="centerY" id="0Td-nY-ZYI"/>
                                         <constraint firstAttribute="height" constant="60" id="FMW-yD-eG2"/>
                                         <constraint firstItem="usg-QC-kZD" firstAttribute="centerX" secondItem="w7z-0F-Nsz" secondAttribute="centerX" id="MMU-da-xzO"/>
-                                        <constraint firstAttribute="centerX" secondItem="w7z-0F-Nsz" secondAttribute="centerX" constant="40" id="Qju-Gb-py4"/>
+                                        <constraint firstItem="w7z-0F-Nsz" firstAttribute="centerX" secondItem="bar-RH-IIT" secondAttribute="centerX" multiplier="5/9" constant="1" id="Qju-Gb-py4"/>
                                         <constraint firstItem="lof-EX-gWq" firstAttribute="leading" secondItem="w7z-0F-Nsz" secondAttribute="trailing" constant="10" id="WIj-dw-9jA"/>
                                         <constraint firstItem="w7z-0F-Nsz" firstAttribute="centerY" secondItem="lof-EX-gWq" secondAttribute="centerY" id="rqQ-fo-wi5"/>
                                         <constraint firstItem="usg-QC-kZD" firstAttribute="centerY" secondItem="w7z-0F-Nsz" secondAttribute="centerY" id="xh2-Ur-aX6"/>
@@ -492,97 +494,25 @@
                         <prototypes>
                             <tableViewCell autoresizesSubviews="NO" clearsContextBeforeDrawing="NO" contentMode="scaleToFill" selectionStyle="gray" hidesAccessoryWhenEditing="NO" indentationLevel="1" indentationWidth="0.0" shouldIndentWhileEditing="NO" reuseIdentifier="cell" rowHeight="130" id="m58-eu-Ae2" customClass="BUCPostListCell">
                                 <autoresizingMask key="autoresizingMask"/>
-                                <tableViewCellContentView key="contentView" autoresizesSubviews="NO" clearsContextBeforeDrawing="NO" multipleTouchEnabled="YES" contentMode="center" tableViewCell="m58-eu-Ae2" id="nA3-9f-Nqs">
+                                <tableViewCellContentView key="contentView" autoresizesSubviews="NO" clearsContextBeforeDrawing="NO" contentMode="center" tableViewCell="m58-eu-Ae2" id="nA3-9f-Nqs">
                                     <autoresizingMask key="autoresizingMask"/>
                                     <subviews>
-                                        <label autoresizesSubviews="NO" clearsContextBeforeDrawing="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="title" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" preferredMaxLayoutWidth="590" translatesAutoresizingMaskIntoConstraints="NO" id="Tds-gL-KvK" userLabel="title">
-                                            <rect key="frame" x="5" y="5" width="590" height="21"/>
+                                        <imageView autoresizesSubviews="NO" clearsContextBeforeDrawing="NO" userInteractionEnabled="NO" contentMode="TopLeft" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="rPO-n6-uSN">
+                                            <rect key="frame" x="0.0" y="0.0" width="600" height="130"/>
                                             <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
-                                            <fontDescription key="fontDescription" type="system" pointSize="17"/>
-                                            <nil key="highlightedColor"/>
-                                        </label>
-                                        <label autoresizesSubviews="NO" clearsContextBeforeDrawing="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="submitted 2 hours ago by" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" preferredMaxLayoutWidth="600" translatesAutoresizingMaskIntoConstraints="NO" id="gKF-HW-HcP" userLabel="dateline">
-                                            <rect key="frame" x="5" y="42" width="154" height="16"/>
-                                            <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
-                                            <fontDescription key="fontDescription" type="system" pointSize="13"/>
-                                            <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
-                                            <nil key="highlightedColor"/>
-                                        </label>
-                                        <button autoresizesSubviews="NO" clearsContextBeforeDrawing="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="QGB-cJ-KfN" userLabel="author">
-                                            <rect key="frame" x="159" y="36" width="39" height="28"/>
-                                            <fontDescription key="fontDescription" type="system" pointSize="13"/>
-                                            <state key="normal" title="author">
-                                                <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
-                                            </state>
-                                        </button>
-                                        <label autoresizesSubviews="NO" clearsContextBeforeDrawing="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="statistic" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" preferredMaxLayoutWidth="600" translatesAutoresizingMaskIntoConstraints="NO" id="IeE-Hu-HLT" userLabel="statistic">
-                                            <rect key="frame" x="200" y="42" width="47" height="16"/>
-                                            <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
-                                            <fontDescription key="fontDescription" type="system" pointSize="13"/>
-                                            <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
-                                            <nil key="highlightedColor"/>
-                                        </label>
-                                        <button hidden="YES" autoresizesSubviews="NO" clearsContextBeforeDrawing="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="59Z-Hr-XFQ" userLabel="forum">
-                                            <rect key="frame" x="249" y="36" width="35" height="28"/>
-                                            <fontDescription key="fontDescription" type="system" pointSize="13"/>
-                                            <state key="normal" title="forum">
-                                                <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
-                                            </state>
-                                        </button>
-                                        <view autoresizesSubviews="NO" clearsContextBeforeDrawing="NO" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="1MU-Bc-jXV" userLabel="separator">
-                                            <rect key="frame" x="5" y="64" width="590" height="1"/>
-                                            <color key="backgroundColor" white="0.66666666666666663" alpha="1" colorSpace="calibratedWhite"/>
-                                            <constraints>
-                                                <constraint firstAttribute="height" constant="1" id="1ne-Z1-shv"/>
-                                            </constraints>
-                                        </view>
-                                        <label autoresizesSubviews="NO" clearsContextBeforeDrawing="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="last post date" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" preferredMaxLayoutWidth="600" translatesAutoresizingMaskIntoConstraints="NO" id="1ur-nn-Hbi" userLabel="last post date">
-                                            <rect key="frame" x="5" y="71" width="83" height="16"/>
-                                            <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
-                                            <fontDescription key="fontDescription" type="system" pointSize="13"/>
-                                            <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
-                                            <nil key="highlightedColor"/>
-                                        </label>
-                                        <button autoresizesSubviews="NO" clearsContextBeforeDrawing="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Ogy-4c-ZXr" userLabel="last poster">
-                                            <rect key="frame" x="90" y="65" width="41" height="28"/>
-                                            <fontDescription key="fontDescription" type="system" pointSize="13"/>
-                                            <state key="normal" title="Button">
-                                                <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
-                                            </state>
-                                        </button>
+                                        </imageView>
                                     </subviews>
                                     <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                                     <constraints>
-                                        <constraint firstItem="1ur-nn-Hbi" firstAttribute="leading" secondItem="nA3-9f-Nqs" secondAttribute="leading" constant="5" id="2zv-ZW-2lc"/>
-                                        <constraint firstAttribute="trailing" secondItem="Tds-gL-KvK" secondAttribute="trailing" constant="5" id="Ed9-VA-mE6"/>
-                                        <constraint firstItem="QGB-cJ-KfN" firstAttribute="leading" secondItem="gKF-HW-HcP" secondAttribute="trailing" id="Fh1-A9-bP3"/>
-                                        <constraint firstItem="QGB-cJ-KfN" firstAttribute="centerY" secondItem="59Z-Hr-XFQ" secondAttribute="centerY" id="I79-1m-wLk"/>
-                                        <constraint firstItem="1ur-nn-Hbi" firstAttribute="centerY" secondItem="Ogy-4c-ZXr" secondAttribute="centerY" id="IJY-TR-3G7"/>
-                                        <constraint firstItem="gKF-HW-HcP" firstAttribute="centerY" secondItem="QGB-cJ-KfN" secondAttribute="centerY" id="Jmy-KS-Knd"/>
-                                        <constraint firstItem="Ogy-4c-ZXr" firstAttribute="top" secondItem="1MU-Bc-jXV" secondAttribute="bottom" id="MVu-8D-oWs"/>
-                                        <constraint firstItem="1MU-Bc-jXV" firstAttribute="leading" secondItem="nA3-9f-Nqs" secondAttribute="leading" constant="5" id="NY9-ws-XUL"/>
-                                        <constraint firstItem="Ogy-4c-ZXr" firstAttribute="leading" secondItem="1ur-nn-Hbi" secondAttribute="trailing" constant="2" id="Tp8-gi-Lys"/>
-                                        <constraint firstItem="IeE-Hu-HLT" firstAttribute="leading" secondItem="QGB-cJ-KfN" secondAttribute="trailing" constant="2" id="WMt-Z3-p7M"/>
-                                        <constraint firstItem="Tds-gL-KvK" firstAttribute="top" secondItem="nA3-9f-Nqs" secondAttribute="top" constant="5" id="YY1-Gp-9yG"/>
-                                        <constraint firstItem="QGB-cJ-KfN" firstAttribute="centerY" secondItem="IeE-Hu-HLT" secondAttribute="centerY" id="bqb-06-LT3"/>
-                                        <constraint firstItem="Tds-gL-KvK" firstAttribute="leading" secondItem="nA3-9f-Nqs" secondAttribute="leading" constant="5" id="cM1-XZ-AOA"/>
-                                        <constraint firstItem="QGB-cJ-KfN" firstAttribute="top" secondItem="Tds-gL-KvK" secondAttribute="bottom" constant="10" id="dGV-JP-qcJ"/>
-                                        <constraint firstItem="59Z-Hr-XFQ" firstAttribute="leading" secondItem="IeE-Hu-HLT" secondAttribute="trailing" constant="2" id="qMO-hu-w7T"/>
-                                        <constraint firstItem="gKF-HW-HcP" firstAttribute="leading" secondItem="nA3-9f-Nqs" secondAttribute="leading" constant="5" id="tIb-er-W3E"/>
-                                        <constraint firstAttribute="trailing" secondItem="1MU-Bc-jXV" secondAttribute="trailing" constant="5" id="tbk-JY-8mT"/>
-                                        <constraint firstItem="1MU-Bc-jXV" firstAttribute="top" secondItem="QGB-cJ-KfN" secondAttribute="bottom" id="yaM-ve-1Ad"/>
+                                        <constraint firstAttribute="bottom" secondItem="rPO-n6-uSN" secondAttribute="bottom" id="0gE-AR-3Qr"/>
+                                        <constraint firstItem="rPO-n6-uSN" firstAttribute="leading" secondItem="nA3-9f-Nqs" secondAttribute="leading" id="MBj-i3-3s1"/>
+                                        <constraint firstAttribute="trailing" secondItem="rPO-n6-uSN" secondAttribute="trailing" id="PPi-Nx-waW"/>
+                                        <constraint firstItem="rPO-n6-uSN" firstAttribute="top" secondItem="nA3-9f-Nqs" secondAttribute="top" id="ksm-8k-IJl"/>
                                     </constraints>
                                 </tableViewCellContentView>
                                 <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                                 <connections>
-                                    <outlet property="author" destination="QGB-cJ-KfN" id="Nws-oS-q3m"/>
-                                    <outlet property="dateline" destination="gKF-HW-HcP" id="Ndu-to-atn"/>
-                                    <outlet property="forum" destination="59Z-Hr-XFQ" id="TB3-5g-kZ0"/>
-                                    <outlet property="lastPostDate" destination="1ur-nn-Hbi" id="p9F-ix-PtL"/>
-                                    <outlet property="lastPoster" destination="Ogy-4c-ZXr" id="6xP-ix-5Pk"/>
-                                    <outlet property="separator" destination="1MU-Bc-jXV" id="k5A-dD-0OB"/>
-                                    <outlet property="statistic" destination="IeE-Hu-HLT" id="kdR-qp-8LC"/>
-                                    <outlet property="title" destination="Tds-gL-KvK" id="Wxm-ft-UGq"/>
+                                    <outlet property="contents" destination="rPO-n6-uSN" id="VRz-Lm-jT6"/>
                                 </connections>
                             </tableViewCell>
                         </prototypes>
@@ -606,9 +536,9 @@
                         <outlet property="bottomLoadingLabel" destination="lof-EX-gWq" id="B0J-dq-ceb"/>
                         <outlet property="bottomPullToLoadHolder" destination="bar-RH-IIT" id="eGk-Ku-OIj"/>
                         <outlet property="bottomRotateArrow" destination="w7z-0F-Nsz" id="HNF-sV-mUh"/>
-                        <outlet property="topLoadingIndicator" destination="jAt-lZ-9yh" id="N5o-GW-Byg"/>
+                        <outlet property="topLoadingIndicator" destination="jAt-lZ-9yh" id="xaB-9D-xog"/>
                         <outlet property="topLoadingLabel" destination="Bzr-dn-ybd" id="XGq-KN-hqp"/>
-                        <outlet property="topRotateArrow" destination="Bzr-dn-ybd" id="n5z-Ao-WlJ"/>
+                        <outlet property="topRotateArrow" destination="QDG-Rk-p5W" id="2jG-Jx-g3H"/>
                         <segue destination="oiG-Nc-ZDP" kind="show" identifier="postListToPostDetail" id="LlL-LF-ROM"/>
                     </connections>
                 </viewController>
@@ -616,7 +546,7 @@
             </objects>
             <point key="canvasLocation" x="5341" y="118"/>
         </scene>
-        <!--Post Detail Controller-->
+        <!--主题贴-->
         <scene sceneID="PEe-cG-dxn">
             <objects>
                 <viewController storyboardIdentifier="BUCPostDetailController" autoresizesArchivedViewToFullSize="NO" automaticallyAdjustsScrollViewInsets="NO" id="oiG-Nc-ZDP" customClass="BUCPostDetailController" sceneMemberID="viewController">
@@ -913,7 +843,7 @@
                     </view>
                     <extendedEdge key="edgesForExtendedLayout"/>
                     <toolbarItems/>
-                    <navigationItem key="navigationItem" id="BTH-jm-Xq6">
+                    <navigationItem key="navigationItem" title="主题贴" id="BTH-jm-Xq6">
                         <barButtonItem key="rightBarButtonItem" image="menu" id="SoA-8d-pPd" userLabel="menu">
                             <connections>
                                 <action selector="toggleMenu" destination="oiG-Nc-ZDP" id="8CU-qK-2nI"/>
@@ -983,10 +913,10 @@
             </objects>
             <point key="canvasLocation" x="6715" y="118"/>
         </scene>
-        <!--Rotation Handle Navigation Controller-->
+        <!--Navigation Controller-->
         <scene sceneID="egt-mt-pAH">
             <objects>
-                <navigationController autoresizesArchivedViewToFullSize="NO" automaticallyAdjustsScrollViewInsets="NO" toolbarHidden="NO" id="hFi-ew-Pwi" customClass="BUCRotationHandleNavigationController" sceneMemberID="viewController">
+                <navigationController autoresizesArchivedViewToFullSize="NO" automaticallyAdjustsScrollViewInsets="NO" toolbarHidden="NO" id="hFi-ew-Pwi" sceneMemberID="viewController">
                     <extendedEdge key="edgesForExtendedLayout"/>
                     <toolbarItems/>
                     <simulatedStatusBarMetrics key="simulatedStatusBarMetrics"/>
@@ -1010,10 +940,10 @@
             </objects>
             <point key="canvasLocation" x="3928" y="118"/>
         </scene>
-        <!--Start-->
+        <!--导航-->
         <scene sceneID="ovE-Va-9xO">
             <objects>
-                <viewController autoresizesArchivedViewToFullSize="NO" automaticallyAdjustsScrollViewInsets="NO" id="GL1-z2-a4Z" userLabel="Start" customClass="BUCRootController" sceneMemberID="viewController">
+                <viewController autoresizesArchivedViewToFullSize="NO" automaticallyAdjustsScrollViewInsets="NO" id="GL1-z2-a4Z" customClass="BUCRootController" sceneMemberID="viewController">
                     <tableView key="view" autoresizesSubviews="NO" clearsContextBeforeDrawing="NO" contentMode="scaleToFill" alwaysBounceVertical="YES" showsHorizontalScrollIndicator="NO" canCancelContentTouches="NO" bouncesZoom="NO" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="44" sectionHeaderHeight="22" sectionFooterHeight="22" id="OfI-sf-dx0">
                         <rect key="frame" x="0.0" y="0.0" width="600" height="492"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
@@ -1080,7 +1010,7 @@
                             </connections>
                         </barButtonItem>
                     </toolbarItems>
-                    <navigationItem key="navigationItem" title="Start" id="1gI-ti-AbE" userLabel="Start">
+                    <navigationItem key="navigationItem" title="导航" id="1gI-ti-AbE">
                         <barButtonItem key="rightBarButtonItem" systemItem="add" id="mNZ-Dv-nqR">
                             <connections>
                                 <segue destination="ukM-1s-YoB" kind="presentation" identifier="rootToForumList" id="Y7Y-yT-pMw"/>
@@ -1103,20 +1033,20 @@
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                     <subviews>
                         <view autoresizesSubviews="NO" clearsContextBeforeDrawing="NO" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="dFV-cx-nMd" userLabel="Logout sheet">
-                            <rect key="frame" x="0.0" y="364" width="600" height="236"/>
+                            <rect key="frame" x="0.0" y="382" width="600" height="218"/>
                             <subviews>
-                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Are you sure to log out? You won't lose any data. You can still log in with this account." textAlignment="center" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" preferredMaxLayoutWidth="250" translatesAutoresizingMaskIntoConstraints="NO" id="0pI-0o-TlG">
-                                    <rect key="frame" x="30" y="25" width="540" height="54"/>
+                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="确定登出吗？你的数据不会被删除，之后可以继续使用这个帐号登录" textAlignment="center" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" preferredMaxLayoutWidth="250" translatesAutoresizingMaskIntoConstraints="NO" id="0pI-0o-TlG">
+                                    <rect key="frame" x="30" y="25" width="540" height="36"/>
                                     <color key="backgroundColor" red="0.92941176469999998" green="0.92941176469999998" blue="0.92941176469999998" alpha="1" colorSpace="calibratedRGB"/>
                                     <fontDescription key="fontDescription" type="system" pointSize="15"/>
                                     <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
                                     <nil key="highlightedColor"/>
                                 </label>
                                 <button autoresizesSubviews="NO" clearsContextBeforeDrawing="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" adjustsImageWhenHighlighted="NO" adjustsImageWhenDisabled="NO" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="kgk-my-pct">
-                                    <rect key="frame" x="20" y="104" width="560" height="41"/>
+                                    <rect key="frame" x="20" y="86" width="560" height="41"/>
                                     <color key="backgroundColor" red="0.90588235289999997" green="0.3294117647" blue="0.35294117650000001" alpha="1" colorSpace="calibratedRGB"/>
                                     <fontDescription key="fontDescription" type="system" pointSize="24"/>
-                                    <state key="normal" title="Log Out">
+                                    <state key="normal" title="登出">
                                         <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
                                     </state>
                                     <connections>
@@ -1124,10 +1054,10 @@
                                     </connections>
                                 </button>
                                 <button autoresizesSubviews="NO" clearsContextBeforeDrawing="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="8fJ-xJ-Q1V">
-                                    <rect key="frame" x="20" y="170" width="560" height="41"/>
+                                    <rect key="frame" x="20" y="152" width="560" height="41"/>
                                     <color key="backgroundColor" white="0.66666666666666663" alpha="1" colorSpace="calibratedWhite"/>
                                     <fontDescription key="fontDescription" type="system" pointSize="24"/>
-                                    <state key="normal" title="Cancel">
+                                    <state key="normal" title="取消">
                                         <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
                                     </state>
                                     <connections>
@@ -1169,7 +1099,7 @@
             </objects>
             <point key="canvasLocation" x="4610" y="118"/>
         </scene>
-        <!--Forum List-->
+        <!--论坛列表-->
         <scene sceneID="jK3-g6-fHx">
             <objects>
                 <tableViewController autoresizesArchivedViewToFullSize="NO" automaticallyAdjustsScrollViewInsets="NO" clearsSelectionOnViewWillAppear="NO" id="Dev-IM-iRT" customClass="BUCForumListController" sceneMemberID="viewController">
@@ -1202,7 +1132,7 @@
                         </connections>
                     </tableView>
                     <extendedEdge key="edgesForExtendedLayout"/>
-                    <navigationItem key="navigationItem" title="Forum List" id="OVL-vN-fMC">
+                    <navigationItem key="navigationItem" title="论坛列表" id="OVL-vN-fMC">
                         <barButtonItem key="rightBarButtonItem" systemItem="cancel" id="pgR-gG-CaO">
                             <connections>
                                 <action selector="cancel" destination="Dev-IM-iRT" id="R5o-GG-KZz"/>
@@ -1219,7 +1149,7 @@
             </objects>
             <point key="canvasLocation" x="4610" y="-557"/>
         </scene>
-        <!--Editor-->
+        <!--编辑器-->
         <scene sceneID="NAz-Lj-fhv">
             <objects>
                 <viewController id="WZc-FQ-sdj" customClass="BUCEditorController" sceneMemberID="viewController">
@@ -1258,7 +1188,8 @@
                         </constraints>
                     </view>
                     <toolbarItems/>
-                    <navigationItem key="navigationItem" title="Editor" id="qe5-bh-dtB"/>
+                    <navigationItem key="navigationItem" title="编辑器" id="qe5-bh-dtB"/>
+                    <simulatedNavigationBarMetrics key="simulatedTopBarMetrics" prompted="NO"/>
                     <connections>
                         <outlet property="textView" destination="B8l-tv-s5h" id="kK3-sa-VBS"/>
                         <outlet property="textViewBottomSpace" destination="1kv-fM-zoP" id="deo-D6-o6Y"/>
@@ -1272,12 +1203,12 @@
             </objects>
             <point key="canvasLocation" x="6040" y="-557"/>
         </scene>
-        <!--Settings Controller-->
+        <!--设置-->
         <scene sceneID="QUH-bK-hwj">
             <objects>
                 <tableViewController id="FOo-kw-BkT" customClass="BUCSettingsController" sceneMemberID="viewController">
                     <tableView key="view" autoresizesSubviews="NO" clearsContextBeforeDrawing="NO" contentMode="scaleToFill" alwaysBounceVertical="YES" showsHorizontalScrollIndicator="NO" showsVerticalScrollIndicator="NO" canCancelContentTouches="NO" bouncesZoom="NO" dataMode="prototypes" style="grouped" separatorStyle="default" rowHeight="44" sectionHeaderHeight="10" sectionFooterHeight="10" id="lPD-b5-q45">
-                        <rect key="frame" x="0.0" y="64" width="600" height="536"/>
+                        <rect key="frame" x="0.0" y="0.0" width="600" height="536"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <color key="backgroundColor" cocoaTouchSystemColor="groupTableViewBackgroundColor"/>
                         <prototypes>
@@ -1358,6 +1289,7 @@
                             <outlet property="delegate" destination="FOo-kw-BkT" id="KTD-Ak-Cs7"/>
                         </connections>
                     </tableView>
+                    <navigationItem key="navigationItem" title="设置" id="JwL-gd-5mh"/>
                     <nil key="simulatedBottomBarMetrics"/>
                 </tableViewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="aRg-cH-QGN" userLabel="First Responder" sceneMemberID="firstResponder"/>
@@ -1385,7 +1317,7 @@
             </objects>
             <point key="canvasLocation" x="4610" y="-1229"/>
         </scene>
-        <!--Bookmarks-->
+        <!--收藏夹-->
         <scene sceneID="G0D-kj-USV">
             <objects>
                 <tableViewController id="b8V-Ux-uXi" customClass="BUCBookmarkController" sceneMemberID="viewController">
@@ -1438,7 +1370,7 @@
                             <outlet property="delegate" destination="b8V-Ux-uXi" id="N1d-qA-uNL"/>
                         </connections>
                     </tableView>
-                    <navigationItem key="navigationItem" title="Bookmarks" id="sv7-8Z-RRY"/>
+                    <navigationItem key="navigationItem" title="收藏夹" id="sv7-8Z-RRY"/>
                     <nil key="simulatedBottomBarMetrics"/>
                 </tableViewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="H4v-Xg-xIA" userLabel="First Responder" sceneMemberID="firstResponder"/>
@@ -1478,10 +1410,10 @@
         <image name="user" width="32" height="32"/>
     </resources>
     <inferredMetricsTieBreakers>
-        <segue reference="c6N-cX-tJy"/>
+        <segue reference="e2e-5o-eg8"/>
+        <segue reference="Y7Y-yT-pMw"/>
         <segue reference="ziq-PT-65J"/>
-        <segue reference="1Mm-GQ-9LS"/>
-        <segue reference="LlL-LF-ROM"/>
         <segue reference="NLt-hK-OQ5"/>
+        <segue reference="kDA-Um-msB"/>
     </inferredMetricsTieBreakers>
 </document>

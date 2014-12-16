@@ -56,6 +56,7 @@
         [self.forumSet addObject:[forum objectForKey:@"name"]];
     }
     
+    self.editButtonItem.title = @"编辑";
     self.navigationItem.leftBarButtonItem = self.editButtonItem;
     
     [self.tableView reloadData];
@@ -88,6 +89,11 @@
     if (!editing && self.listChanged) {
         [self.list writeToFile:self.path atomically:YES];
         self.listChanged = NO;
+    }
+    if (editing) {
+        self.editButtonItem.title = @"完成";
+    } else {
+        self.editButtonItem.title = @"编辑";
     }
 }
 

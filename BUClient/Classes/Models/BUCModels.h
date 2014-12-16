@@ -1,28 +1,20 @@
 #import <Foundation/Foundation.h>
+#include "BUCTextStack.h"
 
 #ifndef BUClient_BUCModels_h
 #define BUClient_BUCModels_h
 
 @interface BUCPost : NSObject
 
-@property (nonatomic) NSString *pid;
-@property (nonatomic) NSString *tid;
+@property (nonatomic) NSAttributedString *forumName;
 @property (nonatomic) NSString *fid;
-@property (nonatomic) NSString *forumName;
-
+@property (nonatomic) NSString *tid;
+@property (nonatomic) NSString *pid;
 @property (nonatomic) NSString *user;
 @property (nonatomic) NSString *uid;
+@property (nonatomic) NSString *date;
 @property (nonatomic) NSURL *avatar;
-
-@property (nonatomic) NSAttributedString *title;
-@property (nonatomic) NSAttributedString *content;
-@property (nonatomic) NSString *dateline;
-@property (nonatomic) NSString *postListDateline;
-
-@property (nonatomic) NSString *statistic;
-
-@property (nonatomic) NSString *lastPostDateline;
-@property (nonatomic) NSString *lastPoster;
+@property (nonatomic) NSString *title;
 
 @property (nonatomic) NSUInteger index;
 @property (nonatomic) CGFloat cellHeight;
@@ -30,6 +22,14 @@
 
 @property (nonatomic) BOOL bookmarked;
 @property (nonatomic) NSInteger bookmarkIndex;
+
+@property (nonatomic) NSAttributedString *content;
+@property (nonatomic) NSAttributedString *meta;
+
+@property (nonatomic) NSTextStorage *textStorage;
+@property (nonatomic) BUCLayoutManager *layoutManager;
+@property (nonatomic) BUCTextContainer *textContainer;
+@property (nonatomic) UIImage *contents;
 
 @end
 
@@ -44,14 +44,9 @@
 
 
 typedef NS_OPTIONS(uint32_t, BUCLinkType) {
-    BUCHomeLink = 1 << 0,
-    BUCForumListLink = 1 << 1,
-    BUCForumLink = 1 << 2,
-    BUCPostLink = 1 << 3,
-    BUCUserLink = 1 << 4,
-    
-    BUCMailLink = 1 << 5,
-    BUCUrlLink = 1 << 6
+    BUCPostLink = 1 << 0,
+    BUCMailLink = 1 << 1,
+    BUCUrlLink = 1 << 2
 };
 
 
