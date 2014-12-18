@@ -19,15 +19,10 @@ static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
 @property (nonatomic) NSString *session;
 @property (nonatomic, readwrite) BOOL loggedIn;
 
-@property (nonatomic) NSError *loginError;
-@property (nonatomic) NSError *postError;
-@property (nonatomic) NSError *permissionError;
-@property (nonatomic) NSError *unknownError;
-
 @end
 
 @implementation BUCDataManager
-#pragma mark - global access
+#pragma mark - setup
 + (BUCDataManager *)sharedInstance {
     static BUCDataManager *sharedInstance;
     static dispatch_once_t onceSecurePredicate;
@@ -51,10 +46,6 @@ static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
         _htmlScraper = [[BUCHTMLScraper alloc] init];
         _htmlScraper.dataManager = self;
         _defaultCache = [[NSCache alloc] init];
-        _loginError = [NSError errorWithDomain:@"BUClient.ErrorDomain" code:1 userInfo:@{NSLocalizedDescriptionKey:@"帐号与密码不符，请检查帐号状态"}];
-        _postError = [NSError errorWithDomain:@"BUClient.ErrorDomain" code:1 userInfo:@{NSLocalizedDescriptionKey:@"发帖失败，请检查内容是否只含有emoj字符"}];
-        _unknownError = [NSError errorWithDomain:@"BUClient.ErrorDomain" code:1 userInfo:@{NSLocalizedDescriptionKey:@"未知错误"}];
-        _permissionError = [NSError errorWithDomain:@"BUClient.ErrorDomain" code:1 userInfo:@{NSLocalizedDescriptionKey:@"该帖设置了访问权限，无法访问"}];
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(userChanged) name:BUCLoginStateNotification object:nil];
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(hostChanged) name:BUCHostChangedNotification object:nil];
     }
@@ -74,7 +65,7 @@ static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
     _host = [[NSUserDefaults standardUserDefaults] stringForKey:@"host"];
 }
 
-#pragma mark - public methods
+#pragma mark - public
 
 - (NSString *)host {
     if (_host) {
@@ -107,7 +98,7 @@ static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
 }
 
 
--(void)loginWithUsername:(NSString *)username password:(NSString *)password onSuccess:(BUCVoidBlock)voidBlock onFail:(BUCErrorBlock)errorBlock {
+-(void)loginWithUsername:(NSString *)username password:(NSString *)password onSuccess:(BUCVoidBlock)voidBlock onFail:(BUCStringBlock)errorBlock {
     self.username = username;
     self.password = password;
     BUCDataManager * __weak weakSelf = self;
@@ -135,13 +126,11 @@ static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
          weakSelf.loggedIn = YES;
          voidBlock();
      }
-     onError:^(NSError *error) {
-         errorBlock(error);
-     }];
+     onError:errorBlock];
 }
 
 
-- (void)childCountOfForum:(NSString *)fid thread:(NSString *)tid onSuccess:(BUCNumberBlock)numberBlock onError:(BUCErrorBlock)errorBlock {
+- (void)childCountOfForum:(NSString *)fid thread:(NSString *)tid onSuccess:(BUCNumberBlock)numberBlock onError:(BUCStringBlock)errorBlock {
     NSMutableDictionary *json = [[NSMutableDictionary alloc] init];
     
     if (fid) {
@@ -174,7 +163,7 @@ static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
 }
 
 
-- (void)listOfForum:(NSString *)fid from:(NSString *)from to:(NSString *)to onSuccess:(BUCListBlock)listBlock onError:(BUCErrorBlock)errorBlock {
+- (void)listOfForum:(NSString *)fid from:(NSString *)from to:(NSString *)to onSuccess:(BUCListBlock)listBlock onError:(BUCStringBlock)errorBlock {
     
     NSMutableDictionary *json = [[NSMutableDictionary alloc] init];
     if (fid) {
@@ -189,7 +178,7 @@ static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
 }
 
 
-- (void)listOfPost:(NSString *)postID from:(NSString *)from to:(NSString *)to onSuccess:(BUCListBlock)listBlock onError:(BUCErrorBlock)errorBlock {
+- (void)listOfPost:(NSString *)postID from:(NSString *)from to:(NSString *)to onSuccess:(BUCListBlock)listBlock onError:(BUCStringBlock)errorBlock {
     
     NSMutableDictionary *json = [[NSMutableDictionary alloc] init];
     [json setObject:@"post" forKey:@"action"];
@@ -201,7 +190,7 @@ static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
 }
 
 
-- (void)newPostToForum:(NSString *)fid thread:(NSString *)tid subject:(NSString *)subject content:(NSString *)content attachment:(UIImage *)attachment onSuccess:(BUCStringBlock)stringBlock onError:(BUCErrorBlock)errorBlock {
+- (void)newPostToForum:(NSString *)fid thread:(NSString *)tid subject:(NSString *)subject content:(NSString *)content attachment:(UIImage *)attachment onSuccess:(BUCStringBlock)stringBlock onError:(BUCStringBlock)errorBlock {
     
     NSMutableDictionary *json = [[NSMutableDictionary alloc] init];
     if (subject && subject.length > 0) {
@@ -281,7 +270,7 @@ static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
 
 
 #pragma mark - private methods
-- (void)updateSessionOnSuccess:(BUCVoidBlock)voidBlock onError:(BUCErrorBlock)errorBlock {
+- (void)updateSessionOnSuccess:(BUCVoidBlock)voidBlock onError:(BUCStringBlock)errorBlock {
     NSMutableDictionary *json = [[NSMutableDictionary alloc] init];
     
     [json setObject:@"login" forKey:@"action"];
@@ -304,7 +293,7 @@ static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
 }
 
 
-- (void)loadJsonFromUrl:(NSString *)url json:(NSMutableDictionary *)json attachment:(UIImage *)attachment isForm:(BOOL)isForm onSuccess:(BUCMapBlock)mapBlock onError:(BUCErrorBlock)errorBlock count:(NSInteger)count {
+- (void)loadJsonFromUrl:(NSString *)url json:(NSMutableDictionary *)json attachment:(UIImage *)attachment isForm:(BOOL)isForm onSuccess:(BUCMapBlock)mapBlock onError:(BUCStringBlock)errorBlock count:(NSInteger)count {
     BUCDataManager * __weak weakSelf = self;
     
     if (![url isEqualToString:@"logging"]) {
@@ -322,7 +311,7 @@ static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
             [json setObject:weakSelf.session forKey:@"session"];
         }
     }
-    
+
     [self.networkEngine
      fetchJsonFromUrl:url
      json:json
@@ -330,23 +319,27 @@ static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
      isForm:isForm
      
      onResult:^(NSDictionary *map) {
-         if ([[map objectForKey:@"result"] isEqualToString:@"fail"]) {
+         if ([[map objectForKey:@"result"] isEqualToString:@"success"]) {
+             mapBlock(map);
+         } else if ([[map objectForKey:@"result"] isEqualToString:@"fail"]) {
              NSString *msg = [map objectForKey:@"msg"];
-             NSLog(@"%@", msg);
-             if ([msg isEqualToString:@"thread_nopermission"]) {
-                 errorBlock(weakSelf.permissionError);
-             } else if ([url isEqualToString:@"logging"]) {
-                 errorBlock(weakSelf.loginError);
-             } else if ([msg isEqualToString:@"post_sm_isnull"]) {
-                 errorBlock(weakSelf.postError);
-             } else if (count > 1) {
-                 errorBlock(weakSelf.unknownError);
-             } else {
+             NSLog(@"ERROR:%@ COUNT:%ld", msg, (long)count);
+             if ([msg isEqualToString:@"IP+logged"] && count <= 1) {
                  weakSelf.session = nil;
                  [weakSelf loadJsonFromUrl:url json:json attachment:attachment isForm:isForm onSuccess:mapBlock onError:errorBlock count:count + 1];
+             } else if ([msg isEqualToString:@"thread_nopermission"]) {
+                 errorBlock(@"该帖设置了访问权限，无法访问");
+             } else if ([url isEqualToString:@"logging"]) {
+                 errorBlock(@"帐号与密码不符，请检查帐号状态");
+             } else if ([msg isEqualToString:@"post_sm_isnull"]) {
+                 errorBlock(@"发帖失败，请检查内容是否只含有emoj字符");
+             } else if ([msg isEqualToString:@"forum+need+password"]) {
+                 errorBlock(@"该论坛需要密码才能进入");
+             } else {
+                 errorBlock(@"未知错误");
              }
          } else {
-             mapBlock(map);
+             errorBlock(@"未知错误");
          }
      }
      
@@ -358,7 +351,7 @@ static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
                    json:(NSMutableDictionary *)json
                 listKey:(NSString *)listKey
               onSuccess:(BUCListBlock)listBlock
-                onError:(BUCErrorBlock)errorBlock {
+                onError:(BUCStringBlock)errorBlock {
     
     BUCDataManager * __weak weakSelf = self;
     
@@ -370,7 +363,7 @@ static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
 }
 
 
-- (void)successListHandler:(NSDictionary *)map listKey:(NSString *)listKey onSuccess:(BUCListBlock)listBlock onError:(BUCErrorBlock)errorBlock {
+- (void)successListHandler:(NSDictionary *)map listKey:(NSString *)listKey onSuccess:(BUCListBlock)listBlock onError:(BUCStringBlock)errorBlock {
     static NSString * const BUCLastPosterTemplate = @"最后回复: %@ by %@";
     
     NSMutableArray *list = [[NSMutableArray alloc] init];
@@ -380,7 +373,7 @@ static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
     for (NSDictionary *rawPost in rawList) {
         BUCPost *post = [[BUCPost alloc] init];
         post.uid = [rawPost objectForKey:@"authorid"];
-        post.avatar = [self.htmlScraper avatarUrlFromHtml:[self urldecode:[rawPost objectForKey:@"avatar"]]];
+        post.avatarUrl = [self.htmlScraper avatarUrlFromHtml:[self urldecode:[rawPost objectForKey:@"avatar"]]];
         post.pid = [rawPost objectForKey:@"pid"];
         post.tid = [rawPost objectForKey:@"tid"];
         post.fid = [rawPost objectForKey:@"fid"];
@@ -485,7 +478,7 @@ static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
     
     NSRegularExpression *regex = [NSRegularExpression regularExpressionWithPattern:@"^[0-9]+$" options:NSRegularExpressionCaseInsensitive error:NULL];
     if ([regex numberOfMatchesInString:dateline options:0 range:NSMakeRange(0, dateline.length)] == 0) {
-        date = [dateFormatter dateFromString:dateline];
+        date = [parsingFormatter dateFromString:dateline];
     } else {
         date = [NSDate dateWithTimeIntervalSince1970:dateline.doubleValue];
     }

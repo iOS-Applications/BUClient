@@ -1,24 +1,10 @@
-//
-//  BUCModels.m
-//  BUClient
-//
-//  Created by Joe Jeong on 11/14/14.
-//  Copyright (c) 2014 Jox. All rights reserved.
-//
-
 #import "BUCModels.h"
-
-
-@implementation BUCImageAttachment
-
-
-@end
+#import "BUCConstants.h"
 
 
 @implementation BUCPost
-- (instancetype)init {
+- (instancetype)initWithTextStack {
     self = [super init];
-    
     if (self) {
         _textStorage = [[NSTextStorage alloc] init];
         _layoutManager = [[BUCLayoutManager alloc] init];
@@ -26,25 +12,26 @@
         _textContainer = [[BUCTextContainer alloc] init];
         _textContainer.lineFragmentPadding = 0;
         [_layoutManager addTextContainer:_textContainer];
+        _layoutManager.delegate = self;
     }
     
     return self;
 }
 
-@end
 
-
-@implementation BUCLinkAttribute
-
-
-@end
-
-
-@implementation BUCTextBlockAttribute
-
-
+- (BOOL)layoutManager:(NSLayoutManager *)layoutManager shouldBreakLineByWordBeforeCharacterAtIndex:(NSUInteger)charIndex {
+    BUCLinkAttribute *linkAttribute = [self.textStorage attribute:BUCLinkAttributeName atIndex:charIndex effectiveRange:NULL];
+    if (linkAttribute && (linkAttribute.range.location < charIndex && charIndex < linkAttribute.range.length + linkAttribute.range.location)) {
+        return NO;
+    }
+    return YES;
+}
 
 @end
+
+@implementation BUCImageAttachment @end
+@implementation BUCLinkAttribute @end
+@implementation BUCTextBlockAttribute @end
 
 
 

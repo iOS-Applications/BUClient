@@ -44,12 +44,12 @@
               attachment:(UIImage *)attachment
                   isForm:(BOOL)isForm
                 onResult:(BUCMapBlock)mapBlock
-                 onError:(BUCErrorBlock)errorBlock {
+                 onError:(BUCStringBlock)errorBlock {
     
     NSError *error;
     NSURLRequest *request = [self requestWithUrl:url json:json attachment:attachment isForm:isForm error:&error];
     if (!request) {
-        errorBlock(error);
+        errorBlock(@"未知错误");
         return;
     }
     
@@ -63,12 +63,10 @@
 }
 
 
-- (void)fetchDataFromUrl:(NSURLRequest *)request onResult:(BUCDataBlock)dataBlock onError:(BUCErrorBlock)errorBlock {
+- (void)fetchDataFromUrl:(NSURLRequest *)request onResult:(BUCDataBlock)dataBlock onError:(BUCStringBlock)errorBlock {
     void(^urlSessionBlock)(NSData *, NSURLResponse *, NSError *);
     urlSessionBlock = ^(NSData *data, NSURLResponse *response, NSError *error) {
-        if (error || !data) {
-            return;
-        } else {
+        if (data) {
             dataBlock(data);
         }
     };
@@ -77,8 +75,7 @@
 }
 
 
-- (void)callbackWithData:(NSData *)data response:(NSURLResponse *)response error:(NSError *)error mapBlock:(BUCMapBlock)mapBlock errorBlock:(BUCErrorBlock)errorBlock {
-    
+- (void)callbackWithData:(NSData *)data response:(NSURLResponse *)response error:(NSError *)error mapBlock:(BUCMapBlock)mapBlock errorBlock:(BUCStringBlock)errorBlock {
     NSDictionary *result;
     if (error || ((NSHTTPURLResponse *)response).statusCode != 200) {
         goto fail;
@@ -173,34 +170,30 @@ fail:
 }
 
 
-- (NSError *)checkErr:(NSError *)error response:(NSURLResponse *)response {
-    NSDictionary *errorInfo;
-    
+- (NSString *)checkErr:(NSError *)error response:(NSURLResponse *)response {
+    NSString *errorMsg;
     if ([response isKindOfClass:[NSHTTPURLResponse class]]) {
         NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse *)response;
         if (httpResponse.statusCode == 500) {
-            errorInfo = @{NSLocalizedDescriptionKey:@"服务器错误，请稍候再试"};
+            errorMsg = @"服务器错误，请稍候再试";
         } else if (httpResponse.statusCode == 404) {
-            errorInfo = @{NSLocalizedDescriptionKey:@"服务器404错误，请稍候再试"};
+            errorMsg = @"服务器404错误，请稍候再试";
         } else {
-            errorInfo = @{NSLocalizedDescriptionKey:@"未知错误"};
+            errorMsg = @"未知错误";
         }
-        
-        return [NSError errorWithDomain:@"buc.http.errorDomain" code:0 userInfo:errorInfo];
-        
     } else if (error.code == NSURLErrorTimedOut) {
-        errorInfo = @{NSLocalizedDescriptionKey:@"服务器连接超时"};
+        errorMsg = @"服务器连接超时";
     } else if (error.code == NSURLErrorCannotConnectToHost) {
-        errorInfo = @{NSLocalizedDescriptionKey:@"无法连接至服务器"};
+        errorMsg = @"无法连接至服务器";
     } else if (error.code == NSURLErrorNotConnectedToInternet) {
-        errorInfo = @{NSLocalizedDescriptionKey:@"无网络连接，请检查网络连接"};
+        errorMsg = @"无网络连接，请检查网络连接";
     } else if (error.code == NSURLErrorCannotFindHost) {
-        errorInfo = @{NSLocalizedDescriptionKey:@"域名解析失败，请检查网络"};
+        errorMsg = @"域名解析失败，请检查网络";
     } else {
-        errorInfo = @{NSLocalizedDescriptionKey:@"未知错误"};
+        errorMsg = @"未知错误";
     }
     
-    return [NSError errorWithDomain:error.domain code:error.code userInfo:errorInfo];
+    return errorMsg;
 }
 
 

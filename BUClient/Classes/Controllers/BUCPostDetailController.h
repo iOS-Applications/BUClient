@@ -7,7 +7,7 @@
 @interface BUCPostDetailController : UIViewController
 
 
-@property (nonatomic) BUCPost *post;
+@property (nonatomic) BUCPost *rootPost;
 
 
 @end

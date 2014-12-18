@@ -98,9 +98,9 @@
          }
      }
      
-     onFail:^(NSError *error) {
+     onFail:^(NSString *errorMsg) {
          [weakSelf hideLoading];
-         [weakSelf.appDelegate alertWithMessage:error.localizedDescription];
+         [weakSelf.appDelegate alertWithMessage:errorMsg];
      }];
 }
 

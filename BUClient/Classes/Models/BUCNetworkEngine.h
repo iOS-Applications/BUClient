@@ -10,11 +10,11 @@
               attachment:(UIImage *)attachment
                   isForm:(BOOL)isForm
                 onResult:(BUCMapBlock)mapBlock
-                 onError:(BUCErrorBlock)errorBlock;
+                 onError:(BUCStringBlock)errorBlock;
 
 - (void)fetchDataFromUrl:(NSURLRequest *)request
                 onResult:(BUCDataBlock)dataBlock
-                 onError:(BUCErrorBlock)errorBlock;
+                 onError:(BUCStringBlock)errorBlock;
 
 
 @end

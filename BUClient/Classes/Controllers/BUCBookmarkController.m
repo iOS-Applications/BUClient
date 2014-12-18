@@ -82,7 +82,7 @@
     post.bookmarked = YES;
     post.bookmarkIndex = indexPath.row;
     BUCPostDetailController *detailController = (BUCPostDetailController *)segue.destinationViewController;
-    detailController.post = post;
+    detailController.rootPost = post;
 }
 
 

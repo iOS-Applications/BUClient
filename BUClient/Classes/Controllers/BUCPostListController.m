@@ -3,29 +3,27 @@
 #import "BUCConstants.h"
 #import "BUCDataManager.h"
 #import "BUCModels.h"
-#import "UIImage+BUCImageCategory.h"
 #import "BUCAppDelegate.h"
 #import "BUCNewPostController.h"
 #import "BUCTextStack.h"
 #import "BUCPostListCell.h"
 
-static NSUInteger const BUCPostListUnitLength = 20;
+static NSUInteger const BUCAPIMaxLoadRowCount = 20;
+static NSUInteger const BUCPostListMaxRowCount = 40;
 
 @interface BUCPostListController ()
 
 @property (nonatomic) BUCAppDelegate *appDelegate;
 
-@property (nonatomic) NSMutableArray *postListA;
-@property (nonatomic) NSMutableSet *postIndexSetA;
-@property (nonatomic) NSMutableArray *postListB;
-@property (nonatomic) NSMutableSet *postIndexSetB;
-
-@property (nonatomic) BOOL loading;
+@property (nonatomic) NSMutableArray *postList;
+@property (nonatomic) NSMutableSet *tidSet;
+@property (nonatomic) NSUInteger rowCount;
+@property (nonatomic) NSUInteger postCount;
 @property (nonatomic) NSUInteger from;
 @property (nonatomic) NSUInteger to;
-@property (nonatomic) NSUInteger rows;
-@property (nonatomic) NSUInteger countA;
-@property (nonatomic) NSUInteger countB;
+
+@property (nonatomic) BOOL flush;
+@property (nonatomic) BOOL loading;
 
 @property (nonatomic) CGFloat screenWidth;
 @property (nonatomic) CGFloat contentWidth;
@@ -46,13 +44,47 @@ static NSUInteger const BUCPostListUnitLength = 20;
 
 @implementation BUCPostListController
 #pragma mark - setup
-- (void)viewDidLoad {
-    [super viewDidLoad];
+- (void)dealloc {
+    [self.appDelegate hideLoading];
+}
+
+
+- (void)viewWillDisappear:(BOOL)animated {
+    [super viewWillDisappear:animated];
     
-    self.navigationItem.backBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"" style:UIBarButtonItemStylePlain target:nil action:nil];
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:UIContentSizeCategoryDidChangeNotification object:nil];
+}
+
+
+- (void)viewWillAppear:(BOOL)animated {
+    [super viewWillAppear:animated];
     
-    self.topRotateArrow.transform = CGAffineTransformMakeRotation(M_PI);
-    
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(textStyleChanged:) name:UIContentSizeCategoryDidChangeNotification object:nil];
+}
+
+
+- (void)textStyleChanged:(NSNotification *)notification {
+    [self.appDelegate displayLoading];
+    self.metaLineHeight = [UIFont preferredFontForTextStyle:UIFontTextStyleCaption1].lineHeight;
+    [self refreshFrom:self.from];
+}
+
+
+- (void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation {
+#warning this need to be queued!
+    UIDeviceOrientation orientation = [UIDevice currentDevice].orientation;
+    if (UIDeviceOrientationIsLandscape(orientation) && self.screenWidth != self.nativeHeight) {
+        self.screenWidth = self.nativeHeight;
+    } else if (UIDeviceOrientationIsPortrait(orientation) && self.screenWidth != self.nativeWidth) {
+        self.screenWidth = self.nativeWidth;
+    }
+
+    self.contentWidth = self.screenWidth - 2 * BUCDefaultPadding;
+    [self.tableView reloadData];
+}
+
+
+- (void)setupGeometry {
     self.nativeWidth = CGRectGetWidth([UIScreen mainScreen].bounds);
     self.nativeHeight = CGRectGetHeight([UIScreen mainScreen].bounds);
     if (self.nativeWidth > self.nativeHeight) {
@@ -70,174 +102,62 @@ static NSUInteger const BUCPostListUnitLength = 20;
     }
     self.contentWidth = self.screenWidth - 2 * BUCDefaultPadding;
     self.metaLineHeight = [UIFont preferredFontForTextStyle:UIFontTextStyleCaption1].lineHeight;
-    
     self.tableView.sectionFooterHeight = 0.0f;
+}
+
+
+- (void)setupList {
+    self.postList = [[NSMutableArray alloc] init];
+    self.tidSet = [[NSMutableSet alloc] init];
+    NSUInteger count;
+    if (self.fid) {
+        count = BUCPostListMaxRowCount;
+    } else {
+        count = BUCAPIMaxLoadRowCount;
+    }
+    for (int i = 0; i < count; i = i + 1) {
+        [self.postList addObject:[[BUCPost alloc] initWithTextStack]];
+    }
     
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(textStyleChanged:) name:UIContentSizeCategoryDidChangeNotification object:nil];
+    self.from = 0;
+    self.to = BUCAPIMaxLoadRowCount;
+}
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    
+    self.navigationItem.backBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"" style:UIBarButtonItemStylePlain target:nil action:nil];
+    self.topRotateArrow.transform = CGAffineTransformMakeRotation(M_PI);
     
     self.appDelegate = [UIApplication sharedApplication].delegate;
     
-    self.postListA = [[NSMutableArray alloc] init];
-    if (self.fid) {
-        self.postIndexSetA = [[NSMutableSet alloc] init];
-        self.postListB = [[NSMutableArray alloc] init];
-        self.postIndexSetB = [[NSMutableSet alloc] init];
-    }
-    for (int i = 0; i < BUCPostListUnitLength; i = i + 1) {
-        [self.postListA addObject:[[BUCPost alloc] init]];
-        if (self.fid) {
-            [self.postListB addObject:[[BUCPost alloc] init]];
-        }
-    }
+    [self setupGeometry];
+    [self setupList];
 
     [self.appDelegate displayLoading];
-    self.from = 0;
-    self.to = BUCPostListUnitLength;
-    [self loadListFrom:self.from to:self.to];
-}
-
-
-- (void)dealloc {
-    [[NSNotificationCenter defaultCenter] removeObserver:self];
-    [self.appDelegate hideLoading];
-}
-
-
-- (void)textStyleChanged:(NSNotification *)notification {
-    [self.appDelegate displayLoading];
-    self.metaLineHeight = [UIFont preferredFontForTextStyle:UIFontTextStyleCaption1].lineHeight;
-    self.countA = 0;
-    self.countB = 0;
-    [self loadListFrom:self.from to:self.from + BUCPostListUnitLength];
-}
-
-
-- (void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation {
-    UIDeviceOrientation orientation = [UIDevice currentDevice].orientation;
-    BOOL layoutInvalid = NO;
-    if (UIDeviceOrientationIsLandscape(orientation) && self.screenWidth != self.nativeHeight) {
-        self.screenWidth = self.nativeHeight;
-        layoutInvalid = YES;
-    } else if (UIDeviceOrientationIsPortrait(orientation) && self.screenWidth != self.nativeWidth) {
-        self.screenWidth = self.nativeWidth;
-        layoutInvalid = YES;
-    }
-    
-    if (layoutInvalid) {
-        self.contentWidth = self.screenWidth - 2 * BUCDefaultPadding;
-        [self.tableView reloadData];
-    }
+    [self refreshFrom:0];
 }
 
 
 #pragma mark - list manipulation
-- (void)swapList {
-    NSMutableArray *list = self.postListA;
-    self.postListA = self.postListB;
-    self.postListB = list;
-    NSMutableSet *set = self.postIndexSetA;
-    self.postIndexSetA = self.postIndexSetB;
-    self.postIndexSetB = set;
-    NSUInteger count = self.countA;
-    self.countA = self.countB;
-    self.countB = count;
-}
-
-
-- (void)updateWithList:(NSArray *)list from:(NSUInteger)from to:(NSUInteger)to {
-    NSUInteger index;
-    UITableViewScrollPosition position;
-    if (self.countA == 0 || (self.from < from && self.countB > 0)) {
-        self.rows = self.countB;
-        NSUInteger count = [self buildList:self.postListA withList:list indexSet:self.postIndexSetB emptyIndexSet:self.postIndexSetA];
-        if (self.countA == 0) {
-            self.countA = count;
-            self.from = from;
-            if (self.countB == 0) {
-                self.to = to;
-            }
-            index = 0;
-            position = UITableViewScrollPositionTop;
-        } else {
-            self.from = self.from + BUCPostListUnitLength;
-            self.to = to;
-            [self swapList];
-            index = count - 1;
-            position = UITableViewScrollPositionBottom;
-        }
-    } else {
-        self.rows = self.countA;
-        NSUInteger count = [self buildList:self.postListB withList:list indexSet:self.postIndexSetA emptyIndexSet:self.postIndexSetB];
-        if (self.countB == 0) {
-            self.to = to;
-            self.countB = count;
-            index = self.countA - 1;
-            position = UITableViewScrollPositionBottom;
-        } else {
-            self.from = from;
-            self.to = to + BUCPostListUnitLength;
-            [self swapList];
-            index = count;
-            position = UITableViewScrollPositionTop;
-        }
+- (NSIndexSet *)updateWithList:(NSArray *)list {
+    if (self.flush) {
+        self.rowCount = 0;
+        [self.tidSet removeAllObjects];
     }
+    NSUInteger index = self.rowCount;
     
-    if (self.tableView.numberOfSections < self.rows) {
-        [self.tableView insertSections:[NSIndexSet indexSetWithIndexesInRange:NSMakeRange(self.tableView.numberOfSections, self.rows - self.tableView.numberOfSections)] withRowAnimation:UITableViewRowAnimationNone];
-    } else if (self.tableView.numberOfSections > self.rows) {
-        [self.tableView deleteSections:[NSIndexSet indexSetWithIndexesInRange:NSMakeRange(0, self.tableView.numberOfSections - self.rows)] withRowAnimation:UITableViewRowAnimationNone];
-    }
-    
-    if (index == 0) {
-        [self.tableView setContentOffset:CGPointZero];
-    } else { 
-        [self.tableView scrollToRowAtIndexPath:[NSIndexPath indexPathForRow:0 inSection:index] atScrollPosition:position animated:NO];
-    }
-}
-
-
-- (void)loadListFrom:(NSUInteger)from to:(NSUInteger)to {
-    BUCPostListController * __weak weakSelf = self;
-    self.loading = YES;
-    
-    [[BUCDataManager sharedInstance]
-     listOfForum:self.fid
-     
-     from:[NSString stringWithFormat:@"%lu", (unsigned long)from]
-     
-     to:[NSString stringWithFormat:@"%lu", (unsigned long)to]
-     
-     onSuccess:^(NSArray *list) {
-         if (weakSelf.fid) {
-             [weakSelf updateWithList:list from:from to:to];
-             weakSelf.tableView.tableFooterView.hidden = NO;
-         } else {
-             weakSelf.rows = 0;
-             [weakSelf buildList:weakSelf.postListA withList:list indexSet:nil emptyIndexSet:nil];
-             [weakSelf.tableView reloadData];
-         }
-         [weakSelf updateTitle];
-         [weakSelf endLoading];
-     }
-     
-     onError:^(NSError *error) {
-         [weakSelf endLoading];
-         [weakSelf.appDelegate alertWithMessage:error.localizedDescription];
-     }];
-}
-
-
-- (NSUInteger)buildList:(NSMutableArray *)list withList:(NSArray *)newList indexSet:(NSSet *)indexSet emptyIndexSet:(NSMutableSet *)emptySet {
-    [emptySet removeAllObjects];
-    NSUInteger index = 0;
-    for (BUCPost *post in newList) {
-        if ([indexSet containsObject:post.tid]) {
+    for (BUCPost *post in list) {
+        if ([self.tidSet containsObject:post.tid]) {
             continue;
+        } else {
+            [self.tidSet addObject:post.tid];
         }
-        [emptySet addObject:post.tid];
         
-        BUCPost *reusablePost = [list objectAtIndex:index];
+        BUCPost *reusablePost = [self.postList objectAtIndex:index];
         reusablePost.uid = post.uid;
+        reusablePost.tid = post.tid;
+        reusablePost.forumName = post.forumName;
         reusablePost.title = post.title;
         [reusablePost.textStorage setAttributedString:post.content];
         reusablePost.meta = post.meta;
@@ -246,9 +166,176 @@ static NSUInteger const BUCPostListUnitLength = 20;
         index = index + 1;
     }
     
-    self.rows = self.rows + index;
+    NSIndexSet *insertSections;
+    if (!self.flush) {
+        insertSections = [NSIndexSet indexSetWithIndexesInRange:NSMakeRange(self.rowCount, index - self.rowCount)];
+    }
+    self.rowCount = index;
     
-    return index;
+    return insertSections;
+}
+
+
+- (void)loadListFrom:(NSUInteger)from {
+    BUCPostListController * __weak weakSelf = self;
+    NSUInteger to = from + BUCAPIMaxLoadRowCount;
+    
+    [[BUCDataManager sharedInstance]
+     listOfForum:self.fid
+     
+     from:to > 0 ? [NSString stringWithFormat:@"%lu", (unsigned long)from] : nil
+     
+     to:to > 0 ? [NSString stringWithFormat:@"%lu", (unsigned long)(to)] : nil
+     
+     onSuccess:^(NSArray *list) {
+         NSIndexSet *insertSections = [weakSelf updateWithList:list];
+         if (weakSelf.flush) {
+             weakSelf.from = from;
+             [weakSelf.tableView setContentOffset:CGPointZero];
+             [weakSelf.tableView reloadData];
+         } else {
+             [weakSelf.tableView insertSections:insertSections withRowAnimation:UITableViewRowAnimationNone];
+         }
+         weakSelf.to = to;
+         
+         if (weakSelf.fid) {
+             weakSelf.tableView.tableFooterView.hidden = NO;
+         }
+         [weakSelf updateTitle];
+         [weakSelf endLoading];
+     }
+     
+     onError:^(NSString *errorMsg) {
+         [weakSelf endLoading];
+         [weakSelf.appDelegate alertWithMessage:errorMsg];
+     }];
+}
+
+
+- (void)refreshFrom:(NSUInteger)from {
+    self.flush = YES;
+    self.loading = YES;
+    BUCPostListController * __weak weakSelf = self;
+    if (self.fid) {
+        [[BUCDataManager sharedInstance]
+         childCountOfForum:self.fid
+         thread:nil
+         
+         onSuccess:^(NSUInteger count) {
+             weakSelf.postCount = count + 1;
+             [weakSelf loadListFrom:from];
+         } onError:^(NSString *errorMsg) {
+             [weakSelf endLoading];
+             [weakSelf.appDelegate alertWithMessage:errorMsg];
+         }];
+    } else {
+        [self loadListFrom:from];
+    }
+}
+
+
+- (void)displayTopLoading {
+    self.topRotateArrow.hidden = YES;
+    self.tableView.bounces = NO;
+    [self.topLoadingIndicator startAnimating];
+    self.tableView.contentInset = UIEdgeInsetsMake(50, 0, 0, 0);
+    self.topLoadingLabel.text = @"加载中，请等待...";
+}
+
+
+- (void)displayBottomLoading {
+    self.bottomRotateArrow.hidden = YES;
+    self.tableView.bounces = NO;
+    [self.bottomLoadingIndicator startAnimating];
+    self.tableView.contentInset = UIEdgeInsetsMake(0, 0, 50, 0);
+    self.bottomLoadingLabel.text = @"加载中，请等待...";
+}
+
+
+- (void)loadBackward {
+    NSUInteger from;
+    if (self.from == 0) {
+        from = self.from;
+    } else {
+        from = self.from - BUCPostListMaxRowCount;
+    }
+    [self refreshFrom:from];
+}
+
+
+- (void)loadMore {
+    self.flush = NO;
+    self.loading = YES;
+    [self displayBottomLoading];
+    self.bottomLoadingLabel.text = @"加载中，请等待...";
+    [self loadListFrom:self.to];
+}
+
+
+- (void)loadForward {
+    NSUInteger from;
+    if (self.to >= self.postCount) {
+        from = self.from;
+    } else {
+        from = self.to;
+    }
+    [self refreshFrom:from];
+}
+
+
+- (void)scrollViewDidScroll:(UIScrollView *)scrollView {
+    if (self.loading) {
+        return;
+    }
+    
+    UIImageView *topArrow = self.topRotateArrow;
+    if (scrollView.contentOffset.y <= -50.0f) {
+        [UIView animateWithDuration:0.2 animations:^{
+            topArrow.transform = CGAffineTransformIdentity;
+        }];
+        if (self.from == 0) {
+            self.topLoadingLabel.text = @"松开后刷新";
+        } else {
+            self.topLoadingLabel.text = @"松开后向前加载";
+        }
+    } else if (scrollView.contentOffset.y < 0.0f) {
+        [UIView animateWithDuration:0.2 animations:^{
+            topArrow.transform = CGAffineTransformMakeRotation(M_PI);
+        }];
+        self.topLoadingLabel.text = @"向下拉动";
+    }
+    
+    UIImageView *bottomArrow = self.bottomRotateArrow;
+    CGFloat maxOffset = scrollView.contentSize.height - CGRectGetHeight(self.tableView.bounds);
+    if (scrollView.contentOffset.y >= maxOffset + 50.0f) {
+        [UIView animateWithDuration:0.2 animations:^{
+            bottomArrow.transform = CGAffineTransformMakeRotation(M_PI);
+        }];
+
+        if (self.to > self.postCount) {
+            self.bottomLoadingLabel.text = @"松开后刷新";
+        } else {
+            self.bottomLoadingLabel.text = @"松开后向后加载";
+        }
+    } else if (scrollView.contentOffset.y > maxOffset){
+        [UIView animateWithDuration:0.2 animations:^{
+            bottomArrow.transform = CGAffineTransformIdentity;
+        }];
+        self.bottomLoadingLabel.text = @"向上拉动";
+    }
+}
+
+
+- (void)scrollViewDidEndDragging:(UIScrollView *)scrollView willDecelerate:(BOOL)decelerate {
+    if (self.loading) {
+        return;
+    } else if (scrollView.contentOffset.y <= - 50.0f) {
+        [self displayTopLoading];
+        [self loadBackward];
+    } else if (self.fid && scrollView.contentOffset.y >= scrollView.contentSize.height - CGRectGetHeight(self.tableView.bounds) + 50.0f) {
+        [self displayBottomLoading];
+        [self loadForward];
+    }
 }
 
 
@@ -262,98 +349,13 @@ static NSUInteger const BUCPostListUnitLength = 20;
     [self.bottomLoadingIndicator stopAnimating];
     self.topLoadingLabel.text = @"向下拉动";
     self.bottomLoadingLabel.text = @"向上拉动";
-}
-
-
-- (void)loadBackward {
-    if (self.loading) {
-        return;
-    }
-    if (self.from == 0) {
-        self.countA = 0;
-        [self loadListFrom:self.from to:BUCPostListUnitLength];
-        return;
-    }
-    
-    NSInteger from = self.from - BUCPostListUnitLength;
-    if (from < 0) {
-        from = 0;
-    }
-    NSUInteger to = self.from;
-    [self loadListFrom:from to:to];
-}
-
-
-- (void)loadForward {
-    if (self.loading) {
-        return;
-    }
-    
-    NSUInteger from = self.to;
-    NSUInteger to = from + BUCPostListUnitLength;
-    [self loadListFrom:from to:to];
-}
-
-
-- (void)scrollViewDidScroll:(UIScrollView *)scrollView {
-    if (self.loading) {
-        return;
-    }
-    UIImageView *topArrow = self.topRotateArrow;
-    if (scrollView.contentOffset.y <= -60.0f) {
-        [UIView animateWithDuration:0.2 animations:^{
-            topArrow.transform = CGAffineTransformIdentity;
-        }];
-        if (self.from == 0) {
-            self.topLoadingLabel.text = @"松开后刷新";
-        } else {
-            self.topLoadingLabel.text = @"松开后向前加载";
-        }
-
-    } else {
-        [UIView animateWithDuration:0.2 animations:^{
-            topArrow.transform = CGAffineTransformMakeRotation(M_PI);
-        }];
-        self.topLoadingLabel.text = @"向下拉动";
-    }
-    
-    CGFloat y = scrollView.contentSize.height - CGRectGetHeight(self.tableView.bounds) + 60.0f;
-
-    UIImageView *bottomArrow = self.bottomRotateArrow;
-    if (scrollView.contentOffset.y >= y) {
-        [UIView animateWithDuration:0.2 animations:^{
-            bottomArrow.transform = CGAffineTransformMakeRotation(M_PI);
-        }];
-
-        self.bottomLoadingLabel.text = @"松开后向后加载";
-    } else {
-        [UIView animateWithDuration:0.2 animations:^{
-            bottomArrow.transform = CGAffineTransformIdentity;
-        }];
-        self.bottomLoadingLabel.text = @"向上拉动";
-    }
-}
-
-- (void)scrollViewDidEndDragging:(UIScrollView *)scrollView willDecelerate:(BOOL)decelerate {
-    if (scrollView.contentOffset.y <= - 60.0f) {
-        self.topRotateArrow.hidden = YES;
-        [self.topLoadingIndicator startAnimating];
-        scrollView.contentInset = UIEdgeInsetsMake(60, 0, 0, 0);
-        self.topLoadingLabel.text = @"加载中，请等待...";
-        [self loadBackward];
-    } else if (self.fid && scrollView.contentOffset.y >= scrollView.contentSize.height - CGRectGetHeight(self.tableView.bounds) + 60.0f) {
-        self.bottomRotateArrow.hidden = YES;
-        [self.bottomLoadingIndicator startAnimating];
-        scrollView.contentInset = UIEdgeInsetsMake(0, 0, 60, 0);
-        self.bottomLoadingLabel.text = @"加载中，请等待...";
-        [self loadForward];
-    }
+    self.tableView.bounces = YES;
 }
 
 
 #pragma mark - table view data source and delegate
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
-    return self.rows;
+    return self.rowCount;
 }
 
 
@@ -366,7 +368,7 @@ static NSUInteger const BUCPostListUnitLength = 20;
 - (void)updateTitle {
     if (self.fid) {
         unsigned long from = self.from + 1;
-        unsigned long to = self.from + self.rows;
+        unsigned long to = self.from + self.rowCount;
 
         self.navigationItem.title = [NSString stringWithFormat:@"%@[%lu-%lu]", self.fname, from, to];
     } else {
@@ -386,17 +388,9 @@ static NSUInteger const BUCPostListUnitLength = 20;
 
 
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {
-    BUCPost *post;
-    if (indexPath.section < BUCPostListUnitLength) {
-        post = [self.postListA objectAtIndex:indexPath.section];
-    } else {
-        post = [self.postListB objectAtIndex:indexPath.section - BUCPostListUnitLength];
-    }
-
+    BUCPost *post = [self.postList objectAtIndex:indexPath.section];
     if (post.contents.size.width != self.screenWidth) {
         post.cellHeight = [self cellHeightWithPost:post];
-    } else {
-        return post.cellHeight;
     }
     
     return post.cellHeight;
@@ -405,16 +399,13 @@ static NSUInteger const BUCPostListUnitLength = 20;
 
 - (UIImage *)renderPost:(BUCPost *)post {
     UIImage *output;
-    CGFloat mainHeight = post.textFrame.size.height;
+    CGFloat separatorPosition = post.textFrame.size.height + BUCDefaultMargin;
     UIGraphicsBeginImageContextWithOptions(CGSizeMake(self.screenWidth, post.cellHeight), NO, 0);
     [post.layoutManager drawGlyphsForGlyphRange:NSMakeRange(0, post.textStorage.length) atPoint:CGPointMake(BUCDefaultPadding, BUCDefaultMargin)];
-    [post.meta drawAtPoint:CGPointMake(BUCDefaultPadding, BUCDefaultMargin + mainHeight + BUCDefaultMargin)];
-    UIBezierPath *path = [UIBezierPath bezierPath];
-    path.lineWidth = 0.25f;
-    [[UIColor darkGrayColor] setStroke];
-    [path moveToPoint:CGPointMake(0, mainHeight + BUCDefaultMargin + 2.0f)];
-    [path addLineToPoint:CGPointMake(self.screenWidth, mainHeight + BUCDefaultMargin + 2.0f)];
-    [path stroke];
+    [post.meta drawAtPoint:CGPointMake(BUCDefaultPadding, separatorPosition + BUCDefaultMargin)];
+    UIBezierPath *path = [UIBezierPath bezierPathWithRect:CGRectMake(0, separatorPosition + 2.0f, self.screenWidth, 0.25f)];
+    [[UIColor darkGrayColor] setFill];
+    [path fill];
     output = UIGraphicsGetImageFromCurrentImageContext();
     UIGraphicsEndImageContext();
     
@@ -424,37 +415,27 @@ static NSUInteger const BUCPostListUnitLength = 20;
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     BUCPostListCell *cell = [self.tableView dequeueReusableCellWithIdentifier:@"cell" forIndexPath:indexPath];
-    BUCPost *post;
-    if (indexPath.section < BUCPostListUnitLength) {
-        post = [self.postListA objectAtIndex:indexPath.section];
-    } else {
-        post = [self.postListB objectAtIndex:indexPath.section - BUCPostListUnitLength];
-    }
-    if (!post.contents || post.content.size.width != self.screenWidth) {
+    BUCPost *post = [self.postList objectAtIndex:indexPath.section];
+    if (post.contents.size.width != self.screenWidth) {
         post.contents = [self renderPost:post];
     }
     cell.contents.image = post.contents;
+    
+    
+    if (indexPath.section == self.rowCount - 1 && !self.loading && self.to < self.postCount && self.rowCount == 20) {
+        [self loadMore];
+    }
     
     return cell;
 }
 
 
 #pragma mark - navigation
-- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
-    [self performSegueWithIdentifier:@"postListToPostDetail" sender:nil];
-}
-
-
 - (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
     if ([segue.identifier isEqualToString:@"postListToPostDetail"]) {
         BUCPostDetailController *postDetail = (BUCPostDetailController *)segue.destinationViewController;
         NSIndexPath *indexPath = self.tableView.indexPathForSelectedRow;
-        if (indexPath.section < BUCPostListUnitLength) {
-            postDetail.post = [self.postListA objectAtIndex:indexPath.section];
-        } else {
-            postDetail.post = [self.postListB objectAtIndex:indexPath.section];
-        }
-        [self.tableView deselectRowAtIndexPath:indexPath animated:NO];
+        postDetail.rootPost = [self.postList objectAtIndex:indexPath.section];
     } else if ([segue.identifier isEqualToString:@"postListToNewPost"]) {
         BUCNewPostController *newPost = (BUCNewPostController *)(((UINavigationController *)segue.destinationViewController).topViewController);
         newPost.fid = self.fid;

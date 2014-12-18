@@ -4,7 +4,7 @@
 #ifndef BUClient_BUCModels_h
 #define BUClient_BUCModels_h
 
-@interface BUCPost : NSObject
+@interface BUCPost : NSObject <NSLayoutManagerDelegate>
 
 @property (nonatomic) NSAttributedString *forumName;
 @property (nonatomic) NSString *fid;
@@ -13,7 +13,8 @@
 @property (nonatomic) NSString *user;
 @property (nonatomic) NSString *uid;
 @property (nonatomic) NSString *date;
-@property (nonatomic) NSURL *avatar;
+@property (nonatomic) NSURL *avatarUrl;
+@property (nonatomic) UIImage *avatar;
 @property (nonatomic) NSString *title;
 
 @property (nonatomic) NSUInteger index;
@@ -30,6 +31,8 @@
 @property (nonatomic) BUCLayoutManager *layoutManager;
 @property (nonatomic) BUCTextContainer *textContainer;
 @property (nonatomic) UIImage *contents;
+
+- (instancetype)initWithTextStack;
 
 @end
 

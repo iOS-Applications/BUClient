@@ -9,6 +9,8 @@
 #import "BUCPostListCell.h"
 
 @implementation BUCPostListCell
-
+- (UIEdgeInsets)layoutMargins {
+    return UIEdgeInsetsZero;
+}
 
 @end
