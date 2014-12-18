@@ -137,6 +137,7 @@ static NSUInteger const BUCPostPageMaxRowCount = 40;
     
     NSMutableArray *barButtons = [self.navigationItem.rightBarButtonItems mutableCopy];
     [barButtons addObject:self.replyButton];
+    self.title = self.rootPost.title;
     self.navigationItem.rightBarButtonItems = barButtons;
     self.topRotateArrow.transform = CGAffineTransformMakeRotation(M_PI);
 
@@ -392,9 +393,9 @@ static NSUInteger const BUCPostPageMaxRowCount = 40;
     self.topLoadingLabel.text = @"向下拉动";
     self.bottomLoadingLabel.text = @"向上拉动";
     self.loading = NO;
-    self.navigationItem.titleView = nil;
     self.tableView.bounces = YES;
-    self.currentPage = self.from / BUCPostPageMaxRowCount + 1;
+    self.currentPage = self.to / BUCPostPageMaxRowCount + 1;
+    self.navigationItem.titleView = nil;
 }
 
 
