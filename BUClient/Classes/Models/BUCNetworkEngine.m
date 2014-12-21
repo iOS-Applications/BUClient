@@ -53,10 +53,9 @@
         return;
     }
     
-    BUCNetworkEngine * __weak weakSelf = self;
     void (^block)(NSData *, NSURLResponse *, NSError *);
     block = ^(NSData *data, NSURLResponse *response, NSError *error) {
-        [weakSelf callbackWithData:data response:response error:error mapBlock:mapBlock errorBlock:errorBlock];
+        [self callbackWithData:data response:response error:error mapBlock:mapBlock errorBlock:errorBlock];
     };
     
     [[self.defaultSession dataTaskWithRequest:request completionHandler:block] resume];

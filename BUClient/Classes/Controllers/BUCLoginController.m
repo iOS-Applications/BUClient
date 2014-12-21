@@ -66,7 +66,6 @@
 
 #pragma mark - IBAction methods
 - (IBAction)login:(id)sender {
-    BUCLoginController * __weak weakSelf = self;
     NSString *username = self.username.text;
     NSString *password = self.password.text;
     [self.currentTextField resignFirstResponder];
@@ -90,17 +89,17 @@
      password:password
      
      onSuccess:^{
-         [weakSelf hideLoading];
-         if (weakSelf.presentingViewController) {
-             [weakSelf.presentingViewController dismissViewControllerAnimated:YES completion:nil];
+         [self hideLoading];
+         if (self.presentingViewController) {
+             [self.presentingViewController dismissViewControllerAnimated:YES completion:nil];
          } else {
-             [weakSelf performSegueWithIdentifier:@"addNewAccount" sender:nil];
+             [self performSegueWithIdentifier:@"addNewAccount" sender:nil];
          }
      }
      
      onFail:^(NSString *errorMsg) {
-         [weakSelf hideLoading];
-         [weakSelf.appDelegate alertWithMessage:errorMsg];
+         [self hideLoading];
+         [self.appDelegate alertWithMessage:errorMsg];
      }];
 }
 

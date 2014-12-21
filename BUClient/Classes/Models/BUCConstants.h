@@ -13,13 +13,11 @@ extern CGFloat const BUCBorderWidth;
 // rich text attirbute keys
 extern NSString * const BUCLinkAttributeName;
 extern NSString * const BUCTextBlockAttributeName;
-extern NSString * const BUCAttachmentListAttributeName;
-extern NSString * const BUCTextBlockListAttributeName;
 
 
 // block types
 typedef void(^BUCMapBlock)(NSDictionary *map);
-typedef void(^BUCListBlock)(NSArray *list);
+typedef void(^BUCListBlock)(NSArray *list, NSUInteger count);
 typedef void(^BUCDataBlock)(NSData *data);
 typedef void(^BUCImageBlock)(UIImage *image);
 typedef void(^BUCNumberBlock)(NSUInteger number);

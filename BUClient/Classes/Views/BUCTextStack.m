@@ -42,33 +42,4 @@
 @end
 
 
-@implementation BUCLayoutManager
-- (void)drawBackgroundForGlyphRange:(NSRange)glyphsToShow atPoint:(CGPoint)origin {    
-    NSArray *blockList = [self.textStorage attribute:BUCTextBlockListAttributeName atIndex:0 effectiveRange:NULL];
-    CGContextRef context = UIGraphicsGetCurrentContext();
-    CGContextSetLineWidth(context, BUCBorderWidth);
-    [[UIColor colorWithWhite:0.98f alpha:1.0f] setFill];
-    CGContextSaveGState(context);
-    BUCTextContainer *textContainer = [self.textContainers lastObject];
-
-    for (BUCTextBlockAttribute *blockAttribute in [blockList reverseObjectEnumerator]) {
-        if (blockAttribute.noBackground) {
-            continue;
-        }
-        
-        CGRect frame = CGRectIntegral([self boundingRectForGlyphRange:blockAttribute.range inTextContainer:textContainer]);
-        frame = CGRectInset(frame, -BUCDefaultMargin, -BUCDefaultMargin);
-        if (blockAttribute.backgroundColor) {
-            [blockAttribute.backgroundColor setFill];
-            CGContextFillRect(context, frame);
-            CGContextRestoreGState(context);
-        } else {
-            CGContextFillRect(context, frame);
-        }
-
-        CGContextStrokeRect(context, frame);
-    }
-}
-
-
-@end
+@implementation BUCLayoutManager @end

@@ -140,14 +140,15 @@ static NSUInteger const BUCPostListMaxRowCount = 40;
 
 
 #pragma mark - list manipulation
-- (NSIndexSet *)updateWithList:(NSArray *)list {
+- (NSIndexSet *)updateWithList:(NSArray *)list count:(NSUInteger)count {
     if (self.flush) {
         self.rowCount = 0;
         [self.tidSet removeAllObjects];
     }
     NSUInteger index = self.rowCount;
     
-    for (BUCPost *post in list) {
+    for (NSUInteger i = 0; i < count; i = i + 1) {
+        BUCPost *post = [list objectAtIndex:i];
         if ([self.tidSet containsObject:post.tid]) {
             continue;
         } else {
@@ -159,7 +160,7 @@ static NSUInteger const BUCPostListMaxRowCount = 40;
         reusablePost.tid = post.tid;
         reusablePost.forumName = post.forumName;
         reusablePost.title = post.title;
-        [reusablePost.textStorage setAttributedString:post.content];
+        [reusablePost.textStorage setAttributedString:post.content.richText];
         reusablePost.meta = post.meta;
         reusablePost.contents = nil;
         
@@ -177,7 +178,6 @@ static NSUInteger const BUCPostListMaxRowCount = 40;
 
 
 - (void)loadListFrom:(NSUInteger)from {
-    BUCPostListController * __weak weakSelf = self;
     NSUInteger to = from + BUCAPIMaxLoadRowCount;
     
     [[BUCDataManager sharedInstance]
@@ -187,27 +187,27 @@ static NSUInteger const BUCPostListMaxRowCount = 40;
      
      to:to > 0 ? [NSString stringWithFormat:@"%lu", (unsigned long)(to)] : nil
      
-     onSuccess:^(NSArray *list) {
-         NSIndexSet *insertSections = [weakSelf updateWithList:list];
-         if (weakSelf.flush) {
-             weakSelf.from = from;
-             [weakSelf.tableView setContentOffset:CGPointZero];
-             [weakSelf.tableView reloadData];
+     onSuccess:^(NSArray *list, NSUInteger count) {
+         NSIndexSet *insertSections = [self updateWithList:list count:count];
+         if (self.flush) {
+             self.from = from;
+             [self.tableView setContentOffset:CGPointZero];
+             [self.tableView reloadData];
          } else {
-             [weakSelf.tableView insertSections:insertSections withRowAnimation:UITableViewRowAnimationNone];
+             [self.tableView insertSections:insertSections withRowAnimation:UITableViewRowAnimationNone];
          }
-         weakSelf.to = to;
+         self.to = to;
          
-         if (weakSelf.fid) {
-             weakSelf.tableView.tableFooterView.hidden = NO;
+         if (self.fid) {
+             self.tableView.tableFooterView.hidden = NO;
          }
-         [weakSelf updateTitle];
-         [weakSelf endLoading];
+         [self updateTitle];
+         [self endLoading];
      }
      
      onError:^(NSString *errorMsg) {
-         [weakSelf endLoading];
-         [weakSelf.appDelegate alertWithMessage:errorMsg];
+         [self endLoading];
+         [self.appDelegate alertWithMessage:errorMsg];
      }];
 }
 
@@ -215,18 +215,17 @@ static NSUInteger const BUCPostListMaxRowCount = 40;
 - (void)refreshFrom:(NSUInteger)from {
     self.flush = YES;
     self.loading = YES;
-    BUCPostListController * __weak weakSelf = self;
     if (self.fid) {
         [[BUCDataManager sharedInstance]
          childCountOfForum:self.fid
          thread:nil
          
          onSuccess:^(NSUInteger count) {
-             weakSelf.postCount = count + 1;
-             [weakSelf loadListFrom:from];
+             self.postCount = count + 1;
+             [self loadListFrom:from];
          } onError:^(NSString *errorMsg) {
-             [weakSelf endLoading];
-             [weakSelf.appDelegate alertWithMessage:errorMsg];
+             [self endLoading];
+             [self.appDelegate alertWithMessage:errorMsg];
          }];
     } else {
         [self loadListFrom:from];
@@ -382,7 +381,7 @@ static NSUInteger const BUCPostListMaxRowCount = 40;
     [post.layoutManager ensureLayoutForTextContainer:post.textContainer];
     CGRect frame = [post.layoutManager usedRectForTextContainer:post.textContainer];
     frame.size.height = ceilf(frame.size.height);
-    post.textFrame = frame;
+    post.contentBounds = frame;
     return BUCDefaultMargin * 3 + frame.size.height + self.metaLineHeight;
 }
 
@@ -399,7 +398,7 @@ static NSUInteger const BUCPostListMaxRowCount = 40;
 
 - (UIImage *)renderPost:(BUCPost *)post {
     UIImage *output;
-    CGFloat separatorPosition = post.textFrame.size.height + BUCDefaultMargin;
+    CGFloat separatorPosition = post.contentBounds.size.height + BUCDefaultMargin;
     UIGraphicsBeginImageContextWithOptions(CGSizeMake(self.screenWidth, post.cellHeight), NO, 0);
     [post.layoutManager drawGlyphsForGlyphRange:NSMakeRange(0, post.textStorage.length) atPoint:CGPointMake(BUCDefaultPadding, BUCDefaultMargin)];
     [post.meta drawAtPoint:CGPointMake(BUCDefaultPadding, separatorPosition + BUCDefaultMargin)];
@@ -419,7 +418,7 @@ static NSUInteger const BUCPostListMaxRowCount = 40;
     if (post.contents.size.width != self.screenWidth) {
         post.contents = [self renderPost:post];
     }
-    cell.contents.image = post.contents;
+    cell.background.image = post.contents;
     
     
     if (indexPath.section == self.rowCount - 1 && !self.loading && self.to < self.postCount && self.rowCount == 20) {

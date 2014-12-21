@@ -101,7 +101,6 @@
 }
 
 - (IBAction)send {
-    BUCNewPostController * __weak weakSelf = self;
     BOOL invalid = NO;
     if (self.fid) {
         if (self.subject.text.length == 0) {
@@ -125,10 +124,10 @@
     }
 
     [[BUCDataManager sharedInstance] newPostToForum:self.fid thread:self.tid subject:self.subject.text content:self.content.text attachment:self.imageAttachment onSuccess:^(NSString *tid) {
-        weakSelf.tid = tid;
-        [weakSelf performSegueWithIdentifier:weakSelf.unwindIdentifier sender:nil];
+        self.tid = tid;
+        [self performSegueWithIdentifier:self.unwindIdentifier sender:nil];
     } onError:^(NSString *errorMsg) {
-        [weakSelf.appDelegate alertWithMessage:errorMsg];
+        [self.appDelegate alertWithMessage:errorMsg];
     }];
 }
 

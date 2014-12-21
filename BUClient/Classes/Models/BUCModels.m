@@ -29,6 +29,15 @@
 
 @end
 
+@implementation BUCRichText
+- (instancetype)init {
+    self = [super init];
+    if (self) {
+        _richText = [[NSMutableAttributedString alloc] init];
+    }
+    return self;
+}
+@end
 @implementation BUCImageAttachment @end
 @implementation BUCLinkAttribute @end
 @implementation BUCTextBlockAttribute @end

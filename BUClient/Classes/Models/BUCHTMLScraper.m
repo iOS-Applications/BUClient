@@ -2,15 +2,12 @@
 #import "TFHpple.h"
 #import "UIImage+BUCImageCategory.h"
 #import "BUCConstants.h"
-#import "BUCModels.h"
+
 
 
 @interface BUCHTMLScraper ()
 
-@property (nonatomic) NSMutableAttributedString *output;
-@property (nonatomic) NSMutableArray *attachmentList;
-@property (nonatomic) NSMutableArray *blockList;
-@property (nonatomic) CGFloat imageWidth;
+@property (nonatomic) CGRect imageBounds;
 
 @end
 
@@ -21,7 +18,7 @@
     self = [super init];
     
     if (self) {
-        _imageWidth = CGRectGetWidth([UIScreen mainScreen].bounds) - 2 * BUCDefaultMargin;
+        _imageBounds = CGRectMake(0.0f, 0.0f, 1000.0f, 200.0f);
     }
     
     return self;
@@ -43,23 +40,23 @@
 }
 
 
-- (NSAttributedString *)richTextFromHtml:(NSString *)html { 
+- (BUCRichText *)richTextFromHtml:(NSString *)html {
     return [self richTextFromHtml:html textStyle:UIFontTextStyleBody trait:0];
 }
 
 
-- (NSAttributedString *)richTextFromHtml:(NSString *)html attributes:(NSDictionary *)attributes {
-    return [self richTextFromTree:[self treeFromHtml:html] attributes:attributes];
-}
-
-
-- (NSAttributedString *)richTextFromHtml:(NSString *)html textStyle:(NSString *)style {
+- (BUCRichText *)richTextFromHtml:(NSString *)html textStyle:(NSString *)style {
     return [self richTextFromHtml:html textStyle:style trait:0];
 }
 
 
-- (NSAttributedString *)richTextFromHtml:(NSString *)html textStyle:(NSString *)style trait:(uint32_t)trait {
+- (BUCRichText *)richTextFromHtml:(NSString *)html textStyle:(NSString *)style trait:(uint32_t)trait {
     return [self richTextFromTree:[self treeFromHtml:html] attributes:[self attributesForFontStyle:style withTrait:trait]];
+}
+
+
+- (BUCRichText *)richTextFromHtml:(NSString *)html attributes:(NSDictionary *)attributes {
+    return [self richTextFromTree:[self treeFromHtml:html] attributes:attributes];
 }
 
 
@@ -80,99 +77,89 @@
 }
 
 
-- (NSAttributedString *)richTextFromTree:(TFHppleElement *)tree attributes:(NSDictionary *)attributes {
+- (BUCRichText *)richTextFromTree:(TFHppleElement *)tree attributes:(NSDictionary *)attributes {
     if (!tree) {
         return nil;
     }
     
-    if (!attributes) {
-        attributes = @{NSFontAttributeName:[UIFont preferredFontForTextStyle:UIFontTextStyleBody]};
-    }
-    
-    self.output = [[NSMutableAttributedString alloc] init];
-    
+    BUCRichText *output = [[BUCRichText alloc] init];
     for (TFHppleElement *node in tree.children) {
         if ([node.tagName isEqualToString:@"br"] || [node.tagName isEqualToString:@"span"]) {
             continue;
         }
         
-        [self appendRichText:node superAttributes:attributes];
+        [self appendNode:node output:output superAttributes:attributes];
     }
     
-    if (self.output.length == 0) {
+    if (output.richText.length == 0) {
         return nil;
     }
     
-    if (self.attachmentList) {
-        [self.output addAttribute:BUCAttachmentListAttributeName value:self.attachmentList range:NSMakeRange(0, 1)];
-        self.attachmentList = nil;
-    }
-    
-    if (self.blockList) {
-        [self.output addAttribute:BUCTextBlockListAttributeName value:self.blockList range:NSMakeRange(0, 1)];
-        self.blockList = nil;
-    }
-    
-    return self.output;
+    return output;
 }
 
 
-- (void)appendRichText:(TFHppleElement *)tree superAttributes:(NSDictionary *)superAttributes {
-    NSString *tagName = tree.tagName;
+- (void)appendNode:(TFHppleElement *)node output:(BUCRichText *)output superAttributes:(NSDictionary *)superAttributes {
+    NSString *tagName = node.tagName;
     
-    if ([tree isTextNode]) {
-        [self appendText:tree superAttributes:superAttributes];
+    if ([node isTextNode]) {
+        [self appendTextNode:node output:output superAttributes:superAttributes];
     } else if ([tagName isEqualToString:@"img"]) {
-        [self appendImage:tree superAttributes:superAttributes];
+        [self appendImageNode:node output:output superAttributes:superAttributes];
     } else if ([tagName isEqualToString:@"center"] || [tagName isEqualToString:@"blockquote"] ||
                [tagName isEqualToString:@"ul"] || [tagName isEqualToString:@"ol"]) {
         
-        NSMutableDictionary *thisAttributes = [NSMutableDictionary dictionaryWithDictionary:superAttributes];
-        BUCTextBlockAttribute *blockAttribute = [self setUpBlockAttribute:thisAttributes];
+        BUCTextBlockAttribute *blockAttribute = [self blockAttributeWithAttribute:superAttributes];
+        NSMutableDictionary *thisAttributes = [superAttributes mutableCopy];
         [thisAttributes setObject:blockAttribute forKey:BUCTextBlockAttributeName];
-        [self beginBlock:superAttributes];
-        [self insertNewLine:superAttributes];
-        NSUInteger location = self.output.length;
+        if (output.richText.length > 0 && [output.richText.string characterAtIndex:output.richText.length - 1] != '\n') {
+            [output.richText appendAttributedString:[[NSAttributedString alloc] initWithString:@"\n" attributes:superAttributes]];
+        }
+        
+        [self appendNewLineToRichText:output.richText superAttributes:superAttributes];
+        
+        NSUInteger location = output.richText.length;
         
         if ([tagName isEqualToString:@"center"]) {
-            TFHppleElement *table = tree.firstChild;
+            TFHppleElement *table = node.firstChild;
             NSString *header = table.firstChild.firstChild.firstChild.content;
             TFHppleElement *content = [table.children objectAtIndex:1];
             content = content.firstChild.firstChild.firstChild.firstChild;
             
             if ([header rangeOfString:@"引用"].length > 0) {
-                location = self.output.length;
-                [self appendQuote:content superAttributes:thisAttributes];
+                [self appendQuoteNode:content output:output superAttributes:thisAttributes];
             } else if ([header rangeOfString:@"代码"].length > 0) {
-                location = self.output.length;
-                [self appendCode:content superAttributes:thisAttributes];
+                [self appendCodeNode:content output:output superAttributes:thisAttributes];
             }
-
+            
         } else if ([tagName isEqualToString:@"blockquote"]) {
-            TFHppleElement *box = [tree.children objectAtIndex:1];
+            TFHppleElement *box = [node.children objectAtIndex:1];
             blockAttribute.backgroundColor = [self colorAttributeOfBox:box];
-            [self appendBox:box superAttributes:thisAttributes];
+            [self appendBoxNode:box output:output superAttributes:thisAttributes];
         } else {
             blockAttribute.noBackground = YES; // do not draw background for list
-            [self appendList:tree superAttributes:thisAttributes];
+            [self appendListNode:node output:output superAttributes:thisAttributes];
         }
         
-        [self finishBlock:thisAttributes];
-        NSUInteger length = self.output.length - location;
-        blockAttribute.range = NSMakeRange(location, length);
-        if (!self.blockList) {
-            self.blockList = [[NSMutableArray alloc] init];
+        if (output.richText.length == 0 || [output.richText.string characterAtIndex:output.richText.length - 1] != '\n') {
+            [output.richText appendAttributedString:[[NSAttributedString alloc] initWithString:@"\n" attributes:thisAttributes]];
         }
-        [self.blockList addObject:blockAttribute];
-        [self insertNewLine:superAttributes];
+        
+        NSUInteger length = output.richText.length - location;
+        blockAttribute.range = NSMakeRange(location, length);
+        if (!output.blockList) {
+            output.blockList = [[NSMutableArray alloc] init];
+        }
+        [output.blockList addObject:blockAttribute];
+        [self appendNewLineToRichText:output.richText superAttributes:superAttributes];
     } else {
         NSDictionary *attributes;
-        NSUInteger location = self.output.length;
+        NSUInteger location = output.richText.length;
         
         if ([tagName isEqualToString:@"a"]) {
-            attributes = [self linkAttributes:tree];
+            attributes = [self linkAttributes:node];
         } else if ([tagName isEqualToString:@"font"]) {
-            attributes = [self fontAttributes:tree];
+            attributes = [self fontAttributes:node];
         } else if ([tagName isEqualToString:@"b"]) {
             attributes = [self attributesForFontStyle:UIFontTextStyleBody withTrait:UIFontDescriptorTraitBold];
         } else if ([tagName isEqualToString:@"i"]) {
@@ -190,17 +177,17 @@
             attributes = superAttributes;
         }
         
-        for (TFHppleElement *node in tree.children) {
-            if ([node.tagName isEqualToString:@"br"] || [node.tagName isEqualToString:@"span"]) {
+        for (TFHppleElement *childNode in node.children) {
+            if ([childNode.tagName isEqualToString:@"br"] || [childNode.tagName isEqualToString:@"span"]) {
                 continue;
             }
             
-            [self appendRichText:node superAttributes:attributes];
+            [self appendNode:childNode output:output superAttributes:attributes];
         }
-
-
+        
+        
         if ([tagName isEqualToString:@"a"]) {
-            NSUInteger length = self.output.length - location;
+            NSUInteger length = output.richText.length - location;
             BUCLinkAttribute *linkAttribute = [thisAttributes objectForKey:BUCLinkAttributeName];
             linkAttribute.range = NSMakeRange(location, length);
         }
@@ -209,30 +196,30 @@
 
 
 #pragma mark - inline elements
-- (void)appendText:(TFHppleElement *)tree superAttributes:(NSDictionary *)superAttributes {
-    // strike and video support are needed...
-    if (!tree.content || tree.content.length == 0) {
+
+- (void)appendTextNode:(TFHppleElement *)node output:(BUCRichText *)output superAttributes:(NSDictionary *)superAttributes {
+#warning strike tag needs to be supported
+    if (!node.content || node.content.length == 0) {
         return;
     }
     
-    NSMutableDictionary *attributes = [NSMutableDictionary dictionaryWithDictionary:superAttributes];
+    NSMutableDictionary *attributes = [superAttributes mutableCopy];
     
-    if ([self matchString:tree.content withPattern:@"\\s*\\[ Last edited by .+ on [0-9]{4}-[0-9]{1,2}-[0-9]{1,2} at [0-9]{2}:[0-9]{2} \\]" match:NULL]) {
+    if ([self matchString:node.content withPattern:@"\\s*\\[ Last edited by .+ on [0-9]{4}-[0-9]{1,2}-[0-9]{1,2} at [0-9]{2}:[0-9]{2} \\]" match:NULL]) {
         [attributes setObject:[UIFont preferredFontForTextStyle:UIFontTextStyleCaption1] forKeyedSubscript:NSFontAttributeName];
     }
     
-    [self.output appendAttributedString:[[NSAttributedString alloc] initWithString:[self replaceHtmlEntities:tree.content] attributes:attributes]];
+    [output.richText appendAttributedString:[[NSAttributedString alloc] initWithString:[self replaceHtmlEntities:node.content] attributes:attributes]];
 }
 
 
-- (void)appendImage:(TFHppleElement *)tree superAttributes:(NSDictionary *)superAttributes {
-    NSString *source = [tree objectForKey:@"src"];
+- (void)appendImageNode:(TFHppleElement *)imageNode output:(BUCRichText *)output superAttributes:(NSDictionary *)superAttributes {
+    NSString *source = [imageNode objectForKey:@"src"];
     if (!source || source.length == 0) {
         return;
     }
-
-    BUCImageAttachment *attachment = [[BUCImageAttachment alloc] init];
     
+    BUCImageAttachment *attachment = [[BUCImageAttachment alloc] init];
     if ([self matchString:source withPattern:@"^\\.\\./images/.+$" match:NULL]) {
         NSString *resourcePath = [[NSBundle mainBundle] resourcePath];
         attachment.path = [NSString stringWithFormat:@"%@/%@", resourcePath, [source substringFromIndex:3]];
@@ -240,56 +227,46 @@
         if (!image) {
             return;
         } else {
-            attachment.bounds = CGRectMake(0, 0, image.size.width, image.size.height);
+            attachment.bounds = CGRectMake(0.0f, 0.0f, image.size.width, image.size.height);
+            attachment.resizedImage = image;
         }
     } else {
         attachment.url = [self parseImageUrl:source];
         if (!attachment.url) {
             return;
         } else {
-            attachment.bounds = CGRectMake(0, 0, self.imageWidth, 100.0f);
+            attachment.bounds = self.imageBounds;
         }
     }
     
-    attachment.glyphIndex = [self.output length];
-    if (!self.attachmentList) {
-        self.attachmentList = [[NSMutableArray alloc] init];
+    attachment.glyphIndex = output.richText.length;
+    if (!output.imageList) {
+        output.imageList = [[NSMutableArray alloc] init];
     }
-    [self.attachmentList addObject:attachment];
-    [self.output appendAttributedString:[NSAttributedString attributedStringWithAttachment:attachment]];
-    [self.output addAttributes:superAttributes range:NSMakeRange(self.output.length - 1, 1)];
+    [output.imageList addObject:attachment];
+    [output.richText appendAttributedString:[NSAttributedString attributedStringWithAttachment:attachment]];
+    [output.richText addAttributes:superAttributes range:NSMakeRange(output.richText.length - 1, 1)];
 }
 
 
 #pragma mark - block elements
-- (void)appendQuote:(TFHppleElement *)tree superAttributes:(NSDictionary *)superAttributes {
-    if (!tree || !tree.children || tree.children.count == 0) {
+- (void)appendQuoteNode:(TFHppleElement *)quoteNode output:(BUCRichText *)output superAttributes:(NSDictionary *)superAttributes {
+    if (!quoteNode || !quoteNode.children || quoteNode.children.count == 0) {
         return;
     }
     
-    for (TFHppleElement *node in tree.children) {
+    for (TFHppleElement *node in quoteNode.children) {
         if ([node.tagName isEqualToString:@"br"] || [node.tagName isEqualToString:@"span"]) {
             continue;
         }
         
-        [self appendRichText:node superAttributes:superAttributes];
+        [self appendNode:node output:output superAttributes:superAttributes];
     }
 }
 
 
-- (void)appendBox:(TFHppleElement *)tree superAttributes:(NSDictionary *)superAttributes {
-    for (TFHppleElement *node in tree.children) {
-        if ([node.tagName isEqualToString:@"br"] || [node.tagName isEqualToString:@"span"]) {
-            continue;
-        }
-        
-        [self appendRichText:node superAttributes:superAttributes];
-    }
-}
-
-
-- (void)appendCode:(TFHppleElement *)tree superAttributes:(NSDictionary *)superAttributes {
-    NSArray *codeLines = [tree searchWithXPathQuery:@"//div/ol/li"];
+- (void)appendCodeNode:(TFHppleElement *)codeNode output:(BUCRichText *)output superAttributes:(NSDictionary *)superAttributes {
+    NSArray *codeLines = [codeNode searchWithXPathQuery:@"//div/ol/li"];
     
     if (!codeLines || codeLines.count == 0) {
         return;
@@ -301,27 +278,38 @@
         }
         
         NSString *buffer = [NSString stringWithFormat:@"%@\n", line.firstChild.content];
-        [self.output appendAttributedString:[[NSAttributedString alloc] initWithString:buffer attributes:superAttributes]];
+        [output.richText appendAttributedString:[[NSAttributedString alloc] initWithString:buffer attributes:superAttributes]];
     }
 }
 
 
-- (void)appendList:(TFHppleElement *)tree superAttributes:(NSDictionary *)superAttributes {
-    for (TFHppleElement *node in tree.children) {
+- (void)appendBoxNode:(TFHppleElement *)boxNode output:(BUCRichText *)output superAttributes:(NSDictionary *)superAttributes {
+    for (TFHppleElement *node in boxNode.children) {
         if ([node.tagName isEqualToString:@"br"] || [node.tagName isEqualToString:@"span"]) {
             continue;
         }
         
-        [self.output appendAttributedString:[[NSAttributedString alloc] initWithString:@"• " attributes:superAttributes]];
+        [self appendNode:node output:output superAttributes:superAttributes];
+    }
+}
+
+
+- (void)appendListNode:(TFHppleElement *)listNode output:(BUCRichText *)output superAttributes:(NSDictionary *)superAttributes {
+    for (TFHppleElement *node in listNode.children) {
+        if ([node.tagName isEqualToString:@"br"] || [node.tagName isEqualToString:@"span"]) {
+            continue;
+        }
+        
+        [output.richText appendAttributedString:[[NSAttributedString alloc] initWithString:@"• " attributes:superAttributes]];
         
         if ([node.firstChild isTextNode] && node.firstChild.content) {
             NSString *buffer = [NSString stringWithFormat:@"%@", node.firstChild.content];
-            [self.output appendAttributedString:[[NSAttributedString alloc] initWithString:buffer attributes:superAttributes]];
+            [output.richText appendAttributedString:[[NSAttributedString alloc] initWithString:buffer attributes:superAttributes]];
         } else {
-            [self appendRichText:node superAttributes:superAttributes];
+            [self appendNode:node output:output superAttributes:superAttributes];
         }
         
-        [self.output appendAttributedString:[[NSAttributedString alloc] initWithString:@"\n" attributes:superAttributes]];
+        [output.richText appendAttributedString:[[NSAttributedString alloc] initWithString:@"\n" attributes:superAttributes]];
     }
 }
 
@@ -526,7 +514,7 @@
 }
 
 
-- (BUCTextBlockAttribute *)setUpBlockAttribute:(NSDictionary *)attributes {
+- (BUCTextBlockAttribute *)blockAttributeWithAttribute:(NSDictionary *)attributes {
     BUCTextBlockAttribute *parentBlockAttribute = [attributes objectForKey:BUCTextBlockAttributeName];
     BUCTextBlockAttribute *blockAttribute = [[BUCTextBlockAttribute alloc] init];
     
@@ -540,28 +528,10 @@
 }
 
 
-- (void)beginBlock:(NSDictionary *)attributes {
-    if (self.output.length == 0) {
-        return;
-    }
-    
-    if ([self.output.string characterAtIndex:self.output.length - 1] != '\n') {
-        [self.output appendAttributedString:[[NSAttributedString alloc] initWithString:@"\n" attributes:attributes]];
-    }
-}
-
-
-- (void)insertNewLine:(NSDictionary *)attributes {    
-    NSMutableDictionary *newLineAttributes = [NSMutableDictionary dictionaryWithDictionary:attributes];
-    [newLineAttributes setObject:[UIFont preferredFontForTextStyle:UIFontTextStyleCaption1] forKeyedSubscript:NSFontAttributeName];
-    [self.output appendAttributedString:[[NSAttributedString alloc] initWithString:@"\n" attributes:newLineAttributes]];
-}
-
-
-- (void)finishBlock:(NSDictionary *)attributes {    
-    if (self.output.length == 0 || [self.output.string characterAtIndex:self.output.length - 1] != '\n') {
-        [self.output appendAttributedString:[[NSAttributedString alloc] initWithString:@"\n" attributes:attributes]];
-    }
+- (void)appendNewLineToRichText:(NSMutableAttributedString *)output superAttributes:(NSDictionary *)superAttributes {
+    NSMutableDictionary *newLineAttributes = [superAttributes mutableCopy];
+    [newLineAttributes setObject:[UIFont preferredFontForTextStyle:UIFontTextStyleCaption1] forKey:NSFontAttributeName];
+    [output appendAttributedString:[[NSAttributedString alloc] initWithString:@"\n" attributes:newLineAttributes]];
 }
 
 

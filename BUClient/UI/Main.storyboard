@@ -513,7 +513,7 @@
                                 </tableViewCellContentView>
                                 <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                                 <connections>
-                                    <outlet property="contents" destination="rPO-n6-uSN" id="VRz-Lm-jT6"/>
+                                    <outlet property="background" destination="rPO-n6-uSN" id="Wkd-jN-nPy"/>
                                     <segue destination="oiG-Nc-ZDP" kind="show" identifier="postListToPostDetail" id="eZ0-FU-nhu"/>
                                 </connections>
                             </tableViewCell>
@@ -562,6 +562,7 @@
                             <tableView autoresizesSubviews="NO" clearsContextBeforeDrawing="NO" contentMode="scaleToFill" alwaysBounceVertical="YES" showsHorizontalScrollIndicator="NO" canCancelContentTouches="NO" bouncesZoom="NO" dataMode="prototypes" style="plain" separatorStyle="default" allowsSelection="NO" showsSelectionImmediatelyOnTouchBegin="NO" rowHeight="287" sectionHeaderHeight="1" sectionFooterHeight="1" translatesAutoresizingMaskIntoConstraints="NO" id="ZJh-te-T7l">
                                 <rect key="frame" x="0.0" y="0.0" width="600" height="492"/>
                                 <color key="backgroundColor" cocoaTouchSystemColor="groupTableViewBackgroundColor"/>
+                                <gestureRecognizers/>
                                 <inset key="separatorInset" minX="0.0" minY="0.0" maxX="0.0" maxY="0.0"/>
                                 <view key="tableHeaderView" autoresizesSubviews="NO" clearsContextBeforeDrawing="NO" contentMode="scaleToFill" id="YsF-2W-hHW" userLabel="header">
                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
@@ -618,14 +619,6 @@
                                                     <rect key="frame" x="210" y="15" width="20" height="20"/>
                                                     <color key="backgroundColor" cocoaTouchSystemColor="groupTableViewBackgroundColor"/>
                                                 </activityIndicatorView>
-                                                <imageView autoresizesSubviews="NO" clearsContextBeforeDrawing="NO" userInteractionEnabled="NO" contentMode="center" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="arrow" translatesAutoresizingMaskIntoConstraints="NO" id="OxM-Yi-7l5">
-                                                    <rect key="frame" x="208" y="13" width="24" height="24"/>
-                                                    <color key="backgroundColor" cocoaTouchSystemColor="groupTableViewBackgroundColor"/>
-                                                    <constraints>
-                                                        <constraint firstAttribute="width" constant="24" id="BuO-cL-POw"/>
-                                                        <constraint firstAttribute="height" constant="24" id="YuE-Dz-N5T"/>
-                                                    </constraints>
-                                                </imageView>
                                                 <label autoresizesSubviews="NO" clearsContextBeforeDrawing="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Pull" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="86Y-re-wwD">
                                                     <rect key="frame" x="287" y="16" width="26" height="18"/>
                                                     <color key="backgroundColor" cocoaTouchSystemColor="groupTableViewBackgroundColor"/>
@@ -637,11 +630,9 @@
                                             <color key="backgroundColor" cocoaTouchSystemColor="groupTableViewBackgroundColor"/>
                                             <constraints>
                                                 <constraint firstAttribute="centerX" secondItem="86Y-re-wwD" secondAttribute="centerX" id="0LW-rd-h3x"/>
+                                                <constraint firstAttribute="centerY" secondItem="86Y-re-wwD" secondAttribute="centerY" id="CJW-qj-f6E"/>
                                                 <constraint firstAttribute="height" constant="50" id="Gus-Mv-9DH"/>
-                                                <constraint firstItem="OxM-Yi-7l5" firstAttribute="centerY" secondItem="86Y-re-wwD" secondAttribute="centerY" id="MYz-EV-jkw"/>
-                                                <constraint firstItem="PCb-Rf-Y3t" firstAttribute="centerX" secondItem="OxM-Yi-7l5" secondAttribute="centerX" id="S3O-jw-Loi"/>
-                                                <constraint firstAttribute="centerY" secondItem="OxM-Yi-7l5" secondAttribute="centerY" id="muT-yD-gds"/>
-                                                <constraint firstItem="OxM-Yi-7l5" firstAttribute="centerX" secondItem="VJC-93-qcC" secondAttribute="centerX" constant="-80" id="pgh-0B-7lS"/>
+                                                <constraint firstAttribute="centerX" secondItem="PCb-Rf-Y3t" secondAttribute="centerX" constant="80" id="Npm-IE-TJf"/>
                                                 <constraint firstAttribute="centerY" secondItem="PCb-Rf-Y3t" secondAttribute="centerY" id="r5f-Fc-2lN"/>
                                             </constraints>
                                         </view>
@@ -676,13 +667,14 @@
                                         </tableViewCellContentView>
                                         <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                                         <connections>
-                                            <outlet property="contents" destination="ccT-Jc-kyT" id="df6-Vz-B8E"/>
+                                            <outlet property="background" destination="ccT-Jc-kyT" id="GNT-FV-A3I"/>
                                         </connections>
                                     </tableViewCell>
                                 </prototypes>
                                 <connections>
                                     <outlet property="dataSource" destination="oiG-Nc-ZDP" id="9rh-b1-eyb"/>
                                     <outlet property="delegate" destination="oiG-Nc-ZDP" id="k5c-co-zky"/>
+                                    <outletCollection property="gestureRecognizers" destination="iGS-sb-H9S" appends="YES" id="1M6-fh-ztx"/>
                                 </connections>
                             </tableView>
                             <view autoresizesSubviews="NO" clearsContextBeforeDrawing="NO" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="Emg-R5-dT2" userLabel="Menu">
@@ -888,7 +880,6 @@
                         <outlet property="bottomLoadingIndicator" destination="PCb-Rf-Y3t" id="Un5-Ys-S8t"/>
                         <outlet property="bottomLoadingLabel" destination="86Y-re-wwD" id="ETz-EY-5hw"/>
                         <outlet property="bottomLoadingView" destination="VJC-93-qcC" id="hU6-3f-dX3"/>
-                        <outlet property="bottomRotateArrow" destination="OxM-Yi-7l5" id="oAq-nL-Tt6"/>
                         <outlet property="descend" destination="ILZ-oQ-l7k" id="ulv-Xi-LgN"/>
                         <outlet property="menu" destination="Emg-R5-dT2" id="SPU-Wq-pdg"/>
                         <outlet property="menuPosition" destination="u6e-qy-oAx" id="YS6-8J-o7m"/>
@@ -923,6 +914,11 @@
                         <action selector="dismissMenu:" destination="oiG-Nc-ZDP" id="opt-LG-Weq"/>
                     </connections>
                 </pongPressGestureRecognizer>
+                <tapGestureRecognizer id="iGS-sb-H9S">
+                    <connections>
+                        <action selector="tapToLoadMore:" destination="oiG-Nc-ZDP" id="Cww-Tq-9yy"/>
+                    </connections>
+                </tapGestureRecognizer>
             </objects>
             <point key="canvasLocation" x="6040" y="118"/>
         </scene>
@@ -1448,7 +1444,7 @@
     <inferredMetricsTieBreakers>
         <segue reference="Y7Y-yT-pMw"/>
         <segue reference="eZ0-FU-nhu"/>
-        <segue reference="ziq-PT-65J"/>
+        <segue reference="9l9-8d-2uH"/>
         <segue reference="NLt-hK-OQ5"/>
         <segue reference="kDA-Um-msB"/>
     </inferredMetricsTieBreakers>

@@ -159,11 +159,10 @@
 
 #pragma mark - actions and transition
 - (void)displayLogout {
-    BUCRootController * __weak weakSelf = self;
     self.logoutBottomSpace.constant = 0;
     [UIView animateWithDuration:0.3 animations:^{
-        weakSelf.logoutWindow.alpha = 1.0f;
-        [weakSelf.logoutWindow layoutIfNeeded];
+        self.logoutWindow.alpha = 1.0f;
+        [self.logoutWindow layoutIfNeeded];
     }];
 }
 
@@ -175,11 +174,10 @@
 
 
 - (IBAction)hideLogout {
-    BUCRootController * __weak weakSelf = self;
     self.logoutBottomSpace.constant = -CGRectGetHeight(self.logoutSheet.frame);
     [UIView animateWithDuration:0.3 animations:^{
-        weakSelf.logoutWindow.alpha = 0.0f;
-        [weakSelf.logoutWindow layoutIfNeeded];
+        self.logoutWindow.alpha = 0.0f;
+        [self.logoutWindow layoutIfNeeded];
     }];
 }
 

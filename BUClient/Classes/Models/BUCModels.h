@@ -4,35 +4,13 @@
 #ifndef BUClient_BUCModels_h
 #define BUClient_BUCModels_h
 
-@interface BUCPost : NSObject <NSLayoutManagerDelegate>
 
-@property (nonatomic) NSAttributedString *forumName;
-@property (nonatomic) NSString *fid;
-@property (nonatomic) NSString *tid;
-@property (nonatomic) NSString *pid;
-@property (nonatomic) NSString *user;
-@property (nonatomic) NSString *uid;
-@property (nonatomic) NSString *date;
-@property (nonatomic) NSURL *avatarUrl;
-@property (nonatomic) UIImage *avatar;
-@property (nonatomic) NSString *title;
+@interface BUCRichText : NSObject
 
-@property (nonatomic) NSUInteger index;
-@property (nonatomic) CGFloat cellHeight;
-@property (nonatomic) CGRect textFrame;
-
-@property (nonatomic) BOOL bookmarked;
-@property (nonatomic) NSInteger bookmarkIndex;
-
-@property (nonatomic) NSAttributedString *content;
-@property (nonatomic) NSAttributedString *meta;
-
-@property (nonatomic) NSTextStorage *textStorage;
-@property (nonatomic) BUCLayoutManager *layoutManager;
-@property (nonatomic) BUCTextContainer *textContainer;
-@property (nonatomic) UIImage *contents;
-
-- (instancetype)initWithTextStack;
+@property (nonatomic) NSMutableAttributedString *richText;
+@property (nonatomic) NSMutableArray *imageList;
+@property (nonatomic) NSMutableArray *gifList;
+@property (nonatomic) NSMutableArray *blockList;
 
 @end
 
@@ -42,6 +20,40 @@
 @property (nonatomic) NSUInteger glyphIndex;
 @property (nonatomic) NSURL *url;
 @property (nonatomic) NSString *path;
+@property (nonatomic) UIImage *resizedImage;
+@property (nonatomic) CGRect boundingRect;
+
+@end
+
+
+@interface BUCPost : NSObject <NSLayoutManagerDelegate>
+
+@property (nonatomic) NSAttributedString *forumName;
+@property (nonatomic) NSString *fid;
+@property (nonatomic) NSString *tid;
+@property (nonatomic) NSString *pid;
+@property (nonatomic) NSString *user;
+@property (nonatomic) NSString *uid;
+@property (nonatomic) NSString *date;
+@property (nonatomic) BUCImageAttachment *avatar;
+@property (nonatomic) NSString *title;
+
+@property (nonatomic) NSUInteger index;
+@property (nonatomic) CGFloat cellHeight;
+@property (nonatomic) CGRect contentBounds;
+
+@property (nonatomic) BOOL bookmarked;
+@property (nonatomic) NSInteger bookmarkIndex;
+
+@property (nonatomic) BUCRichText *content;
+@property (nonatomic) NSAttributedString *meta;
+
+@property (nonatomic) NSTextStorage *textStorage;
+@property (nonatomic) BUCLayoutManager *layoutManager;
+@property (nonatomic) BUCTextContainer *textContainer;
+@property (nonatomic) UIImage *contents;
+
+- (instancetype)initWithTextStack;
 
 @end
 

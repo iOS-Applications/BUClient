@@ -13,4 +13,13 @@
     return UIEdgeInsetsZero;
 }
 
+- (void)prepareForReuse {
+    [super prepareForReuse];
+    
+    if (self.imageList && self.imageList.count > 0) {
+        [self.imageList performSelector:@selector(removeFromSuperview)];
+        [self.imageList removeAllObjects];
+    }
+}
+
 @end

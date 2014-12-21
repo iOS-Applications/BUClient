@@ -1,15 +1,15 @@
 #import <Foundation/Foundation.h>
 #import "BUCDataManager.h"
-
+#import "BUCModels.h"
 
 @interface BUCHTMLScraper : NSObject
 
-@property (nonatomic, weak) BUCDataManager *dataManager;
+@property (nonatomic) BUCDataManager *dataManager;
 
-- (NSAttributedString *)richTextFromHtml:(NSString *)html;
-- (NSAttributedString *)richTextFromHtml:(NSString *)html attributes:(NSDictionary *)attributes;
-- (NSAttributedString *)richTextFromHtml:(NSString *)html textStyle:(NSString *)style;
-- (NSAttributedString *)richTextFromHtml:(NSString *)html textStyle:(NSString *)style trait:(uint32_t)trait;
+- (BUCRichText *)richTextFromHtml:(NSString *)html;
+- (BUCRichText *)richTextFromHtml:(NSString *)html attributes:(NSDictionary *)attributes;
+- (BUCRichText *)richTextFromHtml:(NSString *)html textStyle:(NSString *)style;
+- (BUCRichText *)richTextFromHtml:(NSString *)html textStyle:(NSString *)style trait:(uint32_t)trait;
 
 - (NSURL *)avatarUrlFromHtml:(NSString *)html;
 

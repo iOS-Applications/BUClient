@@ -11,6 +11,8 @@ static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
 @property (nonatomic) BUCHTMLScraper *htmlScraper;
 @property (nonatomic) BUCNetworkEngine *networkEngine;
 
+@property (nonatomic) NSMutableArray *postList;
+
 @property (nonatomic) NSCache *defaultCache;
 
 @property (nonatomic) NSString *username;
@@ -46,6 +48,11 @@ static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
         _htmlScraper = [[BUCHTMLScraper alloc] init];
         _htmlScraper.dataManager = self;
         _defaultCache = [[NSCache alloc] init];
+        _postList = [[NSMutableArray alloc] init];
+        for (int i = 0; i < 20; i = i + 1) {
+            BUCPost *post = [[BUCPost alloc] init];
+            [_postList addObject:post];
+        }
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(userChanged) name:BUCLoginStateNotification object:nil];
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(hostChanged) name:BUCHostChangedNotification object:nil];
     }
@@ -101,14 +108,12 @@ static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
 -(void)loginWithUsername:(NSString *)username password:(NSString *)password onSuccess:(BUCVoidBlock)voidBlock onFail:(BUCStringBlock)errorBlock {
     self.username = username;
     self.password = password;
-    BUCDataManager * __weak weakSelf = self;
-    
     [self
      updateSessionOnSuccess:^{
          NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
          [defaults setObject:username forKey:@"username"];
          [defaults setObject:password forKey:@"password"];
-         [defaults setObject:weakSelf.uid forKey:@"uid"];
+         [defaults setObject:self.uid forKey:@"uid"];
          [defaults setBool:YES forKey:BUCUserLoginStateDefaultKey];
          NSMutableDictionary *userList = [NSMutableDictionary dictionaryWithDictionary:[defaults dictionaryForKey:@"userList"]];
          if (!userList) {
@@ -117,13 +122,13 @@ static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
          NSMutableDictionary *userSettings = [[NSMutableDictionary alloc] init];
          [userSettings setObject:username forKey:@"username"];
          [userSettings setObject:password forKey:@"password"];
-         [userSettings setObject:weakSelf.uid forKey:@"uid"];
+         [userSettings setObject:self.uid forKey:@"uid"];
          
          NSString *userKey = [username lowercaseString];
          [userList setObject:userSettings forKey:userKey];
          [defaults setObject:userList forKey:@"userList"];
          [defaults synchronize];
-         weakSelf.loggedIn = YES;
+         self.loggedIn = YES;
          voidBlock();
      }
      onError:errorBlock];
@@ -171,9 +176,9 @@ static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
         [json setObject:fid forKey:@"fid"];
         [json setObject:from forKey:@"from"];
         [json setObject:to forKey:@"to"];
-        [self loadListFromUrl:@"thread" json:json listKey:@"threadlist" onSuccess:listBlock onError:errorBlock];
+        [self loadListFromUrl:@"thread" json:json listType:@"threadlist" onSuccess:listBlock onError:errorBlock];
     } else {
-        [self loadListFromUrl:@"home" json:json listKey:@"newlist" onSuccess:listBlock onError:errorBlock];
+        [self loadListFromUrl:@"home" json:json listType:@"newlist" onSuccess:listBlock onError:errorBlock];
     }
 }
 
@@ -186,7 +191,7 @@ static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
     [json setObject:from forKey:@"from"];
     [json setObject:to forKey:@"to"];
     
-    [self loadListFromUrl:@"post" json:json listKey:@"postlist" onSuccess:listBlock onError:errorBlock];
+    [self loadListFromUrl:@"post" json:json listType:@"postlist" onSuccess:listBlock onError:errorBlock];
 }
 
 
@@ -241,11 +246,14 @@ static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
      fetchDataFromUrl:[NSURLRequest requestWithURL:url]
      
      onResult:^(NSData *data) {
-         UIImage *image = [UIImage imageWithData:data size:size];
-         if (image) {
-             [cache setObject:image forKey:key];
-             imageBlock(image);
-         }
+         dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0);
+         dispatch_async(queue, ^{
+             UIImage *image = [UIImage imageWithData:data size:size];
+             if (image) {
+                 [cache setObject:image forKey:key];
+                 imageBlock(image);
+             }
+         });
      }
      
      onError:nil];
@@ -276,7 +284,6 @@ static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
     [json setObject:@"login" forKey:@"action"];
     [json setObject:self.username forKey:@"username"];
     [json setObject:self.password forKey:@"password"];
-    BUCDataManager * __weak weakSelf = self;
     
     [self
      loadJsonFromUrl:@"logging"
@@ -284,8 +291,8 @@ static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
      attachment:nil
      isForm:NO
      onSuccess:^(NSDictionary *map) {
-         weakSelf.session = [map objectForKey:@"session"];
-         weakSelf.uid = [map objectForKey:@"uid"];
+         self.session = [map objectForKey:@"session"];
+         self.uid = [map objectForKey:@"uid"];
          voidBlock();
      }
      onError:errorBlock
@@ -294,21 +301,20 @@ static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
 
 
 - (void)loadJsonFromUrl:(NSString *)url json:(NSMutableDictionary *)json attachment:(UIImage *)attachment isForm:(BOOL)isForm onSuccess:(BUCMapBlock)mapBlock onError:(BUCStringBlock)errorBlock count:(NSInteger)count {
-    BUCDataManager * __weak weakSelf = self;
     
     if (![url isEqualToString:@"logging"]) {
         if (!self.session) {
             [self
              updateSessionOnSuccess:^{
-                 [weakSelf loadJsonFromUrl:url json:json attachment:(UIImage *)attachment isForm:(BOOL)isForm onSuccess:mapBlock onError:errorBlock count:count];
+                 [self loadJsonFromUrl:url json:json attachment:(UIImage *)attachment isForm:(BOOL)isForm onSuccess:mapBlock onError:errorBlock count:count];
              }
              
              onError:errorBlock];
             
             return;
         } else {
-            [json setObject:weakSelf.username forKey:@"username"];
-            [json setObject:weakSelf.session forKey:@"session"];
+            [json setObject:self.username forKey:@"username"];
+            [json setObject:self.session forKey:@"session"];
         }
     }
 
@@ -325,8 +331,8 @@ static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
              NSString *msg = [map objectForKey:@"msg"];
              NSLog(@"ERROR:%@ COUNT:%ld", msg, (long)count);
              if ([msg isEqualToString:@"IP+logged"] && count <= 1) {
-                 weakSelf.session = nil;
-                 [weakSelf loadJsonFromUrl:url json:json attachment:attachment isForm:isForm onSuccess:mapBlock onError:errorBlock count:count + 1];
+                 self.session = nil;
+                 [self loadJsonFromUrl:url json:json attachment:attachment isForm:isForm onSuccess:mapBlock onError:errorBlock count:count + 1];
              } else if ([msg isEqualToString:@"thread_nopermission"]) {
                  errorBlock(@"该帖设置了访问权限，无法访问");
              } else if ([url isEqualToString:@"logging"]) {
@@ -349,100 +355,131 @@ static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
 
 - (void)loadListFromUrl:(NSString *)url
                    json:(NSMutableDictionary *)json
-                listKey:(NSString *)listKey
+                listType:(NSString *)listType
               onSuccess:(BUCListBlock)listBlock
                 onError:(BUCStringBlock)errorBlock {
-    
-    BUCDataManager * __weak weakSelf = self;
-    
     BUCMapBlock block = ^(NSDictionary *map) {
-        [weakSelf successListHandler:map listKey:listKey onSuccess:listBlock onError:errorBlock];
+        NSArray *list = [map objectForKey:listType];
+        NSUInteger count = list.count;
+        [self populateWithList:list count:count listType:listType];
+        listBlock(self.postList, count);
     };
     
     [self loadJsonFromUrl:url json:json attachment:nil isForm:NO onSuccess:block onError:errorBlock count:0];
 }
 
 
-- (void)successListHandler:(NSDictionary *)map listKey:(NSString *)listKey onSuccess:(BUCListBlock)listBlock onError:(BUCStringBlock)errorBlock {
-    static NSString * const BUCLastPosterTemplate = @"最后回复: %@ by %@";
-    
-    NSMutableArray *list = [[NSMutableArray alloc] init];
-    NSArray *rawList = [map objectForKey:listKey];
+- (void)populateWithList:(NSArray *)list count:(NSUInteger)count listType:(NSString *)listType {
     NSDictionary *metaAttributes = @{NSFontAttributeName:[UIFont preferredFontForTextStyle:UIFontTextStyleCaption1]};
+
+    void(^block)(BUCPost *, NSDictionary *, NSDictionary *);
     
-    for (NSDictionary *rawPost in rawList) {
-        BUCPost *post = [[BUCPost alloc] init];
-        post.uid = [rawPost objectForKey:@"authorid"];
-        post.avatarUrl = [self.htmlScraper avatarUrlFromHtml:[self urldecode:[rawPost objectForKey:@"avatar"]]];
-        post.pid = [rawPost objectForKey:@"pid"];
-        post.tid = [rawPost objectForKey:@"tid"];
-        post.fid = [rawPost objectForKey:@"fid"];
-        post.date = [self parseDateline:[rawPost objectForKey:@"dateline"]];;
-        post.user = [self urldecode:[rawPost objectForKey:@"author"]];
-        post.forumName = [self.htmlScraper richTextFromHtml:[self urldecode:[rawPost objectForKey:@"fname"]] attributes:metaAttributes];
-
-        if ([listKey isEqualToString:@"postlist"]) {
-            NSMutableString *content = [[NSMutableString alloc] init];
-            NSString *title = [self urldecode:[rawPost objectForKey:@"subject"]];
-            if (title) {
-                title = [NSString stringWithFormat:@"<b>%@</b>\n\n", title];
-                [content appendString:title];
-            }
-            
-            NSString *postBody = [self urldecode:[rawPost objectForKey:@"message"]];
-            if (postBody) {
-                [content appendString:postBody];
-            }
-            
-            NSString *attachment = [self urldecode:[rawPost objectForKey:@"attachment"]];
-            if (attachment) {
-                NSString *filetype = [self urldecode:[rawPost objectForKey:@"filetype"]];
-                if (filetype && [filetype rangeOfString:@"image/"].length > 0) {
-                    attachment = [NSString stringWithFormat:@"\n\n本帖包含图片附件:\n\n<img src='%@/%@'>", self.host, attachment];
-                    [content appendString:attachment];
-                }
-            }
-            
-            post.content = [self.htmlScraper richTextFromHtml:content];
-        } else if ([listKey isEqualToString:@"newlist"]) {
-            NSMutableAttributedString *content = [[NSMutableAttributedString alloc] initWithAttributedString:[self.htmlScraper richTextFromHtml:[self urldecode:[[rawPost objectForKey:@"pname"] stringByAppendingString:@"\n\n"]]]];
-
-            if (content.length > 2) {
-                post.title = [content.string substringToIndex:content.length - 2];
-            }
-            
-            [content appendAttributedString:[[NSAttributedString alloc] initWithString:post.user attributes:metaAttributes]];
-            
-            NSString *childCount = [rawPost objectForKey:@"tid_sum"];
-            [content appendAttributedString:[[NSAttributedString alloc] initWithString:[NSString stringWithFormat:@" • %@ 回复 • ", childCount] attributes:metaAttributes]];
-            [content appendAttributedString:post.forumName];
-            
-            post.content = (NSAttributedString *)content;
-            post.meta = [[NSAttributedString alloc] initWithString:[NSString stringWithFormat:BUCLastPosterTemplate, [self parseDateline:[self urldecode:[[rawPost objectForKey:@"lastreply"] objectForKey:@"when"]]], [self urldecode:[[rawPost objectForKey:@"lastreply"] objectForKey:@"who"]]] attributes:metaAttributes];
-        } else {
-            NSMutableAttributedString *content = [[NSMutableAttributedString alloc] initWithAttributedString:[self.htmlScraper richTextFromHtml:[self urldecode:[[rawPost objectForKey:@"subject"] stringByAppendingString:@"\n\n"]]]];
-
-            if (content.length > 2) {
-                post.title = [content.string substringToIndex:content.length - 2];
-            }
-            
-            [content appendAttributedString:[[NSAttributedString alloc] initWithString:post.user attributes:metaAttributes]];
-            
-            [content appendAttributedString:[[NSAttributedString alloc] initWithString:[@" • " stringByAppendingString:post.date] attributes:metaAttributes]];
-
-            NSString *viewCount = [rawPost objectForKey:@"views"];
-            viewCount = [NSString stringWithFormat:@"%@ 查看", viewCount];
-            NSString *childCount = [rawPost objectForKey:@"replies"];
-            childCount = [NSString stringWithFormat:@"%@ 回复", childCount];
-            [content appendAttributedString:[[NSAttributedString alloc] initWithString:[NSString stringWithFormat:@" • %@ | %@", childCount, viewCount] attributes:metaAttributes]];
-            post.content = content;
-            post.meta = [[NSAttributedString alloc] initWithString:[NSString stringWithFormat:BUCLastPosterTemplate, [self parseDateline:[rawPost objectForKey:@"lastpost"]], [self urldecode:[rawPost objectForKey:@"lastposter"]]] attributes:metaAttributes];
-        }
-        
-        [list addObject:post];
+    if ([listType isEqualToString:@"newlist"]) {
+        block  = ^(BUCPost *post, NSDictionary *raw, NSDictionary *metaAttributes) {
+            [self newListPost:post fromRaw:raw metaAttributes:metaAttributes];
+        };
+    } else if ([listType isEqualToString:@"threadlist"]) {
+        block = ^(BUCPost *post, NSDictionary *raw, NSDictionary *metaAttributes) {
+            [self threadListPost:post fromRaw:raw metaAttributes:metaAttributes];
+        };
+    } else {
+        block = ^(BUCPost *post, NSDictionary *raw, NSDictionary *metaAttributes) {
+            [self detailListPost:post fromRaw:raw];
+        };
     }
     
-    listBlock(list);
+    dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0);
+    dispatch_apply(count, queue, ^(size_t i) {
+        BUCPost *post = [self.postList objectAtIndex:i];
+        NSDictionary *raw = [list objectAtIndex:i];
+        block(post, raw, metaAttributes);
+    });
+}
+
+
+- (void)detailListPost:(BUCPost *)post fromRaw:(NSDictionary *)raw {
+    NSMutableString *content = [[NSMutableString alloc] init];
+    NSString *title = [self urldecode:[raw objectForKey:@"subject"]];
+    if (title) {
+        title = [NSString stringWithFormat:@"<b>%@</b>\n\n", title];
+        [content appendString:title];
+    }
+    
+    NSString *body = [self urldecode:[raw objectForKey:@"message"]];
+    if (body) {
+        [content appendString:body];
+    }
+    
+    NSString *attachment = [self urldecode:[raw objectForKey:@"attachment"]];
+    if (attachment) {
+        NSString *filetype = [self urldecode:[raw objectForKey:@"filetype"]];
+        if (filetype && [filetype rangeOfString:@"image/"].length > 0) {
+            attachment = [NSString stringWithFormat:@"\n\n本帖包含图片附件:\n\n<img src='%@/%@'>", self.host, attachment];
+            [content appendString:attachment];
+        }
+    }
+    
+    post.content = [self.htmlScraper richTextFromHtml:content];
+    post.uid = [raw objectForKey:@"authorid"];
+    NSURL *avatarUrl = [self.htmlScraper avatarUrlFromHtml:[self urldecode:[raw objectForKey:@"avatar"]]];
+    if (avatarUrl) {
+        post.avatar = [[BUCImageAttachment alloc] init];
+        post.avatar.url = avatarUrl;
+    } else {
+        post.avatar = nil;
+    }
+    post.pid = [raw objectForKey:@"pid"];
+    post.tid = [raw objectForKey:@"tid"];
+    post.date = [self parseDateline:[raw objectForKey:@"dateline"]];;
+    post.user = [self urldecode:[raw objectForKey:@"author"]];
+}
+
+
+- (void)newListPost:(BUCPost *)post fromRaw:(NSDictionary *)raw metaAttributes:(NSDictionary *)metaAttributes {
+    post.tid = [raw objectForKey:@"tid"];
+    post.user = [self urldecode:[raw objectForKey:@"author"]];
+    post.forumName = [self.htmlScraper richTextFromHtml:[self urldecode:[raw objectForKey:@"fname"]] attributes:metaAttributes].richText;
+    
+    BUCRichText *content = [self.htmlScraper richTextFromHtml:[self urldecode:[[raw objectForKey:@"pname"] stringByAppendingString:@"\n\n"]]];
+    
+    if (content.richText.length > 2) {
+        post.title = [content.richText.string substringToIndex:content.richText.length - 2];
+    }
+    
+    [content.richText appendAttributedString:[[NSAttributedString alloc] initWithString:post.user attributes:metaAttributes]];
+    
+    NSString *childCount = [raw objectForKey:@"tid_sum"];
+    [content.richText appendAttributedString:[[NSAttributedString alloc] initWithString:[NSString stringWithFormat:@" • %@ 回复 • ", childCount] attributes:metaAttributes]];
+    [content.richText appendAttributedString:post.forumName];
+    
+    post.content = content;
+    post.meta = [[NSAttributedString alloc] initWithString:[NSString stringWithFormat:@"最后回复: %@ by %@", [self parseDateline:[self urldecode:[[raw objectForKey:@"lastreply"] objectForKey:@"when"]]], [self urldecode:[[raw objectForKey:@"lastreply"] objectForKey:@"who"]]] attributes:metaAttributes];
+}
+
+
+- (void)threadListPost:(BUCPost *)post fromRaw:(NSDictionary *)raw metaAttributes:(NSDictionary *)metaAttributes {
+    post.uid = [raw objectForKey:@"authorid"];
+    post.user = [self urldecode:[raw objectForKey:@"author"]];
+    post.tid = [raw objectForKey:@"tid"];
+    post.date = [self parseDateline:[raw objectForKey:@"dateline"]];
+    
+    BUCRichText *content = [self.htmlScraper richTextFromHtml:[self urldecode:[[raw objectForKey:@"subject"] stringByAppendingString:@"\n\n"]]];
+    
+    if (content.richText.length > 2) {
+        post.title = [content.richText.string substringToIndex:content.richText.length - 2];
+    }
+    
+    [content.richText appendAttributedString:[[NSAttributedString alloc] initWithString:post.user attributes:metaAttributes]];
+    
+    [content.richText appendAttributedString:[[NSAttributedString alloc] initWithString:[@" • " stringByAppendingString:post.date] attributes:metaAttributes]];
+    
+    NSString *viewCount = [raw objectForKey:@"views"];
+    viewCount = [NSString stringWithFormat:@"%@ 查看", viewCount];
+    NSString *childCount = [raw objectForKey:@"replies"];
+    childCount = [NSString stringWithFormat:@"%@ 回复", childCount];
+    [content.richText appendAttributedString:[[NSAttributedString alloc] initWithString:[NSString stringWithFormat:@" • %@ | %@", childCount, viewCount] attributes:metaAttributes]];
+    post.content = content;
+    post.meta = [[NSAttributedString alloc] initWithString:[NSString stringWithFormat:@"最后回复: %@ by %@", [self parseDateline:[raw objectForKey:@"lastpost"]], [self urldecode:[raw objectForKey:@"lastposter"]]] attributes:metaAttributes];
 }
 
 
