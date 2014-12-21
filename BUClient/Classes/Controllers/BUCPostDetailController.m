@@ -512,17 +512,21 @@ static NSUInteger const BUCPostPageMaxRowCount = 40;
     }
     CGRect frame = cell.bounds;
     dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0);
-    dispatch_async(queue, ^{
-        UIImage *background = [self drawBackgroundWithPost:post inRect:frame];
-        if ([[tableView indexPathsForVisibleRows] containsObject:indexPath]) {
-            dispatch_async(dispatch_get_main_queue(), ^{
-                if ([[tableView indexPathsForVisibleRows] containsObject:indexPath]) {
-                    BUCPostListCell *cell = (BUCPostListCell *)[tableView cellForRowAtIndexPath:indexPath];
-                    cell.background.image = background;
-                }
-            });
-        }
-    });
+    if (post.content.richText.length < 100) {
+        cell.background.image = [self drawBackgroundWithPost:post inRect:frame];
+    } else {
+        dispatch_async(queue, ^{
+            UIImage *background = [self drawBackgroundWithPost:post inRect:frame];
+            if ([[tableView indexPathsForVisibleRows] containsObject:indexPath]) {
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    if ([[tableView indexPathsForVisibleRows] containsObject:indexPath]) {
+                        BUCPostListCell *cell = (BUCPostListCell *)[tableView cellForRowAtIndexPath:indexPath];
+                        cell.background.image = background;
+                    }
+                });
+            }
+        });
+    }
     
     UIImageView *avatarView = [[UIImageView alloc] initWithFrame:self.avatarBounds];
     avatarView.backgroundColor = [UIColor whiteColor];
