@@ -12,6 +12,7 @@
         [self.imageList makeObjectsPerformSelector:@selector(removeFromSuperview)];
         [self.imageList removeAllObjects];
     }
+    self.background.image = nil;
 }
 
 @end

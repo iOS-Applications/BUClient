@@ -473,7 +473,6 @@ static NSUInteger const BUCPostPageMaxRowCount = 40;
 
 - (UIImage *)drawBackgroundWithPost:(BUCPost *)post inRect:(CGRect)rect {
     UIImage *output;
-    NSLog(@"%@", NSStringFromCGRect(rect));
     UIGraphicsBeginImageContextWithOptions(rect.size, YES, 0.0f);
     [[UIColor whiteColor] setFill];
     UIBezierPath *path = [UIBezierPath bezierPathWithRect:rect];
@@ -511,19 +510,19 @@ static NSUInteger const BUCPostPageMaxRowCount = 40;
     if (!cell.imageList) {
         cell.imageList = [[NSMutableArray alloc] init];
     }
-    
-    
+    CGRect frame = cell.bounds;
     dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0);
     dispatch_async(queue, ^{
-        UIImage *background = [self drawBackgroundWithPost:post inRect:cell.bounds];
-        dispatch_async(dispatch_get_main_queue(), ^{
-            if ([[tableView indexPathsForVisibleRows] containsObject:indexPath]) {
-                BUCPostListCell *cell = (BUCPostListCell *)[tableView cellForRowAtIndexPath:indexPath];
-                cell.background.image = background;
-            }
-        });
+        UIImage *background = [self drawBackgroundWithPost:post inRect:frame];
+        if ([[tableView indexPathsForVisibleRows] containsObject:indexPath]) {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                if ([[tableView indexPathsForVisibleRows] containsObject:indexPath]) {
+                    BUCPostListCell *cell = (BUCPostListCell *)[tableView cellForRowAtIndexPath:indexPath];
+                    cell.background.image = background;
+                }
+            });
+        }
     });
-    
     
     UIImageView *avatarView = [[UIImageView alloc] initWithFrame:self.avatarBounds];
     avatarView.backgroundColor = [UIColor whiteColor];
@@ -533,7 +532,6 @@ static NSUInteger const BUCPostPageMaxRowCount = 40;
     [cell.imageList addObject:avatarView];
     
     if (post.avatar) {
-        dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0);
         dispatch_async(queue, ^{
             [[BUCDataManager sharedInstance] getImageWithUrl:post.avatar.url size:self.avatarBounds.size onSuccess:^(UIImage *image) {
                 dispatch_async(dispatch_get_main_queue(), ^{
@@ -546,7 +544,6 @@ static NSUInteger const BUCPostPageMaxRowCount = 40;
     }
     
     if (post.content.imageList) {
-        dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0);
         dispatch_async(queue, ^{
             for (BUCImageAttachment *attachment in post.content.imageList) {
                 if (attachment.path) {
