@@ -9,7 +9,6 @@
 
 @property (nonatomic) NSMutableAttributedString *richText;
 @property (nonatomic) NSMutableArray *imageList;
-@property (nonatomic) NSMutableArray *gifList;
 @property (nonatomic) NSMutableArray *blockList;
 
 @end
@@ -20,8 +19,6 @@
 @property (nonatomic) NSUInteger glyphIndex;
 @property (nonatomic) NSURL *url;
 @property (nonatomic) NSString *path;
-@property (nonatomic) UIImage *resizedImage;
-@property (nonatomic) CGRect boundingRect;
 
 @end
 
@@ -40,7 +37,7 @@
 
 @property (nonatomic) NSUInteger index;
 @property (nonatomic) CGFloat cellHeight;
-@property (nonatomic) CGRect contentBounds;
+@property (nonatomic) CGFloat cellWidth;
 
 @property (nonatomic) BOOL bookmarked;
 @property (nonatomic) NSInteger bookmarkIndex;
@@ -51,7 +48,6 @@
 @property (nonatomic) NSTextStorage *textStorage;
 @property (nonatomic) BUCLayoutManager *layoutManager;
 @property (nonatomic) BUCTextContainer *textContainer;
-@property (nonatomic) UIImage *contents;
 
 - (instancetype)initWithTextStack;
 
@@ -80,7 +76,6 @@ typedef NS_OPTIONS(uint32_t, BUCLinkType) {
 @property (nonatomic) NSRange range;
 
 @property (nonatomic) UIColor *backgroundColor;
-
 @property (nonatomic) BOOL noBackground;
 
 @end

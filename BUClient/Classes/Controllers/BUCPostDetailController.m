@@ -127,7 +127,7 @@ static NSUInteger const BUCPostPageMaxRowCount = 40;
     self.metaLineHeight = ceilf(metaFont.lineHeight);
     
     self.avatarBounds = CGRectMake(BUCDefaultPadding, BUCDefaultMargin, 40.0f, 40.0f);
-    self.imageSize = CGSizeMake(200.0f, 200.0f);
+    self.imageSize = CGSizeMake(100.0f, 100.0f);
     self.defaultAvatar = [UIImage imageNamed:@"avatar"];
     self.defaultImage = [UIImage imageNamed:@"loading"];
 }
@@ -218,9 +218,9 @@ static NSUInteger const BUCPostPageMaxRowCount = 40;
         reusablePost.user = post.user;
         reusablePost.pid = post.pid;
         reusablePost.index = index + self.from;
-        reusablePost.contents = nil;
         reusablePost.avatar = post.avatar;
         reusablePost.date = post.date;
+        reusablePost.cellWidth = 0.0f;
         
         if (!self.flush) {
             [self.insertIndexPaths addObject:[NSIndexPath indexPathForRow:index inSection:0]];
@@ -382,7 +382,7 @@ static NSUInteger const BUCPostPageMaxRowCount = 40;
             self.bottomLoadingLabel.text = @"点这里加载更多";
         }
     }
-
+    
     [self.topLoadingIndicator stopAnimating];
     [self.bottomLoadingIndicator stopAnimating];
     self.loading = NO;
@@ -427,6 +427,7 @@ static NSUInteger const BUCPostPageMaxRowCount = 40;
     [post.layoutManager ensureLayoutForTextContainer:post.textContainer];
     CGRect frame = [post.layoutManager usedRectForTextContainer:post.textContainer];
     frame.size.height = ceilf(frame.size.height);
+    post.cellWidth = self.screenWidth;
     return BUCDefaultMargin * 4.0f + frame.size.height + 40.0f;
 }
 
@@ -434,9 +435,8 @@ static NSUInteger const BUCPostPageMaxRowCount = 40;
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {
     BUCPost *post = [self getPostWithIndexpath:indexPath];
     
-    if (post.contents.size.width != self.screenWidth) {
+    if (self.screenWidth != post.cellWidth) {
         post.cellHeight = [self cellHeightWithPost:post];
-        post.contentBounds = CGRectMake(0.0f, 0.0f, self.screenWidth, post.cellHeight);
     }
     
     return post.cellHeight;
@@ -473,8 +473,8 @@ static NSUInteger const BUCPostPageMaxRowCount = 40;
 
 - (UIImage *)drawBackgroundWithPost:(BUCPost *)post inRect:(CGRect)rect {
     UIImage *output;
+    NSLog(@"%@", NSStringFromCGRect(rect));
     UIGraphicsBeginImageContextWithOptions(rect.size, YES, 0.0f);
-    
     [[UIColor whiteColor] setFill];
     UIBezierPath *path = [UIBezierPath bezierPathWithRect:rect];
     [path fill];
@@ -505,16 +505,6 @@ static NSUInteger const BUCPostPageMaxRowCount = 40;
 }
 
 
-- (void)tableView:(UITableView *)tableView didEndDisplayingCell:(UITableViewCell *)cell forRowAtIndexPath:(NSIndexPath *)indexPath {
-    BUCPostListCell *postCell = (BUCPostListCell *)cell;
-    for (UIImageView *imageView in postCell.imageList) {
-        imageView.image = nil;
-        [imageView removeFromSuperview];
-    }
-    [postCell.imageList removeAllObjects];
-}
-
-
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     BUCPostListCell *cell = [self.tableView dequeueReusableCellWithIdentifier:@"cell" forIndexPath:indexPath];
     BUCPost *post = [self getPostWithIndexpath:indexPath];
@@ -522,48 +512,37 @@ static NSUInteger const BUCPostPageMaxRowCount = 40;
         cell.imageList = [[NSMutableArray alloc] init];
     }
     
-    if (post.contents.size.width != self.screenWidth) {
-        dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0);
-        dispatch_async(queue, ^{
-            post.contents = [self drawBackgroundWithPost:post inRect:post.contentBounds];
-            dispatch_async(dispatch_get_main_queue(), ^{
-                if ([[tableView indexPathsForVisibleRows] containsObject:indexPath]) {
-                    BUCPostListCell *cell = (BUCPostListCell *)[tableView cellForRowAtIndexPath:indexPath];
-                    cell.background.image = post.contents;
-                }
-            });
+    
+    dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0);
+    dispatch_async(queue, ^{
+        UIImage *background = [self drawBackgroundWithPost:post inRect:cell.bounds];
+        dispatch_async(dispatch_get_main_queue(), ^{
+            if ([[tableView indexPathsForVisibleRows] containsObject:indexPath]) {
+                BUCPostListCell *cell = (BUCPostListCell *)[tableView cellForRowAtIndexPath:indexPath];
+                cell.background.image = background;
+            }
         });
-    } else {
-        cell.background.image = post.contents;
-    }
+    });
+    
     
     UIImageView *avatarView = [[UIImageView alloc] initWithFrame:self.avatarBounds];
     avatarView.backgroundColor = [UIColor whiteColor];
     avatarView.contentMode = UIViewContentModeCenter;
+    avatarView.image = self.defaultAvatar;
     [cell.contentView addSubview:avatarView];
     [cell.imageList addObject:avatarView];
-
+    
     if (post.avatar) {
-        if (post.avatar.resizedImage) {
-            avatarView.image = post.avatar.resizedImage;
-        } else {
-            avatarView.image = self.defaultAvatar;
-            dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0);
-            dispatch_async(queue, ^{
-                [[BUCDataManager sharedInstance] getImageWithUrl:post.avatar.url size:self.avatarBounds.size onSuccess:^(UIImage *image) {
-                    post.avatar.resizedImage = image;
-                    
-                    dispatch_async(dispatch_get_main_queue(), ^{
-                        if ([[tableView indexPathsForVisibleRows] containsObject:indexPath]) {
-                            avatarView.image = nil;
-                            avatarView.image = post.avatar.resizedImage;
-                        }
-                    });
-                }];
-            });
-        }
-    } else {
-        avatarView.image = self.defaultAvatar;
+        dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0);
+        dispatch_async(queue, ^{
+            [[BUCDataManager sharedInstance] getImageWithUrl:post.avatar.url size:self.avatarBounds.size onSuccess:^(UIImage *image) {
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    if ([[tableView indexPathsForVisibleRows] containsObject:indexPath]) {
+                        avatarView.image = image;
+                    }
+                });
+            }];
+        });
     }
     
     if (post.content.imageList) {
@@ -576,64 +555,43 @@ static NSUInteger const BUCPostPageMaxRowCount = 40;
                     frame.origin.y = ceilf(frame.origin.y + BUCDefaultMargin * 3.0f + 40.0f);
                     frame.size.width = ceilf(frame.size.width);
                     frame.size.height = ceilf(frame.size.height);
+                    UIImage *image = [[BUCDataManager sharedInstance] getImageWithPath:attachment.path];
                     dispatch_async(dispatch_get_main_queue(), ^{
                         if ([[tableView indexPathsForVisibleRows] containsObject:indexPath]) {
                             BUCPostListCell *cell = (BUCPostListCell *)[tableView cellForRowAtIndexPath:indexPath];
                             UIImageView *gifView = [[UIImageView alloc] initWithFrame:frame];
                             gifView.backgroundColor = [UIColor whiteColor];
                             gifView.contentMode = UIViewContentModeCenter;
-                            gifView.image = attachment.resizedImage;
+                            gifView.image = image;
                             [cell.contentView addSubview:gifView];
                             [cell.imageList addObject:gifView];
                         }
                     });
                 } else {
                     CGRect frame = [post.layoutManager boundingRectForGlyphRange:NSMakeRange(attachment.glyphIndex, 1) inTextContainer:post.textContainer];
-                    frame.origin.x = ceilf((self.screenWidth - 200.0f) / 2.0f);
-                    frame.origin.y = ceilf((frame.size.height - 200.0f) / 2.0f + frame.origin.y + BUCDefaultMargin * 3.0f + 40.0f);
+                    frame.origin.x = ceilf((self.screenWidth - 100.0f) / 2.0f);
+                    frame.origin.y = ceilf((frame.size.height - 100.0f) / 2.0f + frame.origin.y + BUCDefaultMargin * 3.0f + 40.0f);
                     frame.size = self.imageSize;
-                    if (attachment.resizedImage) {
+                    UIImageView *imageView = [[UIImageView alloc] initWithFrame:frame];
+                    imageView.backgroundColor = [UIColor whiteColor];
+                    imageView.contentMode = UIViewContentModeCenter;
+                    imageView.image = self.defaultImage;
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        [cell.contentView addSubview:imageView];
+                        [cell.imageList addObject:imageView];
+                    });
+                    [[BUCDataManager sharedInstance] getImageWithUrl:attachment.url size:self.imageSize onSuccess:^(UIImage *image) {
                         dispatch_async(dispatch_get_main_queue(), ^{
                             if ([[tableView indexPathsForVisibleRows] containsObject:indexPath]) {
-                                BUCPostListCell *cell = (BUCPostListCell *)[tableView cellForRowAtIndexPath:indexPath];
-                                UIImageView *imageView = [[UIImageView alloc] initWithFrame:frame];
-                                imageView.backgroundColor = [UIColor whiteColor];
-                                imageView.contentMode = UIViewContentModeCenter;
-                                imageView.image = attachment.resizedImage;
-                                [cell.contentView addSubview:imageView];
-                                [cell.imageList addObject:imageView];
+                                imageView.image = image;
                             }
                         });
-                    } else {
-                        dispatch_async(dispatch_get_main_queue(), ^{
-                            UIImageView *imageView = [[UIImageView alloc] initWithFrame:frame];
-                            imageView.backgroundColor = [UIColor whiteColor];
-                            imageView.contentMode = UIViewContentModeCenter;
-                            imageView.image = self.defaultImage;
-                            if ([[tableView indexPathsForVisibleRows] containsObject:indexPath]) {
-                                BUCPostListCell *cell = (BUCPostListCell *)[tableView cellForRowAtIndexPath:indexPath];
-                                [cell.contentView addSubview:imageView];
-                                [cell.imageList addObject:imageView];
-                            }
-                            
-                            dispatch_async(queue, ^{
-                                [[BUCDataManager sharedInstance] getImageWithUrl:attachment.url size:self.imageSize onSuccess:^(UIImage *image) {
-                                    attachment.resizedImage = image;
-                                    dispatch_async(dispatch_get_main_queue(), ^{
-                                        if ([[tableView indexPathsForVisibleRows] containsObject:indexPath]) {
-                                            imageView.image = nil;
-                                            imageView.image = attachment.resizedImage;
-                                        }
-                                    });
-                                }];
-                            });
-                        });
-                    }
+                    }];
                 }
             }
         });
     }
- 
+    
     if (!self.reverse && indexPath.row == self.filterRowCount - 1 && !self.loading && self.to < self.postCount) {
         [self loadMore];
     }
@@ -767,7 +725,7 @@ static NSUInteger const BUCPostPageMaxRowCount = 40;
     } else {
         self.tableView.contentInset = UIEdgeInsetsMake(0.0f, 0.0f, 50.0f, 0.0f);
     }
-
+    
     [self toggleMenu];
     [self.tableView setContentOffset:CGPointZero];
     [self.tableView reloadData];

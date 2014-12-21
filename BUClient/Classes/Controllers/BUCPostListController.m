@@ -162,7 +162,7 @@ static NSUInteger const BUCPostListMaxRowCount = 40;
         reusablePost.title = post.title;
         [reusablePost.textStorage setAttributedString:post.content.richText];
         reusablePost.meta = post.meta;
-        reusablePost.contents = nil;
+        reusablePost.cellWidth = 0.0f;
         
         index = index + 1;
     }
@@ -381,14 +381,14 @@ static NSUInteger const BUCPostListMaxRowCount = 40;
     [post.layoutManager ensureLayoutForTextContainer:post.textContainer];
     CGRect frame = [post.layoutManager usedRectForTextContainer:post.textContainer];
     frame.size.height = ceilf(frame.size.height);
-    post.contentBounds = frame;
+    post.cellWidth = self.screenWidth;
     return BUCDefaultMargin * 3 + frame.size.height + self.metaLineHeight;
 }
 
 
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {
     BUCPost *post = [self.postList objectAtIndex:indexPath.section];
-    if (post.contents.size.width != self.screenWidth) {
+    if (self.screenWidth != post.cellWidth) {
         post.cellHeight = [self cellHeightWithPost:post];
     }
     
@@ -396,9 +396,9 @@ static NSUInteger const BUCPostListMaxRowCount = 40;
 }
 
 
-- (UIImage *)renderPost:(BUCPost *)post {
+- (UIImage *)renderPost:(BUCPost *)post bounds:(CGRect)bounds {
     UIImage *output;
-    CGFloat separatorPosition = post.contentBounds.size.height + BUCDefaultMargin;
+    CGFloat separatorPosition = bounds.size.height - self.metaLineHeight - BUCDefaultMargin * 2.0f;
     UIGraphicsBeginImageContextWithOptions(CGSizeMake(self.screenWidth, post.cellHeight), NO, 0);
     [post.layoutManager drawGlyphsForGlyphRange:NSMakeRange(0, post.textStorage.length) atPoint:CGPointMake(BUCDefaultPadding, BUCDefaultMargin)];
     [post.meta drawAtPoint:CGPointMake(BUCDefaultPadding, separatorPosition + BUCDefaultMargin)];
@@ -415,11 +415,7 @@ static NSUInteger const BUCPostListMaxRowCount = 40;
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     BUCPostListCell *cell = [self.tableView dequeueReusableCellWithIdentifier:@"cell" forIndexPath:indexPath];
     BUCPost *post = [self.postList objectAtIndex:indexPath.section];
-    if (post.contents.size.width != self.screenWidth) {
-        post.contents = [self renderPost:post];
-    }
-    cell.background.image = post.contents;
-    
+    cell.background.image = [self renderPost:post bounds:cell.bounds];
     
     if (indexPath.section == self.rowCount - 1 && !self.loading && self.to < self.postCount && self.rowCount == 20) {
         [self loadMore];

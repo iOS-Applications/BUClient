@@ -1,9 +1,6 @@
 #import "BUCHTMLScraper.h"
 #import "TFHpple.h"
-#import "UIImage+BUCImageCategory.h"
 #import "BUCConstants.h"
-
-
 
 @interface BUCHTMLScraper ()
 
@@ -18,7 +15,7 @@
     self = [super init];
     
     if (self) {
-        _imageBounds = CGRectMake(0.0f, 0.0f, 1000.0f, 200.0f);
+        _imageBounds = CGRectMake(0.0f, 0.0f, 1000.0f, 100.0f);
     }
     
     return self;
@@ -228,7 +225,6 @@
             return;
         } else {
             attachment.bounds = CGRectMake(0.0f, 0.0f, image.size.width, image.size.height);
-            attachment.resizedImage = image;
         }
     } else {
         attachment.url = [self parseImageUrl:source];
@@ -318,7 +314,6 @@
 - (NSDictionary *)fontAttributes:(TFHppleElement *)font {
     NSMutableDictionary *fontAttributes = [[NSMutableDictionary alloc] init];
     
-    // size attribute support is needed..
     NSString *color = [font objectForKey:@"color"];
     if (color) {
         [fontAttributes setObject:[self colorAttribute:color] forKey:NSForegroundColorAttributeName];
