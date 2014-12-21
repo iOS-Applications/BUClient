@@ -462,9 +462,13 @@ static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
     post.user = [self urldecode:[raw objectForKey:@"author"]];
     post.tid = [raw objectForKey:@"tid"];
     post.date = [self parseDateline:[raw objectForKey:@"dateline"]];
-    
-    BUCRichText *content = [self.htmlScraper richTextFromHtml:[self urldecode:[[raw objectForKey:@"subject"] stringByAppendingString:@"\n\n"]]];
-    
+    NSString *html = [self urldecode:[[raw objectForKey:@"subject"] stringByAppendingString:@"\n\n"]];
+    BUCRichText *content = [self.htmlScraper richTextFromHtml:html];
+    if (!content) {
+        // sometimes API can return invalid HTML string....
+        content = [[BUCRichText alloc] init];
+        content.richText = [[NSMutableAttributedString alloc] initWithString:html attributes:@{NSFontAttributeName:[UIFont preferredFontForTextStyle:UIFontTextStyleBody]}];
+    }
     if (content.richText.length > 2) {
         post.title = [content.richText.string substringToIndex:content.richText.length - 2];
     }
