@@ -44,15 +44,13 @@ static NSUInteger const BUCPostListMaxRowCount = 40;
 
 @implementation BUCPostListController
 #pragma mark - setup
-- (void)dealloc {
-    [self.appDelegate hideLoading];
-}
-
-
 - (void)viewWillDisappear:(BOOL)animated {
     [super viewWillDisappear:animated];
     
     [[NSNotificationCenter defaultCenter] removeObserver:self name:UIContentSizeCategoryDidChangeNotification object:nil];
+    if ([self.navigationController.viewControllers indexOfObject:self]==NSNotFound) {
+        [self.appDelegate hideLoading];
+    }
 }
 
 
@@ -123,10 +121,12 @@ static NSUInteger const BUCPostListMaxRowCount = 40;
     self.to = BUCAPIMaxLoadRowCount;
 }
 
+
 - (void)viewDidLoad {
     [super viewDidLoad];
     
     self.navigationItem.backBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"" style:UIBarButtonItemStylePlain target:nil action:nil];
+    
     self.topRotateArrow.transform = CGAffineTransformMakeRotation(M_PI);
     
     self.appDelegate = [UIApplication sharedApplication].delegate;

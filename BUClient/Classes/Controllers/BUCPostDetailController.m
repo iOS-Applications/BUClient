@@ -72,10 +72,6 @@ static NSUInteger const BUCPostPageMaxRowCount = 40;
 
 @implementation BUCPostDetailController
 #pragma mark - setup
-- (void)dealloc {
-    [self.appDelegate hideLoading];
-}
-
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];
     
@@ -91,7 +87,10 @@ static NSUInteger const BUCPostPageMaxRowCount = 40;
      removeObserver:self name:UIKeyboardWillShowNotification object:nil];
     
     [self dismissPageSelection];
-    [self.appDelegate hideLoading];
+    
+    if ([self.navigationController.viewControllers indexOfObject:self]==NSNotFound) {
+        [self.appDelegate hideLoading];
+    }
 }
 
 
@@ -132,10 +131,13 @@ static NSUInteger const BUCPostPageMaxRowCount = 40;
     self.defaultImage = [UIImage imageNamed:@"loading"];
 }
 
+
 - (void)viewDidLoad {
     [super viewDidLoad];
     
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(textStyleChanged:) name:UIContentSizeCategoryDidChangeNotification object:nil];
+    
+    self.navigationItem.backBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"" style:UIBarButtonItemStylePlain target:nil action:nil];
     
     NSMutableArray *barButtons = [self.navigationItem.rightBarButtonItems mutableCopy];
     [barButtons addObject:self.replyButton];

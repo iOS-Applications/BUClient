@@ -3,9 +3,12 @@
 #import "BUCPostListController.h"
 #import "BUCForumListController.h"
 #import "UIImage+BUCImageCategory.h"
+#import "BUCAppDelegate.h"
 
 
 @interface BUCRootController () <UITableViewDataSource, UITableViewDelegate>
+
+@property (nonatomic) BUCAppDelegate *appDelegate;
 
 @property (nonatomic) NSString *path;
 @property (nonatomic) NSMutableArray *list;
