@@ -170,7 +170,6 @@ static NSUInteger const BUCPostPageMaxRowCount = 40;
 
 
 - (void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation {
-#warning this needs to be queued!
     UIDeviceOrientation orientation = [UIDevice currentDevice].orientation;
     BOOL layoutInvalid = NO;
     if (UIDeviceOrientationIsLandscape(orientation) && self.screenWidth != self.nativeHeight) {

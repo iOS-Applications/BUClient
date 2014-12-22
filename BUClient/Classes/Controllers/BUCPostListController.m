@@ -69,16 +69,20 @@ static NSUInteger const BUCPostListMaxRowCount = 40;
 
 
 - (void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation {
-#warning this need to be queued!
     UIDeviceOrientation orientation = [UIDevice currentDevice].orientation;
+    BOOL layoutInvalid = NO;
     if (UIDeviceOrientationIsLandscape(orientation) && self.screenWidth != self.nativeHeight) {
         self.screenWidth = self.nativeHeight;
+        layoutInvalid = YES;
     } else if (UIDeviceOrientationIsPortrait(orientation) && self.screenWidth != self.nativeWidth) {
         self.screenWidth = self.nativeWidth;
+        layoutInvalid = YES;
     }
 
-    self.contentWidth = self.screenWidth - 2 * BUCDefaultPadding;
-    [self.tableView reloadData];
+    if (layoutInvalid) {
+        self.contentWidth = self.screenWidth - 2 * BUCDefaultPadding;
+        [self.tableView reloadData];
+    }
 }
 
 
