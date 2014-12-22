@@ -94,6 +94,18 @@ static NSUInteger const BUCPostPageMaxRowCount = 40;
 }
 
 
+- (void)viewDidAppear:(BOOL)animated {
+    [super viewDidAppear:animated];
+    
+    BUCPost *post = [self.postList firstObject];
+    UITableView *cell = [self.tableView.visibleCells firstObject];
+    if (cell.frame.size.width != post.cellWidth) {
+        [self setupGeometry];
+        [self.tableView reloadData];
+    }
+}
+
+
 - (void)viewWillAppear:(BOOL)animated {
     [super viewWillAppear:animated];
     
@@ -101,6 +113,16 @@ static NSUInteger const BUCPostPageMaxRowCount = 40;
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(keyboardWillShown:) name:UIKeyboardWillShowNotification object:nil];
 }
 
+
+- (void)setupGeometry {
+    UIDeviceOrientation deviceOrientation = [UIDevice currentDevice].orientation;
+    if (UIDeviceOrientationIsLandscape(deviceOrientation)) {
+        self.screenWidth = self.nativeHeight;
+    } else {
+        self.screenWidth = self.nativeWidth;
+    }
+    self.contentWidth = self.screenWidth - 2 * BUCDefaultPadding;
+}
 
 - (void)setupRenderDefalut {
     self.nativeWidth = CGRectGetWidth([UIScreen mainScreen].bounds);
@@ -110,15 +132,7 @@ static NSUInteger const BUCPostPageMaxRowCount = 40;
         self.nativeWidth = self.nativeHeight;
         self.nativeHeight = save;
     }
-    UIDeviceOrientation deviceOrientation = [UIDevice currentDevice].orientation;
-    if (UIDeviceOrientationIsLandscape(deviceOrientation)) {
-        self.screenWidth = self.nativeHeight;
-    } else if (UIDeviceOrientationIsPortrait(deviceOrientation)) {
-        self.screenWidth = self.nativeWidth;
-    } else {
-        self.screenWidth = self.nativeWidth;
-    }
-    self.contentWidth = self.screenWidth - 2 * BUCDefaultPadding;
+    [self setupGeometry];
     
     UIFont *metaFont = [UIFont preferredFontForTextStyle:UIFontTextStyleCaption1];
     self.metaAttribute = @{NSFontAttributeName:metaFont};
@@ -321,16 +335,6 @@ static NSUInteger const BUCPostPageMaxRowCount = 40;
 }
 
 
-- (IBAction)tapToLoadMore:(UITapGestureRecognizer *)recognizer {
-    CGPoint location = [recognizer locationInView:self.bottomLoadingView];
-    if (![self.bottomLoadingView pointInside:location withEvent:nil]) {
-        return;
-    } else {
-        [self loadMore];
-    }
-}
-
-
 - (void)scrollViewDidScroll:(UIScrollView *)scrollView {
     if (self.loading || !self.reverse) {
         return;
@@ -461,6 +465,7 @@ static NSUInteger const BUCPostPageMaxRowCount = 40;
         frame.origin.x = blockAttribute.padding - BUCDefaultMargin;
         frame = CGRectInset(frame, 0, -BUCDefaultMargin);
         if (blockAttribute.backgroundColor) {
+            CGContextSaveGState(context);
             [blockAttribute.backgroundColor setFill];
             CGContextFillRect(context, frame);
             CGContextRestoreGState(context);
@@ -470,6 +475,7 @@ static NSUInteger const BUCPostPageMaxRowCount = 40;
         
         CGContextStrokeRect(context, frame);
     }
+    CGContextRestoreGState(context);
 }
 
 
@@ -586,6 +592,7 @@ static NSUInteger const BUCPostPageMaxRowCount = 40;
                     [[BUCDataManager sharedInstance] getImageWithUrl:attachment.url size:self.imageSize onSuccess:^(UIImage *image) {
                         dispatch_async(dispatch_get_main_queue(), ^{
                             if ([[tableView indexPathsForVisibleRows] containsObject:indexPath]) {
+                                imageView.userInteractionEnabled = YES;
                                 imageView.image = image;
                             }
                         });
@@ -604,16 +611,63 @@ static NSUInteger const BUCPostPageMaxRowCount = 40;
 
 
 #pragma mark - actions
-
-- (IBAction)handlerTapOnCell:(UITapGestureRecognizer *)tap {
-    CGPoint location = [tap locationInView:self.tableView];
+- (IBAction)handlerTapOnTable:(UITapGestureRecognizer *)tap {
+    CGPoint location = [tap locationInView:self.bottomLoadingView];
+    if ([self.bottomLoadingView pointInside:location withEvent:nil]) {
+        [self loadMore];
+        return;
+    }
+    
+    location = [tap locationInView:self.tableView];
     NSIndexPath *indexPath = [self.tableView indexPathForRowAtPoint:location];
     if (!indexPath) {
         return;
     }
-    BUCPostListCell *cell = (BUCPostListCell *)[self.tableView cellForRowAtIndexPath:indexPath];
-    NSLog(@"%@", cell);
-    NSLog(@"%@", cell.contentView);
+    BUCPost *post = [self getPostWithIndexpath:indexPath];
+    UITableViewCell *cell = [self.tableView cellForRowAtIndexPath:indexPath];
+    UIView *contents = cell.contentView;
+    location = [tap locationInView:contents];
+    if (CGRectContainsPoint(self.avatarBounds, location)) {
+        if (post.avatar) {
+            [self performSegueWithIdentifier:@"postDetailToImage" sender:post.avatar];
+        }
+        return;
+    }
+    
+    NSUInteger index;
+    UIImageView *imageView = (UIImageView *)[contents hitTest:location withEvent:nil];
+    if ([imageView isKindOfClass:[UIImageView class]]) {
+        location.x = location.x - BUCDefaultPadding;
+        location.y = location.y - 3 * BUCDefaultMargin - 40.0f;
+        index = [post.layoutManager glyphIndexForPoint:location inTextContainer:post.textContainer fractionOfDistanceThroughGlyph:NULL];
+        BUCImageAttachment *attachment = (BUCImageAttachment *)[post.content.richText attribute:NSAttachmentAttributeName atIndex:index effectiveRange:NULL];
+        if (!attachment) {
+            return;
+        }
+        
+        [self performSegueWithIdentifier:@"postDetailToImage" sender:(id)attachment];
+        return;
+    }
+    
+    location.x = location.x - BUCDefaultPadding;
+    location.y = location.y - 3 * BUCDefaultMargin - 40.0f;
+    index = [post.layoutManager glyphIndexForPoint:location inTextContainer:post.textContainer fractionOfDistanceThroughGlyph:NULL];
+    BUCLinkAttribute *link = (BUCLinkAttribute *)[post.content.richText attribute:BUCLinkAttributeName atIndex:index effectiveRange:NULL];
+    BUCPostDetailController *postDetail;
+    switch (link.linkType) {
+        case BUCPostLink:
+            postDetail = (BUCPostDetailController *)[self.storyboard instantiateViewControllerWithIdentifier:@"BUCPostDetailController"];
+            postDetail.rootPost = [[BUCPost alloc] init];
+            postDetail.rootPost.tid = link.linkValue;
+            [self.navigationController pushViewController:postDetail animated:YES];
+            break;
+        case BUCMailLink:
+            [[UIApplication sharedApplication] openURL:[NSURL URLWithString:link.linkValue]];
+            break;
+        default:
+            [[UIApplication sharedApplication] openURL:[NSURL URLWithString:link.linkValue]];
+            break;
+    }
 }
 
 - (IBAction)toggleMenu {
@@ -771,14 +825,10 @@ static NSUInteger const BUCPostPageMaxRowCount = 40;
         newPost.parentTitle = self.rootPost.title;
         newPost.forumName = self.rootPost.forumName.string;
         newPost.unwindIdentifier = @"newPostToPostDetail";
+    } else if ([segue.identifier isEqualToString:@"postDetailToImage"]) {
+        BUCImageController *image = (BUCImageController *)segue.destinationViewController;
+        image.attachment = (BUCImageAttachment *)sender;
     }
-}
-
-
-- (void)imageTapHandler:(BUCImageAttachment *)attachment {
-    BUCImageController *imageController = [[UIStoryboard storyboardWithName:@"Main" bundle:nil] instantiateViewControllerWithIdentifier:@"BUCImageController"];
-    imageController.url = attachment.url;
-    [self presentViewController:imageController animated:YES completion:nil];
 }
 
 

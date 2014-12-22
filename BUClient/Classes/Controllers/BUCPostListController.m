@@ -97,8 +97,6 @@ static NSUInteger const BUCPostListMaxRowCount = 40;
     UIDeviceOrientation deviceOrientation = [UIDevice currentDevice].orientation;
     if (UIDeviceOrientationIsLandscape(deviceOrientation)) {
         self.screenWidth = self.nativeHeight;
-    } else if (UIDeviceOrientationIsPortrait(deviceOrientation)) {
-        self.screenWidth = self.nativeWidth;
     } else {
         self.screenWidth = self.nativeWidth;
     }

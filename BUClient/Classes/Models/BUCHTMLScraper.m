@@ -297,14 +297,7 @@
         }
         
         [output.richText appendAttributedString:[[NSAttributedString alloc] initWithString:@"• " attributes:superAttributes]];
-        
-        if ([node.firstChild isTextNode] && node.firstChild.content) {
-            NSString *buffer = [NSString stringWithFormat:@"%@", node.firstChild.content];
-            [output.richText appendAttributedString:[[NSAttributedString alloc] initWithString:buffer attributes:superAttributes]];
-        } else {
-            [self appendNode:node output:output superAttributes:superAttributes];
-        }
-        
+        [self appendNode:node output:output superAttributes:superAttributes];
         [output.richText appendAttributedString:[[NSAttributedString alloc] initWithString:@"\n" attributes:superAttributes]];
     }
 }
@@ -441,7 +434,7 @@
         }
     } else if ([self matchString:href withPattern:@"^mailto:.+$" match:&match]) {
         linkAttribute.linkType = BUCMailLink;
-        linkAttribute.linkValue = [href substringFromIndex:7];
+        linkAttribute.linkValue = href;
         linkColor = [self colorAttribute:@"mail"];
     } else {
         linkAttribute.linkType = BUCUrlLink;

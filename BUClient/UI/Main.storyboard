@@ -11,7 +11,7 @@
         <!--登录-->
         <scene sceneID="Vgy-wN-jNb">
             <objects>
-                <viewController storyboardIdentifier="BUCLoginController" autoresizesArchivedViewToFullSize="NO" title="登录" automaticallyAdjustsScrollViewInsets="NO" modalTransitionStyle="crossDissolve" id="FHD-W1-3aU" customClass="BUCLoginController" sceneMemberID="viewController">
+                <viewController autoresizesArchivedViewToFullSize="NO" title="登录" automaticallyAdjustsScrollViewInsets="NO" modalTransitionStyle="crossDissolve" id="FHD-W1-3aU" customClass="BUCLoginController" sceneMemberID="viewController">
                     <layoutGuides>
                         <viewControllerLayoutGuide type="top" id="Ja2-2M-FHs"/>
                         <viewControllerLayoutGuide type="bottom" id="4U7-xt-m2R"/>
@@ -395,7 +395,7 @@
         <!--主题贴列表-->
         <scene sceneID="Up7-aq-1Xq">
             <objects>
-                <viewController storyboardIdentifier="BUCPostListController" autoresizesArchivedViewToFullSize="NO" title="主题贴列表" automaticallyAdjustsScrollViewInsets="NO" id="rhr-pR-J9R" customClass="BUCPostListController" sceneMemberID="viewController">
+                <viewController autoresizesArchivedViewToFullSize="NO" title="主题贴列表" automaticallyAdjustsScrollViewInsets="NO" id="rhr-pR-J9R" customClass="BUCPostListController" sceneMemberID="viewController">
                     <tableView key="view" autoresizesSubviews="NO" clearsContextBeforeDrawing="NO" contentMode="scaleToFill" alwaysBounceVertical="YES" showsHorizontalScrollIndicator="NO" canCancelContentTouches="NO" bouncesZoom="NO" dataMode="prototypes" style="grouped" separatorStyle="none" rowHeight="44" sectionHeaderHeight="8" sectionFooterHeight="8" id="GRG-7K-swt">
                         <rect key="frame" x="0.0" y="0.0" width="600" height="536"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
@@ -543,11 +543,11 @@
                         <viewControllerLayoutGuide type="bottom" id="HRu-kK-amO"/>
                     </layoutGuides>
                     <view key="view" autoresizesSubviews="NO" clearsContextBeforeDrawing="NO" contentMode="scaleToFill" id="d3g-10-KPD" userLabel="Container">
-                        <rect key="frame" x="0.0" y="0.0" width="600" height="492"/>
+                        <rect key="frame" x="0.0" y="64" width="600" height="536"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                         <subviews>
                             <tableView autoresizesSubviews="NO" clearsContextBeforeDrawing="NO" contentMode="scaleToFill" alwaysBounceVertical="YES" showsHorizontalScrollIndicator="NO" canCancelContentTouches="NO" bouncesZoom="NO" dataMode="prototypes" style="plain" separatorStyle="default" allowsSelection="NO" showsSelectionImmediatelyOnTouchBegin="NO" rowHeight="287" sectionHeaderHeight="1" sectionFooterHeight="1" translatesAutoresizingMaskIntoConstraints="NO" id="ZJh-te-T7l">
-                                <rect key="frame" x="0.0" y="0.0" width="600" height="492"/>
+                                <rect key="frame" x="0.0" y="0.0" width="600" height="536"/>
                                 <color key="backgroundColor" cocoaTouchSystemColor="groupTableViewBackgroundColor"/>
                                 <gestureRecognizers/>
                                 <inset key="separatorInset" minX="0.0" minY="0.0" maxX="0.0" maxY="0.0"/>
@@ -646,7 +646,6 @@
                                 <connections>
                                     <outlet property="dataSource" destination="oiG-Nc-ZDP" id="9rh-b1-eyb"/>
                                     <outlet property="delegate" destination="oiG-Nc-ZDP" id="k5c-co-zky"/>
-                                    <outletCollection property="gestureRecognizers" destination="iGS-sb-H9S" appends="YES" id="1M6-fh-ztx"/>
                                     <outletCollection property="gestureRecognizers" destination="geM-SS-xVn" appends="YES" id="5ef-hC-Jx0"/>
                                 </connections>
                             </tableView>
@@ -763,7 +762,7 @@
                                 </constraints>
                             </view>
                             <view autoresizesSubviews="NO" clearsContextBeforeDrawing="NO" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="d7E-T9-DLZ" userLabel="Page input handler">
-                                <rect key="frame" x="0.0" y="492" width="600" height="50"/>
+                                <rect key="frame" x="0.0" y="536" width="600" height="50"/>
                                 <subviews>
                                     <button autoresizesSubviews="NO" clearsContextBeforeDrawing="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="gOy-fN-dUN">
                                         <rect key="frame" x="37" y="10" width="48" height="30"/>
@@ -846,7 +845,6 @@
                             </connections>
                         </barButtonItem>
                     </navigationItem>
-                    <simulatedToolbarMetrics key="simulatedBottomBarMetrics"/>
                     <connections>
                         <outlet property="bottomLoadingIndicator" destination="PCb-Rf-Y3t" id="Un5-Ys-S8t"/>
                         <outlet property="bottomLoadingLabel" destination="86Y-re-wwD" id="ETz-EY-5hw"/>
@@ -867,6 +865,7 @@
                         <outlet property="topRotateArrow" destination="nie-Rh-u1t" id="icF-fx-Sqf"/>
                         <outlet property="user" destination="6uk-bw-8hc" id="KEa-Ef-bbp"/>
                         <segue destination="Um8-f9-jMx" kind="presentation" identifier="postDetailToNewPost" id="9l9-8d-2uH"/>
+                        <segue destination="nDG-91-Iyh" kind="presentation" identifier="postDetailToImage" id="HBb-gb-dUh"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="RuH-kQ-6fg" userLabel="First Responder" sceneMemberID="firstResponder"/>
@@ -875,14 +874,9 @@
                         <action selector="dismissMenu:" destination="oiG-Nc-ZDP" id="VbJ-dZ-qfr"/>
                     </connections>
                 </tapGestureRecognizer>
-                <tapGestureRecognizer id="iGS-sb-H9S">
-                    <connections>
-                        <action selector="tapToLoadMore:" destination="oiG-Nc-ZDP" id="Cww-Tq-9yy"/>
-                    </connections>
-                </tapGestureRecognizer>
                 <tapGestureRecognizer id="geM-SS-xVn">
                     <connections>
-                        <action selector="handlerTapOnCell:" destination="oiG-Nc-ZDP" id="yVT-Ql-Rcq"/>
+                        <action selector="handlerTapOnTable:" destination="oiG-Nc-ZDP" id="589-oV-Z3y"/>
                     </connections>
                 </tapGestureRecognizer>
             </objects>
@@ -891,22 +885,50 @@
         <!--Image Controller-->
         <scene sceneID="Kww-WG-IpO">
             <objects>
-                <viewController storyboardIdentifier="BUCImageController" autoresizesArchivedViewToFullSize="NO" automaticallyAdjustsScrollViewInsets="NO" id="nDG-91-Iyh" customClass="BUCImageController" sceneMemberID="viewController">
+                <viewController autoresizesArchivedViewToFullSize="NO" automaticallyAdjustsScrollViewInsets="NO" modalTransitionStyle="crossDissolve" id="nDG-91-Iyh" customClass="BUCImageController" sceneMemberID="viewController">
                     <layoutGuides>
-                        <viewControllerLayoutGuide type="top" id="7lz-qz-fei"/>
-                        <viewControllerLayoutGuide type="bottom" id="Upd-3H-ddp"/>
+                        <viewControllerLayoutGuide type="top" id="E5x-xD-CVg"/>
+                        <viewControllerLayoutGuide type="bottom" id="g2H-eL-UUE"/>
                     </layoutGuides>
-                    <view key="view" contentMode="scaleToFill" id="cp4-cw-FlH">
+                    <view key="view" autoresizesSubviews="NO" clearsContextBeforeDrawing="NO" contentMode="scaleToFill" id="hNr-NY-rii">
                         <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                        <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                        <subviews>
+                            <scrollView autoresizesSubviews="NO" clearsContextBeforeDrawing="NO" multipleTouchEnabled="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" minimumZoomScale="0.5" maximumZoomScale="1.5" translatesAutoresizingMaskIntoConstraints="NO" id="eFm-3H-1xl">
+                                <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
+                                <color key="backgroundColor" white="0.0" alpha="1" colorSpace="calibratedWhite"/>
+                                <connections>
+                                    <outlet property="delegate" destination="nDG-91-Iyh" id="I6c-kJ-wea"/>
+                                    <outletCollection property="gestureRecognizers" destination="rKe-q0-o6q" appends="YES" id="jgp-W0-Sfs"/>
+                                    <outletCollection property="gestureRecognizers" destination="VTN-gr-x69" appends="YES" id="5kK-xg-u68"/>
+                                </connections>
+                            </scrollView>
+                        </subviews>
+                        <color key="backgroundColor" white="0.0" alpha="1" colorSpace="calibratedWhite"/>
+                        <constraints>
+                            <constraint firstItem="eFm-3H-1xl" firstAttribute="leading" secondItem="hNr-NY-rii" secondAttribute="leading" id="8CQ-Tn-zFC"/>
+                            <constraint firstAttribute="trailing" secondItem="eFm-3H-1xl" secondAttribute="trailing" id="Qa9-sG-IgU"/>
+                            <constraint firstItem="eFm-3H-1xl" firstAttribute="top" secondItem="E5x-xD-CVg" secondAttribute="bottom" id="VIQ-xX-56E"/>
+                            <constraint firstItem="g2H-eL-UUE" firstAttribute="top" secondItem="eFm-3H-1xl" secondAttribute="bottom" id="ssB-sz-vUV"/>
+                        </constraints>
                     </view>
                     <extendedEdge key="edgesForExtendedLayout"/>
+                    <nil key="simulatedStatusBarMetrics"/>
+                    <connections>
+                        <outlet property="oneTap" destination="VTN-gr-x69" id="KVP-Jf-go9"/>
+                        <outlet property="scrollView" destination="eFm-3H-1xl" id="KO4-xh-5gv"/>
+                        <outlet property="twoTap" destination="rKe-q0-o6q" id="T3F-XM-WzS"/>
+                    </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="uNj-oe-loQ" userLabel="First Responder" sceneMemberID="firstResponder"/>
-                <tapGestureRecognizer id="acf-04-XSZ">
+                <tapGestureRecognizer delaysTouchesEnded="NO" numberOfTapsRequired="2" id="rKe-q0-o6q">
                     <connections>
-                        <action selector="tapImage:" destination="nDG-91-Iyh" id="kRZ-T3-d20"/>
+                        <action selector="scrollViewDoubleTapped:" destination="nDG-91-Iyh" id="sLc-n7-3HB"/>
+                    </connections>
+                </tapGestureRecognizer>
+                <tapGestureRecognizer delaysTouchesEnded="NO" id="VTN-gr-x69">
+                    <connections>
+                        <action selector="dismiss:" destination="nDG-91-Iyh" id="3rj-zt-eI1"/>
                     </connections>
                 </tapGestureRecognizer>
             </objects>
@@ -1408,10 +1430,10 @@
         <image name="user" width="32" height="32"/>
     </resources>
     <inferredMetricsTieBreakers>
-        <segue reference="eZ0-FU-nhu"/>
-        <segue reference="1Mm-GQ-9LS"/>
-        <segue reference="ziq-PT-65J"/>
-        <segue reference="LUK-rN-otd"/>
+        <segue reference="kDA-Um-msB"/>
+        <segue reference="Ull-UE-Zpd"/>
+        <segue reference="e2e-5o-eg8"/>
+        <segue reference="9l9-8d-2uH"/>
         <segue reference="c6N-cX-tJy"/>
     </inferredMetricsTieBreakers>
 </document>
