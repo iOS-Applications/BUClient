@@ -38,6 +38,7 @@
 @property (nonatomic) NSUInteger index;
 @property (nonatomic) CGFloat cellHeight;
 @property (nonatomic) CGFloat cellWidth;
+@property (nonatomic) CGRect bounds;
 
 @property (nonatomic) BOOL bookmarked;
 @property (nonatomic) NSInteger bookmarkIndex;

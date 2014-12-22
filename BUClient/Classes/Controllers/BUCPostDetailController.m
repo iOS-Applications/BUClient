@@ -438,9 +438,10 @@ static NSUInteger const BUCPostPageMaxRowCount = 40;
     
     if (self.screenWidth != post.cellWidth) {
         post.cellHeight = [self cellHeightWithPost:post];
+        post.bounds = CGRectMake(0.0f, 0.0f, self.screenWidth, post.cellHeight);
     }
-    
-    return post.cellHeight;
+
+    return post.cellHeight + 0.5f;
 }
 
 
@@ -472,11 +473,11 @@ static NSUInteger const BUCPostPageMaxRowCount = 40;
 }
 
 
-- (UIImage *)drawBackgroundWithPost:(BUCPost *)post inRect:(CGRect)rect {
+- (UIImage *)drawBackgroundWithPost:(BUCPost *)post {
     UIImage *output;
-    UIGraphicsBeginImageContextWithOptions(rect.size, YES, 0.0f);
+    UIGraphicsBeginImageContextWithOptions(post.bounds.size, YES, 0.0f);
     [[UIColor whiteColor] setFill];
-    UIBezierPath *path = [UIBezierPath bezierPathWithRect:rect];
+    UIBezierPath *path = [UIBezierPath bezierPathWithRect:post.bounds];
     [path fill];
     
     CGContextRef context = UIGraphicsGetCurrentContext();
@@ -511,18 +512,18 @@ static NSUInteger const BUCPostPageMaxRowCount = 40;
     if (!cell.imageList) {
         cell.imageList = [[NSMutableArray alloc] init];
     }
-    CGRect frame = cell.bounds;
+
     dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0);
     if (post.content.richText.length < 100) {
-        cell.background.image = [self drawBackgroundWithPost:post inRect:frame];
+        cell.contentView.layer.contents = (id)[self drawBackgroundWithPost:post].CGImage;
     } else {
         dispatch_async(queue, ^{
-            UIImage *background = [self drawBackgroundWithPost:post inRect:frame];
+            UIImage *background = [self drawBackgroundWithPost:post];
             if ([[tableView indexPathsForVisibleRows] containsObject:indexPath]) {
                 dispatch_async(dispatch_get_main_queue(), ^{
                     if ([[tableView indexPathsForVisibleRows] containsObject:indexPath]) {
                         BUCPostListCell *cell = (BUCPostListCell *)[tableView cellForRowAtIndexPath:indexPath];
-                        cell.background.image = background;
+                        cell.contentView.layer.contents = (id)background.CGImage;
                     }
                 });
             }
@@ -603,6 +604,18 @@ static NSUInteger const BUCPostPageMaxRowCount = 40;
 
 
 #pragma mark - actions
+
+- (IBAction)handlerTapOnCell:(UITapGestureRecognizer *)tap {
+    CGPoint location = [tap locationInView:self.tableView];
+    NSIndexPath *indexPath = [self.tableView indexPathForRowAtPoint:location];
+    if (!indexPath) {
+        return;
+    }
+    BUCPostListCell *cell = (BUCPostListCell *)[self.tableView cellForRowAtIndexPath:indexPath];
+    NSLog(@"%@", cell);
+    NSLog(@"%@", cell.contentView);
+}
+
 - (IBAction)toggleMenu {
     if (self.loading) {
         return;

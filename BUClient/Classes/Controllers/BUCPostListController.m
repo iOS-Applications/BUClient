@@ -394,20 +394,21 @@ static NSUInteger const BUCPostListMaxRowCount = 40;
     BUCPost *post = [self.postList objectAtIndex:indexPath.section];
     if (self.screenWidth != post.cellWidth) {
         post.cellHeight = [self cellHeightWithPost:post];
+        post.bounds = CGRectMake(0.0f, 0.0f, self.screenWidth, post.cellHeight);
     }
     
-    return post.cellHeight;
+    return post.cellHeight + 0.5f;
 }
 
 
-- (UIImage *)renderPost:(BUCPost *)post bounds:(CGRect)bounds {
+- (UIImage *)renderPost:(BUCPost *)post {
     UIImage *output;
-    CGFloat separatorPosition = bounds.size.height - self.metaLineHeight - BUCDefaultMargin * 2.0f;
-    UIGraphicsBeginImageContextWithOptions(CGSizeMake(self.screenWidth, post.cellHeight), NO, 0);
+    CGFloat separatorPosition = post.cellHeight - self.metaLineHeight - BUCDefaultMargin * 2.0f;
+    UIGraphicsBeginImageContextWithOptions(post.bounds.size, NO, 0);
     [post.layoutManager drawGlyphsForGlyphRange:NSMakeRange(0, post.textStorage.length) atPoint:CGPointMake(BUCDefaultPadding, BUCDefaultMargin)];
     [post.meta drawAtPoint:CGPointMake(BUCDefaultPadding, separatorPosition + BUCDefaultMargin)];
-    UIBezierPath *path = [UIBezierPath bezierPathWithRect:CGRectMake(0, separatorPosition + 2.0f, self.screenWidth, 0.25f)];
-    [[UIColor darkGrayColor] setFill];
+    UIBezierPath *path = [UIBezierPath bezierPathWithRect:CGRectMake(0, separatorPosition + 2.0f, self.screenWidth, 0.5f)];
+    [[UIColor lightGrayColor] setFill];
     [path fill];
     output = UIGraphicsGetImageFromCurrentImageContext();
     UIGraphicsEndImageContext();
@@ -419,7 +420,7 @@ static NSUInteger const BUCPostListMaxRowCount = 40;
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     BUCPostListCell *cell = [self.tableView dequeueReusableCellWithIdentifier:@"cell" forIndexPath:indexPath];
     BUCPost *post = [self.postList objectAtIndex:indexPath.section];
-    cell.background.image = [self renderPost:post bounds:cell.bounds];
+    cell.contentView.layer.contents = (id)[self renderPost:post].CGImage;
     
     if (indexPath.section == self.rowCount - 1 && !self.loading && self.to < self.postCount && self.rowCount == 20) {
         [self loadMore];

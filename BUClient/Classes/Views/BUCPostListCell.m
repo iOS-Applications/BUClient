@@ -1,6 +1,11 @@
 #import "BUCPostListCell.h"
 
 @implementation BUCPostListCell
+- (void)awakeFromNib {
+    self.contentView.layer.contentsScale = [UIScreen mainScreen].scale;
+}
+
+
 - (UIEdgeInsets)layoutMargins {
     return UIEdgeInsetsZero;
 }
@@ -12,7 +17,6 @@
         [self.imageList makeObjectsPerformSelector:@selector(removeFromSuperview)];
         [self.imageList removeAllObjects];
     }
-    self.background.image = nil;
 }
 
 @end

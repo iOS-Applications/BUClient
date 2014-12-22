@@ -9,6 +9,5 @@
 #import <UIKit/UIKit.h>
 
 @interface BUCPostListCell : UITableViewCell
-@property (weak, nonatomic) IBOutlet UIImageView *background;
 @property (nonatomic) NSMutableArray *imageList;
 @end

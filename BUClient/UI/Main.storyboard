@@ -8,10 +8,10 @@
         <capability name="Constraints with non-1.0 multipliers" minToolsVersion="5.1"/>
     </dependencies>
     <scenes>
-        <!--Login Controller-->
+        <!--登录-->
         <scene sceneID="Vgy-wN-jNb">
             <objects>
-                <viewController storyboardIdentifier="BUCLoginController" autoresizesArchivedViewToFullSize="NO" automaticallyAdjustsScrollViewInsets="NO" modalTransitionStyle="crossDissolve" id="FHD-W1-3aU" customClass="BUCLoginController" sceneMemberID="viewController">
+                <viewController storyboardIdentifier="BUCLoginController" autoresizesArchivedViewToFullSize="NO" title="登录" automaticallyAdjustsScrollViewInsets="NO" modalTransitionStyle="crossDissolve" id="FHD-W1-3aU" customClass="BUCLoginController" sceneMemberID="viewController">
                     <layoutGuides>
                         <viewControllerLayoutGuide type="top" id="Ja2-2M-FHs"/>
                         <viewControllerLayoutGuide type="bottom" id="4U7-xt-m2R"/>
@@ -51,11 +51,11 @@
                                 </constraints>
                             </view>
                             <button autoresizesSubviews="NO" clearsContextBeforeDrawing="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" adjustsImageWhenHighlighted="NO" adjustsImageWhenDisabled="NO" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="p6Q-ty-e5D">
-                                <rect key="frame" x="20" y="180" width="352" height="32"/>
+                                <rect key="frame" x="20" y="180" width="418" height="32"/>
                                 <color key="backgroundColor" red="0.090196080509999998" green="0.7019608021" blue="0.59607845540000004" alpha="1" colorSpace="deviceRGB"/>
                                 <fontDescription key="fontDescription" style="UICTFontTextStyleBody"/>
                                 <color key="tintColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
-                                <state key="normal" title="Log In"/>
+                                <state key="normal" title="登录"/>
                                 <connections>
                                     <action selector="login:" destination="FHD-W1-3aU" eventType="touchUpInside" id="gfh-m2-pPn"/>
                                 </connections>
@@ -66,8 +66,8 @@
                                     <activityIndicatorView autoresizesSubviews="NO" clearsContextBeforeDrawing="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" style="whiteLarge" translatesAutoresizingMaskIntoConstraints="NO" id="Nea-5D-eW2">
                                         <rect key="frame" x="57" y="20" width="37" height="37"/>
                                     </activityIndicatorView>
-                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Please wait..." lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="5fH-SB-gkP">
-                                        <rect key="frame" x="24" y="82" width="102" height="21"/>
+                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="登录中，请等待..." lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="5fH-SB-gkP">
+                                        <rect key="frame" x="8" y="82" width="134" height="21"/>
                                         <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                         <color key="textColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="calibratedRGB"/>
                                         <nil key="highlightedColor"/>
@@ -89,8 +89,8 @@
                                     <action selector="hostChanged:" destination="FHD-W1-3aU" eventType="valueChanged" id="IfT-20-GO3"/>
                                 </connections>
                             </switch>
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Campus Network:" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="L80-fS-1AG">
-                                <rect key="frame" x="382" y="186" width="139" height="21"/>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="校园网络:" textAlignment="right" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="L80-fS-1AG">
+                                <rect key="frame" x="448" y="186" width="73" height="21"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                 <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
                                 <nil key="highlightedColor"/>
@@ -146,12 +146,12 @@
                     </connections>
                 </tapGestureRecognizer>
             </objects>
-            <point key="canvasLocation" x="6067" y="934"/>
+            <point key="canvasLocation" x="6040" y="842"/>
         </scene>
-        <!--New Post Controller-->
+        <!--发布新帖-->
         <scene sceneID="mFE-Rf-4ql">
             <objects>
-                <tableViewController id="Zua-7q-xV0" customClass="BUCNewPostController" sceneMemberID="viewController">
+                <tableViewController title="发布新帖" id="Zua-7q-xV0" customClass="BUCNewPostController" sceneMemberID="viewController">
                     <tableView key="view" autoresizesSubviews="NO" clearsContextBeforeDrawing="NO" contentMode="scaleToFill" alwaysBounceVertical="YES" showsHorizontalScrollIndicator="NO" canCancelContentTouches="NO" bouncesZoom="NO" dataMode="static" style="plain" separatorStyle="default" rowHeight="44" sectionHeaderHeight="22" sectionFooterHeight="22" id="peV-20-cFE">
                         <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
@@ -392,10 +392,10 @@
             </objects>
             <point key="canvasLocation" x="5341" y="-557"/>
         </scene>
-        <!--Post List Controller-->
+        <!--主题贴列表-->
         <scene sceneID="Up7-aq-1Xq">
             <objects>
-                <viewController storyboardIdentifier="BUCPostListController" autoresizesArchivedViewToFullSize="NO" automaticallyAdjustsScrollViewInsets="NO" id="rhr-pR-J9R" customClass="BUCPostListController" sceneMemberID="viewController">
+                <viewController storyboardIdentifier="BUCPostListController" autoresizesArchivedViewToFullSize="NO" title="主题贴列表" automaticallyAdjustsScrollViewInsets="NO" id="rhr-pR-J9R" customClass="BUCPostListController" sceneMemberID="viewController">
                     <tableView key="view" autoresizesSubviews="NO" clearsContextBeforeDrawing="NO" contentMode="scaleToFill" alwaysBounceVertical="YES" showsHorizontalScrollIndicator="NO" canCancelContentTouches="NO" bouncesZoom="NO" dataMode="prototypes" style="grouped" separatorStyle="none" rowHeight="44" sectionHeaderHeight="8" sectionFooterHeight="8" id="GRG-7K-swt">
                         <rect key="frame" x="0.0" y="0.0" width="600" height="536"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
@@ -497,23 +497,10 @@
                                 <autoresizingMask key="autoresizingMask"/>
                                 <tableViewCellContentView key="contentView" autoresizesSubviews="NO" clearsContextBeforeDrawing="NO" contentMode="center" tableViewCell="m58-eu-Ae2" id="nA3-9f-Nqs">
                                     <autoresizingMask key="autoresizingMask"/>
-                                    <subviews>
-                                        <imageView autoresizesSubviews="NO" clearsContextBeforeDrawing="NO" userInteractionEnabled="NO" contentMode="TopLeft" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="rPO-n6-uSN">
-                                            <rect key="frame" x="0.0" y="0.0" width="600" height="130"/>
-                                            <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
-                                        </imageView>
-                                    </subviews>
                                     <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
-                                    <constraints>
-                                        <constraint firstAttribute="bottom" secondItem="rPO-n6-uSN" secondAttribute="bottom" id="0gE-AR-3Qr"/>
-                                        <constraint firstItem="rPO-n6-uSN" firstAttribute="leading" secondItem="nA3-9f-Nqs" secondAttribute="leading" id="MBj-i3-3s1"/>
-                                        <constraint firstAttribute="trailing" secondItem="rPO-n6-uSN" secondAttribute="trailing" id="PPi-Nx-waW"/>
-                                        <constraint firstItem="rPO-n6-uSN" firstAttribute="top" secondItem="nA3-9f-Nqs" secondAttribute="top" id="ksm-8k-IJl"/>
-                                    </constraints>
                                 </tableViewCellContentView>
                                 <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                                 <connections>
-                                    <outlet property="background" destination="rPO-n6-uSN" id="Wkd-jN-nPy"/>
                                     <segue destination="oiG-Nc-ZDP" kind="show" identifier="postListToPostDetail" id="eZ0-FU-nhu"/>
                                 </connections>
                             </tableViewCell>
@@ -651,30 +638,16 @@
                                         <autoresizingMask key="autoresizingMask"/>
                                         <tableViewCellContentView key="contentView" autoresizesSubviews="NO" clearsContextBeforeDrawing="NO" contentMode="center" tableViewCell="BXX-5X-0Nb" id="H9h-rR-E3l">
                                             <autoresizingMask key="autoresizingMask"/>
-                                            <subviews>
-                                                <imageView autoresizesSubviews="NO" clearsContextBeforeDrawing="NO" userInteractionEnabled="NO" contentMode="TopLeft" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="ccT-Jc-kyT">
-                                                    <rect key="frame" x="0.0" y="0.0" width="600" height="286"/>
-                                                    <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
-                                                </imageView>
-                                            </subviews>
                                             <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
-                                            <constraints>
-                                                <constraint firstAttribute="trailing" secondItem="ccT-Jc-kyT" secondAttribute="trailing" id="Gyg-xO-879"/>
-                                                <constraint firstAttribute="bottom" secondItem="ccT-Jc-kyT" secondAttribute="bottom" id="H2Z-bT-bSE"/>
-                                                <constraint firstItem="ccT-Jc-kyT" firstAttribute="leading" secondItem="H9h-rR-E3l" secondAttribute="leading" id="lQU-dz-aHq"/>
-                                                <constraint firstItem="ccT-Jc-kyT" firstAttribute="top" secondItem="H9h-rR-E3l" secondAttribute="top" id="mtB-c7-cvp"/>
-                                            </constraints>
                                         </tableViewCellContentView>
                                         <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
-                                        <connections>
-                                            <outlet property="background" destination="ccT-Jc-kyT" id="GNT-FV-A3I"/>
-                                        </connections>
                                     </tableViewCell>
                                 </prototypes>
                                 <connections>
                                     <outlet property="dataSource" destination="oiG-Nc-ZDP" id="9rh-b1-eyb"/>
                                     <outlet property="delegate" destination="oiG-Nc-ZDP" id="k5c-co-zky"/>
                                     <outletCollection property="gestureRecognizers" destination="iGS-sb-H9S" appends="YES" id="1M6-fh-ztx"/>
+                                    <outletCollection property="gestureRecognizers" destination="geM-SS-xVn" appends="YES" id="5ef-hC-Jx0"/>
                                 </connections>
                             </tableView>
                             <view autoresizesSubviews="NO" clearsContextBeforeDrawing="NO" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="Emg-R5-dT2" userLabel="Menu">
@@ -855,9 +828,7 @@
                             <constraint firstItem="Emg-R5-dT2" firstAttribute="top" secondItem="iCg-MY-T2g" secondAttribute="bottom" constant="-200" id="u6e-qy-oAx" userLabel="Vertical Space - menu - Container"/>
                         </constraints>
                         <connections>
-                            <outletCollection property="gestureRecognizers" destination="9Ub-Oi-3ra" appends="YES" id="YNm-38-37P"/>
                             <outletCollection property="gestureRecognizers" destination="VUC-nD-Gy5" appends="YES" id="0rq-Kj-x3a"/>
-                            <outletCollection property="gestureRecognizers" destination="1dp-Xk-LMF" appends="YES" id="rlw-ZA-87v"/>
                         </connections>
                     </view>
                     <extendedEdge key="edgesForExtendedLayout"/>
@@ -899,24 +870,19 @@
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="RuH-kQ-6fg" userLabel="First Responder" sceneMemberID="firstResponder"/>
-                <panGestureRecognizer minimumNumberOfTouches="1" id="9Ub-Oi-3ra">
-                    <connections>
-                        <action selector="dismissMenu:" destination="oiG-Nc-ZDP" id="bxg-0K-KIH"/>
-                    </connections>
-                </panGestureRecognizer>
                 <tapGestureRecognizer id="VUC-nD-Gy5">
                     <connections>
                         <action selector="dismissMenu:" destination="oiG-Nc-ZDP" id="VbJ-dZ-qfr"/>
                     </connections>
                 </tapGestureRecognizer>
-                <pongPressGestureRecognizer allowableMovement="10" minimumPressDuration="0.5" id="1dp-Xk-LMF">
-                    <connections>
-                        <action selector="dismissMenu:" destination="oiG-Nc-ZDP" id="opt-LG-Weq"/>
-                    </connections>
-                </pongPressGestureRecognizer>
                 <tapGestureRecognizer id="iGS-sb-H9S">
                     <connections>
                         <action selector="tapToLoadMore:" destination="oiG-Nc-ZDP" id="Cww-Tq-9yy"/>
+                    </connections>
+                </tapGestureRecognizer>
+                <tapGestureRecognizer id="geM-SS-xVn">
+                    <connections>
+                        <action selector="handlerTapOnCell:" destination="oiG-Nc-ZDP" id="yVT-Ql-Rcq"/>
                     </connections>
                 </tapGestureRecognizer>
             </objects>
@@ -1240,7 +1206,7 @@
         <scene sceneID="QUH-bK-hwj">
             <objects>
                 <tableViewController id="FOo-kw-BkT" customClass="BUCSettingsController" sceneMemberID="viewController">
-                    <tableView key="view" autoresizesSubviews="NO" clearsContextBeforeDrawing="NO" contentMode="scaleToFill" alwaysBounceVertical="YES" showsHorizontalScrollIndicator="NO" showsVerticalScrollIndicator="NO" canCancelContentTouches="NO" bouncesZoom="NO" dataMode="prototypes" style="grouped" separatorStyle="default" rowHeight="44" sectionHeaderHeight="10" sectionFooterHeight="10" id="lPD-b5-q45">
+                    <tableView key="view" autoresizesSubviews="NO" clearsContextBeforeDrawing="NO" contentMode="scaleToFill" alwaysBounceVertical="YES" showsHorizontalScrollIndicator="NO" canCancelContentTouches="NO" bouncesZoom="NO" dataMode="prototypes" style="grouped" separatorStyle="default" rowHeight="44" sectionHeaderHeight="10" sectionFooterHeight="10" id="lPD-b5-q45">
                         <rect key="frame" x="0.0" y="0.0" width="600" height="536"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <color key="backgroundColor" cocoaTouchSystemColor="groupTableViewBackgroundColor"/>
@@ -1354,7 +1320,7 @@
         <scene sceneID="G0D-kj-USV">
             <objects>
                 <tableViewController id="b8V-Ux-uXi" customClass="BUCBookmarkController" sceneMemberID="viewController">
-                    <tableView key="view" autoresizesSubviews="NO" clearsContextBeforeDrawing="NO" contentMode="scaleToFill" alwaysBounceVertical="YES" showsHorizontalScrollIndicator="NO" showsVerticalScrollIndicator="NO" canCancelContentTouches="NO" bouncesZoom="NO" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="44" sectionHeaderHeight="22" sectionFooterHeight="22" id="4vk-Pt-wnz">
+                    <tableView key="view" autoresizesSubviews="NO" clearsContextBeforeDrawing="NO" contentMode="scaleToFill" alwaysBounceVertical="YES" showsHorizontalScrollIndicator="NO" canCancelContentTouches="NO" bouncesZoom="NO" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="44" sectionHeaderHeight="22" sectionFooterHeight="22" id="4vk-Pt-wnz">
                         <rect key="frame" x="0.0" y="64" width="600" height="536"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <color key="backgroundColor" cocoaTouchSystemColor="groupTableViewBackgroundColor"/>
@@ -1442,10 +1408,10 @@
         <image name="user" width="32" height="32"/>
     </resources>
     <inferredMetricsTieBreakers>
-        <segue reference="Y7Y-yT-pMw"/>
         <segue reference="eZ0-FU-nhu"/>
-        <segue reference="9l9-8d-2uH"/>
-        <segue reference="kDA-Um-msB"/>
-        <segue reference="Ull-UE-Zpd"/>
+        <segue reference="1Mm-GQ-9LS"/>
+        <segue reference="ziq-PT-65J"/>
+        <segue reference="LUK-rN-otd"/>
+        <segue reference="c6N-cX-tJy"/>
     </inferredMetricsTieBreakers>
 </document>
