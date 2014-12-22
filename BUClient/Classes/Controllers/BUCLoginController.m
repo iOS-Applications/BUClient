@@ -93,7 +93,7 @@
          if (self.presentingViewController) {
              [self.presentingViewController dismissViewControllerAnimated:YES completion:nil];
          } else {
-             [self performSegueWithIdentifier:@"addNewAccount" sender:nil];
+             [self performSegueWithIdentifier:@"loginToSettings" sender:nil];
          }
      }
      

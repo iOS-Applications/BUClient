@@ -510,6 +510,7 @@ static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
         dateFormatter = [[NSDateFormatter alloc] init];
         dateFormatter.timeStyle = NSDateFormatterNoStyle;
         dateFormatter.dateStyle = NSDateFormatterMediumStyle;
+        dateFormatter.locale = [NSLocale localeWithLocaleIdentifier:@"zh_Hans_CN"];
         parsingFormatter = [[NSDateFormatter alloc] init];
         [parsingFormatter setDateFormat:@"yyyy-MM-dd HH:mm"];
     });
