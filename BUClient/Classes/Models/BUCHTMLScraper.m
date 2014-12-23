@@ -81,7 +81,7 @@
     
     BUCRichText *output = [[BUCRichText alloc] init];
     for (TFHppleElement *node in tree.children) {
-        if ([node.tagName isEqualToString:@"br"] || [node.tagName isEqualToString:@"span"]) {
+        if ([node.tagName isEqualToString:@"br"] || [[node objectForKey:@"id"] isEqualToString:@"id_open_api_label"]) {
             continue;
         }
         
@@ -104,7 +104,7 @@
     } else if ([tagName isEqualToString:@"img"]) {
         [self appendImageNode:node output:output superAttributes:superAttributes];
     } else if ([tagName isEqualToString:@"center"] || [tagName isEqualToString:@"blockquote"] ||
-               [tagName isEqualToString:@"ul"] || [tagName isEqualToString:@"ol"]) {
+               [tagName isEqualToString:@"table"] || [tagName isEqualToString:@"ul"] || [tagName isEqualToString:@"ol"]) {
         
         BUCTextBlockAttribute *blockAttribute = [self blockAttributeWithAttribute:superAttributes];
         NSMutableDictionary *thisAttributes = [superAttributes mutableCopy];
@@ -126,9 +126,13 @@
             if ([header rangeOfString:@"引用"].length > 0) {
                 [self appendQuoteNode:content output:output superAttributes:thisAttributes];
             } else if ([header rangeOfString:@"代码"].length > 0) {
+                content = content.firstChild.firstChild;
                 [self appendCodeNode:content output:output superAttributes:thisAttributes];
             }
             
+        } else if ([tagName isEqualToString:@"table"]) {
+            TFHppleElement *codeNode = node.firstChild.firstChild.firstChild.firstChild.firstChild;
+            [self appendCodeNode:codeNode output:output superAttributes:thisAttributes];
         } else if ([tagName isEqualToString:@"blockquote"]) {
             TFHppleElement *box = [node.children objectAtIndex:1];
             blockAttribute.backgroundColor = [self colorAttributeOfBox:box];
@@ -154,6 +158,9 @@
         NSUInteger location = output.richText.length;
         
         if ([tagName isEqualToString:@"a"]) {
+            if ([node.firstChild.content rangeOfString:@"复制到剪贴板"].length > 0) {
+                return;
+            }
             attributes = [self linkAttributes:node];
         } else if ([tagName isEqualToString:@"font"]) {
             attributes = [self fontAttributes:node];
@@ -175,7 +182,7 @@
         }
         
         for (TFHppleElement *childNode in node.children) {
-            if ([childNode.tagName isEqualToString:@"br"] || [childNode.tagName isEqualToString:@"span"]) {
+            if ([node.tagName isEqualToString:@"br"] || [[node objectForKey:@"id"] isEqualToString:@"id_open_api_label"]) {
                 continue;
             }
             
@@ -204,6 +211,9 @@
     
     if ([self matchString:node.content withPattern:@"\\s*\\[ Last edited by .+ on [0-9]{4}-[0-9]{1,2}-[0-9]{1,2} at [0-9]{2}:[0-9]{2} \\]" match:NULL]) {
         [attributes setObject:[UIFont preferredFontForTextStyle:UIFontTextStyleCaption1] forKeyedSubscript:NSFontAttributeName];
+    } else if ([self matchString:node.content withPattern:@"^\\s*[a-zA-Z]+\\s*代码\\s*$" match:NULL]) {
+        [self appendNewLineToRichText:output.richText superAttributes:superAttributes];
+        [self appendNewLineToRichText:output.richText superAttributes:superAttributes];
     }
     
     [output.richText appendAttributedString:[[NSAttributedString alloc] initWithString:[self replaceHtmlEntities:node.content] attributes:attributes]];
@@ -262,19 +272,18 @@
 
 
 - (void)appendCodeNode:(TFHppleElement *)codeNode output:(BUCRichText *)output superAttributes:(NSDictionary *)superAttributes {
-    NSArray *codeLines = [codeNode searchWithXPathQuery:@"//div/ol/li"];
     
-    if (!codeLines || codeLines.count == 0) {
+    if (!codeNode.children || codeNode.children.count == 0) {
         return;
     }
     
-    for (TFHppleElement *line in codeLines) {
-        if (!line.firstChild.content) {
+    for (TFHppleElement *node in codeNode.children) {
+        if ([node.tagName isEqualToString:@"br"] || [node.tagName isEqualToString:@"span"]) {
             continue;
         }
-        
-        NSString *buffer = [NSString stringWithFormat:@"%@\n", line.firstChild.content];
-        [output.richText appendAttributedString:[[NSAttributedString alloc] initWithString:buffer attributes:superAttributes]];
+
+        [self appendNode:node output:output superAttributes:superAttributes];
+        [output.richText appendAttributedString:[[NSAttributedString alloc] initWithString:@"\n" attributes:superAttributes]];
     }
 }
 

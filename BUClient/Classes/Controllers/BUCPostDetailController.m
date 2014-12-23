@@ -101,7 +101,7 @@ static NSUInteger const BUCPostPageMaxRowCount = 40;
         BUCPost *post = [self.postList firstObject];
         UITableView *cell = [self.tableView.visibleCells firstObject];
         if (cell.frame.size.width != post.cellWidth) {
-            [self setupGeometry];
+            [self didRotateFromInterfaceOrientation:0];
             [self.tableView reloadData];
         }
     });

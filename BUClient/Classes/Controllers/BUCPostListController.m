@@ -57,6 +57,15 @@ static NSUInteger const BUCPostListMaxRowCount = 40;
 - (void)viewWillAppear:(BOOL)animated {
     [super viewWillAppear:animated];
     
+    dispatch_async(dispatch_get_main_queue(), ^{
+        BUCPost *post = [self.postList firstObject];
+        UITableView *cell = [self.tableView.visibleCells firstObject];
+        if (cell.frame.size.width != post.cellWidth) {
+            [self didRotateFromInterfaceOrientation:0];
+            [self.tableView reloadData];
+        }
+    });
+    
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(textStyleChanged:) name:UIContentSizeCategoryDidChangeNotification object:nil];
 }
 
