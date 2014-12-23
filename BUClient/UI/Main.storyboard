@@ -897,10 +897,10 @@
                             <scrollView autoresizesSubviews="NO" clearsContextBeforeDrawing="NO" multipleTouchEnabled="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" minimumZoomScale="0.5" maximumZoomScale="1.5" translatesAutoresizingMaskIntoConstraints="NO" id="eFm-3H-1xl">
                                 <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
                                 <color key="backgroundColor" white="0.0" alpha="1" colorSpace="calibratedWhite"/>
+                                <gestureRecognizers/>
                                 <connections>
                                     <outlet property="delegate" destination="nDG-91-Iyh" id="I6c-kJ-wea"/>
-                                    <outletCollection property="gestureRecognizers" destination="rKe-q0-o6q" appends="YES" id="jgp-W0-Sfs"/>
-                                    <outletCollection property="gestureRecognizers" destination="VTN-gr-x69" appends="YES" id="5kK-xg-u68"/>
+                                    <outletCollection property="gestureRecognizers" destination="APu-ji-ftR" appends="YES" id="QzN-Gr-nhf"/>
                                 </connections>
                             </scrollView>
                         </subviews>
@@ -915,20 +915,14 @@
                     <extendedEdge key="edgesForExtendedLayout"/>
                     <nil key="simulatedStatusBarMetrics"/>
                     <connections>
-                        <outlet property="oneTap" destination="VTN-gr-x69" id="KVP-Jf-go9"/>
                         <outlet property="scrollView" destination="eFm-3H-1xl" id="KO4-xh-5gv"/>
-                        <outlet property="twoTap" destination="rKe-q0-o6q" id="T3F-XM-WzS"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="uNj-oe-loQ" userLabel="First Responder" sceneMemberID="firstResponder"/>
-                <tapGestureRecognizer delaysTouchesEnded="NO" numberOfTapsRequired="2" id="rKe-q0-o6q">
+                <tapGestureRecognizer id="APu-ji-ftR">
                     <connections>
-                        <action selector="scrollViewDoubleTapped:" destination="nDG-91-Iyh" id="sLc-n7-3HB"/>
-                    </connections>
-                </tapGestureRecognizer>
-                <tapGestureRecognizer delaysTouchesEnded="NO" id="VTN-gr-x69">
-                    <connections>
-                        <action selector="dismiss:" destination="nDG-91-Iyh" id="3rj-zt-eI1"/>
+                        <action selector="doubleTapToZoom:" destination="nDG-91-Iyh" id="10a-yU-dXG"/>
+                        <outlet property="delegate" destination="nDG-91-Iyh" id="TMN-jI-dFK"/>
                     </connections>
                 </tapGestureRecognizer>
             </objects>
@@ -965,7 +959,7 @@
         <scene sceneID="ovE-Va-9xO">
             <objects>
                 <viewController autoresizesArchivedViewToFullSize="NO" automaticallyAdjustsScrollViewInsets="NO" id="GL1-z2-a4Z" customClass="BUCRootController" sceneMemberID="viewController">
-                    <tableView key="view" autoresizesSubviews="NO" clearsContextBeforeDrawing="NO" contentMode="scaleToFill" alwaysBounceVertical="YES" showsHorizontalScrollIndicator="NO" canCancelContentTouches="NO" bouncesZoom="NO" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="44" sectionHeaderHeight="22" sectionFooterHeight="22" id="OfI-sf-dx0">
+                    <tableView key="view" autoresizesSubviews="NO" clearsContextBeforeDrawing="NO" contentMode="scaleToFill" alwaysBounceVertical="YES" showsHorizontalScrollIndicator="NO" canCancelContentTouches="NO" bouncesZoom="NO" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="60" sectionHeaderHeight="22" sectionFooterHeight="22" id="OfI-sf-dx0">
                         <rect key="frame" x="0.0" y="0.0" width="600" height="492"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
@@ -1430,10 +1424,10 @@
         <image name="user" width="32" height="32"/>
     </resources>
     <inferredMetricsTieBreakers>
+        <segue reference="Y7Y-yT-pMw"/>
         <segue reference="kDA-Um-msB"/>
         <segue reference="Ull-UE-Zpd"/>
         <segue reference="e2e-5o-eg8"/>
         <segue reference="9l9-8d-2uH"/>
-        <segue reference="c6N-cX-tJy"/>
     </inferredMetricsTieBreakers>
 </document>

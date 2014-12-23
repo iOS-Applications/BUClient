@@ -97,12 +97,14 @@ static NSUInteger const BUCPostPageMaxRowCount = 40;
 - (void)viewDidAppear:(BOOL)animated {
     [super viewDidAppear:animated];
     
-    BUCPost *post = [self.postList firstObject];
-    UITableView *cell = [self.tableView.visibleCells firstObject];
-    if (cell.frame.size.width != post.cellWidth) {
-        [self setupGeometry];
-        [self.tableView reloadData];
-    }
+    dispatch_async(dispatch_get_main_queue(), ^{
+        BUCPost *post = [self.postList firstObject];
+        UITableView *cell = [self.tableView.visibleCells firstObject];
+        if (cell.frame.size.width != post.cellWidth) {
+            [self setupGeometry];
+            [self.tableView reloadData];
+        }
+    });
 }
 
 

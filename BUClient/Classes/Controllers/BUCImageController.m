@@ -1,16 +1,16 @@
 #import "BUCImageController.h"
 #import "BUCDataManager.h"
+#import "BUCAppDelegate.h"
 
-@interface BUCImageController () <UIScrollViewDelegate>
+@interface BUCImageController () <UIScrollViewDelegate, UIGestureRecognizerDelegate>
+@property (nonatomic) BUCAppDelegate *appDelegate;
 @property (strong, nonatomic) IBOutlet UIScrollView *scrollView;
 @property (nonatomic) UIImageView *imageView;
 @property (nonatomic) CGFloat nativeWidth;
 @property (nonatomic) CGFloat nativeHeight;
 @property (nonatomic) CGFloat screenWidth;
 @property (nonatomic) CGFloat screenHeight;
-@property (strong, nonatomic) IBOutlet UITapGestureRecognizer *oneTap;
-@property (strong, nonatomic) IBOutlet UITapGestureRecognizer *twoTap;
-
+@property (nonatomic) NSUInteger tapCount;
 @end
 
 @implementation BUCImageController
@@ -38,7 +38,7 @@
 }
 
 
-- (IBAction)scrollViewDoubleTapped:(UITapGestureRecognizer*)recognizer {
+- (IBAction)doubleTapToZoom:(UITapGestureRecognizer*)recognizer {
     if (self.scrollView.zoomScale == 1.0f) {
         CGPoint pointInView = [recognizer locationInView:self.imageView];
         CGFloat newZoomScale = self.scrollView.zoomScale * 1.5f;
@@ -53,29 +53,29 @@
     } else {
         [self.scrollView setZoomScale:1.0f animated:YES];
     }
+    self.tapCount = 0;
 }
 
-
-- (BOOL)prefersStatusBarHidden {
-    return YES;
-}
 
 - (void)viewDidLoad {
     [super viewDidLoad];
     
     [self setupGeometry];
-    self.imageView.frame = CGRectMake(0.0f, 0.0f, self.screenWidth, self.screenHeight);
+    [[UIApplication sharedApplication] setStatusBarHidden:YES withAnimation:UIStatusBarAnimationFade];
 
     self.imageView = [[UIImageView alloc] initWithFrame:CGRectMake(0.0f, 0.0f, self.screenWidth, self.screenHeight)];
+    self.imageView.hidden = YES;
     self.imageView.contentMode = UIViewContentModeScaleAspectFit;
     self.imageView.backgroundColor = [UIColor blackColor];
     self.imageView.userInteractionEnabled = YES;
     [self.scrollView addSubview:self.imageView];
     self.scrollView.contentSize = self.imageView.frame.size;
 
-    [self.oneTap requireGestureRecognizerToFail:self.twoTap];
+    self.appDelegate = (BUCAppDelegate *)[[UIApplication sharedApplication] delegate];
+    [self.appDelegate displayLoading];
     [[BUCDataManager sharedInstance] getImageWithUrl:self.attachment.url size:CGSizeZero onSuccess:^(UIImage *image) {
         dispatch_async(dispatch_get_main_queue(), ^{
+            [self.appDelegate hideLoading];
             self.imageView.image = image;
             CGFloat scaledHeight = image.size.height * self.screenWidth / image.size.width;
             if (scaledHeight > self.screenHeight) {
@@ -84,6 +84,7 @@
                 self.imageView.frame = frame;
             }
             self.scrollView.contentSize = self.imageView.frame.size;
+            self.imageView.hidden = NO;
         });
     }];
 }
@@ -91,6 +92,7 @@
 
 - (void)scrollViewDidZoom:(UIScrollView *)scrollView {
     [self centerScrollViewContents];
+    self.tapCount = 0;
 }
 
 
@@ -126,13 +128,36 @@
 }
 
 
+- (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldReceiveTouch:(UITouch *)touch {
+
+    if (touch.tapCount == 2) {
+        self.tapCount = touch.tapCount;
+        return YES;
+    } else if (touch.tapCount == 1) {
+        self.tapCount = self.tapCount + touch.tapCount;
+        [self performSelector:@selector(dismiss) withObject:nil afterDelay:0.25];
+    }
+    return NO;
+}
+
+
+- (void)scrollViewDidScroll:(UIScrollView *)scrollView {
+    self.tapCount = 0;
+}
+
+
+- (void)dismiss {
+    if (self.tapCount == 1) {
+        self.imageView.hidden = YES;
+        [[UIApplication sharedApplication] setStatusBarHidden:NO withAnimation:UIStatusBarAnimationFade];
+        [self.presentingViewController dismissViewControllerAnimated:YES completion:nil];
+    }
+}
+
+
 - (UIView *)viewForZoomingInScrollView:(UIScrollView *)scrollView {
     return self.imageView;
 }
 
-
-- (IBAction)dismiss:(UITapGestureRecognizer *)sender {
-    [self.presentingViewController dismissViewControllerAnimated:YES completion:nil];
-}
 
 @end
