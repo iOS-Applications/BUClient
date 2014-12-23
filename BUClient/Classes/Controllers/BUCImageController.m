@@ -1,10 +1,9 @@
 #import "BUCImageController.h"
 #import "BUCDataManager.h"
-#import "BUCAppDelegate.h"
 
 @interface BUCImageController () <UIScrollViewDelegate, UIGestureRecognizerDelegate>
-@property (nonatomic) BUCAppDelegate *appDelegate;
 @property (strong, nonatomic) IBOutlet UIScrollView *scrollView;
+@property (weak, nonatomic) IBOutlet UIActivityIndicatorView *loadingIndicator;
 @property (nonatomic) UIImageView *imageView;
 @property (nonatomic) CGFloat nativeWidth;
 @property (nonatomic) CGFloat nativeHeight;
@@ -70,12 +69,10 @@
     self.imageView.userInteractionEnabled = YES;
     [self.scrollView addSubview:self.imageView];
     self.scrollView.contentSize = self.imageView.frame.size;
-
-    self.appDelegate = (BUCAppDelegate *)[[UIApplication sharedApplication] delegate];
-    [self.appDelegate displayLoading];
+    [self.loadingIndicator startAnimating];
     [[BUCDataManager sharedInstance] getImageWithUrl:self.attachment.url size:CGSizeZero onSuccess:^(UIImage *image) {
         dispatch_async(dispatch_get_main_queue(), ^{
-            [self.appDelegate hideLoading];
+            [self.loadingIndicator stopAnimating];
             self.imageView.image = image;
             CGFloat scaledHeight = image.size.height * self.screenWidth / image.size.width;
             if (scaledHeight > self.screenHeight) {
@@ -146,11 +143,15 @@
 }
 
 
+- (void)scrollViewWillBeginDragging:(UIScrollView *)scrollView {
+    self.tapCount = 0;
+}
+
 - (void)dismiss {
-    if (self.tapCount == 1) {
+    if (self.tapCount == 1 && !self.scrollView.tracking && !self.scrollView.dragging && !self.scrollView.decelerating) {
         self.imageView.hidden = YES;
         [[UIApplication sharedApplication] setStatusBarHidden:NO withAnimation:UIStatusBarAnimationFade];
-        [self.presentingViewController dismissViewControllerAnimated:YES completion:nil];
+        [self.presentingViewController dismissViewControllerAnimated:NO completion:nil];
     }
 }
 

@@ -903,18 +903,24 @@
                                     <outletCollection property="gestureRecognizers" destination="APu-ji-ftR" appends="YES" id="QzN-Gr-nhf"/>
                                 </connections>
                             </scrollView>
+                            <activityIndicatorView hidden="YES" autoresizesSubviews="NO" opaque="NO" clearsContextBeforeDrawing="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" hidesWhenStopped="YES" style="white" translatesAutoresizingMaskIntoConstraints="NO" id="cvn-zs-077">
+                                <rect key="frame" x="290" y="290" width="20" height="20"/>
+                            </activityIndicatorView>
                         </subviews>
                         <color key="backgroundColor" white="0.0" alpha="1" colorSpace="calibratedWhite"/>
                         <constraints>
                             <constraint firstItem="eFm-3H-1xl" firstAttribute="leading" secondItem="hNr-NY-rii" secondAttribute="leading" id="8CQ-Tn-zFC"/>
+                            <constraint firstAttribute="centerY" secondItem="cvn-zs-077" secondAttribute="centerY" id="PWr-CZ-scH"/>
                             <constraint firstAttribute="trailing" secondItem="eFm-3H-1xl" secondAttribute="trailing" id="Qa9-sG-IgU"/>
                             <constraint firstItem="eFm-3H-1xl" firstAttribute="top" secondItem="E5x-xD-CVg" secondAttribute="bottom" id="VIQ-xX-56E"/>
+                            <constraint firstAttribute="centerX" secondItem="cvn-zs-077" secondAttribute="centerX" id="aFK-ng-Y4k"/>
                             <constraint firstItem="g2H-eL-UUE" firstAttribute="top" secondItem="eFm-3H-1xl" secondAttribute="bottom" id="ssB-sz-vUV"/>
                         </constraints>
                     </view>
                     <extendedEdge key="edgesForExtendedLayout"/>
                     <nil key="simulatedStatusBarMetrics"/>
                     <connections>
+                        <outlet property="loadingIndicator" destination="cvn-zs-077" id="F7S-8o-gJe"/>
                         <outlet property="scrollView" destination="eFm-3H-1xl" id="KO4-xh-5gv"/>
                     </connections>
                 </viewController>
