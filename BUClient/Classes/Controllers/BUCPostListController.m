@@ -442,6 +442,7 @@ static NSUInteger const BUCPostListMaxRowCount = 40;
     if ([segue.identifier isEqualToString:@"postListToPostDetail"]) {
         BUCPostDetailController *postDetail = (BUCPostDetailController *)segue.destinationViewController;
         NSIndexPath *indexPath = self.tableView.indexPathForSelectedRow;
+        [self.tableView deselectRowAtIndexPath:indexPath animated:NO];
         postDetail.rootPost = [self.postList objectAtIndex:indexPath.section];
     } else if ([segue.identifier isEqualToString:@"postListToNewPost"]) {
         BUCNewPostController *newPost = (BUCNewPostController *)(((UINavigationController *)segue.destinationViewController).topViewController);

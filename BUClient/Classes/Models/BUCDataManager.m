@@ -329,7 +329,7 @@ static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
              mapBlock(map);
          } else if ([[map objectForKey:@"result"] isEqualToString:@"fail"]) {
              NSString *msg = [map objectForKey:@"msg"];
-             NSLog(@"ERROR:%@ COUNT:%ld", msg, (long)count);
+             NSLog(@"ERROR:%@ COUNT:%ld URL:%@", msg, (long)count, url);
              if ([msg isEqualToString:@"IP+logged"] && count <= 1) {
                  self.session = nil;
                  [self loadJsonFromUrl:url json:json attachment:attachment isForm:isForm onSuccess:mapBlock onError:errorBlock count:count + 1];

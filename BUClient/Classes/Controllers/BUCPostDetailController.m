@@ -514,6 +514,11 @@ static NSUInteger const BUCPostPageMaxRowCount = 40;
 }
 
 
+- (void)tableView:(UITableView *)tableView didEndDisplayingCell:(UITableViewCell *)cell forRowAtIndexPath:(NSIndexPath *)indexPath {
+    cell.contentView.hidden = YES;
+}
+
+
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     BUCPostListCell *cell = [self.tableView dequeueReusableCellWithIdentifier:@"cell" forIndexPath:indexPath];
     BUCPost *post = [self getPostWithIndexpath:indexPath];
@@ -522,21 +527,19 @@ static NSUInteger const BUCPostPageMaxRowCount = 40;
     }
 
     dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0);
-    if (post.content.richText.length < 100) {
-        cell.contentView.layer.contents = (id)[self drawBackgroundWithPost:post].CGImage;
-    } else {
-        dispatch_async(queue, ^{
-            UIImage *background = [self drawBackgroundWithPost:post];
-            if ([[tableView indexPathsForVisibleRows] containsObject:indexPath]) {
-                dispatch_async(dispatch_get_main_queue(), ^{
-                    if ([[tableView indexPathsForVisibleRows] containsObject:indexPath]) {
-                        BUCPostListCell *cell = (BUCPostListCell *)[tableView cellForRowAtIndexPath:indexPath];
-                        cell.contentView.layer.contents = (id)background.CGImage;
-                    }
-                });
-            }
-        });
-    }
+    dispatch_async(queue, ^{
+        UIImage *background = [self drawBackgroundWithPost:post];
+        if ([[tableView indexPathsForVisibleRows] containsObject:indexPath]) {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                if ([[tableView indexPathsForVisibleRows] containsObject:indexPath]) {
+                    BUCPostListCell *cell = (BUCPostListCell *)[tableView cellForRowAtIndexPath:indexPath];
+                    cell.contentView.layer.contents = (id)background.CGImage;
+                    cell.contentView.hidden = NO;
+                }
+            });
+        }
+    });
+
     
     UIImageView *avatarView = [[UIImageView alloc] initWithFrame:self.avatarBounds];
     avatarView.backgroundColor = [UIColor whiteColor];
@@ -550,6 +553,7 @@ static NSUInteger const BUCPostPageMaxRowCount = 40;
             [[BUCDataManager sharedInstance] getImageWithUrl:post.avatar.url size:self.avatarBounds.size onSuccess:^(UIImage *image) {
                 dispatch_async(dispatch_get_main_queue(), ^{
                     if ([[tableView indexPathsForVisibleRows] containsObject:indexPath]) {
+                        avatarView.image = nil;
                         avatarView.image = image;
                     }
                 });
