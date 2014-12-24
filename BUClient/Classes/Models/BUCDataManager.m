@@ -355,7 +355,7 @@ static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
 
 - (void)loadListFromUrl:(NSString *)url
                    json:(NSMutableDictionary *)json
-                listType:(NSString *)listType
+               listType:(NSString *)listType
               onSuccess:(BUCListBlock)listBlock
                 onError:(BUCStringBlock)errorBlock {
     BUCMapBlock block = ^(NSDictionary *map) {
@@ -371,7 +371,7 @@ static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
 
 - (void)populateWithList:(NSArray *)list count:(NSUInteger)count listType:(NSString *)listType {
     NSDictionary *metaAttributes = @{NSFontAttributeName:[UIFont preferredFontForTextStyle:UIFontTextStyleCaption1]};
-
+    
     void(^block)(BUCPost *, NSDictionary *, NSDictionary *);
     
     if ([listType isEqualToString:@"newlist"]) {
@@ -492,9 +492,30 @@ static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
     if (!string || (id)string == [NSNull null] || string.length == 0) {
         return nil;
     }
+
+    static const unsigned char hexValue['f' - '0' + 1] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0,0,0,0,0,0,0, 10, 11, 12, 13, 14, 15};
+    const unsigned char *source = (const unsigned char *)[string UTF8String];
+    NSUInteger length = [string maximumLengthOfBytesUsingEncoding: NSUTF8StringEncoding];
+    unsigned char output[length];
+    int indexOutput = 0;
+    int indexSource = 0;
+    unsigned char thisChar = source[indexSource];
+    while (thisChar != '\0') {
+        if (thisChar == '+') {
+            output[indexOutput] = ' ';
+        } else if (thisChar == '%') {
+            output[indexOutput] = (hexValue[source[indexSource + 1] - '0'] << 4) + hexValue[source[indexSource + 2] - '0'];
+            indexSource = indexSource + 2;
+        } else {
+            output[indexOutput] = thisChar;
+        }
+        indexOutput = indexOutput + 1;
+        indexSource = indexSource + 1;
+        thisChar = source[indexSource];
+    }
+    output[indexOutput] = '\0';
     
-    return [[string stringByReplacingOccurrencesOfString:@"+" withString:@" "]
-            stringByReplacingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
+    return [NSString stringWithUTF8String:(const char *)output];
 }
 
 

@@ -149,9 +149,9 @@ fail:
 - (NSString *)urlencode:(NSString *)string {
     NSMutableString *output = [NSMutableString string];
     const unsigned char *source = (const unsigned char *)[string UTF8String];
-    unsigned long sourceLen = strlen((const char *)source);
-    for (int i = 0; i < sourceLen; ++i) {
-        const unsigned char thisChar = source[i];
+    int i = 0;
+    unsigned char thisChar = source[i];
+    while (thisChar != '\0') {
         if (thisChar == ' ') {
             [output appendString:@"+"];
         } else if (thisChar == '.' || thisChar == '-' || thisChar == '_' || thisChar == '~' ||
@@ -163,6 +163,8 @@ fail:
         } else {
             [output appendFormat:@"%%%02X", thisChar];
         }
+        i = i + 1;
+        thisChar = source[i];
     }
     
     return output;
