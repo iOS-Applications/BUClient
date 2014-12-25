@@ -281,6 +281,8 @@ static NSUInteger const BUCPostPageMaxRowCount = 40;
          if (self.flush || self.reverse) {
              [self.tableView setContentOffset:CGPointZero];
              [self.tableView reloadData];
+         } else if (self.opOnly) {
+             [self.tableView reloadData];
          } else if (self.insertIndexPaths.count > 0) {
              [self.tableView insertRowsAtIndexPaths:self.insertIndexPaths withRowAnimation:UITableViewRowAnimationNone];
          }
@@ -507,15 +509,20 @@ static NSUInteger const BUCPostPageMaxRowCount = 40;
     [self drawBlockList:post.content.blockList post:post];
     [post.layoutManager drawGlyphsForGlyphRange:NSMakeRange(0.0f, post.textStorage.length) atPoint:CGPointZero];
     
+    for (BUCImageAttachment *attachment in post.content.imageList) {
+        if (attachment.url) {
+            CGRect frame = [post.layoutManager boundingRectForGlyphRange:NSMakeRange(attachment.glyphIndex, 1) inTextContainer:post.textContainer];
+            frame.origin.x = ceilf((self.contentWidth - 100.0f) / 2.0f);
+            frame.origin.y = ceilf((frame.size.height - 100.0f) / 2.0f + frame.origin.y);
+            frame.size = self.imageSize;
+            [self.defaultImage drawInRect:frame];
+        }
+    }
+    
     output = UIGraphicsGetImageFromCurrentImageContext();
     UIGraphicsEndImageContext();
     
     return output;
-}
-
-
-- (void)tableView:(UITableView *)tableView didEndDisplayingCell:(UITableViewCell *)cell forRowAtIndexPath:(NSIndexPath *)indexPath {
-    cell.contentView.hidden = YES;
 }
 
 
@@ -524,6 +531,10 @@ static NSUInteger const BUCPostPageMaxRowCount = 40;
     BUCPost *post = [self getPostWithIndexpath:indexPath];
     if (!cell.imageList) {
         cell.imageList = [[NSMutableArray alloc] init];
+    }
+    
+    if (post.cellHeight > 1000.0f) {
+        [self.appDelegate displayLoading];
     }
 
     dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0);
@@ -535,11 +546,11 @@ static NSUInteger const BUCPostPageMaxRowCount = 40;
                     BUCPostListCell *cell = (BUCPostListCell *)[tableView cellForRowAtIndexPath:indexPath];
                     cell.contentView.layer.contents = (id)background.CGImage;
                     cell.contentView.hidden = NO;
+                    [self.appDelegate hideLoading];
                 }
             });
         }
     });
-
     
     UIImageView *avatarView = [[UIImageView alloc] initWithFrame:self.avatarBounds];
     avatarView.backgroundColor = [UIColor whiteColor];
@@ -590,19 +601,14 @@ static NSUInteger const BUCPostPageMaxRowCount = 40;
                     UIImageView *imageView = [[UIImageView alloc] initWithFrame:frame];
                     imageView.backgroundColor = [UIColor whiteColor];
                     imageView.contentMode = UIViewContentModeCenter;
-                    imageView.image = self.defaultImage;
-                    dispatch_async(dispatch_get_main_queue(), ^{
-                        if ([[tableView indexPathsForVisibleRows] containsObject:indexPath]) {
-                            BUCPostListCell *cell = (BUCPostListCell *)[tableView cellForRowAtIndexPath:indexPath];
-                            [cell.contentView addSubview:imageView];
-                            [cell.imageList addObject:imageView];
-                        }
-                    });
                     [[BUCDataManager sharedInstance] getImageWithUrl:attachment.url size:self.imageSize onSuccess:^(UIImage *image) {
                         dispatch_async(dispatch_get_main_queue(), ^{
                             if ([[tableView indexPathsForVisibleRows] containsObject:indexPath]) {
+                                BUCPostListCell *cell = (BUCPostListCell *)[tableView cellForRowAtIndexPath:indexPath];
                                 imageView.userInteractionEnabled = YES;
                                 imageView.image = image;
+                                [cell.contentView addSubview:imageView];
+                                [cell.imageList addObject:imageView];
                             }
                         });
                     }];

@@ -17,6 +17,8 @@
         [self.imageList makeObjectsPerformSelector:@selector(removeFromSuperview)];
         [self.imageList removeAllObjects];
     }
+    
+    self.contentView.hidden = YES;
 }
 
 @end

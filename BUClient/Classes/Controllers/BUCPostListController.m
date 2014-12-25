@@ -428,6 +428,7 @@ static NSUInteger const BUCPostListMaxRowCount = 40;
     BUCPostListCell *cell = [self.tableView dequeueReusableCellWithIdentifier:@"cell" forIndexPath:indexPath];
     BUCPost *post = [self.postList objectAtIndex:indexPath.section];
     cell.contentView.layer.contents = (id)[self renderPost:post].CGImage;
+    cell.contentView.hidden = NO;
     
     if (indexPath.section == self.rowCount - 1 && !self.loading && self.to < self.postCount && self.rowCount == 20) {
         [self loadMore];
