@@ -12,9 +12,8 @@
 typedef NS_OPTIONS(uint8_t, BUCDiscuzToken) {
     buc_token_left_bracket = 1 << 0,
     buc_token_right_bracket = 1 << 1,
-    buc_token_slash_right_bracket = 1 << 2,
-    buc_token_string = 1 << 3,
-    buc_token_null = 1 << 4
+    buc_token_string = 1 << 2,
+    buc_token_null = 1 << 3
 };
 
 typedef NS_OPTIONS(uint8_t, BUCDiscuzTag) {
@@ -26,11 +25,11 @@ typedef NS_OPTIONS(uint8_t, BUCDiscuzTag) {
 };
 
 typedef struct {
-    const unsigned char *source;
-    unsigned char *rest;
+    char *source;
+    char *rest;
     int minBufferSize;
     size_t bufferSize;
-    unsigned char *buffer;
+    char *buffer;
     BUCDiscuzToken lastToken;
     __unsafe_unretained NSMutableAttributedString *product;
     __unsafe_unretained NSDictionary *attributes;

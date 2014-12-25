@@ -2,15 +2,12 @@
 
 
 BUCDiscuzContext *BUCDiscuzNewContext(NSString *string, NSMutableAttributedString *product, NSDictionary *attributes) {
-    BUCDiscuzContext init = {
-        .source = (const unsigned char *)[string UTF8String]
-    };
     BUCDiscuzContext *newContext = malloc(sizeof *newContext);
     if (newContext == NULL) {
         return nil;
     }
-    memcpy(newContext, &init, sizeof *newContext);
-    newContext->rest = (unsigned char *)newContext->source;
+    newContext->source = (char *)[string UTF8String];
+    newContext->rest = (char *)newContext->source;
     newContext->minBufferSize = 1024;
     newContext->bufferSize = 1024;
     newContext->buffer = malloc(1024);
@@ -27,16 +24,12 @@ void BUCDiscuzFreeContext(BUCDiscuzContext *context) {
 
 
 void nextToken(BUCDiscuzContext *context) {
-    unsigned char *source = context->rest;
+    const char *source = context->rest;
     size_t maxSize = context->bufferSize;
     NSUInteger index = 0;
-    unsigned char lastChar = source[0];
-    unsigned char *buffer = context->buffer;
+    char lastChar = source[0];
+    char *buffer = context->buffer;
     while (lastChar != '\0' && lastChar != '[' && lastChar != ']') {
-        if (lastChar == '/' && source[index + 1] == ']') {
-            break;
-        }
-        
         if (index == maxSize) {
             maxSize = maxSize + context->minBufferSize;
             context->bufferSize = maxSize;
@@ -74,11 +67,6 @@ void nextToken(BUCDiscuzContext *context) {
         } else {
             context->lastToken = buc_token_right_bracket;
         }
-    } else if (lastChar == '/') {
-        buffer[0] = '/';
-        buffer[1] = ']';
-        index = index + 2;
-        context->lastToken = buc_token_slash_right_bracket;
     } else {
         context->lastToken = buc_token_null;
         return;
@@ -90,21 +78,19 @@ void nextToken(BUCDiscuzContext *context) {
 
 
 BUCDiscuzTag parseOpenTag(BUCDiscuzContext *context) {
-    unsigned char temp[8];
-    temp[0] = '[';
-    temp[1] = '\0';
+    char *temp = "[";
     nextToken(context);
     BUCDiscuzToken token = context->lastToken;
     if (token == buc_token_string) {
         if (strcmp((const char *)context->buffer, "s") == 0) {
-            memcpy(temp + 1, context->buffer, 2);
+            temp = "[s";
             if (context->rest[0] == ']') {
                 context->rest = context->rest + 1;
                 nextToken(context);
                 return buc_discuz_tag_strike;
             }
         } else if (strcmp((const char *)context->buffer, "video") == 0) {
-            memcpy(temp + 1, context->buffer, 6);
+            temp = "[video";
             if (context->rest[0] == ']') {
                 context->rest = context->rest + 1;
                 nextToken(context);
@@ -122,8 +108,7 @@ BUCDiscuzTag parseOpenTag(BUCDiscuzContext *context) {
     [context->product appendAttributedString:[[NSAttributedString alloc] initWithString:[NSString stringWithUTF8String:(const char *)context->buffer] attributes:context->attributes]];
     
     if (context->rest[0] == ']') {
-        temp[0] = ']';
-        temp[1] = '\0';
+        temp = "]";
         [context->product appendAttributedString:[[NSAttributedString alloc] initWithString:[NSString stringWithUTF8String:(const char *)temp] attributes:context->attributes]];
         context->rest = context->rest + 1;
     }
@@ -134,22 +119,19 @@ BUCDiscuzTag parseOpenTag(BUCDiscuzContext *context) {
 
 
 BUCDiscuzTag parseCloseTag(BUCDiscuzContext *context) {
-    unsigned char temp[8];
-    temp[0] = '[';
-    temp[1] = '/';
-    temp[2] = '\0';
+    char *temp = "[/";
     nextToken(context);
     BUCDiscuzToken token = context->lastToken;
     if (token == buc_token_string) {
         if (strcmp((const char *)context->buffer, "s") == 0) {
-            memcpy(temp + 2, context->buffer, 2);
+            temp = "[/s";
             if (context->rest[0] == ']') {
                 context->rest = context->rest + 1;
                 nextToken(context);
                 return buc_discuz_tag_strike_close;
             }
         } else if (strcmp((const char *)context->buffer, "video") == 0) {
-            memcpy(temp + 2, context->buffer, 6);
+            temp = "[/video";
             if (context->rest[0] == ']') {
                 context->rest = context->rest + 1;
                 nextToken(context);
@@ -167,8 +149,7 @@ BUCDiscuzTag parseCloseTag(BUCDiscuzContext *context) {
     [context->product appendAttributedString:[[NSAttributedString alloc] initWithString:[NSString stringWithUTF8String:(const char *)context->buffer] attributes:context->attributes]];
     
     if (context->rest[0] == ']') {
-        temp[0] = ']';
-        temp[1] = '\0';
+        temp = "]";
         [context->product appendAttributedString:[[NSAttributedString alloc] initWithString:[NSString stringWithUTF8String:(const char *)temp] attributes:context->attributes]];
         context->rest = context->rest + 1;
     }
