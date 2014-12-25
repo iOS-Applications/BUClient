@@ -533,8 +533,8 @@ static NSUInteger const BUCPostPageMaxRowCount = 40;
             dispatch_async(dispatch_get_main_queue(), ^{
                 if ([[tableView indexPathsForVisibleRows] containsObject:indexPath]) {
                     BUCPostListCell *cell = (BUCPostListCell *)[tableView cellForRowAtIndexPath:indexPath];
-                    cell.contentView.hidden = NO;
                     cell.contentView.layer.contents = (id)background.CGImage;
+                    cell.contentView.hidden = NO;
                 }
             });
         }
@@ -592,8 +592,11 @@ static NSUInteger const BUCPostPageMaxRowCount = 40;
                     imageView.contentMode = UIViewContentModeCenter;
                     imageView.image = self.defaultImage;
                     dispatch_async(dispatch_get_main_queue(), ^{
-                        [cell.contentView addSubview:imageView];
-                        [cell.imageList addObject:imageView];
+                        if ([[tableView indexPathsForVisibleRows] containsObject:indexPath]) {
+                            BUCPostListCell *cell = (BUCPostListCell *)[tableView cellForRowAtIndexPath:indexPath];
+                            [cell.contentView addSubview:imageView];
+                            [cell.imageList addObject:imageView];
+                        }
                     });
                     [[BUCDataManager sharedInstance] getImageWithUrl:attachment.url size:self.imageSize onSuccess:^(UIImage *image) {
                         dispatch_async(dispatch_get_main_queue(), ^{

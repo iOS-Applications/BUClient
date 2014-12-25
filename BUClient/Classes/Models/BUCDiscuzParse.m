@@ -1,4 +1,6 @@
 #import "BUCDiscuzParse.h"
+
+
 BUCDiscuzContext *BUCDiscuzNewContext(NSString *string, NSMutableAttributedString *product, NSDictionary *attributes) {
     BUCDiscuzContext init = {
         .source = (const unsigned char *)[string UTF8String]
