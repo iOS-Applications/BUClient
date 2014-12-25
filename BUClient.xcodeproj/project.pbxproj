@@ -16,6 +16,7 @@
 		1B63FA271A39505200AA2244 /* BUCSettingsController.m in Sources */ = {isa = PBXBuildFile; fileRef = 1B63FA261A39505200AA2244 /* BUCSettingsController.m */; };
 		1B711DF81A3ABA8600C9DB8F /* BUCEditorController.m in Sources */ = {isa = PBXBuildFile; fileRef = 1B711DF71A3ABA8600C9DB8F /* BUCEditorController.m */; };
 		1B711DFB1A3B3CF400C9DB8F /* BUCNewPostController.m in Sources */ = {isa = PBXBuildFile; fileRef = 1B711DFA1A3B3CF400C9DB8F /* BUCNewPostController.m */; };
+		1BD9B9681A4BF32C00B9C6FC /* BUCDiscuzParse.m in Sources */ = {isa = PBXBuildFile; fileRef = 1BD9B9671A4BF32C00B9C6FC /* BUCDiscuzParse.m */; };
 		1BDE21C91A2EC724009F82C9 /* UIImage+BUCImageCategory.m in Sources */ = {isa = PBXBuildFile; fileRef = 1BDE21C81A2EC724009F82C9 /* UIImage+BUCImageCategory.m */; };
 		D803C6911A1782DB00D26604 /* BUCTextStack.m in Sources */ = {isa = PBXBuildFile; fileRef = D803C6901A1782DB00D26604 /* BUCTextStack.m */; };
 		D8114CD4189012BC00F0E1A7 /* BUCAppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = D8114CAA189012BC00F0E1A7 /* BUCAppDelegate.m */; };
@@ -59,6 +60,8 @@
 		1B711DF71A3ABA8600C9DB8F /* BUCEditorController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BUCEditorController.m; sourceTree = "<group>"; };
 		1B711DF91A3B3CF400C9DB8F /* BUCNewPostController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BUCNewPostController.h; sourceTree = "<group>"; };
 		1B711DFA1A3B3CF400C9DB8F /* BUCNewPostController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BUCNewPostController.m; sourceTree = "<group>"; };
+		1BD9B9671A4BF32C00B9C6FC /* BUCDiscuzParse.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BUCDiscuzParse.m; sourceTree = "<group>"; };
+		1BD9B9691A4BF34000B9C6FC /* BUCDiscuzParse.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BUCDiscuzParse.h; sourceTree = "<group>"; };
 		1BDE21C71A2EC724009F82C9 /* UIImage+BUCImageCategory.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "UIImage+BUCImageCategory.h"; sourceTree = "<group>"; };
 		1BDE21C81A2EC724009F82C9 /* UIImage+BUCImageCategory.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "UIImage+BUCImageCategory.m"; sourceTree = "<group>"; };
 		D803C68F1A1782DB00D26604 /* BUCTextStack.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BUCTextStack.h; sourceTree = "<group>"; };
@@ -282,6 +285,8 @@
 				D8B766F719F4FCA100EB63D2 /* BUCDataManager.m */,
 				D8C8ECC21A0C81EC00D7759F /* BUCHTMLScraper.h */,
 				D8C8ECC31A0C81EC00D7759F /* BUCHTMLScraper.m */,
+				1BD9B9691A4BF34000B9C6FC /* BUCDiscuzParse.h */,
+				1BD9B9671A4BF32C00B9C6FC /* BUCDiscuzParse.m */,
 				D8CA4DBB1A1604990043DEAD /* BUCModels.h */,
 				D8CA4DBC1A16051E0043DEAD /* BUCModels.m */,
 			);
@@ -366,6 +371,7 @@
 				1B4714C61A33FADD009AB55B /* BUCForumListController.m in Sources */,
 				1B63FA271A39505200AA2244 /* BUCSettingsController.m in Sources */,
 				D8B766F819F4FCA100EB63D2 /* BUCDataManager.m in Sources */,
+				1BD9B9681A4BF32C00B9C6FC /* BUCDiscuzParse.m in Sources */,
 				D8A3BFA4187C895E006CBF64 /* main.m in Sources */,
 				D8DDF7EB1A08C60000CEFBA9 /* BUCRootController.m in Sources */,
 				D8114CD4189012BC00F0E1A7 /* BUCAppDelegate.m in Sources */,

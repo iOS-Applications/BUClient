@@ -533,8 +533,8 @@ static NSUInteger const BUCPostPageMaxRowCount = 40;
             dispatch_async(dispatch_get_main_queue(), ^{
                 if ([[tableView indexPathsForVisibleRows] containsObject:indexPath]) {
                     BUCPostListCell *cell = (BUCPostListCell *)[tableView cellForRowAtIndexPath:indexPath];
-                    cell.contentView.layer.contents = (id)background.CGImage;
                     cell.contentView.hidden = NO;
+                    cell.contentView.layer.contents = (id)background.CGImage;
                 }
             });
         }

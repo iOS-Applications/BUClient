@@ -1,6 +1,8 @@
 #import "BUCHTMLScraper.h"
 #import "TFHpple.h"
 #import "BUCConstants.h"
+#import "BUCDiscuzParse.h"
+
 
 @interface BUCHTMLScraper ()
 
@@ -200,28 +202,23 @@
 
 
 #pragma mark - inline elements
-
 - (void)appendTextNode:(TFHppleElement *)node output:(BUCRichText *)output superAttributes:(NSDictionary *)superAttributes {
-#warning strike tag needs to be supported
     if (!node.content || node.content.length == 0) {
         return;
     }
     
     NSMutableDictionary *attributes = [superAttributes mutableCopy];
-    NSTextCheckingResult *match;
-    NSMutableString *s;
-    
     
     if ([self matchString:node.content withPattern:@"\\s*\\[ Last edited by .+ on [0-9]{4}-[0-9]{1,2}-[0-9]{1,2} at [0-9]{2}:[0-9]{2} \\]" match:NULL]) {
         [attributes setObject:[UIFont preferredFontForTextStyle:UIFontTextStyleCaption1] forKeyedSubscript:NSFontAttributeName];
     } else if ([self matchString:node.content withPattern:@"^\\s*[a-zA-Z]+\\s*代码\\s*$" match:NULL]) {
         [self appendNewLineToRichText:output.richText superAttributes:superAttributes];
         [self appendNewLineToRichText:output.richText superAttributes:superAttributes];
-    } else if ([self matchString:node.content withPattern:@"\\([s\\](.+)\\[/s\\])*?" match:&match]) {
-        
     }
     
-    [output.richText appendAttributedString:[[NSAttributedString alloc] initWithString:[self replaceHtmlEntities:node.content] attributes:attributes]];
+    BUCDiscuzContext *context = BUCDiscuzNewContext([self replaceHtmlEntities:node.content], output.richText, attributes);
+    parseContext(context);
+    BUCDiscuzFreeContext(context);
 }
 
 

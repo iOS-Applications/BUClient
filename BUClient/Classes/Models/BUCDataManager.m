@@ -387,7 +387,7 @@ static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
             [self detailListPost:post fromRaw:raw];
         };
     }
-    
+
     dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0);
     dispatch_apply(count, queue, ^(size_t i) {
         BUCPost *post = [self.postList objectAtIndex:i];
@@ -463,6 +463,7 @@ static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
     post.tid = [raw objectForKey:@"tid"];
     post.date = [self parseDateline:[raw objectForKey:@"dateline"]];
     NSString *html = [self urldecode:[[raw objectForKey:@"subject"] stringByAppendingString:@"\n\n"]];
+
     BUCRichText *content = [self.htmlScraper richTextFromHtml:html];
     if (!content) {
         // sometimes API can return invalid HTML string....
