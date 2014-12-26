@@ -1,7 +1,7 @@
 #import "BUCHTMLScraper.h"
 #import "TFHpple.h"
 #import "BUCConstants.h"
-#import "BUCDiscuzParse.h"
+#import "BUCParser.h"
 
 
 @interface BUCHTMLScraper ()
@@ -209,9 +209,9 @@
     
     NSMutableDictionary *attributes = [superAttributes mutableCopy];
     
-    if ([self matchString:node.content withPattern:@"\\s*\\[ Last edited by .+ on [0-9]{4}-[0-9]{1,2}-[0-9]{1,2} at [0-9]{2}:[0-9]{2} \\]" match:NULL]) {
+    if (matchPattern(node.content, @"\\s*\\[ Last edited by .+ on [0-9]{4}-[0-9]{1,2}-[0-9]{1,2} at [0-9]{2}:[0-9]{2} \\]", NULL)) {
         [attributes setObject:[UIFont preferredFontForTextStyle:UIFontTextStyleCaption1] forKeyedSubscript:NSFontAttributeName];
-    } else if ([self matchString:node.content withPattern:@"^\\s*[a-zA-Z]+\\s*代码\\s*$" match:NULL]) {
+    } else if (matchPattern(node.content, @"^\\s*[a-zA-Z]+\\s*代码\\s*$", NULL)) {
         [self appendNewLineToRichText:output.richText superAttributes:superAttributes];
         [self appendNewLineToRichText:output.richText superAttributes:superAttributes];
     }
@@ -229,7 +229,7 @@
     }
     
     BUCImageAttachment *attachment = [[BUCImageAttachment alloc] init];
-    if ([self matchString:source withPattern:@"^\\.\\./images/.+$" match:NULL]) {
+    if (matchPattern(source, @"^\\.\\./images/.+$", NULL)) {
         NSString *resourcePath = [[NSBundle mainBundle] resourcePath];
         attachment.path = [NSString stringWithFormat:@"%@/%@", resourcePath, [source substringFromIndex:3]];
         UIImage *image = [self.dataManager getImageWithPath:attachment.path];
@@ -377,10 +377,7 @@
                        @"navy":       [UIColor colorWithRed:0 green:0 blue:128.0f/255.0f alpha:1.0f],
                        @"maroon":     [UIColor colorWithRed:128.0f/255.0f green:0 blue:0 alpha:1.0f],
                        @"limegreen":  [UIColor colorWithRed:50.0f/255.0f green:205.0f/255.0f blue:50.0f/255.0f alpha:1.0f],
-                       @"#cc3333":    [UIColor colorWithRed:204.0f/255.0f green:51.0f/255.0f blue:51.0f/255.0f alpha:1.0f],
-                       @"#cc3333":    [UIColor colorWithRed:204.0f/255.0f green:51.0f/255.0f blue:51.0f/255.0f alpha:1.0f],
-                       @"mail":       [UIColor colorWithRed:0 green:128.0f/255.0f blue:1.0f alpha:1.0f],
-                       @"url":        [UIColor colorWithRed:0 green:122.0f/255.0f blue:1.0f alpha:1.0f]
+                       @"#cc3333":    [UIColor colorWithRed:204.0f/255.0f green:51.0f/255.0f blue:51.0f/255.0f alpha:1.0f]
                        };
     });
     
@@ -390,7 +387,7 @@
         return output;
     }
     
-    if (![self matchString:color withPattern:@"^#\\s*([a-z0-9]{3}|[a-z0-9]{6})$" match:NULL]) {
+    if (!matchPattern(color, @"^#\\s*([a-z0-9]{3}|[a-z0-9]{6})$", NULL)) {
         output = [UIColor blackColor];
     } else {
         NSString *cleanString = [color stringByReplacingOccurrencesOfString:@"#" withString:@""];
@@ -421,11 +418,11 @@
     NSTextCheckingResult *match;
     UIColor *linkColor;
     
-    if ([self matchString:href withPattern:@"^/profile-username-.+\\.html$" match:&match]) {
+    if (matchPattern(href, @"^/profile-username-.+\\.html$", &match)) {
         linkAttribute.linkType = BUCUrlLink;
         linkAttribute.linkValue = [NSString stringWithFormat:@"%@%@", self.dataManager.host, href];
         linkColor = [self colorAttribute:@"url"];
-    } else if ([self matchString:href withPattern:@"^(http://)?(((www)|(out)|(us))\\.)?bitunion\\.org(/.*)?$" match:&match]) {
+    } else if (matchPattern(href, @"^(http://)?(((www)|(out)|(us))\\.)?bitunion\\.org(/.*)?$", &match)) {
         NSRange hostRange = [href rangeOfString:@"bitunion.org"];
         NSUInteger pathIndex = hostRange.location + hostRange.length;
         NSString *path;
@@ -433,24 +430,18 @@
             path = [href substringFromIndex:pathIndex];
         }
         
-        if ([self matchString:path withPattern:@"^/thread-([1-9][0-9]+)-[1-9]-[1-9]\\.html$" match:&match] ||
-            [self matchString:path withPattern:@"^/viewthread\\.php\\?tid=([1-9][0-9]+).*$" match:&match]) {
+        if (matchPattern(path, @"^/thread-([1-9][0-9]+)-[1-9]-[1-9]\\.html$", &match) ||
+            matchPattern(path, @"^/viewthread\\.php\\?tid=([1-9][0-9]+).*$", &match)) {
             linkAttribute.linkType = BUCPostLink;
             linkAttribute.linkValue = [path substringWithRange:[match rangeAtIndex:1]];
-            linkColor = [self colorAttribute:@"orange"];
-        } else {
-            linkAttribute.linkType = BUCUrlLink;
-            linkAttribute.linkValue = href;
-            linkColor = [self colorAttribute:@"url"];
+            linkColor = [UIColor orangeColor];
         }
-    } else if ([self matchString:href withPattern:@"^mailto:.+$" match:&match]) {
-        linkAttribute.linkType = BUCMailLink;
-        linkAttribute.linkValue = href;
-        linkColor = [self colorAttribute:@"mail"];
-    } else {
+    }
+    
+    if (!linkAttribute.linkValue) {
         linkAttribute.linkType = BUCUrlLink;
         linkAttribute.linkValue = href;
-        linkColor = [self colorAttribute:@"url"];
+        linkColor = [UIColor colorWithRed:0 green:122.0f/255.0f blue:1.0f alpha:1.0f];
     }
     
     return @{BUCLinkAttributeName:linkAttribute, NSForegroundColorAttributeName:linkColor};
@@ -465,7 +456,7 @@
     }
     
     NSTextCheckingResult *match;
-    if ([self matchString:styleString withPattern:@"background-color:\\s*(#[0-9a-f]{6}|[0-9a-f]{3})" match:&match]) {
+    if (matchPattern(styleString, @"background-color:\\s*(#[0-9a-f]{6}|[0-9a-f]{3})", &match)) {
         return [self colorAttribute:[styleString substringWithRange:[match rangeAtIndex:1]]];
     }
     
@@ -496,21 +487,21 @@
 }
 
 
-- (BOOL)matchString:(NSString *)string withPattern:(NSString *)pattern match:(NSTextCheckingResult **)match {
-    NSRegularExpression *regex = [NSRegularExpression regularExpressionWithPattern:pattern options:NSRegularExpressionCaseInsensitive error:NULL];
-    
-    NSTextCheckingResult *output = [regex firstMatchInString:string options:0 range:NSMakeRange(0, string.length)];
-    
-    if (output.numberOfRanges > 0) {
-        if (match) {
-            *match = output;
-        }
-        
-        return YES;
-    }
-    
-    return NO;
-}
+//- (BOOL)matchString:(NSString *)string withPattern:(NSString *)pattern match:(NSTextCheckingResult **)match {
+//    NSRegularExpression *regex = [NSRegularExpression regularExpressionWithPattern:pattern options:NSRegularExpressionCaseInsensitive error:NULL];
+//    
+//    NSTextCheckingResult *output = [regex firstMatchInString:string options:0 range:NSMakeRange(0, string.length)];
+//    
+//    if (output.numberOfRanges > 0) {
+//        if (match) {
+//            *match = output;
+//        }
+//        
+//        return YES;
+//    }
+//    
+//    return NO;
+//}
 
 
 - (BUCTextBlockAttribute *)blockAttributeWithAttribute:(NSDictionary *)attributes {
@@ -539,11 +530,11 @@
     
     if ([url.host isEqualToString:@"bitunion.org"] || [url.host isEqualToString:@"v6.bitunion.org"]) {
         source = [NSString stringWithFormat:@"%@%@", self.dataManager.host, url.path];
-    } else if ([self matchString:source withPattern:@"^http://www\\.bitunion\\.org/.+$" match:NULL]) {
+    } else if (matchPattern(source, @"^http://www\\.bitunion\\.org/.+$", NULL)) {
         source = [source stringByReplacingOccurrencesOfString:@"http://www.bitunion.org" withString:self.dataManager.host];
-    } else if ([self matchString:source withPattern:@"^images/.+$" match:NULL]) {
+    } else if (matchPattern(source, @"^images/.+$", NULL)) {
         source = [NSString stringWithFormat:@"%@/%@", self.dataManager.host, source];
-    } else if ([self matchString:source withPattern:@"^/attachments/.+$" match:NULL]) {
+    } else if (matchPattern(source, @"^/attachments/.+$", NULL)) {
         source = [NSString stringWithFormat:@"%@%@", self.dataManager.host, source];
     }
     

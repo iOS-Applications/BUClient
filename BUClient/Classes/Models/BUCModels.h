@@ -57,8 +57,7 @@
 
 typedef NS_OPTIONS(uint8_t, BUCLinkType) {
     BUCPostLink = 1 << 0,
-    BUCMailLink = 1 << 1,
-    BUCUrlLink = 1 << 2
+    BUCUrlLink = 1 << 1
 };
 
 

@@ -656,19 +656,13 @@ static NSUInteger const BUCPostPageMaxRowCount = 40;
     index = [post.layoutManager glyphIndexForPoint:location inTextContainer:post.textContainer fractionOfDistanceThroughGlyph:NULL];
     BUCLinkAttribute *link = (BUCLinkAttribute *)[post.content.richText attribute:BUCLinkAttributeName atIndex:index effectiveRange:NULL];
     BUCPostDetailController *postDetail;
-    switch (link.linkType) {
-        case BUCPostLink:
-            postDetail = (BUCPostDetailController *)[self.storyboard instantiateViewControllerWithIdentifier:@"BUCPostDetailController"];
-            postDetail.rootPost = [[BUCPost alloc] init];
-            postDetail.rootPost.tid = link.linkValue;
-            [self.navigationController pushViewController:postDetail animated:YES];
-            break;
-        case BUCMailLink:
-            [[UIApplication sharedApplication] openURL:[NSURL URLWithString:link.linkValue]];
-            break;
-        default:
-            [[UIApplication sharedApplication] openURL:[NSURL URLWithString:link.linkValue]];
-            break;
+    if (link.linkType == BUCPostLink) {
+        postDetail = (BUCPostDetailController *)[self.storyboard instantiateViewControllerWithIdentifier:@"BUCPostDetailController"];
+        postDetail.rootPost = [[BUCPost alloc] init];
+        postDetail.rootPost.tid = link.linkValue;
+        [self.navigationController pushViewController:postDetail animated:YES];
+    } else {
+        [[UIApplication sharedApplication] openURL:[NSURL URLWithString:link.linkValue]];
     }
 }
 

@@ -1,4 +1,6 @@
-#import "BUCDiscuzParse.h"
+#import "BUCParser.h"
+#import "BUCModels.h"
+#import "BUCConstants.h"
 
 
 BUCDiscuzContext *BUCDiscuzNewContext(NSString *string, NSMutableAttributedString *product, NSDictionary *attributes) {
@@ -22,7 +24,23 @@ void BUCDiscuzFreeContext(BUCDiscuzContext *context) {
     free(context);
 }
 
+BOOL matchPattern(NSString *string, NSString *pattern, NSTextCheckingResult **match) {
+    NSRegularExpression *regex = [NSRegularExpression regularExpressionWithPattern:pattern options:NSRegularExpressionCaseInsensitive error:NULL];
+    
+    NSTextCheckingResult *output = [regex firstMatchInString:string options:0 range:NSMakeRange(0, string.length)];
+    
+    if (output.numberOfRanges > 0) {
+        if (match) {
+            *match = output;
+        }
+        
+        return YES;
+    }
+    
+    return NO;
+}
 
+#pragma mark - private functions
 void nextToken(BUCDiscuzContext *context) {
     const char *source = context->rest;
     size_t maxSize = context->bufferSize;
@@ -158,6 +176,51 @@ BUCDiscuzTag parseCloseTag(BUCDiscuzContext *context) {
     return buc_discuz_tag_invalid;
 }
 
+
+void appendVideo(BUCDiscuzContext *context, NSString *flashUrl) {
+    NSTextCheckingResult *match;
+    NSString *htmlUrl;
+    if (matchPattern(flashUrl, @"^http://player.youku.com/player.php/sid/([a-z0-9]+)/v.swf$", &match)) {
+        htmlUrl = [NSString stringWithFormat:@"http://v.youku.com/v_show/id_%@.html", [flashUrl substringWithRange:[match rangeAtIndex:1]]];
+    } else if (matchPattern(flashUrl, @"^http://player.video.qiyi.com/[a-z0-9]+/[0-9]+/[0-9]+/(v_[0-9a-z]+).swf.+$", &match)) {
+        htmlUrl = [NSString stringWithFormat:@"http://www.iqiyi.com/%@.html", [flashUrl substringWithRange:[match rangeAtIndex:1]]];
+    } else if (matchPattern(flashUrl, @"^http://i7.imgs.letv.com/player/swfPlayer.swf\\?id=([0-9]+).+$", &match)) {
+        htmlUrl = [NSString stringWithFormat:@"http://www.letv.com/ptv/vplay/%@.html", [flashUrl substringWithRange:[match rangeAtIndex:1]]];
+    } else if (matchPattern(flashUrl, @"^http://www.tucao.cc/mini/([0-9]+).swf$", &match)) {
+        htmlUrl = [NSString stringWithFormat:@"http://www.tucao.cc/play/h%@/", [flashUrl substringWithRange:[match rangeAtIndex:1]]];
+    } else {
+        htmlUrl = flashUrl;
+    }
+    
+    BUCLinkAttribute *linkAttribute = [[BUCLinkAttribute alloc] init];
+    linkAttribute.linkType = BUCUrlLink;
+    linkAttribute.linkValue = htmlUrl;
+    linkAttribute.range = NSMakeRange(context->product.length, htmlUrl.length);
+    NSMutableDictionary *attributes = [context->attributes mutableCopy];
+    [attributes setObject:[UIColor colorWithRed:0 green:122.0f/255.0f blue:1.0f alpha:1.0f] forKey:NSForegroundColorAttributeName];
+    [attributes setObject:linkAttribute forKey:BUCLinkAttributeName];
+    [context->product appendAttributedString:[[NSAttributedString alloc] initWithString:htmlUrl attributes:attributes]];
+}
+
+
+void parseVideo(BUCDiscuzContext *context) {
+    char *save;
+    
+    if (context->lastToken == buc_token_string) {
+        appendVideo(context, [NSString stringWithUTF8String:(const char *)context->buffer]);
+        if (context->rest[0] == '[' && context->rest[1] == '/') {
+            save = context->rest;
+            context->rest = context->rest + 2;
+            if (parseCloseTag(context) != buc_discuz_tag_video_close) {
+                context->rest = save;
+            }
+        }
+        
+        nextToken(context);
+    }
+}
+
+
 void parseStrike(BUCDiscuzContext *context) {
     BUCDiscuzTag tag;
     while (context->lastToken != buc_token_null) {
@@ -178,12 +241,10 @@ void parseStrike(BUCDiscuzContext *context) {
                     if (tag == buc_discuz_tag_strike) {
                         parseStrike(context);
                     } else if (tag == buc_discuz_tag_video) {
-                        
+                        parseVideo(context);
                     }
                 }
-                
                 break;
-                
             default:
                 break;
         }
@@ -215,7 +276,7 @@ void parseContext(BUCDiscuzContext *context) {
                         parseStrike(context);
                         context->attributes = save;
                     } else if (tag == buc_discuz_tag_video) {
-                        
+                        parseVideo(context);
                     }
                 }
                 break;

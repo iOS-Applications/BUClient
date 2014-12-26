@@ -40,6 +40,6 @@ typedef struct {
 BUCDiscuzContext *BUCDiscuzNewContext(NSString *string, NSMutableAttributedString *product, NSDictionary *attributes);
 void BUCDiscuzFreeContext(BUCDiscuzContext *context);
 void parseContext(BUCDiscuzContext *context);
-
+BOOL matchPattern(NSString *string, NSString *pattern, NSTextCheckingResult **match);
 
 #endif
