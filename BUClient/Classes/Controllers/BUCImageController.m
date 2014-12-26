@@ -70,7 +70,7 @@
     [self.scrollView addSubview:self.imageView];
     self.scrollView.contentSize = self.imageView.frame.size;
     [self.loadingIndicator startAnimating];
-    [[BUCDataManager sharedInstance] getImageWithUrl:self.attachment.url size:CGSizeZero onSuccess:^(UIImage *image) {
+    [[BUCDataManager sharedInstance] getImageWithUrl:self.url size:CGSizeZero onSuccess:^(UIImage *image) {
         dispatch_async(dispatch_get_main_queue(), ^{
             [self.loadingIndicator stopAnimating];
             self.imageView.image = image;

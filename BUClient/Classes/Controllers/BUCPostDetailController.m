@@ -533,6 +533,10 @@ static NSUInteger const BUCPostPageMaxRowCount = 40;
         cell.imageList = [[NSMutableArray alloc] init];
     }
     
+    if (!cell.urlMap) {
+        cell.urlMap = [[NSMutableDictionary alloc] init];
+    }
+    
     if (post.cellHeight > 1000.0f) {
         [self.appDelegate displayLoading];
     }
@@ -565,6 +569,9 @@ static NSUInteger const BUCPostPageMaxRowCount = 40;
                 dispatch_async(dispatch_get_main_queue(), ^{
                     if ([[tableView indexPathsForVisibleRows] containsObject:indexPath]) {
                         avatarView.image = nil;
+                        avatarView.userInteractionEnabled = YES;
+                        avatarView.tag = 100;
+                        [cell.urlMap setObject:post.avatar.url forKey:@(avatarView.tag)];
                         avatarView.image = image;
                     }
                 });
@@ -574,6 +581,7 @@ static NSUInteger const BUCPostPageMaxRowCount = 40;
     
     if (post.content.imageList) {
         dispatch_async(queue, ^{
+            NSInteger tag = 101;
             for (BUCImageAttachment *attachment in post.content.imageList) {
                 if (attachment.path) {
                     CGRect frame = [post.layoutManager boundingRectForGlyphRange:NSMakeRange(attachment.glyphIndex, 1) inTextContainer:post.textContainer];
@@ -601,6 +609,7 @@ static NSUInteger const BUCPostPageMaxRowCount = 40;
                     UIImageView *imageView = [[UIImageView alloc] initWithFrame:frame];
                     imageView.backgroundColor = [UIColor whiteColor];
                     imageView.contentMode = UIViewContentModeCenter;
+                    imageView.tag = tag;
                     [[BUCDataManager sharedInstance] getImageWithUrl:attachment.url size:self.imageSize onSuccess:^(UIImage *image) {
                         dispatch_async(dispatch_get_main_queue(), ^{
                             if ([[tableView indexPathsForVisibleRows] containsObject:indexPath]) {
@@ -609,10 +618,12 @@ static NSUInteger const BUCPostPageMaxRowCount = 40;
                                 imageView.image = image;
                                 [cell.contentView addSubview:imageView];
                                 [cell.imageList addObject:imageView];
+                                [cell.urlMap setObject:attachment.url forKey:@(imageView.tag)];
                             }
                         });
                     }];
                 }
+                tag = tag + 1;
             }
         });
     }
@@ -642,29 +653,14 @@ static NSUInteger const BUCPostPageMaxRowCount = 40;
     BUCPostListCell *cell = (BUCPostListCell *)[self.tableView cellForRowAtIndexPath:indexPath];
     UIView *contents = cell.contentView;
     location = [tap locationInView:contents];
-    if (CGRectContainsPoint(self.avatarBounds, location)) {
-        if (post.avatar) {
-            [self performSegueWithIdentifier:@"postDetailToImage" sender:post.avatar];
-        }
-        return;
-    }
-    
-    NSUInteger index;
+
     UIImageView *imageView = (UIImageView *)[contents hitTest:location withEvent:nil];
     if ([imageView isKindOfClass:[UIImageView class]]) {
-        NSUInteger index = [cell.imageList indexOfObject:imageView];
-        if (index == 0 || index > post.content.imageList.count) {
-            return;
-        }
-        BUCImageAttachment *attachment = [post.content.imageList objectAtIndex:index - 1];
-        if (!attachment) {
-            return;
-        }
-        
-        [self performSegueWithIdentifier:@"postDetailToImage" sender:(id)attachment];
+        [self performSegueWithIdentifier:@"postDetailToImage" sender:[cell.urlMap objectForKey:@(imageView.tag)]];
         return;
     }
-    
+
+    NSUInteger index;
     location.x = location.x - BUCDefaultPadding;
     location.y = location.y - 3 * BUCDefaultMargin - 40.0f;
     index = [post.layoutManager glyphIndexForPoint:location inTextContainer:post.textContainer fractionOfDistanceThroughGlyph:NULL];
@@ -843,7 +839,7 @@ static NSUInteger const BUCPostPageMaxRowCount = 40;
         newPost.unwindIdentifier = @"newPostToPostDetail";
     } else if ([segue.identifier isEqualToString:@"postDetailToImage"]) {
         BUCImageController *image = (BUCImageController *)segue.destinationViewController;
-        image.attachment = (BUCImageAttachment *)sender;
+        image.url = (NSURL *)sender;
     }
 }
 

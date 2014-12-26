@@ -3,5 +3,5 @@
 #import "BUCModels.h"
 
 @interface BUCImageController : UIViewController
-@property (nonatomic) BUCImageAttachment *attachment;
+@property (nonatomic) NSURL *url;
 @end
