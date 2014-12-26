@@ -58,12 +58,7 @@ static NSUInteger const BUCPostListMaxRowCount = 40;
     [super viewWillAppear:animated];
     
     dispatch_async(dispatch_get_main_queue(), ^{
-        BUCPost *post = [self.postList firstObject];
-        UITableView *cell = [self.tableView.visibleCells firstObject];
-        if (cell.frame.size.width != post.cellWidth) {
-            [self didRotateFromInterfaceOrientation:0];
-            [self.tableView reloadData];
-        }
+        [self didRotateFromInterfaceOrientation:0];
     });
     
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(textStyleChanged:) name:UIContentSizeCategoryDidChangeNotification object:nil];
@@ -78,7 +73,7 @@ static NSUInteger const BUCPostListMaxRowCount = 40;
 
 
 - (void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation {
-    UIDeviceOrientation orientation = [UIDevice currentDevice].orientation;
+    UIInterfaceOrientation orientation = [[UIApplication sharedApplication] statusBarOrientation];
     BOOL layoutInvalid = NO;
     if (UIDeviceOrientationIsLandscape(orientation) && self.screenWidth != self.nativeHeight) {
         self.screenWidth = self.nativeHeight;
@@ -103,8 +98,8 @@ static NSUInteger const BUCPostListMaxRowCount = 40;
         self.nativeWidth = self.nativeHeight;
         self.nativeHeight = save;
     }
-    UIDeviceOrientation deviceOrientation = [UIDevice currentDevice].orientation;
-    if (UIDeviceOrientationIsLandscape(deviceOrientation)) {
+    UIInterfaceOrientation orientation = [[UIApplication sharedApplication] statusBarOrientation];
+    if (UIDeviceOrientationIsLandscape(orientation)) {
         self.screenWidth = self.nativeHeight;
     } else {
         self.screenWidth = self.nativeWidth;

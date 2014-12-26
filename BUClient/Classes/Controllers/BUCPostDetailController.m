@@ -94,22 +94,12 @@ static NSUInteger const BUCPostPageMaxRowCount = 40;
 }
 
 
-- (void)viewDidAppear:(BOOL)animated {
-    [super viewDidAppear:animated];
-    
-    dispatch_async(dispatch_get_main_queue(), ^{
-        BUCPost *post = [self.postList firstObject];
-        UITableView *cell = [self.tableView.visibleCells firstObject];
-        if (cell.frame.size.width != post.cellWidth) {
-            [self didRotateFromInterfaceOrientation:0];
-            [self.tableView reloadData];
-        }
-    });
-}
-
-
 - (void)viewWillAppear:(BOOL)animated {
     [super viewWillAppear:animated];
+    
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [self didRotateFromInterfaceOrientation:0];
+    });
     
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(textStyleChanged:) name:UIContentSizeCategoryDidChangeNotification object:nil];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(keyboardWillShown:) name:UIKeyboardWillShowNotification object:nil];
@@ -117,8 +107,8 @@ static NSUInteger const BUCPostPageMaxRowCount = 40;
 
 
 - (void)setupGeometry {
-    UIDeviceOrientation deviceOrientation = [UIDevice currentDevice].orientation;
-    if (UIDeviceOrientationIsLandscape(deviceOrientation)) {
+    UIInterfaceOrientation orientation = [[UIApplication sharedApplication] statusBarOrientation];
+    if (UIDeviceOrientationIsLandscape(orientation)) {
         self.screenWidth = self.nativeHeight;
     } else {
         self.screenWidth = self.nativeWidth;
@@ -186,7 +176,7 @@ static NSUInteger const BUCPostPageMaxRowCount = 40;
 
 
 - (void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation {
-    UIDeviceOrientation orientation = [UIDevice currentDevice].orientation;
+    UIInterfaceOrientation orientation = [[UIApplication sharedApplication] statusBarOrientation];
     BOOL layoutInvalid = NO;
     if (UIDeviceOrientationIsLandscape(orientation) && self.screenWidth != self.nativeHeight) {
         self.screenWidth = self.nativeHeight;
