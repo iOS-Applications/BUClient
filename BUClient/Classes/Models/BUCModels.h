@@ -46,7 +46,7 @@
 @property (nonatomic) NSAttributedString *meta;
 
 @property (nonatomic) NSTextStorage *textStorage;
-@property (nonatomic) BUCLayoutManager *layoutManager;
+@property (nonatomic) NSLayoutManager *layoutManager;
 @property (nonatomic) BUCTextContainer *textContainer;
 
 - (instancetype)initWithTextStack;
