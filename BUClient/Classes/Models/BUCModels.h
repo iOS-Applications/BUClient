@@ -1,4 +1,3 @@
-#import <Foundation/Foundation.h>
 #include "BUCTextStack.h"
 
 #ifndef BUClient_BUCModels_h

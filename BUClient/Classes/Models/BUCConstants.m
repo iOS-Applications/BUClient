@@ -1,5 +1,3 @@
-#import <Foundation/Foundation.h>
-
 
 // global notifications
 NSString * const BUCLoginStateNotification = @"BUCUserChangedNotification";
