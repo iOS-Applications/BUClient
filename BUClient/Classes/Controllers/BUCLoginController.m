@@ -44,7 +44,7 @@
     if (self.navigationController) {
         [self.username becomeFirstResponder];
         self.userList = [defaults dictionaryForKey:@"userList"];
-        self.navigationItem.title = @"Add Account";
+        self.navigationItem.title = @"添加帐号";
     } else {
         self.currentUser = [defaults stringForKey:@"username"];
         self.username.text = self.currentUser;
@@ -54,6 +54,8 @@
             [self.username becomeFirstResponder];
         }
     }
+    
+    self.campus.on = [[NSUserDefaults standardUserDefaults] boolForKey:BUCCampusNetworkSetting];
     
     self.appDelegate = [UIApplication sharedApplication].delegate;
 }
@@ -103,16 +105,10 @@
      }];
 }
 
-- (IBAction)hostChanged:(id)sender {
-    NSString *host;
-    if (self.campus.on) {
-        host = @"http://www.bitunion.org";
-    } else {
-        host = @"http://out.bitunion.org";
-    }
-    
-    [[NSUserDefaults standardUserDefaults] setObject:host forKey:@"host"];
-    [[NSNotificationCenter defaultCenter] postNotificationName:BUCHostChangedNotification object:nil];
+- (IBAction)hostChanged:(UISwitch *)sender {    
+    [[NSUserDefaults standardUserDefaults] setBool:sender.on forKey:BUCCampusNetworkSetting];
+    [[NSUserDefaults standardUserDefaults] synchronize];
+    [[NSNotificationCenter defaultCenter] postNotificationName:BUCNetworkSettingChangedNotification object:nil];
 }
 
 - (IBAction)dissmissTextfield:(id)sender {

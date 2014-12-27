@@ -7,6 +7,7 @@
 @interface BUCHTMLScraper ()
 
 @property (nonatomic) CGRect imageBounds;
+@property (nonatomic) BOOL parseInternetImage;
 
 @end
 
@@ -18,14 +19,21 @@
     
     if (self) {
         _imageBounds = CGRectMake(0.0f, 0.0f, 1000.0f, 100.0f);
+        _parseInternetImage = [[NSUserDefaults standardUserDefaults] boolForKey:BUCInternetImageSetting];
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(internetImageSettingChanged) name:BUCInternetImageSettingChangedNotification object:nil];
     }
     
     return self;
 }
 
 
+- (void)internetImageSettingChanged {
+    _parseInternetImage = [[NSUserDefaults standardUserDefaults] boolForKey:BUCInternetImageSetting];
+}
+
+
 - (NSURL *)avatarUrlFromHtml:(NSString *)html {
-    if (!html || html.length == 0) {
+    if (!html || html.length == 0 || !_parseInternetImage) {
         return nil;
     }
     
@@ -238,13 +246,15 @@
         } else {
             attachment.bounds = CGRectMake(0.0f, 0.0f, image.size.width, image.size.height);
         }
-    } else {
+    } else if (self.parseInternetImage){
         attachment.url = [self parseImageUrl:source];
         if (!attachment.url) {
             return;
         } else {
             attachment.bounds = self.imageBounds;
         }
+    } else {
+        return;
     }
     
     attachment.glyphIndex = output.richText.length;
@@ -485,23 +495,6 @@
     
     return @{NSFontAttributeName:font};
 }
-
-
-//- (BOOL)matchString:(NSString *)string withPattern:(NSString *)pattern match:(NSTextCheckingResult **)match {
-//    NSRegularExpression *regex = [NSRegularExpression regularExpressionWithPattern:pattern options:NSRegularExpressionCaseInsensitive error:NULL];
-//    
-//    NSTextCheckingResult *output = [regex firstMatchInString:string options:0 range:NSMakeRange(0, string.length)];
-//    
-//    if (output.numberOfRanges > 0) {
-//        if (match) {
-//            *match = output;
-//        }
-//        
-//        return YES;
-//    }
-//    
-//    return NO;
-//}
 
 
 - (BUCTextBlockAttribute *)blockAttributeWithAttribute:(NSDictionary *)attributes {

@@ -3,6 +3,7 @@
 
 @interface BUCNetworkEngine : NSObject
 
+@property (readonly, nonatomic) NSString *host;
 
 - (void)fetchJsonFromUrl:(NSString *)url
                     json:(NSDictionary *)json

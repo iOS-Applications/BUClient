@@ -3,7 +3,7 @@
 
 @interface BUCDataManager : NSObject
 
-@property (nonatomic) NSString *host;;
+@property (nonatomic, readonly) NSString *host;;
 
 @property (nonatomic, readonly) BOOL loggedIn;
 

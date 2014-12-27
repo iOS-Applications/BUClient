@@ -5,7 +5,7 @@
 
 
 @property (nonatomic) NSURLSession *defaultSession;
-@property (nonatomic) NSString *host;
+@property (nonatomic, readwrite) NSString *host;
 
 
 @end
@@ -25,8 +25,13 @@
         config.timeoutIntervalForResource = 30;
         _defaultSession = [NSURLSession sessionWithConfiguration: config delegate: nil delegateQueue: [NSOperationQueue mainQueue]];
         
-        _host = [[NSUserDefaults standardUserDefaults] stringForKey:@"host"];
-        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(hostChanged) name:BUCHostChangedNotification object:nil];
+        if ([[NSUserDefaults standardUserDefaults] boolForKey:BUCCampusNetworkSetting]) {
+            _host = @"http://www.bitunion.org";
+        } else {
+            _host = @"http://out.bitunion.org";
+        }
+        
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(hostChanged) name:BUCNetworkSettingChangedNotification object:nil];
     }
     
     return self;
@@ -34,7 +39,11 @@
 
 
 - (void)hostChanged {
-    self.host = [[NSUserDefaults standardUserDefaults] stringForKey:@"host"];
+    if ([[NSUserDefaults standardUserDefaults] boolForKey:BUCCampusNetworkSetting]) {
+        _host = @"http://www.bitunion.org";
+    } else {
+        _host = @"http://out.bitunion.org";
+    }
 }
 
 

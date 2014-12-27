@@ -39,11 +39,6 @@ static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
     self = [super init];
     
     if (self) {
-        _host = [[NSUserDefaults standardUserDefaults] stringForKey:@"host"];
-        if (!_host) {
-            _host = @"http://out.bitunion.org";
-            [[NSUserDefaults standardUserDefaults] setObject:_host forKey:@"host"];
-        }
         _networkEngine = [[BUCNetworkEngine alloc] init];
         _htmlScraper = [[BUCHTMLScraper alloc] init];
         _htmlScraper.dataManager = self;
@@ -54,7 +49,6 @@ static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
             [_postList addObject:post];
         }
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(userChanged) name:BUCLoginStateNotification object:nil];
-        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(hostChanged) name:BUCHostChangedNotification object:nil];
     }
     
     return self;
@@ -68,19 +62,10 @@ static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
     _loggedIn = [defaults boolForKey:BUCUserLoginStateDefaultKey];
 }
 
-- (void)hostChanged {
-    _host = [[NSUserDefaults standardUserDefaults] stringForKey:@"host"];
-}
 
 #pragma mark - public
-
 - (NSString *)host {
-    if (_host) {
-        return _host;
-    }
-    
-    [self hostChanged];
-    return _host;
+    return self.networkEngine.host;
 }
 
 - (BOOL)loggedIn {
@@ -115,18 +100,26 @@ static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
          [defaults setObject:password forKey:@"password"];
          [defaults setObject:self.uid forKey:@"uid"];
          [defaults setBool:YES forKey:BUCUserLoginStateDefaultKey];
-         NSMutableDictionary *userList = [NSMutableDictionary dictionaryWithDictionary:[defaults dictionaryForKey:@"userList"]];
+         NSMutableDictionary *userList = [[defaults dictionaryForKey:@"userList"] mutableCopy];
          if (!userList) {
              userList = [[NSMutableDictionary alloc] init];
          }
-         NSMutableDictionary *userSettings = [[NSMutableDictionary alloc] init];
-         [userSettings setObject:username forKey:@"username"];
-         [userSettings setObject:password forKey:@"password"];
-         [userSettings setObject:self.uid forKey:@"uid"];
-         
          NSString *userKey = [username lowercaseString];
+         NSMutableDictionary *userSettings = [userList objectForKey:userKey];
+         NSString *signature;
+         if (!userSettings) {
+             userSettings = [[NSMutableDictionary alloc] init];
+             [userSettings setObject:username forKey:@"username"];
+             [userSettings setObject:self.uid forKey:@"uid"];
+             signature = @"\n\nSent from my iPhone";
+             [userSettings setObject:signature forKey:@"signature"];
+         } else {
+             [userSettings setObject:password forKey:@"password"];
+             signature = [userSettings objectForKey:@"signature"];
+         }
          [userList setObject:userSettings forKey:userKey];
          [defaults setObject:userList forKey:@"userList"];
+         [defaults setObject:signature forKey:@"signature"];
          [defaults synchronize];
          self.loggedIn = YES;
          voidBlock();

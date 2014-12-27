@@ -252,6 +252,7 @@ static NSUInteger const BUCPostPageMaxRowCount = 40;
 
 - (void)loadListFrom:(NSUInteger)from {
     NSUInteger to = from + BUCAPIMaxLoadRowCount;
+    BUCPostDetailController * __weak weakSelf = self;
     [[BUCDataManager sharedInstance]
      listOfPost:self.rootPost.tid
      
@@ -260,29 +261,33 @@ static NSUInteger const BUCPostPageMaxRowCount = 40;
      to:[NSString stringWithFormat:@"%lu", (unsigned long)to]
      
      onSuccess:^(NSArray *list, NSUInteger count) {
-         if (self.flush) {
-             self.from = from;
+         if (weakSelf) {
+             if (weakSelf.flush) {
+                 weakSelf.from = from;
+             }
+             if (from == 0) {
+                 weakSelf.rootPost.uid = ((BUCPost *)[list objectAtIndex:from]).uid;
+             }
+             weakSelf.to = to;
+             [weakSelf buildList:list count:count];
+             if (weakSelf.flush || weakSelf.reverse) {
+                 [weakSelf.tableView setContentOffset:CGPointZero];
+                 [weakSelf.tableView reloadData];
+             } else if (weakSelf.opOnly) {
+                 [weakSelf.tableView reloadData];
+             } else if (weakSelf.insertIndexPaths.count > 0) {
+                 [weakSelf.tableView insertRowsAtIndexPaths:weakSelf.insertIndexPaths withRowAnimation:UITableViewRowAnimationNone];
+             }
+             
+             [weakSelf endLoading];
          }
-         if (from == 0) {
-             self.rootPost.uid = ((BUCPost *)[list objectAtIndex:from]).uid;
-         }
-         self.to = to;
-         [self buildList:list count:count];
-         if (self.flush || self.reverse) {
-             [self.tableView setContentOffset:CGPointZero];
-             [self.tableView reloadData];
-         } else if (self.opOnly) {
-             [self.tableView reloadData];
-         } else if (self.insertIndexPaths.count > 0) {
-             [self.tableView insertRowsAtIndexPaths:self.insertIndexPaths withRowAnimation:UITableViewRowAnimationNone];
-         }
-         
-         [self endLoading];
      }
      
      onError:^(NSString *errorMsg) {
-         [self endLoading];
-         [self.appDelegate alertWithMessage:errorMsg];
+         if (weakSelf) {
+             [weakSelf endLoading];
+             [weakSelf.appDelegate alertWithMessage:errorMsg];
+         }
      }];
 }
 

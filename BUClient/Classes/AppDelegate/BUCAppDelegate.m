@@ -1,4 +1,5 @@
 #import "BUCAppDelegate.h"
+#import "BUCConstants.h"
 
 @interface BUCAppDelegate ()
 
@@ -17,6 +18,13 @@
     [self.window addSubview:self.loadingView];
     [self.window addConstraint:[NSLayoutConstraint constraintWithItem:self.loadingView attribute:NSLayoutAttributeCenterX relatedBy:NSLayoutRelationEqual toItem:self.window attribute:NSLayoutAttributeCenterX multiplier:1.0f constant:0.0f]];
     [self.window addConstraint:[NSLayoutConstraint constraintWithItem:self.loadingView attribute:NSLayoutAttributeCenterY relatedBy:NSLayoutRelationEqual toItem:self.window attribute:NSLayoutAttributeCenterY multiplier:1.0f constant:0.0f]];
+    
+    if (![[NSUserDefaults standardUserDefaults] boolForKey:BUCFirstTimeLaunchingSetting]) {
+        [[NSUserDefaults standardUserDefaults] setBool:YES forKey:BUCFirstTimeLaunchingSetting];
+        [[NSUserDefaults standardUserDefaults] setBool:YES forKey:BUCInternetImageSetting];
+        [[NSUserDefaults standardUserDefaults] setBool:NO forKey:BUCCampusNetworkSetting];
+        [[NSUserDefaults standardUserDefaults] synchronize];
+    }
     
     return YES;
 }

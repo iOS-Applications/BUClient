@@ -185,7 +185,7 @@ static NSUInteger const BUCPostListMaxRowCount = 40;
 
 - (void)loadListFrom:(NSUInteger)from {
     NSUInteger to = from + BUCAPIMaxLoadRowCount;
-    
+    BUCPostListController * __weak weakSelf = self;
     [[BUCDataManager sharedInstance]
      listOfForum:self.fid
      
@@ -194,26 +194,30 @@ static NSUInteger const BUCPostListMaxRowCount = 40;
      to:to > 0 ? [NSString stringWithFormat:@"%lu", (unsigned long)(to)] : nil
      
      onSuccess:^(NSArray *list, NSUInteger count) {
-         NSIndexSet *insertSections = [self updateWithList:list count:count];
-         if (self.flush) {
-             self.from = from;
-             [self.tableView setContentOffset:CGPointZero];
-             [self.tableView reloadData];
-         } else {
-             [self.tableView insertSections:insertSections withRowAnimation:UITableViewRowAnimationNone];
+         if (weakSelf) {
+             NSIndexSet *insertSections = [weakSelf updateWithList:list count:count];
+             if (weakSelf.flush) {
+                 weakSelf.from = from;
+                 [weakSelf.tableView setContentOffset:CGPointZero];
+                 [weakSelf.tableView reloadData];
+             } else {
+                 [weakSelf.tableView insertSections:insertSections withRowAnimation:UITableViewRowAnimationNone];
+             }
+             weakSelf.to = to;
+             
+             if (weakSelf.fid) {
+                 weakSelf.tableView.tableFooterView.hidden = NO;
+             }
+             [weakSelf updateTitle];
+             [weakSelf endLoading];
          }
-         self.to = to;
-         
-         if (self.fid) {
-             self.tableView.tableFooterView.hidden = NO;
-         }
-         [self updateTitle];
-         [self endLoading];
      }
      
      onError:^(NSString *errorMsg) {
-         [self endLoading];
-         [self.appDelegate alertWithMessage:errorMsg];
+         if (weakSelf) {
+             [weakSelf endLoading];
+             [weakSelf.appDelegate alertWithMessage:errorMsg];
+         }
      }];
 }
 
@@ -221,17 +225,18 @@ static NSUInteger const BUCPostListMaxRowCount = 40;
 - (void)refreshFrom:(NSUInteger)from {
     self.flush = YES;
     self.loading = YES;
+    BUCPostListController * __weak weakSelf = self;
     if (self.fid) {
         [[BUCDataManager sharedInstance]
          childCountOfForum:self.fid
          thread:nil
          
          onSuccess:^(NSUInteger count) {
-             self.postCount = count + 1;
-             [self loadListFrom:from];
+             weakSelf.postCount = count + 1;
+             [weakSelf loadListFrom:from];
          } onError:^(NSString *errorMsg) {
-             [self endLoading];
-             [self.appDelegate alertWithMessage:errorMsg];
+             [weakSelf endLoading];
+             [weakSelf.appDelegate alertWithMessage:errorMsg];
          }];
     } else {
         [self loadListFrom:from];
