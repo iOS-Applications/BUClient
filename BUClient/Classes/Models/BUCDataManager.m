@@ -407,7 +407,7 @@ static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
     if (attachment) {
         NSString *filetype = [self urldecode:[raw objectForKey:@"filetype"]];
         if (filetype && [filetype rangeOfString:@"image/"].length > 0) {
-            attachment = [NSString stringWithFormat:@"\n\n本帖包含图片附件:\n\n<img src='%@/%@'>", self.host, attachment];
+            attachment = [NSString stringWithFormat:@"\n\n本帖包含图片附件:\n<img src='%@/%@'>", self.host, attachment];
             [content appendString:attachment];
         }
     }
