@@ -237,6 +237,7 @@
     }
     
     BUCImageAttachment *attachment = [[BUCImageAttachment alloc] init];
+    BOOL emotionFlag = NO;
     if (matchPattern(source, @"^\\.\\./images/.+$", NULL)) {
         NSString *resourcePath = [[NSBundle mainBundle] resourcePath];
         attachment.path = [NSString stringWithFormat:@"%@/%@", resourcePath, [source substringFromIndex:3]];
@@ -245,6 +246,7 @@
             return;
         } else {
             attachment.bounds = CGRectMake(0.0f, 0.0f, image.size.width, image.size.height);
+            emotionFlag = YES;
         }
     } else if (self.parseInternetImage){
         attachment.url = [self parseImageUrl:source];
@@ -258,10 +260,18 @@
     }
     
     attachment.glyphIndex = output.richText.length;
-    if (!output.imageList) {
-        output.imageList = [[NSMutableArray alloc] init];
+    if (emotionFlag) {
+        if (!output.emotionList) {
+            output.emotionList = [[NSMutableArray alloc] init];
+        }
+        [output.emotionList addObject:attachment];
+    } else {
+        if (!output.imageList) {
+            output.imageList = [[NSMutableArray alloc] init];
+        }
+        [output.imageList addObject:attachment];
     }
-    [output.imageList addObject:attachment];
+    
     [output.richText appendAttributedString:[NSAttributedString attributedStringWithAttachment:attachment]];
     [output.richText addAttributes:superAttributes range:NSMakeRange(output.richText.length - 1, 1)];
 }

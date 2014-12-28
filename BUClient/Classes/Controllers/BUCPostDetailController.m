@@ -90,6 +90,7 @@ static NSUInteger const BUCPostPageMaxRowCount = 40;
     
     if ([self.navigationController.viewControllers indexOfObject:self]==NSNotFound) {
         [self.appDelegate hideLoading];
+        [[BUCDataManager sharedInstance] cancelAllImageTasks];
     }
 }
 
@@ -160,6 +161,7 @@ static NSUInteger const BUCPostPageMaxRowCount = 40;
     [self setupRenderDefalut];
     
     [self.appDelegate displayLoading];
+    [[BUCDataManager sharedInstance] resumeAllImageTasks];
     [self refreshFrom:self.from];
 }
 
@@ -504,16 +506,6 @@ static NSUInteger const BUCPostPageMaxRowCount = 40;
     [self drawBlockList:post.content.blockList post:post];
     [post.layoutManager drawGlyphsForGlyphRange:NSMakeRange(0.0f, post.textStorage.length) atPoint:CGPointZero];
     
-    for (BUCImageAttachment *attachment in post.content.imageList) {
-        if (attachment.url) {
-            CGRect frame = [post.layoutManager boundingRectForGlyphRange:NSMakeRange(attachment.glyphIndex, 1) inTextContainer:post.textContainer];
-            frame.origin.x = ceilf((self.contentWidth - 100.0f) / 2.0f);
-            frame.origin.y = ceilf((frame.size.height - 100.0f) / 2.0f + frame.origin.y);
-            frame.size = self.imageSize;
-            [self.defaultImage drawInRect:frame];
-        }
-    }
-    
     output = UIGraphicsGetImageFromCurrentImageContext();
     UIGraphicsEndImageContext();
     
@@ -537,15 +529,16 @@ static NSUInteger const BUCPostPageMaxRowCount = 40;
     }
 
     dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0);
+    BUCPostDetailController * __weak weakSelf = self;
     dispatch_async(queue, ^{
-        UIImage *background = [self drawBackgroundWithPost:post];
+        UIImage *background = [weakSelf drawBackgroundWithPost:post];
         if ([[tableView indexPathsForVisibleRows] containsObject:indexPath]) {
             dispatch_async(dispatch_get_main_queue(), ^{
                 if ([[tableView indexPathsForVisibleRows] containsObject:indexPath]) {
                     BUCPostListCell *cell = (BUCPostListCell *)[tableView cellForRowAtIndexPath:indexPath];
                     cell.contentView.layer.contents = (id)background.CGImage;
                     cell.contentView.hidden = NO;
-                    [self.appDelegate hideLoading];
+                    [weakSelf.appDelegate hideLoading];
                 }
             });
         }
@@ -555,70 +548,82 @@ static NSUInteger const BUCPostPageMaxRowCount = 40;
     avatarView.backgroundColor = [UIColor whiteColor];
     avatarView.contentMode = UIViewContentModeCenter;
     avatarView.image = self.defaultAvatar;
+    avatarView.tag = 100;
     [cell.contentView addSubview:avatarView];
     [cell.imageList addObject:avatarView];
     
     if (post.avatar) {
         dispatch_async(queue, ^{
-            [[BUCDataManager sharedInstance] getImageWithUrl:post.avatar.url size:self.avatarBounds.size onSuccess:^(UIImage *image) {
+            [[BUCDataManager sharedInstance] getImageWithUrl:post.avatar.url size:weakSelf.avatarBounds.size onSuccess:^(UIImage *image) {
                 dispatch_async(dispatch_get_main_queue(), ^{
                     if ([[tableView indexPathsForVisibleRows] containsObject:indexPath]) {
+                        BUCPostListCell *cell = (BUCPostListCell *)[tableView cellForRowAtIndexPath:indexPath];
+                        UIImageView *avatarView = (UIImageView *)[cell.contentView viewWithTag:100];
                         avatarView.image = nil;
                         avatarView.userInteractionEnabled = YES;
-                        avatarView.tag = 100;
-                        [cell.urlMap setObject:post.avatar.url forKey:@(avatarView.tag)];
                         avatarView.image = image;
+                        [cell.urlMap setObject:post.avatar.url forKey:@(100)];
                     }
                 });
             }];
         });
     }
     
-    if (post.content.imageList) {
+    if (post.content.emotionList) {
         dispatch_async(queue, ^{
-            NSInteger tag = 101;
+            for (BUCImageAttachment *attachment in post.content.emotionList) {
+                CGRect frame = [post.layoutManager boundingRectForGlyphRange:NSMakeRange(attachment.glyphIndex, 1) inTextContainer:post.textContainer];
+                frame.origin.x = ceilf(frame.origin.x + BUCDefaultPadding);
+                frame.origin.y = ceilf(frame.origin.y + BUCDefaultMargin * 3.0f + 40.0f);
+                frame.size.width = ceilf(frame.size.width);
+                frame.size.height = ceilf(frame.size.height);
+                UIImage *image = [[BUCDataManager sharedInstance] getImageWithPath:attachment.path];
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    if ([[tableView indexPathsForVisibleRows] containsObject:indexPath]) {
+                        BUCPostListCell *cell = (BUCPostListCell *)[tableView cellForRowAtIndexPath:indexPath];
+                        UIImageView *gifView = [[UIImageView alloc] initWithFrame:frame];
+                        gifView.backgroundColor = [UIColor whiteColor];
+                        gifView.contentMode = UIViewContentModeCenter;
+                        gifView.image = image;
+                        [cell.contentView addSubview:gifView];
+                        [cell.imageList addObject:gifView];
+                    }
+                });
+            }
+        });
+    }
+    
+    if (post.content.imageList) {
+        NSInteger tag = 101;
+        for (BUCImageAttachment *attachment in post.content.imageList) {
+            CGRect frame = [post.layoutManager boundingRectForGlyphRange:NSMakeRange(attachment.glyphIndex, 1) inTextContainer:post.textContainer];
+            frame.origin.x = ceilf((weakSelf.screenWidth - 100.0f) / 2.0f);
+            frame.origin.y = ceilf((frame.size.height - 100.0f) / 2.0f + frame.origin.y + BUCDefaultMargin * 3.0f + 40.0f);
+            frame.size = weakSelf.imageSize;
+            attachment.tag = tag;
+            UIImageView *imageView = [[UIImageView alloc] initWithFrame:frame];
+            imageView.backgroundColor = [UIColor whiteColor];
+            imageView.contentMode = UIViewContentModeCenter;
+            imageView.tag = tag;
+            imageView.image = weakSelf.defaultImage;
+            [cell.contentView addSubview:imageView];
+            [cell.imageList addObject:imageView];
+            [cell.urlMap setObject:attachment.url forKey:@(imageView.tag)];
+            tag = tag + 1;
+        }
+        
+        dispatch_async(queue, ^{
             for (BUCImageAttachment *attachment in post.content.imageList) {
-                if (attachment.path) {
-                    CGRect frame = [post.layoutManager boundingRectForGlyphRange:NSMakeRange(attachment.glyphIndex, 1) inTextContainer:post.textContainer];
-                    frame.origin.x = ceilf(frame.origin.x + BUCDefaultPadding);
-                    frame.origin.y = ceilf(frame.origin.y + BUCDefaultMargin * 3.0f + 40.0f);
-                    frame.size.width = ceilf(frame.size.width);
-                    frame.size.height = ceilf(frame.size.height);
-                    UIImage *image = [[BUCDataManager sharedInstance] getImageWithPath:attachment.path];
+                [[BUCDataManager sharedInstance] getImageWithUrl:attachment.url size:weakSelf.imageSize onSuccess:^(UIImage *image) {
                     dispatch_async(dispatch_get_main_queue(), ^{
                         if ([[tableView indexPathsForVisibleRows] containsObject:indexPath]) {
                             BUCPostListCell *cell = (BUCPostListCell *)[tableView cellForRowAtIndexPath:indexPath];
-                            UIImageView *gifView = [[UIImageView alloc] initWithFrame:frame];
-                            gifView.backgroundColor = [UIColor whiteColor];
-                            gifView.contentMode = UIViewContentModeCenter;
-                            gifView.image = image;
-                            [cell.contentView addSubview:gifView];
-                            [cell.imageList addObject:gifView];
+                            UIImageView *imageView = (UIImageView *)[cell.contentView viewWithTag:attachment.tag];
+                            imageView.userInteractionEnabled = YES;
+                            imageView.image = image;
                         }
                     });
-                } else {
-                    CGRect frame = [post.layoutManager boundingRectForGlyphRange:NSMakeRange(attachment.glyphIndex, 1) inTextContainer:post.textContainer];
-                    frame.origin.x = ceilf((self.screenWidth - 100.0f) / 2.0f);
-                    frame.origin.y = ceilf((frame.size.height - 100.0f) / 2.0f + frame.origin.y + BUCDefaultMargin * 3.0f + 40.0f);
-                    frame.size = self.imageSize;
-                    UIImageView *imageView = [[UIImageView alloc] initWithFrame:frame];
-                    imageView.backgroundColor = [UIColor whiteColor];
-                    imageView.contentMode = UIViewContentModeCenter;
-                    imageView.tag = tag;
-                    [[BUCDataManager sharedInstance] getImageWithUrl:attachment.url size:self.imageSize onSuccess:^(UIImage *image) {
-                        dispatch_async(dispatch_get_main_queue(), ^{
-                            if ([[tableView indexPathsForVisibleRows] containsObject:indexPath]) {
-                                BUCPostListCell *cell = (BUCPostListCell *)[tableView cellForRowAtIndexPath:indexPath];
-                                imageView.userInteractionEnabled = YES;
-                                imageView.image = image;
-                                [cell.contentView addSubview:imageView];
-                                [cell.imageList addObject:imageView];
-                                [cell.urlMap setObject:attachment.url forKey:@(imageView.tag)];
-                            }
-                        });
-                    }];
-                }
-                tag = tag + 1;
+                }];
             }
         });
     }

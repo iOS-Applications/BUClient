@@ -1,5 +1,6 @@
 #import "UIImage+BUCImageCategory.h"
 #import <ImageIO/ImageIO.h>
+#import "BUCDataManager.h"
 
 
 #if __has_feature(objc_arc)
@@ -32,11 +33,17 @@ static int delayCentisecondsForImageAtIndex(CGImageSourceRef const source, size_
     return delayCentiseconds;
 }
 
-static void createImagesAndDelays(CGImageSourceRef source, size_t count, CGImageRef imagesOut[count], int delayCentisecondsOut[count], CFDictionaryRef options) {
+static int createImagesAndDelays(CGImageSourceRef source, size_t count, CGImageRef imagesOut[count], int delayCentisecondsOut[count], CFDictionaryRef options) {
+    BUCDataManager *dataManager = [BUCDataManager sharedInstance];
     for (size_t i = 0; i < count; ++i) {
+        if ([dataManager cancelFlag]) {
+            return i;
+        }
         imagesOut[i] = CGImageSourceCreateThumbnailAtIndex(source, i, options);
         delayCentisecondsOut[i] = delayCentisecondsForImageAtIndex(source, i);
     }
+    
+    return 0;
 }
 
 static int sum(size_t const count, int const *const values) {
@@ -73,7 +80,7 @@ static NSArray *frameArray(size_t const count, CGImageRef const images[count], i
     size_t const frameCount = totalDurationCentiseconds / gcd;
     UIImage *frames[frameCount];
     for (size_t i = 0, f = 0; i < count; ++i) {
-        UIImage *const frame = [UIImage imageWithCGImage:images[i]];
+        UIImage * const frame = [UIImage imageWithCGImage:images[i]];
         for (size_t j = delayCentiseconds[i] / gcd; j > 0; --j) {
             frames[f] = frame;
             f = f + 1;
@@ -90,19 +97,29 @@ static void releaseImages(size_t const count, CGImageRef const images[count]) {
 }
 
 static UIImage *animatedImageWithAnimatedGIFImageSource(CGImageSourceRef const source, CFDictionaryRef options) {
+    UIImage *output;
     size_t const count = CGImageSourceGetCount(source);
     CGImageRef images[count];
     int delayCentiseconds[count]; // in centiseconds
-    createImagesAndDelays(source, count, images, delayCentiseconds, options);
+    int imageCount = createImagesAndDelays(source, count, images, delayCentiseconds, options);
+    if (imageCount > 0) {
+        releaseImages(imageCount, images);
+        return nil;
+    }
+    
     int const totalDurationCentiseconds = sum(count, delayCentiseconds);
     NSArray *const frames = frameArray(count, images, delayCentiseconds, totalDurationCentiseconds);
-    NSTimeInterval duration = (NSTimeInterval)totalDurationCentiseconds / 100.0;
-    if (frames.count <= 10 && duration / frames.count <= 0.01) {
-        duration = duration * 8;
+    
+    if (frames) {
+        NSTimeInterval duration = (NSTimeInterval)totalDurationCentiseconds / 100.0;
+        if (frames.count <= 10 && duration / frames.count <= 0.01) {
+            duration = duration * 8;
+        }
+        output = [UIImage animatedImageWithImages:frames duration:duration];
     }
-    UIImage *const animation = [UIImage animatedImageWithImages:frames duration:duration];
+    
     releaseImages(count, images);
-    return animation;
+    return output;
 }
 
 static int maxDimension(CFDictionaryRef properties, CGSize fitSize) {
@@ -127,22 +144,6 @@ static int maxDimension(CFDictionaryRef properties, CGSize fitSize) {
     }
     
     return floorf(MAX(scaledWidth, scaledHeight));
-}
-
-
-static void decompress(UIImage *image) {
-    if (image.images) {
-        for (UIImage *frame in image.images) {
-            UIGraphicsBeginImageContext(CGSizeMake(1, 1));
-            [frame drawAtPoint:CGPointZero];
-            UIGraphicsEndImageContext();
-        }
-        return;
-    }
-    
-    UIGraphicsBeginImageContext(CGSizeMake(1, 1));
-    [image drawAtPoint:CGPointZero];
-    UIGraphicsEndImageContext();
 }
 
 
@@ -177,13 +178,9 @@ static void decompress(UIImage *image) {
     type = (NSString *)CGImageSourceGetType(source);
     if ([type isEqualToString:@"com.compuserve.gif"]) {
         output = animatedImageWithAnimatedGIFImageSource(source, toCF options);
-        for (UIImage *image in output.images) {
-            decompress(image);
-        }
     } else {
         image = CGImageSourceCreateThumbnailAtIndex(source, 0, toCF options);
         output = [UIImage imageWithCGImage:image];
-        decompress(output);
     }
     
 cleanup:

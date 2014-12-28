@@ -10,6 +10,7 @@ static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
 
 @property (nonatomic) BUCHTMLScraper *htmlScraper;
 @property (nonatomic) BUCNetworkEngine *networkEngine;
+@property (nonatomic) dispatch_queue_t queue;
 
 @property (nonatomic) NSMutableArray *postList;
 
@@ -20,6 +21,8 @@ static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
 @property (nonatomic) NSString *password;
 @property (nonatomic) NSString *session;
 @property (nonatomic, readwrite) BOOL loggedIn;
+
+@property (nonatomic, readwrite) BOOL cancelFlag;
 
 @end
 
@@ -48,6 +51,7 @@ static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
             BUCPost *post = [[BUCPost alloc] init];
             [_postList addObject:post];
         }
+        _queue = dispatch_queue_create("buc.image.queue", DISPATCH_QUEUE_SERIAL);
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(userChanged) name:BUCLoginStateNotification object:nil];
     }
     
@@ -226,6 +230,16 @@ static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
 }
 
 
+- (void)resumeAllImageTasks {
+    self.cancelFlag = NO;
+}
+
+
+- (void)cancelAllImageTasks {
+    self.cancelFlag = YES;
+}
+
+
 - (void)getImageWithUrl:(NSURL *)url size:(CGSize)size onSuccess:(BUCImageBlock)imageBlock {
     NSString *key = [NSString stringWithFormat:@"%@%@", url.absoluteString, NSStringFromCGSize(size)];
     NSCache *cache = self.defaultCache;
@@ -239,9 +253,19 @@ static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
      fetchDataFromUrl:[NSURLRequest requestWithURL:url]
      
      onResult:^(NSData *data) {
-         dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0);
-         dispatch_async(queue, ^{
-             UIImage *image = [UIImage imageWithData:data size:size];
+         dispatch_async(self.queue, ^{
+             if (self.cancelFlag) {
+                 return;
+             }
+             
+             UIImage *image = [cache objectForKey:key];
+             if (image) {
+                 imageBlock(image);
+                 return;
+             }
+             
+             image = [UIImage imageWithData:data size:size];
+
              if (image) {
                  [cache setObject:image forKey:key];
                  imageBlock(image);

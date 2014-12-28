@@ -7,6 +7,7 @@
 @interface BUCRichText : NSObject
 
 @property (nonatomic) NSMutableAttributedString *richText;
+@property (nonatomic) NSMutableArray *emotionList;
 @property (nonatomic) NSMutableArray *imageList;
 @property (nonatomic) NSMutableArray *blockList;
 
@@ -18,6 +19,7 @@
 @property (nonatomic) NSUInteger glyphIndex;
 @property (nonatomic) NSURL *url;
 @property (nonatomic) NSString *path;
+@property (nonatomic) NSInteger tag;
 
 @end
 

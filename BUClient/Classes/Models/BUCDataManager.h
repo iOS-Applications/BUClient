@@ -7,6 +7,8 @@
 
 @property (nonatomic, readonly) BOOL loggedIn;
 
+@property (nonatomic, readonly) BOOL cancelFlag;
+
 
 + (BUCDataManager *)sharedInstance;
 
@@ -34,5 +36,8 @@
 - (UIImage *)getImageWithPath:(NSString *)path;
 
 - (void)newPostToForum:(NSString *)fid thread:(NSString *)tid subject:(NSString *)subject content:(NSString *)content attachment:(UIImage *)attachment onSuccess:(BUCStringBlock)stringBlock onError:(BUCStringBlock)errorBlock;
+
+- (void)resumeAllImageTasks;
+- (void)cancelAllImageTasks;
 
 @end

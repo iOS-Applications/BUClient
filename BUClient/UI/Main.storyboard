@@ -970,43 +970,9 @@
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                         <inset key="separatorInset" minX="0.0" minY="0.0" maxX="0.0" maxY="0.0"/>
-                        <view key="tableHeaderView" autoresizesSubviews="NO" clearsContextBeforeDrawing="NO" contentMode="scaleToFill" id="H16-4s-HeW">
-                            <rect key="frame" x="0.0" y="0.0" width="600" height="20"/>
+                        <view key="tableFooterView" contentMode="scaleToFill" id="94D-6s-DtN">
                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                            <subviews>
-                                <view autoresizesSubviews="NO" clearsContextBeforeDrawing="NO" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="rJn-Oi-kEq">
-                                    <rect key="frame" x="0.0" y="-1" width="600" height="20"/>
-                                    <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
-                                    <constraints>
-                                        <constraint firstAttribute="height" constant="20" id="cko-yb-goH"/>
-                                    </constraints>
-                                </view>
-                            </subviews>
-                            <color key="backgroundColor" red="0.86274509799999999" green="0.86274509799999999" blue="0.86274509799999999" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
-                            <constraints>
-                                <constraint firstItem="rJn-Oi-kEq" firstAttribute="top" secondItem="H16-4s-HeW" secondAttribute="top" multiplier="1/10" constant="-1" id="TkX-Og-u10"/>
-                                <constraint firstItem="rJn-Oi-kEq" firstAttribute="leading" secondItem="H16-4s-HeW" secondAttribute="leading" id="Uvn-N0-RWU"/>
-                                <constraint firstAttribute="trailing" secondItem="rJn-Oi-kEq" secondAttribute="trailing" id="Z3J-o2-VEt"/>
-                            </constraints>
-                        </view>
-                        <view key="tableFooterView" autoresizesSubviews="NO" clearsContextBeforeDrawing="NO" contentMode="scaleToFill" id="WTR-Rk-r8d">
-                            <rect key="frame" x="0.0" y="142" width="600" height="20"/>
-                            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                            <subviews>
-                                <view autoresizesSubviews="NO" clearsContextBeforeDrawing="NO" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="6ab-iF-sD0">
-                                    <rect key="frame" x="0.0" y="1" width="600" height="20"/>
-                                    <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
-                                    <constraints>
-                                        <constraint firstAttribute="height" constant="20" id="inB-lU-HUP"/>
-                                    </constraints>
-                                </view>
-                            </subviews>
-                            <color key="backgroundColor" red="0.86274509799999999" green="0.86274509799999999" blue="0.86274509799999999" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
-                            <constraints>
-                                <constraint firstItem="6ab-iF-sD0" firstAttribute="top" secondItem="WTR-Rk-r8d" secondAttribute="top" multiplier="1/10" constant="1" id="9an-Bn-vVS"/>
-                                <constraint firstItem="6ab-iF-sD0" firstAttribute="leading" secondItem="WTR-Rk-r8d" secondAttribute="leading" id="Trv-kO-wN9"/>
-                                <constraint firstAttribute="trailing" secondItem="6ab-iF-sD0" secondAttribute="trailing" id="tmh-YP-ekW"/>
-                            </constraints>
+                            <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                         </view>
                         <prototypes>
                             <tableViewCell autoresizesSubviews="NO" clearsContextBeforeDrawing="NO" contentMode="scaleToFill" selectionStyle="default" accessoryType="disclosureIndicator" indentationWidth="10" reuseIdentifier="cell" textLabel="Cnk-gH-5kd" style="IBUITableViewCellStyleDefault" id="eYC-G8-6dE">
