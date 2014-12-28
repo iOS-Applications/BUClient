@@ -6,6 +6,8 @@
 
 @interface BUCSettingsController () <UITextViewDelegate>
 
+@property (nonatomic) BOOL rotateFlag;
+
 @property (nonatomic) NSMutableDictionary *userList;
 @property (nonatomic) NSMutableArray *list;
 
@@ -48,6 +50,10 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     
+    NSNumber *value = [NSNumber numberWithInt:UIInterfaceOrientationPortrait];
+    [[UIDevice currentDevice] setValue:value forKey:@"orientation"];
+    [UIViewController attemptRotationToDeviceOrientation];
+    
     self.navigationItem.backBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"" style:UIBarButtonItemStylePlain target:nil action:nil];
     self.navigationItem.rightBarButtonItem = self.editButtonItem;
     
@@ -82,6 +88,16 @@
     self.signatureEditor.text = self.signature;
 }
 
+
+#pragma mark - rotate handling
+- (BOOL)shouldAutorotate {
+    if (self.rotateFlag) {
+        return NO;
+    } else {
+        self.rotateFlag = YES;
+        return YES;
+    }
+}
 
 #pragma mark - keyboard and text view management
 - (void)keyboardWasShown:(NSNotification *)notification {

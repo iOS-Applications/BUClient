@@ -60,7 +60,7 @@
     self.appDelegate = [UIApplication sharedApplication].delegate;
 }
 
-
+#pragma mark - interface orientation handling
 - (BOOL)shouldAutorotate {
     return NO;
 }

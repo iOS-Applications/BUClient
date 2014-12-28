@@ -6,6 +6,19 @@
 #import "BUCAppDelegate.h"
 
 
+@implementation UINavigationController (autoRotate)
+
+- (BOOL)shouldAutorotate {
+    return [self.visibleViewController shouldAutorotate];
+}
+
+- (UIInterfaceOrientation)preferredInterfaceOrientationForPresentation {
+    return UIInterfaceOrientationPortrait;
+}
+
+@end
+
+
 @interface BUCRootController () <UITableViewDataSource, UITableViewDelegate>
 
 @property (nonatomic) BUCAppDelegate *appDelegate;
