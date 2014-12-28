@@ -41,9 +41,6 @@
 @property (nonatomic) CGFloat cellWidth;
 @property (nonatomic) CGRect bounds;
 
-@property (nonatomic) BOOL bookmarked;
-@property (nonatomic) NSInteger bookmarkIndex;
-
 @property (nonatomic) BUCRichText *content;
 @property (nonatomic) NSAttributedString *meta;
 

@@ -19,14 +19,13 @@
 @end
 
 
-@interface BUCRootController () <UITableViewDataSource, UITableViewDelegate>
+@interface BUCRootController ()
 
 @property (nonatomic) BUCAppDelegate *appDelegate;
 
 @property (nonatomic) NSString *path;
 @property (nonatomic) NSMutableArray *list;
 @property (nonatomic) NSMutableSet *forumSet;
-@property (nonatomic) BOOL listChanged;
 
 @property (strong, nonatomic) IBOutlet UIView *logoutWindow;
 @property (weak, nonatomic) IBOutlet UIView *logoutSheet;
@@ -102,9 +101,8 @@
 
 - (void)setEditing:(BOOL)editing animated:(BOOL)animated {
     [super setEditing:editing animated:animated];
-    if (!editing && self.listChanged) {
+    if (!editing) {
         [self.list writeToFile:self.path atomically:YES];
-        self.listChanged = NO;
     }
     if (editing) {
         self.editButtonItem.title = @"完成";
@@ -142,7 +140,6 @@
 - (void)tableView:(UITableView *)tableView commitEditingStyle:(UITableViewCellEditingStyle)editingStyle forRowAtIndexPath:(NSIndexPath *)indexPath {
     if (editingStyle == UITableViewCellEditingStyleDelete) {
         [self.list removeObjectAtIndex:indexPath.row];
-        self.listChanged = YES;
         [tableView deleteRowsAtIndexPaths:@[indexPath] withRowAnimation:UITableViewRowAnimationFade];
     }
 }
@@ -169,7 +166,6 @@
     NSDictionary *forum = [self.list objectAtIndex:fromIndexPath.row];
     [self.list removeObjectAtIndex:fromIndexPath.row];
     [self.list insertObject:forum atIndex:toIndexPath.row];
-    self.listChanged = YES;
 }
 
 

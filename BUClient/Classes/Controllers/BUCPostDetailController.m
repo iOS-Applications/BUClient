@@ -158,6 +158,8 @@ static NSUInteger const BUCPostPageMaxRowCount = 40;
     self.opIndexSet = [[NSMutableIndexSet alloc] init];
     self.insertIndexPaths = [[NSMutableArray alloc] init];
     
+    self.star.selected = [[BUCDataManager sharedInstance] lookupBookmarkOfThread:self.rootPost.tid];
+    
     [self setupRenderDefalut];
     
     [self.appDelegate displayLoading];
@@ -709,7 +711,12 @@ static NSUInteger const BUCPostPageMaxRowCount = 40;
 
 
 - (IBAction)bookmark:(id)sender {
-    
+    self.star.selected = !self.star.selected;
+    if (self.star.selected) {
+        [[BUCDataManager sharedInstance] bookmarkThread:self.rootPost.tid title:self.rootPost.title];
+    } else {
+        [[BUCDataManager sharedInstance] removeBookmarkOfThread:self.rootPost.tid];
+    }
     [self toggleMenu];
 }
 

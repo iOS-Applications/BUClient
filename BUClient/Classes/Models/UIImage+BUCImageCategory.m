@@ -35,7 +35,7 @@ static int delayCentisecondsForImageAtIndex(CGImageSourceRef const source, size_
 
 static int createImagesAndDelays(CGImageSourceRef source, size_t count, CGImageRef imagesOut[count], int delayCentisecondsOut[count], CFDictionaryRef options) {
     BUCDataManager *dataManager = [BUCDataManager sharedInstance];
-    for (size_t i = 0; i < count; ++i) {
+    for (int i = 0; i < count; ++i) {
         if ([dataManager cancelFlag]) {
             return i;
         }

@@ -40,4 +40,14 @@
 - (void)resumeAllImageTasks;
 - (void)cancelAllImageTasks;
 
+- (BOOL)lookupBookmarkOfThread:(NSString *)tid;
+- (void)bookmarkThread:(NSString *)tid title:(NSString *)title;
+- (void)removeBookmarkOfThread:(NSString *)tid;
+- (NSMutableArray *)getBookmarkList;
+- (void)updateBookmarkList;
+
 @end
+
+
+
+

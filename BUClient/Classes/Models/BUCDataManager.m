@@ -14,6 +14,10 @@ static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
 
 @property (nonatomic) NSMutableArray *postList;
 
+@property (nonatomic) NSMutableArray *bookmarkList;
+@property (nonatomic) NSMutableSet *bookmarkTidSet;
+@property (nonatomic) NSString *bookmarkListPath;
+
 @property (nonatomic) NSCache *defaultCache;
 
 @property (nonatomic) NSString *username;
@@ -52,6 +56,17 @@ static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
             [_postList addObject:post];
         }
         _queue = dispatch_queue_create("buc.image.queue", DISPATCH_QUEUE_SERIAL);
+        _bookmarkListPath = [[NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) firstObject] stringByAppendingString:@"/BUCBookmarkList.plist"];
+        if ([[NSFileManager defaultManager] fileExistsAtPath:_bookmarkListPath]) {
+            _bookmarkList = [NSMutableArray arrayWithContentsOfFile:_bookmarkListPath];
+        }
+        if (!_bookmarkList) {
+            _bookmarkList = [[NSMutableArray alloc] init];
+        }
+        _bookmarkTidSet = [[NSMutableSet alloc] init];
+        for (NSDictionary *bookmark in _bookmarkList) {
+            [_bookmarkTidSet addObject:[bookmark objectForKey:@"tid"]];
+        }
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(userChanged) name:BUCLoginStateNotification object:nil];
     }
     
@@ -67,7 +82,7 @@ static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
 }
 
 
-#pragma mark - public
+#pragma mark - login state and host data
 - (NSString *)host {
     return self.networkEngine.host;
 }
@@ -132,6 +147,7 @@ static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
 }
 
 
+#pragma mark - list data
 - (void)childCountOfForum:(NSString *)fid thread:(NSString *)tid onSuccess:(BUCNumberBlock)numberBlock onError:(BUCStringBlock)errorBlock {
     NSMutableDictionary *json = [[NSMutableDictionary alloc] init];
     
@@ -230,6 +246,7 @@ static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
 }
 
 
+#pragma mark - image data
 - (void)resumeAllImageTasks {
     self.cancelFlag = NO;
 }
@@ -291,6 +308,44 @@ static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
     }
     
     return nil;
+}
+
+
+#pragma mark - bookmark data
+- (NSMutableArray *)getBookmarkList {
+    return self.bookmarkList;
+}
+
+- (BOOL)lookupBookmarkOfThread:(NSString *)tid {
+    if ([self.bookmarkTidSet containsObject:tid]) {
+        return YES;
+    } else {
+        return NO;
+    }
+}
+
+- (void)bookmarkThread:(NSString *)tid title:(NSString *)title {
+    [self.bookmarkTidSet addObject:tid];
+    [self.bookmarkList addObject:@{@"tid":tid, @"title":title}];
+    [self.bookmarkList writeToFile:self.bookmarkListPath atomically:YES];
+}
+
+- (void)removeBookmarkOfThread:(NSString *)tid {
+    [self.bookmarkTidSet removeObject:tid];
+    NSUInteger count = self.bookmarkList.count;
+    for (NSUInteger i = 0; i < count; i = i + 1) {
+        NSDictionary *bookmark = [self.bookmarkList objectAtIndex:i];
+        if ([[bookmark objectForKey:@"tid"] isEqualToString:tid]) {
+            [self.bookmarkList removeObject:bookmark];
+            [self.bookmarkList writeToFile:self.bookmarkListPath atomically:YES];
+            break;
+        }
+    }
+}
+
+
+- (void)updateBookmarkList {
+    [self.bookmarkList writeToFile:self.bookmarkListPath atomically:YES];
 }
 
 
