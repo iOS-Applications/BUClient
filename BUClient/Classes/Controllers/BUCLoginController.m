@@ -82,7 +82,7 @@
             return;
         }
     }
-    
+    BUCLoginController * __weak weakSelf = self;
     [self displayLoading];
     [[BUCDataManager sharedInstance]
      
@@ -91,17 +91,17 @@
      password:password
      
      onSuccess:^{
-         [self hideLoading];
-         if (self.presentingViewController) {
-             [self.presentingViewController dismissViewControllerAnimated:YES completion:nil];
+         [weakSelf hideLoading];
+         if (weakSelf.presentingViewController) {
+             [weakSelf.presentingViewController dismissViewControllerAnimated:YES completion:nil];
          } else {
-             [self performSegueWithIdentifier:@"loginToSettings" sender:nil];
+             [weakSelf performSegueWithIdentifier:@"loginToSettings" sender:nil];
          }
      }
      
      onFail:^(NSString *errorMsg) {
-         [self hideLoading];
-         [self.appDelegate alertWithMessage:errorMsg];
+         [weakSelf hideLoading];
+         [weakSelf.appDelegate alertWithMessage:errorMsg];
      }];
 }
 

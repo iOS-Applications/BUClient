@@ -1228,7 +1228,7 @@
         <scene sceneID="QUH-bK-hwj">
             <objects>
                 <tableViewController id="FOo-kw-BkT" customClass="BUCSettingsController" sceneMemberID="viewController">
-                    <tableView key="view" autoresizesSubviews="NO" clearsContextBeforeDrawing="NO" contentMode="scaleToFill" alwaysBounceVertical="YES" showsHorizontalScrollIndicator="NO" canCancelContentTouches="NO" bouncesZoom="NO" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="44" sectionHeaderHeight="20" sectionFooterHeight="20" id="lPD-b5-q45">
+                    <tableView key="view" autoresizesSubviews="NO" clearsContextBeforeDrawing="NO" contentMode="scaleToFill" alwaysBounceVertical="YES" showsHorizontalScrollIndicator="NO" bouncesZoom="NO" keyboardDismissMode="interactive" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="44" sectionHeaderHeight="20" sectionFooterHeight="20" id="lPD-b5-q45">
                         <rect key="frame" x="0.0" y="0.0" width="600" height="536"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <color key="backgroundColor" cocoaTouchSystemColor="groupTableViewBackgroundColor"/>
@@ -1280,7 +1280,7 @@
                                     <constraints>
                                         <constraint firstAttribute="height" constant="100" id="0ny-is-Kzf"/>
                                     </constraints>
-                                    <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                                    <fontDescription key="fontDescription" style="UICTFontTextStyleBody"/>
                                     <textInputTraits key="textInputTraits" autocapitalizationType="sentences"/>
                                     <connections>
                                         <outlet property="delegate" destination="FOo-kw-BkT" id="xsS-eR-M6k"/>
@@ -1410,43 +1410,11 @@
                         <outlet property="addAccountButton" destination="fxH-Yk-Z4V" id="7NE-4h-6F4"/>
                         <outlet property="campusNetwork" destination="6Pd-s8-wz0" id="6p9-AO-u0K"/>
                         <outlet property="internetImage" destination="5bQ-I4-3ii" id="kth-n7-c1Y"/>
-                        <outlet property="keyboardToolbar" destination="7um-NS-F0x" id="7z7-aE-Dfq"/>
                         <outlet property="logoutButton" destination="RTE-V4-bpn" id="FGK-RP-e2N"/>
                         <outlet property="signatureEditor" destination="m9A-gC-Tet" id="t5l-xQ-1Dk"/>
                     </connections>
                 </tableViewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="aRg-cH-QGN" userLabel="First Responder" sceneMemberID="firstResponder"/>
-                <view autoresizesSubviews="NO" clearsContextBeforeDrawing="NO" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="7um-NS-F0x" userLabel="Tool Bar">
-                    <rect key="frame" x="0.0" y="0.0" width="600" height="44"/>
-                    <subviews>
-                        <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="3hW-t4-acN">
-                            <rect key="frame" x="15" y="7" width="30" height="30"/>
-                            <state key="normal" title="取消">
-                                <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
-                            </state>
-                            <connections>
-                                <action selector="resotreSignature:" destination="FOo-kw-BkT" eventType="touchUpInside" id="P6t-gX-s35"/>
-                            </connections>
-                        </button>
-                        <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="N8Q-uL-Ibq">
-                            <rect key="frame" x="555" y="7" width="30" height="30"/>
-                            <state key="normal" title="完成">
-                                <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
-                            </state>
-                            <connections>
-                                <action selector="doneUpdateSignature:" destination="FOo-kw-BkT" eventType="touchUpInside" id="Rip-zb-1nA"/>
-                            </connections>
-                        </button>
-                    </subviews>
-                    <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
-                    <constraints>
-                        <constraint firstAttribute="trailing" secondItem="N8Q-uL-Ibq" secondAttribute="trailing" constant="15" id="H7P-kQ-w5h"/>
-                        <constraint firstAttribute="height" constant="44" id="RP7-J0-M09"/>
-                        <constraint firstAttribute="centerY" secondItem="3hW-t4-acN" secondAttribute="centerY" id="bV0-5Q-cgo"/>
-                        <constraint firstItem="3hW-t4-acN" firstAttribute="leading" secondItem="7um-NS-F0x" secondAttribute="leading" constant="15" id="m87-v5-eyG"/>
-                        <constraint firstAttribute="centerY" secondItem="N8Q-uL-Ibq" secondAttribute="centerY" id="v4C-hw-EzQ"/>
-                    </constraints>
-                </view>
                 <tapGestureRecognizer id="9dx-Kd-3L7"/>
             </objects>
             <point key="canvasLocation" x="4610" y="842"/>

@@ -4,7 +4,7 @@
 #import "BUCRootController.h"
 #import "UIImage+BUCImageCategory.h"
 
-@interface BUCSettingsController ()
+@interface BUCSettingsController () <UITextViewDelegate>
 
 @property (nonatomic) NSMutableDictionary *userList;
 @property (nonatomic) NSMutableArray *list;
@@ -17,7 +17,6 @@
 
 @property (nonatomic) BUCRootController *rootController;
 
-@property (strong, nonatomic) IBOutlet UIView *keyboardToolbar;
 
 @property (weak, nonatomic) IBOutlet UIButton *addAccountButton;
 @property (weak, nonatomic) IBOutlet UIButton *logoutButton;
@@ -33,7 +32,6 @@
     [super viewWillAppear:animated];
     
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(keyboardWasShown:) name:UIKeyboardDidShowNotification object:nil];
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(keyboardWasHidden:) name:UIKeyboardDidHideNotification object:nil];
 }
 
 
@@ -41,19 +39,9 @@
     [super viewWillDisappear:animated];
     
     [[NSNotificationCenter defaultCenter] removeObserver:self name:UIKeyboardDidShowNotification object:nil];
-    [[NSNotificationCenter defaultCenter] removeObserver:self name:UIKeyboardDidHideNotification object:nil];
-}
-
-
-- (void)keyboardWasShown:(NSNotification *)notification {
-    NSDictionary *info = notification.userInfo;
-    CGSize kbSize = [[info objectForKey:UIKeyboardFrameBeginUserInfoKey] CGRectValue].size;
-    self.tableView.contentInset = UIEdgeInsetsMake(0.0f, 0.0f, kbSize.height, 0.0f);
-    [self.tableView scrollRectToVisible:[self.tableView.tableFooterView convertRect:self.signatureEditor.frame toView:self.tableView] animated:NO];
-}
-
-- (void)keyboardWasHidden:(NSNotification*)notification {
-    self.tableView.contentInset = UIEdgeInsetsZero;
+    if ([self.signatureEditor isFirstResponder]) {
+        [self.signatureEditor resignFirstResponder];
+    }
 }
 
 
@@ -71,7 +59,6 @@
     
     self.signatureEditor.layer.borderWidth = 0.5f;
     self.signatureEditor.layer.borderColor = [UIColor lightGrayColor].CGColor;
-    self.signatureEditor.inputAccessoryView = self.keyboardToolbar;
 
     self.rootController = (BUCRootController *)[self.navigationController.viewControllers objectAtIndex:0];
     
@@ -93,6 +80,34 @@
     self.campusNetwork.on = [defaults boolForKey:BUCCampusNetworkSetting];
     self.internetImage.on = [defaults boolForKey:BUCInternetImageSetting];
     self.signatureEditor.text = self.signature;
+}
+
+
+#pragma mark - keyboard and text view management
+- (void)keyboardWasShown:(NSNotification *)notification {
+    if ([self.signatureEditor isFirstResponder]) {
+        CGRect frame = [self.tableView.tableFooterView convertRect:self.signatureEditor.frame toView:self.tableView];
+        CGPoint offset = self.tableView.contentOffset;
+        offset.y = frame.origin.y - BUCDefaultMargin;
+        [self.tableView setContentOffset:offset];
+        [self textViewDidChange:self.signatureEditor];
+    }
+}
+
+
+- (void)textViewDidChange:(UITextView *)textView {
+    NSRange selectedRange = textView.selectedRange;
+    if (selectedRange.length == 0) {
+        selectedRange.length = 1;
+    }
+    if (selectedRange.location == textView.textStorage.length) {
+        selectedRange.location = selectedRange.location - 1;
+    }
+    CGRect frame = [textView.layoutManager boundingRectForGlyphRange:selectedRange inTextContainer:textView.textContainer];
+    CGFloat bottom = ceilf(CGRectGetMaxY(frame)) + textView.textContainerInset.top + textView.textContainerInset.bottom;
+    if (CGRectGetMaxY(textView.bounds) < bottom) {
+        [textView setContentOffset:CGPointMake(0.0f, bottom - CGRectGetHeight(textView.bounds))];
+    }
 }
 
 
