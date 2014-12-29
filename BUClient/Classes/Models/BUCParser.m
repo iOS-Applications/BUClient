@@ -188,6 +188,8 @@ void appendVideo(BUCDiscuzContext *context, NSString *flashUrl) {
         htmlUrl = [NSString stringWithFormat:@"http://www.letv.com/ptv/vplay/%@.html", [flashUrl substringWithRange:[match rangeAtIndex:1]]];
     } else if (matchPattern(flashUrl, @"^http://www.tucao.cc/mini/([0-9]+).swf$", &match)) {
         htmlUrl = [NSString stringWithFormat:@"http://www.tucao.cc/play/h%@/", [flashUrl substringWithRange:[match rangeAtIndex:1]]];
+    } else if (matchPattern(flashUrl, @"^http://player.56.com/v_([0-9a-z]+).swf$", &match)) {
+        htmlUrl = [NSString stringWithFormat:@"http://www.56.com/u72/v_%@.html", [flashUrl substringWithRange:[match rangeAtIndex:1]]];
     } else {
         htmlUrl = flashUrl;
     }
