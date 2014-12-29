@@ -306,7 +306,7 @@ static NSUInteger const BUCPostPageMaxRowCount = 40;
      
      onSuccess:^(NSUInteger count) {
          self.postCount = count + 1;
-         self.pageCount = [self pageCountWithPostCount:self.postCount];
+         self.pageCount = count / BUCPostPageMaxRowCount + 1;
          [self loadListFrom:from];
      }
      
@@ -397,16 +397,6 @@ static NSUInteger const BUCPostPageMaxRowCount = 40;
     self.tableView.bounces = YES;
     self.currentPage = (self.to + BUCAPIMaxLoadRowCount) / BUCPostPageMaxRowCount;
     self.navigationItem.titleView = nil;
-}
-
-
-- (NSUInteger)pageCountWithPostCount:(NSUInteger)postCount {
-    NSUInteger pageCount = 0;
-    for (NSUInteger count = 0; count < postCount; count = count + 40) {
-        pageCount = pageCount + 1;
-    }
-    
-    return pageCount;
 }
 
 
