@@ -395,7 +395,7 @@ static NSUInteger const BUCPostPageMaxRowCount = 40;
     [self.bottomLoadingIndicator stopAnimating];
     self.loading = NO;
     self.tableView.bounces = YES;
-    self.currentPage = self.to / BUCPostPageMaxRowCount + 1;
+    self.currentPage = (self.to + BUCAPIMaxLoadRowCount) / BUCPostPageMaxRowCount;
     self.navigationItem.titleView = nil;
 }
 
