@@ -524,16 +524,14 @@ static NSUInteger const BUCPostPageMaxRowCount = 40;
     BUCPostDetailController * __weak weakSelf = self;
     dispatch_async(queue, ^{
         UIImage *background = [weakSelf drawBackgroundWithPost:post];
-        if ([[tableView indexPathsForVisibleRows] containsObject:indexPath]) {
-            dispatch_async(dispatch_get_main_queue(), ^{
-                if ([[tableView indexPathsForVisibleRows] containsObject:indexPath]) {
-                    BUCPostListCell *cell = (BUCPostListCell *)[tableView cellForRowAtIndexPath:indexPath];
-                    cell.contentView.layer.contents = (id)background.CGImage;
-                    cell.contentView.hidden = NO;
-                    [weakSelf.appDelegate hideLoading];
-                }
-            });
-        }
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [weakSelf.appDelegate hideLoading];
+            BUCPostListCell *cell = (BUCPostListCell *)[tableView cellForRowAtIndexPath:indexPath];
+            if ([[tableView visibleCells] containsObject:cell]) {
+                cell.contentView.layer.contents = (id)background.CGImage;
+                cell.contentView.hidden = NO;
+            }
+        });
     });
     
     UIImageView *avatarView = [[UIImageView alloc] initWithFrame:self.avatarBounds];
@@ -548,8 +546,8 @@ static NSUInteger const BUCPostPageMaxRowCount = 40;
         dispatch_async(queue, ^{
             [[BUCDataManager sharedInstance] getImageWithUrl:post.avatar.url size:weakSelf.avatarBounds.size onSuccess:^(UIImage *image) {
                 dispatch_async(dispatch_get_main_queue(), ^{
-                    if ([[tableView indexPathsForVisibleRows] containsObject:indexPath]) {
-                        BUCPostListCell *cell = (BUCPostListCell *)[tableView cellForRowAtIndexPath:indexPath];
+                    BUCPostListCell *cell = (BUCPostListCell *)[tableView cellForRowAtIndexPath:indexPath];
+                    if ([[tableView visibleCells] containsObject:cell]) {
                         UIImageView *avatarView = (UIImageView *)[cell.contentView viewWithTag:100];
                         avatarView.image = nil;
                         avatarView.userInteractionEnabled = YES;
@@ -571,8 +569,8 @@ static NSUInteger const BUCPostPageMaxRowCount = 40;
                 frame.size.height = ceilf(frame.size.height);
                 UIImage *image = [[BUCDataManager sharedInstance] getImageWithPath:attachment.path];
                 dispatch_async(dispatch_get_main_queue(), ^{
-                    if ([[tableView indexPathsForVisibleRows] containsObject:indexPath]) {
-                        BUCPostListCell *cell = (BUCPostListCell *)[tableView cellForRowAtIndexPath:indexPath];
+                    BUCPostListCell *cell = (BUCPostListCell *)[tableView cellForRowAtIndexPath:indexPath];
+                    if ([[tableView visibleCells] containsObject:cell]) {
                         UIImageView *gifView = [[UIImageView alloc] initWithFrame:frame];
                         gifView.backgroundColor = [UIColor whiteColor];
                         gifView.contentMode = UIViewContentModeCenter;
@@ -608,8 +606,8 @@ static NSUInteger const BUCPostPageMaxRowCount = 40;
             for (BUCImageAttachment *attachment in post.content.imageList) {
                 [[BUCDataManager sharedInstance] getImageWithUrl:attachment.url size:weakSelf.imageSize onSuccess:^(UIImage *image) {
                     dispatch_async(dispatch_get_main_queue(), ^{
-                        if ([[tableView indexPathsForVisibleRows] containsObject:indexPath]) {
-                            BUCPostListCell *cell = (BUCPostListCell *)[tableView cellForRowAtIndexPath:indexPath];
+                        BUCPostListCell *cell = (BUCPostListCell *)[tableView cellForRowAtIndexPath:indexPath];
+                        if ([[tableView visibleCells] containsObject:cell]) {
                             UIImageView *imageView = (UIImageView *)[cell.contentView viewWithTag:attachment.tag];
                             imageView.userInteractionEnabled = YES;
                             imageView.image = image;

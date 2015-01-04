@@ -15,6 +15,7 @@ BUCDiscuzContext *BUCDiscuzNewContext(NSString *string, NSMutableAttributedStrin
     newContext->buffer = malloc(1024);
     newContext->product = product;
     newContext->attributes = attributes;
+    
     return newContext;
 }
 
