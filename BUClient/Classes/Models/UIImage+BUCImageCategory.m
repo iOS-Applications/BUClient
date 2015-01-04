@@ -172,7 +172,7 @@ static int maxDimension(CFDictionaryRef properties, CGSize fitSize) {
     if (size.width > 0) {
         [options setObject:[NSNumber numberWithInt:maxDimension(properties, size)] forKey:(id)kCGImageSourceThumbnailMaxPixelSize];
     }
-    [options setObject:(id)kCFBooleanTrue forKey:(id)kCGImageSourceCreateThumbnailFromImageIfAbsent];
+    [options setObject:(id)kCFBooleanTrue forKey:(id)kCGImageSourceCreateThumbnailFromImageAlways];
     [options setObject:(id)kCFBooleanTrue forKey:(id)kCGImageSourceCreateThumbnailWithTransform];
     
     type = (NSString *)CGImageSourceGetType(source);
