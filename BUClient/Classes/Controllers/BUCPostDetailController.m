@@ -572,7 +572,7 @@ static NSUInteger const BUCPostPageMaxRowCount = 40;
                     BUCPostListCell *cell = (BUCPostListCell *)[tableView cellForRowAtIndexPath:indexPath];
                     if ([[tableView visibleCells] containsObject:cell]) {
                         UIImageView *gifView = [[UIImageView alloc] initWithFrame:frame];
-                        gifView.backgroundColor = [UIColor whiteColor];
+                        gifView.backgroundColor = [UIColor clearColor];
                         gifView.contentMode = UIViewContentModeCenter;
                         gifView.image = image;
                         [cell.contentView addSubview:gifView];

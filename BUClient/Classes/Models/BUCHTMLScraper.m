@@ -245,7 +245,12 @@
         if (!image) {
             return;
         } else {
-            attachment.bounds = CGRectMake(0.0f, 0.0f, image.size.width, image.size.height);
+            if (image.size.width <= 20.0f) {
+                // the size less than 20 may cause text kit to failed to typesetting
+                attachment.bounds = CGRectMake(0.0f, 0.0f, 25.0f, 25.0f);
+            } else {
+                attachment.bounds = CGRectMake(0.0f, 0.0f, image.size.width, image.size.height);
+            }
             emotionFlag = YES;
         }
     } else if (self.parseInternetImage){
