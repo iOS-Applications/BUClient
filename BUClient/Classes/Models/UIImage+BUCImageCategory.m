@@ -11,6 +11,11 @@
 #define fromCF (id)
 #endif
 
+typedef NS_OPTIONS(uint8_t, BUCImageTaskError) {
+    BUCImageTaskNoError = 1 << 0,
+    BUCImageTaskCancelError = 1 << 1
+};
+
 @implementation UIImage (BUCImageCategory)
 
 static int delayCentisecondsForImageAtIndex(CGImageSourceRef const source, size_t const i) {
@@ -33,17 +38,17 @@ static int delayCentisecondsForImageAtIndex(CGImageSourceRef const source, size_
     return delayCentiseconds;
 }
 
-static int createImagesAndDelays(CGImageSourceRef source, size_t count, CGImageRef imagesOut[count], int delayCentisecondsOut[count], CFDictionaryRef options) {
+static BUCImageTaskError createImagesAndDelays(CGImageSourceRef source, size_t count, CGImageRef imagesOut[count], int delayCentisecondsOut[count], CFDictionaryRef options) {
     BUCDataManager *dataManager = [BUCDataManager sharedInstance];
     for (int i = 0; i < count; ++i) {
         if ([dataManager cancelFlag]) {
-            return i;
+            return BUCImageTaskCancelError;
         }
         imagesOut[i] = CGImageSourceCreateThumbnailAtIndex(source, i, options);
         delayCentisecondsOut[i] = delayCentisecondsForImageAtIndex(source, i);
     }
     
-    return 0;
+    return BUCImageTaskNoError;
 }
 
 static int sum(size_t const count, int const *const values) {
@@ -100,9 +105,12 @@ static UIImage *animatedImageWithAnimatedGIFImageSource(CGImageSourceRef const s
     UIImage *output;
     size_t const count = CGImageSourceGetCount(source);
     CGImageRef images[count];
+    for (int i = 0; i < count; i = i + 1) {
+        images[i] = NULL;
+    }
     int delayCentiseconds[count]; // in centiseconds
     int imageCount = createImagesAndDelays(source, count, images, delayCentiseconds, options);
-    if (imageCount > 0) {
+    if (imageCount == BUCImageTaskCancelError) {
         releaseImages(imageCount, images);
         return nil;
     }
