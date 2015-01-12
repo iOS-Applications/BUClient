@@ -182,13 +182,13 @@ void appendVideo(BUCDiscuzContext *context, NSString *flashUrl) {
     NSTextCheckingResult *match;
     NSString *htmlUrl;
     if (matchPattern(flashUrl, @"^http://player\\.youku\\.com/player\\.php/sid/([a-z0-9]+)/v\\.swf$", &match)) {
-        htmlUrl = [NSString stringWithFormat:@"http://v\\.youku\\.com/v_show/id_%@\\.html", [flashUrl substringWithRange:[match rangeAtIndex:1]]];
+        htmlUrl = [NSString stringWithFormat:@"http://v.youku.com/v_show/id_%@.html", [flashUrl substringWithRange:[match rangeAtIndex:1]]];
     } else if (matchPattern(flashUrl, @"^http://player\\.video\\.qiyi\\.com/[a-z0-9]+/[0-9]+/[0-9]+/(v_[0-9a-z]+)\\.swf.+$", &match)) {
-        htmlUrl = [NSString stringWithFormat:@"http://www\\.iqiyi\\.com/%@\\.html", [flashUrl substringWithRange:[match rangeAtIndex:1]]];
+        htmlUrl = [NSString stringWithFormat:@"http://www.iqiyi.com/%@.html", [flashUrl substringWithRange:[match rangeAtIndex:1]]];
     } else if (matchPattern(flashUrl, @"^http://i7\\.imgs\\.letv\\.com/player/swfPlayer\\.swf\\?id=([0-9]+).+$", &match)) {
-        htmlUrl = [NSString stringWithFormat:@"http://www\\.letv\\.com/ptv/vplay/%@\\.html", [flashUrl substringWithRange:[match rangeAtIndex:1]]];
+        htmlUrl = [NSString stringWithFormat:@"http://www.letv.com/ptv/vplay/%@.html", [flashUrl substringWithRange:[match rangeAtIndex:1]]];
     } else if (matchPattern(flashUrl, @"^http://www\\.tucao\\.cc/mini/([0-9]+)\\.swf$", &match)) {
-        htmlUrl = [NSString stringWithFormat:@"http://www\\.tucao\\.cc/play/h%@/", [flashUrl substringWithRange:[match rangeAtIndex:1]]];
+        htmlUrl = [NSString stringWithFormat:@"http://www.tucao.cc/play/h%@/", [flashUrl substringWithRange:[match rangeAtIndex:1]]];
     } else if (matchPattern(flashUrl, @"^http://player\\.56\\.com/v_([0-9a-z]+)\\.swf$", &match)) {
         htmlUrl = [NSString stringWithFormat:@"http://www.56.com/u72/v_%@.html", [flashUrl substringWithRange:[match rangeAtIndex:1]]];
     } else {

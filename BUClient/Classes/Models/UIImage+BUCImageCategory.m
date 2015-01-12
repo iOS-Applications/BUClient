@@ -109,9 +109,9 @@ static UIImage *animatedImageWithAnimatedGIFImageSource(CGImageSourceRef const s
         images[i] = NULL;
     }
     int delayCentiseconds[count]; // in centiseconds
-    int imageCount = createImagesAndDelays(source, count, images, delayCentiseconds, options);
-    if (imageCount == BUCImageTaskCancelError) {
-        releaseImages(imageCount, images);
+    int error = createImagesAndDelays(source, count, images, delayCentiseconds, options);
+    if (error == BUCImageTaskCancelError) {
+        releaseImages(count, images);
         return nil;
     }
     
