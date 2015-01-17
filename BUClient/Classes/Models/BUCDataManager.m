@@ -46,6 +46,7 @@ static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
     self = [super init];
     
     if (self) {
+        _session = @"session";
         _networkEngine = [[BUCNetworkEngine alloc] init];
         _htmlScraper = [[BUCHTMLScraper alloc] init];
         _htmlScraper.dataManager = self;
@@ -354,7 +355,6 @@ static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
     NSMutableDictionary *json = [[NSMutableDictionary alloc] init];
     
     [json setObject:@"login" forKey:@"action"];
-    [json setObject:self.username forKey:@"username"];
     [json setObject:self.password forKey:@"password"];
     
     [self
@@ -374,20 +374,9 @@ static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
 
 - (void)loadJsonFromUrl:(NSString *)url json:(NSMutableDictionary *)json attachment:(UIImage *)attachment isForm:(BOOL)isForm onSuccess:(BUCMapBlock)mapBlock onError:(BUCStringBlock)errorBlock count:(NSInteger)count {
     
+    [json setObject:self.username forKey:@"username"];
     if (![url isEqualToString:@"logging"]) {
-        if (!self.session) {
-            [self
-             updateSessionOnSuccess:^{
-                 [self loadJsonFromUrl:url json:json attachment:(UIImage *)attachment isForm:(BOOL)isForm onSuccess:mapBlock onError:errorBlock count:count];
-             }
-             
-             onError:errorBlock];
-            
-            return;
-        } else {
-            [json setObject:self.username forKey:@"username"];
-            [json setObject:self.session forKey:@"session"];
-        }
+        [json setObject:self.session forKey:@"session"];
     }
 
     [self.networkEngine
@@ -403,8 +392,19 @@ static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
              NSString *msg = [map objectForKey:@"msg"];
              NSLog(@"ERROR:%@ COUNT:%ld URL:%@", msg, (long)count, url);
              if ([msg isEqualToString:@"IP+logged"] && count <= 1) {
-                 self.session = nil;
-                 [self loadJsonFromUrl:url json:json attachment:attachment isForm:isForm onSuccess:mapBlock onError:errorBlock count:count + 1];
+                 [self updateSessionOnSuccess:^{
+                     
+                     [self loadJsonFromUrl:url
+                                      json:json
+                                attachment:(UIImage *)attachment
+                                    isForm:(BOOL)isForm
+                                 onSuccess:mapBlock
+                                   onError:errorBlock
+                                     count:count + 1];
+                  }
+                  
+                                      onError:errorBlock];
+                 
              } else if ([msg isEqualToString:@"thread_nopermission"]) {
                  errorBlock(@"该帖设置了访问权限，无法访问");
              } else if ([url isEqualToString:@"logging"]) {

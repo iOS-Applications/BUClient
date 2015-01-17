@@ -506,7 +506,7 @@
         fontDescriptor = [fontDescriptor fontDescriptorWithSymbolicTraits:trait];
     }
     
-    UIFont *font =  [UIFont fontWithDescriptor:fontDescriptor size: 0.0];
+    UIFont *font =  [UIFont fontWithDescriptor:fontDescriptor size:0.0f];
     
     return @{NSFontAttributeName:font};
 }
