@@ -18,20 +18,20 @@
 - (void)logout;
 
 - (void)listOfForum:(NSString *)fid
-                from:(NSString *)from
-                  to:(NSString *)to
-           onSuccess:(BUCListBlock)listBlock
-             onError:(BUCStringBlock)errorBlock;
+               from:(NSString *)from
+                 to:(NSString *)to
+          onSuccess:(BUCListBlock)listBlock
+            onError:(BUCStringBlock)errorBlock;
 
 - (void)listOfPost:(NSString *)postID
-           from:(NSString *)from
-             to:(NSString *)to
-      onSuccess:(BUCListBlock)listBlock
-        onError:(BUCStringBlock)errorBlock;
+              from:(NSString *)from
+                to:(NSString *)to
+         onSuccess:(BUCListBlock)listBlock
+           onError:(BUCStringBlock)errorBlock;
 
 - (void)childCountOfForum:(NSString *)fid thread:(NSString *)tid onSuccess:(BUCNumberBlock)numberBlock onError:(BUCStringBlock)errorBlock;
 
-- (void)getImageWithUrl:(NSURL *)url size:(CGSize)size onSuccess:(BUCImageBlock)imageBlock;
+- (void)getImageWithURL:(NSURL *)url size:(CGSize)size onSuccess:(BUCImageBlock)imageBlock;
 
 - (UIImage *)getImageWithPath:(NSString *)path;
 

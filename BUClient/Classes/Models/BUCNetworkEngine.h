@@ -5,16 +5,16 @@
 
 @property (readonly, nonatomic) NSString *host;
 
-- (void)fetchJsonFromUrl:(NSString *)url
-                    json:(NSDictionary *)json
+- (void)fetchJSONFromAPI:(NSString *)api
+                    JSON:(NSDictionary *)json
               attachment:(UIImage *)attachment
                   isForm:(BOOL)isForm
-                onResult:(BUCMapBlock)mapBlock
-                 onError:(BUCStringBlock)errorBlock;
+                 onError:(BUCStringBlock)errorBlock
+               onSuccess:(BUCMapBlock)mapBlock;
 
-- (void)fetchDataFromUrl:(NSURLRequest *)request
-                onResult:(BUCDataBlock)dataBlock
-                 onError:(BUCStringBlock)errorBlock;
 
+- (void)fetchDataFromURL:(NSURL *)url
+                 onError:(BUCStringBlock)errorBlock
+               onSuccess:(BUCDataBlock)dataBlock;
 
 @end

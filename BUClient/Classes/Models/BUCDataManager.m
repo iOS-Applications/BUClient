@@ -110,41 +110,44 @@ static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
 }
 
 
--(void)loginWithUsername:(NSString *)username password:(NSString *)password onSuccess:(BUCVoidBlock)voidBlock onFail:(BUCStringBlock)errorBlock {
+-(void)loginWithUsername:(NSString *)username
+                password:(NSString *)password
+               onSuccess:(BUCVoidBlock)voidBlock
+                  onFail:(BUCStringBlock)errorBlock {
+    
     self.username = username;
     self.password = password;
-    [self
-     updateSessionOnSuccess:^{
-         NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-         [defaults setObject:username forKey:@"username"];
-         [defaults setObject:password forKey:@"password"];
-         [defaults setObject:self.uid forKey:@"uid"];
-         [defaults setBool:YES forKey:BUCUserLoginStateDefaultKey];
-         NSMutableDictionary *userList = [[defaults dictionaryForKey:@"userList"] mutableCopy];
-         if (!userList) {
-             userList = [[NSMutableDictionary alloc] init];
-         }
-         NSString *userKey = [username lowercaseString];
-         NSMutableDictionary *userSettings = [userList objectForKey:userKey];
-         NSString *signature;
-         if (!userSettings) {
-             userSettings = [[NSMutableDictionary alloc] init];
-             [userSettings setObject:username forKey:@"username"];
-             [userSettings setObject:self.uid forKey:@"uid"];
-             signature = @"\n\nSent from my iPhone";
-             [userSettings setObject:signature forKey:@"signature"];
-         } else {
-             [userSettings setObject:password forKey:@"password"];
-             signature = [userSettings objectForKey:@"signature"];
-         }
-         [userList setObject:userSettings forKey:userKey];
-         [defaults setObject:userList forKey:@"userList"];
-         [defaults setObject:signature forKey:@"signature"];
-         [defaults synchronize];
-         self.loggedIn = YES;
-         voidBlock();
-     }
-     onError:errorBlock];
+    
+    [self updateSessionOnError:errorBlock onSuccess:^{
+        NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+        [defaults setObject:username forKey:@"username"];
+        [defaults setObject:password forKey:@"password"];
+        [defaults setObject:self.uid forKey:@"uid"];
+        [defaults setBool:YES forKey:BUCUserLoginStateDefaultKey];
+        NSMutableDictionary *userList = [[defaults dictionaryForKey:@"userList"] mutableCopy];
+        if (!userList) {
+            userList = [[NSMutableDictionary alloc] init];
+        }
+        NSString *userKey = [username lowercaseString];
+        NSMutableDictionary *userSettings = [userList objectForKey:userKey];
+        NSString *signature;
+        if (!userSettings) {
+            userSettings = [[NSMutableDictionary alloc] init];
+            [userSettings setObject:username forKey:@"username"];
+            [userSettings setObject:self.uid forKey:@"uid"];
+            signature = @"\n\nSent from my iPhone";
+            [userSettings setObject:signature forKey:@"signature"];
+        } else {
+            [userSettings setObject:password forKey:@"password"];
+            signature = [userSettings objectForKey:@"signature"];
+        }
+        [userList setObject:userSettings forKey:userKey];
+        [defaults setObject:userList forKey:@"userList"];
+        [defaults setObject:signature forKey:@"signature"];
+        [defaults synchronize];
+        self.loggedIn = YES;
+        voidBlock();
+    }];
 }
 
 
@@ -161,11 +164,12 @@ static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
     }
     
     [self
-     loadJsonFromUrl:@"fid_tid"
-     json:json
+     loadJSONFromURL:@"fid_tid"
+     JSON:json
      attachment:nil
      isForm:NO
-     
+     count:0
+     onError:errorBlock
      onSuccess:^(NSDictionary *map) {
          NSString *count;
          if (fid) {
@@ -174,11 +178,7 @@ static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
              count = [map objectForKey:@"tid_sum"];
          }
          numberBlock(count.integerValue);
-     }
-     
-     onError:errorBlock
-     
-     count:0];
+     }];
 }
 
 
@@ -190,9 +190,17 @@ static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
         [json setObject:fid forKey:@"fid"];
         [json setObject:from forKey:@"from"];
         [json setObject:to forKey:@"to"];
-        [self loadListFromUrl:@"thread" json:json listType:@"threadlist" onSuccess:listBlock onError:errorBlock];
+        [self loadListFromURL:@"thread"
+                         JSON:json
+                     listType:@"threadlist"
+                      onError:errorBlock
+                    onSuccess:listBlock];
     } else {
-        [self loadListFromUrl:@"home" json:json listType:@"newlist" onSuccess:listBlock onError:errorBlock];
+        [self loadListFromURL:@"home"
+                         JSON:json
+                     listType:@"newlist"
+                      onError:errorBlock
+                    onSuccess:listBlock];
     }
 }
 
@@ -205,7 +213,11 @@ static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
     [json setObject:from forKey:@"from"];
     [json setObject:to forKey:@"to"];
     
-    [self loadListFromUrl:@"post" json:json listType:@"postlist" onSuccess:listBlock onError:errorBlock];
+    [self loadListFromURL:@"post"
+                     JSON:json
+                 listType:@"postlist"
+                  onError:errorBlock
+                onSuccess:listBlock];
 }
 
 
@@ -233,17 +245,16 @@ static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
         [json setObject:@"newreply" forKey:@"action"];
     }
     
-    [self
-     loadJsonFromUrl:@"newpost"
-     json:json
-     attachment:attachment
-     isForm:YES
-     onSuccess:^(NSDictionary *map) {
-         NSNumber *tid = [map objectForKey:@"tid"];
-         stringBlock(tid.stringValue);
-     }
-     onError:errorBlock
-     count:0];
+    [self loadJSONFromURL:@"newpost"
+                     JSON:json
+               attachment:attachment
+                   isForm:YES
+                    count:0
+                  onError:errorBlock
+                onSuccess:^(NSDictionary *map) {
+                    NSNumber *tid = [map objectForKey:@"tid"];
+                    stringBlock(tid.stringValue);
+                }];
 }
 
 
@@ -258,7 +269,7 @@ static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
 }
 
 
-- (void)getImageWithUrl:(NSURL *)url size:(CGSize)size onSuccess:(BUCImageBlock)imageBlock {
+- (void)getImageWithURL:(NSURL *)url size:(CGSize)size onSuccess:(BUCImageBlock)imageBlock {
     NSString *key = [NSString stringWithFormat:@"%@%@", url.absoluteString, NSStringFromCGSize(size)];
     NSCache *cache = self.defaultCache;
     UIImage *image = [cache objectForKey:key];
@@ -267,31 +278,26 @@ static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
         return;
     }
     
-    [self.networkEngine
-     fetchDataFromUrl:[NSURLRequest requestWithURL:url]
-     
-     onResult:^(NSData *data) {
-         dispatch_async(self.queue, ^{
-             if (self.cancelFlag) {
-                 return;
-             }
-             
-             UIImage *image = [cache objectForKey:key];
-             if (image) {
-                 imageBlock(image);
-                 return;
-             }
-             
-             image = [UIImage imageWithData:data size:size];
-
-             if (image) {
-                 [cache setObject:image forKey:key];
-                 imageBlock(image);
-             }
-         });
-     }
-     
-     onError:nil];
+    [self.networkEngine fetchDataFromURL:url onError:nil onSuccess:^(NSData *data) {
+        dispatch_async(self.queue, ^{
+            if (self.cancelFlag) {
+                return;
+            }
+            
+            UIImage *image = [cache objectForKey:key];
+            if (image) {
+                imageBlock(image);
+                return;
+            }
+            
+            image = [UIImage imageWithData:data size:size];
+            
+            if (image) {
+                [cache setObject:image forKey:key];
+                imageBlock(image);
+            }
+        });
+    }];
 }
 
 
@@ -317,6 +323,7 @@ static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
     return self.bookmarkList;
 }
 
+
 - (BOOL)lookupBookmarkOfThread:(NSString *)tid {
     if ([self.bookmarkTidSet containsObject:tid]) {
         return YES;
@@ -325,11 +332,13 @@ static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
     }
 }
 
+
 - (void)bookmarkThread:(NSString *)tid title:(NSString *)title {
     [self.bookmarkTidSet addObject:tid];
     [self.bookmarkList addObject:@{@"tid":tid, @"title":title}];
     [self.bookmarkList writeToFile:self.bookmarkListPath atomically:YES];
 }
+
 
 - (void)removeBookmarkOfThread:(NSString *)tid {
     [self.bookmarkTidSet removeObject:tid];
@@ -350,60 +359,85 @@ static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
 }
 
 
-#pragma mark - private methods
-- (void)updateSessionOnSuccess:(BUCVoidBlock)voidBlock onError:(BUCStringBlock)errorBlock {
+#pragma mark - private
+- (void)updateSessionOnError:(BUCStringBlock)errorBlock onSuccess:(BUCVoidBlock)voidBlock {
     NSMutableDictionary *json = [[NSMutableDictionary alloc] init];
     
     [json setObject:@"login" forKey:@"action"];
     [json setObject:self.password forKey:@"password"];
     
     [self
-     loadJsonFromUrl:@"logging"
-     json:json
+     loadJSONFromURL:@"logging"
+     JSON:json
      attachment:nil
      isForm:NO
+     count:0
+     onError:errorBlock
      onSuccess:^(NSDictionary *map) {
          self.session = [map objectForKey:@"session"];
          self.uid = [map objectForKey:@"uid"];
          voidBlock();
-     }
-     onError:errorBlock
-     count:0];
+     }];
 }
 
 
-- (void)loadJsonFromUrl:(NSString *)url json:(NSMutableDictionary *)json attachment:(UIImage *)attachment isForm:(BOOL)isForm onSuccess:(BUCMapBlock)mapBlock onError:(BUCStringBlock)errorBlock count:(NSInteger)count {
+- (void)loadListFromURL:(NSString *)url
+                   JSON:(NSMutableDictionary *)json
+               listType:(NSString *)listType
+                onError:(BUCStringBlock)errorBlock
+              onSuccess:(BUCListBlock)listBlock {
+    
+    [self loadJSONFromURL:url
+                     JSON:json
+               attachment:nil
+                   isForm:NO
+                    count:0
+                  onError:errorBlock
+                onSuccess:^(NSDictionary *map) {
+                    NSArray *list = [map objectForKey:listType];
+                    NSUInteger count = list.count;
+                    [self populateWithList:list count:count listType:listType];
+                    listBlock(self.postList, count);
+                }];
+}
+
+
+- (void)loadJSONFromURL:(NSString *)url
+                   JSON:(NSMutableDictionary *)json
+             attachment:(UIImage *)attachment
+                 isForm:(BOOL)isForm
+                  count:(NSUInteger)count
+                onError:(BUCStringBlock)errorBlock
+              onSuccess:(BUCMapBlock)mapBlock {
     
     [json setObject:self.username forKey:@"username"];
     if (![url isEqualToString:@"logging"]) {
         [json setObject:self.session forKey:@"session"];
     }
-
+    
     [self.networkEngine
-     fetchJsonFromUrl:url
-     json:json
+     fetchJSONFromAPI:url
+     JSON:json
      attachment:attachment
      isForm:isForm
-     
-     onResult:^(NSDictionary *map) {
+     onError:errorBlock
+     onSuccess:^(NSDictionary *map) {
          if ([[map objectForKey:@"result"] isEqualToString:@"success"]) {
              mapBlock(map);
          } else if ([[map objectForKey:@"result"] isEqualToString:@"fail"]) {
              NSString *msg = [map objectForKey:@"msg"];
              NSLog(@"ERROR:%@ COUNT:%ld URL:%@", msg, (long)count, url);
              if ([msg isEqualToString:@"IP+logged"] && count <= 1) {
-                 [self updateSessionOnSuccess:^{
-                     
-                     [self loadJsonFromUrl:url
-                                      json:json
-                                attachment:(UIImage *)attachment
-                                    isForm:(BOOL)isForm
-                                 onSuccess:mapBlock
+                 
+                 [self updateSessionOnError:errorBlock onSuccess:^{
+                     [self loadJSONFromURL:url
+                                      JSON:json
+                                attachment:attachment
+                                    isForm:isForm
+                                     count:count + 1
                                    onError:errorBlock
-                                     count:count + 1];
-                  }
-                  
-                                      onError:errorBlock];
+                                 onSuccess:mapBlock];
+                 }];
                  
              } else if ([msg isEqualToString:@"thread_nopermission"]) {
                  errorBlock(@"该帖设置了访问权限，无法访问");
@@ -419,25 +453,7 @@ static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
          } else {
              errorBlock(@"未知错误");
          }
-     }
-     
-     onError:errorBlock];
-}
-
-
-- (void)loadListFromUrl:(NSString *)url
-                   json:(NSMutableDictionary *)json
-               listType:(NSString *)listType
-              onSuccess:(BUCListBlock)listBlock
-                onError:(BUCStringBlock)errorBlock {
-    BUCMapBlock block = ^(NSDictionary *map) {
-        NSArray *list = [map objectForKey:listType];
-        NSUInteger count = list.count;
-        [self populateWithList:list count:count listType:listType];
-        listBlock(self.postList, count);
-    };
-    
-    [self loadJsonFromUrl:url json:json attachment:nil isForm:NO onSuccess:block onError:errorBlock count:0];
+     }];
 }
 
 
@@ -599,6 +615,7 @@ static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
     
     static NSDateFormatter *dateFormatter;
     static NSDateFormatter *parsingFormatter;
+    static NSRegularExpression *regex;
     static dispatch_once_t onceEnsure;
     dispatch_once(&onceEnsure, ^{
         dateFormatter = [[NSDateFormatter alloc] init];
@@ -607,12 +624,12 @@ static NSString * const BUCUserLoginStateDefaultKey = @"UserIsLoggedIn";
         dateFormatter.locale = [NSLocale localeWithLocaleIdentifier:@"zh_Hans_CN"];
         parsingFormatter = [[NSDateFormatter alloc] init];
         [parsingFormatter setDateFormat:@"yyyy-MM-dd HH:mm"];
+        regex = [NSRegularExpression regularExpressionWithPattern:@"^[0-9]+$" options:NSRegularExpressionCaseInsensitive error:NULL];
     });
     
     NSString *output;
     NSDate *date;
     
-    NSRegularExpression *regex = [NSRegularExpression regularExpressionWithPattern:@"^[0-9]+$" options:NSRegularExpressionCaseInsensitive error:NULL];
     if ([regex numberOfMatchesInString:dateline options:0 range:NSMakeRange(0, dateline.length)] == 0) {
         date = [parsingFormatter dateFromString:dateline];
     } else {

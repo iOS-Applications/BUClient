@@ -48,15 +48,15 @@
 
 
 #pragma mark - public methods
-- (void)fetchJsonFromUrl:(NSString *)url
-                    json:(NSDictionary *)json
+- (void)fetchJSONFromAPI:(NSString *)api
+                    JSON:(NSDictionary *)json
               attachment:(UIImage *)attachment
                   isForm:(BOOL)isForm
-                onResult:(BUCMapBlock)mapBlock
-                 onError:(BUCStringBlock)errorBlock {
+                 onError:(BUCStringBlock)errorBlock
+               onSuccess:(BUCMapBlock)mapBlock {
     
     NSError *error;
-    NSURLRequest *request = [self requestWithUrl:url json:json attachment:attachment isForm:isForm error:&error];
+    NSURLRequest *request = [self requestWithAPI:api json:json attachment:attachment isForm:isForm error:&error];
     if (!request) {
         errorBlock(@"未知错误");
         return;
@@ -64,14 +64,24 @@
     
     void (^block)(NSData *, NSURLResponse *, NSError *);
     block = ^(NSData *data, NSURLResponse *response, NSError *error) {
-        [self callbackWithData:data response:response error:error mapBlock:mapBlock errorBlock:errorBlock];
+        dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0);
+        dispatch_async(queue, ^{
+            [self callbackWithData:data
+                          response:response
+                             error:error
+                          mapBlock:mapBlock
+                        errorBlock:errorBlock];
+        });
     };
     
     [[self.defaultSession dataTaskWithRequest:request completionHandler:block] resume];
 }
 
 
-- (void)fetchDataFromUrl:(NSURLRequest *)request onResult:(BUCDataBlock)dataBlock onError:(BUCStringBlock)errorBlock {
+- (void)fetchDataFromURL:(NSURL *)url
+                 onError:(BUCStringBlock)errorBlock
+               onSuccess:(BUCDataBlock)dataBlock {
+    
     void(^urlSessionBlock)(NSData *, NSURLResponse *, NSError *);
     urlSessionBlock = ^(NSData *data, NSURLResponse *response, NSError *error) {
         if (data) {
@@ -79,11 +89,19 @@
         }
     };
     
+    NSURLRequest *request = [NSURLRequest requestWithURL:url];
+    
     [[self.defaultSession dataTaskWithRequest:request completionHandler:urlSessionBlock] resume];
 }
 
 
-- (void)callbackWithData:(NSData *)data response:(NSURLResponse *)response error:(NSError *)error mapBlock:(BUCMapBlock)mapBlock errorBlock:(BUCStringBlock)errorBlock {
+#pragma mark - private
+- (void)callbackWithData:(NSData *)data
+                response:(NSURLResponse *)response
+                   error:(NSError *)error
+                mapBlock:(BUCMapBlock)mapBlock
+              errorBlock:(BUCStringBlock)errorBlock {
+    
     NSDictionary *result;
     if (error || ((NSHTTPURLResponse *)response).statusCode != 200) {
         goto fail;
@@ -105,11 +123,10 @@ fail:
 }
 
 
-#pragma mark - private methods
-- (NSURLRequest *)requestWithUrl:(NSString *)url json:(NSDictionary *)json attachment:(UIImage *)attachment isForm:(BOOL)isForm error:(NSError **)error {
+- (NSURLRequest *)requestWithAPI:(NSString *)api json:(NSDictionary *)json attachment:(UIImage *)attachment isForm:(BOOL)isForm error:(NSError **)error {
     NSString *baseURL = [NSString stringWithFormat:@"%@/open_api/bu_%%@.php", self.host];
 //    baseURL = @"http://192.168.1.100/open_api/bu_%@.php";
-    NSMutableURLRequest *req = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:[NSString stringWithFormat:baseURL, url]]];
+    NSMutableURLRequest *req = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:[NSString stringWithFormat:baseURL, api]]];
     NSMutableDictionary *dataJSON = [[NSMutableDictionary alloc] init];
     NSData *data;
     
@@ -136,17 +153,17 @@ fail:
 
 
 - (NSData *)formDataWithData:(NSData *)data attachment:(UIImage *)attachment boundary:(NSString *)boundary {
-    NSMutableData * body=[NSMutableData data];
+    NSMutableData *body = [NSMutableData data];
     
     [body appendData:[[NSString stringWithFormat:@"\r\n--%@\r\n",boundary] dataUsingEncoding:NSUTF8StringEncoding]];
-    [body appendData:[@"Content-Disposition: form-data; name=\"json\"\r\n\r\n" dataUsingEncoding:NSUTF8StringEncoding]];
+    [body appendData:[@"Content-Disposition:form-data; name=\"json\"\r\n\r\n" dataUsingEncoding:NSUTF8StringEncoding]];
     [body appendData:data];
-    [body appendData:[[NSString stringWithFormat:@"\r\n--%@\r\n",boundary]dataUsingEncoding:NSUTF8StringEncoding]];
+    [body appendData:[[NSString stringWithFormat:@"\r\n--%@\r\n",boundary] dataUsingEncoding:NSUTF8StringEncoding]];
     
     if (attachment) {
-        [body appendData:[@"Content-Disposition: form-data;name=\"attach\"\r\n" dataUsingEncoding:NSUTF8StringEncoding]];
-        [body appendData:[@"Content-Type: image/png\r\n" dataUsingEncoding:NSUTF8StringEncoding]];
-        [body appendData:[@"Content-Transfer-Encoding: binary\r\n\r\n" dataUsingEncoding:NSUTF8StringEncoding]];
+        [body appendData:[@"Content-Disposition:form-data; name=\"attach\"\r\n" dataUsingEncoding:NSUTF8StringEncoding]];
+        [body appendData:[@"Content-Type:image/png\r\n" dataUsingEncoding:NSUTF8StringEncoding]];
+        [body appendData:[@"Content-Transfer-Encoding:binary\r\n\r\n" dataUsingEncoding:NSUTF8StringEncoding]];
         [body appendData:UIImagePNGRepresentation(attachment)];
         [body appendData:[[NSString stringWithFormat:@"\r\n--%@--\r\n",boundary]dataUsingEncoding:NSUTF8StringEncoding]];
     }

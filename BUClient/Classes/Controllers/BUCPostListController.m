@@ -85,7 +85,7 @@ static NSUInteger const BUCPostListMaxRowCount = 40;
 
     if (layoutInvalid) {
         self.contentWidth = self.screenWidth - 2 * BUCDefaultPadding;
-        [self.tableView reloadData];
+        [self relayoutList];
     }
 }
 
@@ -146,11 +146,12 @@ static NSUInteger const BUCPostListMaxRowCount = 40;
 
 
 #pragma mark - list manipulation
-- (NSIndexSet *)updateWithList:(NSArray *)list count:(NSUInteger)count {
+- (NSIndexSet *)newSectionsWithList:(NSArray *)list count:(NSUInteger)count {
     if (self.flush) {
         self.rowCount = 0;
         [self.tidSet removeAllObjects];
     }
+    
     NSUInteger index = self.rowCount;
     
     for (NSUInteger i = 0; i < count; i = i + 1) {
@@ -168,7 +169,7 @@ static NSUInteger const BUCPostListMaxRowCount = 40;
         reusablePost.title = post.title;
         [reusablePost.textStorage setAttributedString:post.content.richText];
         reusablePost.meta = post.meta;
-        reusablePost.cellWidth = 0.0f;
+        [self layoutPost:reusablePost];
         
         index = index + 1;
     }
@@ -195,28 +196,32 @@ static NSUInteger const BUCPostListMaxRowCount = 40;
      
      onSuccess:^(NSArray *list, NSUInteger count) {
          if (weakSelf) {
-             NSIndexSet *insertSections = [weakSelf updateWithList:list count:count];
-             if (weakSelf.flush) {
-                 weakSelf.from = from;
-                 [weakSelf.tableView setContentOffset:CGPointZero];
-                 [weakSelf.tableView reloadData];
-             } else {
-                 [weakSelf.tableView insertSections:insertSections withRowAnimation:UITableViewRowAnimationNone];
-             }
-             weakSelf.to = to;
-             
-             if (weakSelf.fid) {
-                 weakSelf.tableView.tableFooterView.hidden = NO;
-             }
-             [weakSelf updateTitle];
-             [weakSelf endLoading];
+             NSIndexSet *newSections = [weakSelf newSectionsWithList:list count:count];
+             dispatch_async(dispatch_get_main_queue(), ^{
+                 if (weakSelf.flush) {
+                     weakSelf.from = from;
+                     [weakSelf.tableView setContentOffset:CGPointZero];
+                     [weakSelf.tableView reloadData];
+                 } else {
+                     [weakSelf.tableView insertSections:newSections withRowAnimation:UITableViewRowAnimationNone];
+                 }
+                 weakSelf.to = to;
+                 
+                 if (weakSelf.fid) {
+                     weakSelf.tableView.tableFooterView.hidden = NO;
+                 }
+                 [weakSelf updateTitle];
+                 [weakSelf endLoading];
+             });
          }
      }
      
      onError:^(NSString *errorMsg) {
          if (weakSelf) {
-             [weakSelf endLoading];
-             [weakSelf.appDelegate alertWithMessage:errorMsg];
+             dispatch_async(dispatch_get_main_queue(), ^{
+                 [weakSelf endLoading];
+                 [weakSelf.appDelegate alertWithMessage:errorMsg];
+             });
          }
      }];
 }
@@ -387,23 +392,35 @@ static NSUInteger const BUCPostListMaxRowCount = 40;
 }
 
 
-- (CGFloat)cellHeightWithPost:(BUCPost *)post {
+- (void)layoutPost:(BUCPost *)post {
     post.textContainer.size = CGSizeMake(self.contentWidth, FLT_MAX);
     [post.layoutManager ensureLayoutForTextContainer:post.textContainer];
     CGRect frame = [post.layoutManager usedRectForTextContainer:post.textContainer];
     frame.size.height = ceilf(frame.size.height);
+    
     post.cellWidth = self.screenWidth;
-    return BUCDefaultMargin * 3 + frame.size.height + self.metaLineHeight;
+    post.cellHeight = BUCDefaultMargin * 3 + frame.size.height + self.metaLineHeight;
+    post.bounds = CGRectMake(0.0f, 0.0f, self.screenWidth, post.cellHeight);
+}
+
+
+- (void)relayoutList {
+    BUCPostListController * __weak weakSelf = self;
+    dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0);
+    dispatch_async(queue, ^{
+        dispatch_apply(self.rowCount, queue, ^(size_t i) {
+            BUCPost *post = [self.postList objectAtIndex:i];
+            [weakSelf layoutPost:post];
+        });
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [weakSelf.tableView reloadData];
+        });
+    });
 }
 
 
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {
-    BUCPost *post = [self.postList objectAtIndex:indexPath.section];
-    if (self.screenWidth != post.cellWidth) {
-        post.cellHeight = [self cellHeightWithPost:post];
-        post.bounds = CGRectMake(0.0f, 0.0f, self.screenWidth, post.cellHeight);
-    }
-    
+    BUCPost *post = [self.postList objectAtIndex:indexPath.section];    
     return post.cellHeight + 0.5f;
 }
 

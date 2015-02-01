@@ -544,7 +544,7 @@ static NSUInteger const BUCPostPageMaxRowCount = 40;
     
     if (post.avatar) {
         dispatch_async(queue, ^{
-            [[BUCDataManager sharedInstance] getImageWithUrl:post.avatar.url size:weakSelf.avatarBounds.size onSuccess:^(UIImage *image) {
+            [[BUCDataManager sharedInstance] getImageWithURL:post.avatar.url size:weakSelf.avatarBounds.size onSuccess:^(UIImage *image) {
                 dispatch_async(dispatch_get_main_queue(), ^{
                     BUCPostListCell *cell = (BUCPostListCell *)[tableView cellForRowAtIndexPath:indexPath];
                     if ([[tableView visibleCells] containsObject:cell]) {
@@ -604,7 +604,7 @@ static NSUInteger const BUCPostPageMaxRowCount = 40;
         
         dispatch_async(queue, ^{
             for (BUCImageAttachment *attachment in post.content.imageList) {
-                [[BUCDataManager sharedInstance] getImageWithUrl:attachment.url size:weakSelf.imageSize onSuccess:^(UIImage *image) {
+                [[BUCDataManager sharedInstance] getImageWithURL:attachment.url size:weakSelf.imageSize onSuccess:^(UIImage *image) {
                     dispatch_async(dispatch_get_main_queue(), ^{
                         BUCPostListCell *cell = (BUCPostListCell *)[tableView cellForRowAtIndexPath:indexPath];
                         if ([[tableView visibleCells] containsObject:cell]) {
