@@ -192,7 +192,7 @@ static NSUInteger const BUCPostPageMaxRowCount = 40;
     
     if (layoutInvalid) {
         self.contentWidth = self.screenWidth - 2 * BUCDefaultPadding;
-        [self.tableView reloadData];
+        [self relayoutList];
     }
 }
 
@@ -231,7 +231,7 @@ static NSUInteger const BUCPostPageMaxRowCount = 40;
         reusablePost.index = index + self.from;
         reusablePost.avatar = post.avatar;
         reusablePost.date = post.date;
-        reusablePost.cellWidth = 0.0f;
+        [self layoutPost:reusablePost];
         
         if (!self.flush) {
             [self.insertIndexPaths addObject:[NSIndexPath indexPathForRow:index inSection:0]];
@@ -274,23 +274,28 @@ static NSUInteger const BUCPostPageMaxRowCount = 40;
              }
              weakSelf.to = to;
              [weakSelf buildList:list count:count];
-             if (weakSelf.flush || weakSelf.reverse) {
-                 [weakSelf.tableView setContentOffset:CGPointZero];
-                 [weakSelf.tableView reloadData];
-             } else if (weakSelf.opOnly) {
-                 [weakSelf.tableView reloadData];
-             } else if (weakSelf.insertIndexPaths.count > 0) {
-                 [weakSelf.tableView insertRowsAtIndexPaths:weakSelf.insertIndexPaths withRowAnimation:UITableViewRowAnimationNone];
-             }
-             
-             [weakSelf endLoading];
+             dispatch_async(dispatch_get_main_queue(), ^{
+                 if (weakSelf.flush || weakSelf.reverse) {
+                     [weakSelf.tableView setContentOffset:CGPointZero];
+                     [weakSelf.tableView reloadData];
+                 } else if (weakSelf.opOnly) {
+                     [weakSelf.tableView reloadData];
+                 } else if (weakSelf.insertIndexPaths.count > 0) {
+                     [weakSelf.tableView insertRowsAtIndexPaths:weakSelf.insertIndexPaths
+                                               withRowAnimation:UITableViewRowAnimationNone];
+                 }
+                 
+                 [weakSelf endLoading];
+             });
          }
      }
      
      onError:^(NSString *errorMsg) {
          if (weakSelf) {
-             [weakSelf endLoading];
-             [weakSelf.appDelegate alertWithMessage:errorMsg];
+             dispatch_async(dispatch_get_main_queue(), ^{
+                 [weakSelf endLoading];
+                 [weakSelf.appDelegate alertWithMessage:errorMsg];                 
+             });
          }
      }];
 }
@@ -420,24 +425,35 @@ static NSUInteger const BUCPostPageMaxRowCount = 40;
 }
 
 
-- (CGFloat)cellHeightWithPost:(BUCPost *)post {
+- (void)layoutPost:(BUCPost *)post {
     post.textContainer.size = CGSizeMake(self.contentWidth, FLT_MAX);
     [post.layoutManager ensureLayoutForTextContainer:post.textContainer];
     CGRect frame = [post.layoutManager usedRectForTextContainer:post.textContainer];
     frame.size.height = ceilf(frame.size.height);
+    
     post.cellWidth = self.screenWidth;
-    return BUCDefaultMargin * 4.0f + frame.size.height + 40.0f;
+    post.cellHeight = BUCDefaultMargin * 4.0f + frame.size.height + 40.0f;
+    post.bounds = CGRectMake(0.0f, 0.0f, self.screenWidth, post.cellHeight);
+}
+
+
+- (void)relayoutList {
+    BUCPostDetailController * __weak weakSelf = self;
+    dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0);
+    dispatch_async(queue, ^{
+        dispatch_apply(self.rowCount, queue, ^(size_t i) {
+            BUCPost *post = [self.postList objectAtIndex:i];
+            [weakSelf layoutPost:post];
+        });
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [weakSelf.tableView reloadData];
+        });
+    });
 }
 
 
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {
     BUCPost *post = [self getPostWithIndexpath:indexPath];
-    
-    if (self.screenWidth != post.cellWidth) {
-        post.cellHeight = [self cellHeightWithPost:post];
-        post.bounds = CGRectMake(0.0f, 0.0f, self.screenWidth, post.cellHeight);
-    }
-
     return post.cellHeight + 0.5f;
 }
 

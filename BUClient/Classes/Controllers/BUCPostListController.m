@@ -240,8 +240,10 @@ static NSUInteger const BUCPostListMaxRowCount = 40;
              weakSelf.postCount = count + 1;
              [weakSelf loadListFrom:from];
          } onError:^(NSString *errorMsg) {
-             [weakSelf endLoading];
-             [weakSelf.appDelegate alertWithMessage:errorMsg];
+             dispatch_async(dispatch_get_main_queue(), ^{
+                 [weakSelf endLoading];
+                 [weakSelf.appDelegate alertWithMessage:errorMsg];
+             });
          }];
     } else {
         [self loadListFrom:from];
@@ -399,7 +401,7 @@ static NSUInteger const BUCPostListMaxRowCount = 40;
     frame.size.height = ceilf(frame.size.height);
     
     post.cellWidth = self.screenWidth;
-    post.cellHeight = BUCDefaultMargin * 3 + frame.size.height + self.metaLineHeight;
+    post.cellHeight = BUCDefaultMargin * 3.0f + frame.size.height + self.metaLineHeight;
     post.bounds = CGRectMake(0.0f, 0.0f, self.screenWidth, post.cellHeight);
 }
 
