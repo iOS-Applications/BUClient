@@ -47,7 +47,9 @@ static NSUInteger const BUCPostListMaxRowCount = 40;
 - (void)viewWillDisappear:(BOOL)animated {
     [super viewWillDisappear:animated];
     
-    [[NSNotificationCenter defaultCenter] removeObserver:self name:UIContentSizeCategoryDidChangeNotification object:nil];
+    [[NSNotificationCenter defaultCenter] removeObserver:self
+                                                    name:UIContentSizeCategoryDidChangeNotification
+                                                  object:nil];
     if ([self.navigationController.viewControllers indexOfObject:self]==NSNotFound) {
         [self.appDelegate hideLoading];
     }
@@ -61,7 +63,10 @@ static NSUInteger const BUCPostListMaxRowCount = 40;
         [self didRotateFromInterfaceOrientation:0];
     });
     
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(textStyleChanged:) name:UIContentSizeCategoryDidChangeNotification object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(textStyleChanged:)
+                                                 name:UIContentSizeCategoryDidChangeNotification
+                                               object:nil];
 }
 
 
@@ -90,7 +95,7 @@ static NSUInteger const BUCPostListMaxRowCount = 40;
 }
 
 
-- (void)setupGeometry {
+- (void)setupLayout {
     self.nativeWidth = CGRectGetWidth([UIScreen mainScreen].bounds);
     self.nativeHeight = CGRectGetHeight([UIScreen mainScreen].bounds);
     if (self.nativeWidth > self.nativeHeight) {
@@ -137,7 +142,7 @@ static NSUInteger const BUCPostListMaxRowCount = 40;
     
     self.appDelegate = [UIApplication sharedApplication].delegate;
     
-    [self setupGeometry];
+    [self setupLayout];
     [self setupList];
 
     [self.appDelegate displayLoading];
@@ -431,7 +436,8 @@ static NSUInteger const BUCPostListMaxRowCount = 40;
     UIImage *output;
     CGFloat separatorPosition = post.cellHeight - self.metaLineHeight - BUCDefaultMargin * 2.0f;
     UIGraphicsBeginImageContextWithOptions(post.bounds.size, NO, 0);
-    [post.layoutManager drawGlyphsForGlyphRange:NSMakeRange(0, post.textStorage.length) atPoint:CGPointMake(BUCDefaultPadding, BUCDefaultMargin)];
+    [post.layoutManager drawGlyphsForGlyphRange:NSMakeRange(0, post.textStorage.length)
+                                        atPoint:CGPointMake(BUCDefaultPadding, BUCDefaultMargin)];
     [post.meta drawAtPoint:CGPointMake(BUCDefaultPadding, separatorPosition + BUCDefaultMargin)];
     UIBezierPath *path = [UIBezierPath bezierPathWithRect:CGRectMake(0, separatorPosition + 2.0f, self.screenWidth, 0.5f)];
     [[UIColor lightGrayColor] setFill];
@@ -444,12 +450,16 @@ static NSUInteger const BUCPostListMaxRowCount = 40;
 
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
-    BUCPostListCell *cell = [self.tableView dequeueReusableCellWithIdentifier:@"cell" forIndexPath:indexPath];
+    BUCPostListCell *cell = [self.tableView dequeueReusableCellWithIdentifier:@"cell"
+                                                                 forIndexPath:indexPath];
     BUCPost *post = [self.postList objectAtIndex:indexPath.section];
     cell.contentView.layer.contents = (id)[self renderPost:post].CGImage;
     cell.contentView.hidden = NO;
     
-    if (indexPath.section == self.rowCount - 1 && !self.loading && self.to < self.postCount && self.rowCount == 20) {
+    if (indexPath.section == self.rowCount - 1 &&
+        !self.loading &&
+        self.to < self.postCount &&
+        self.rowCount == 20) {
         [self loadMore];
     }
     

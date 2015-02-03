@@ -107,17 +107,7 @@ static NSUInteger const BUCPostPageMaxRowCount = 40;
 }
 
 
-- (void)setupGeometry {
-    UIInterfaceOrientation orientation = [[UIApplication sharedApplication] statusBarOrientation];
-    if (UIDeviceOrientationIsLandscape(orientation)) {
-        self.screenWidth = self.nativeHeight;
-    } else {
-        self.screenWidth = self.nativeWidth;
-    }
-    self.contentWidth = self.screenWidth - 2 * BUCDefaultPadding;
-}
-
-- (void)setupRenderDefalut {
+- (void)setupLayout {
     self.nativeWidth = CGRectGetWidth([UIScreen mainScreen].bounds);
     self.nativeHeight = CGRectGetHeight([UIScreen mainScreen].bounds);
     if (self.nativeWidth > self.nativeHeight) {
@@ -125,7 +115,14 @@ static NSUInteger const BUCPostPageMaxRowCount = 40;
         self.nativeWidth = self.nativeHeight;
         self.nativeHeight = save;
     }
-    [self setupGeometry];
+    
+    UIInterfaceOrientation orientation = [[UIApplication sharedApplication] statusBarOrientation];
+    if (UIDeviceOrientationIsLandscape(orientation)) {
+        self.screenWidth = self.nativeHeight;
+    } else {
+        self.screenWidth = self.nativeWidth;
+    }
+    self.contentWidth = self.screenWidth - 2 * BUCDefaultPadding;
     
     UIFont *metaFont = [UIFont preferredFontForTextStyle:UIFontTextStyleCaption1];
     self.metaAttribute = @{NSFontAttributeName:metaFont};
@@ -160,7 +157,7 @@ static NSUInteger const BUCPostPageMaxRowCount = 40;
     
     self.star.selected = [[BUCDataManager sharedInstance] lookupBookmarkOfThread:self.rootPost.tid];
     
-    [self setupRenderDefalut];
+    [self setupLayout];
     
     [self.appDelegate displayLoading];
     [[BUCDataManager sharedInstance] resumeAllImageTasks];

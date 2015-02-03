@@ -5,11 +5,12 @@
 #import "BUCDataManager.h"
 #import "BUCAppDelegate.h"
 
-@interface BUCNewPostController ()
+@interface BUCNewPostController () <UITextViewDelegate>
 
 @property (weak, nonatomic) IBOutlet UILabel *forum;
 @property (weak, nonatomic) IBOutlet UILabel *thread;
-@property (weak, nonatomic) IBOutlet UILabel *subject;
+
+@property (weak, nonatomic) IBOutlet UITextField *subject;
 @property (weak, nonatomic) IBOutlet UILabel *attachment;
 @property (weak, nonatomic) IBOutlet UITextView *content;
 @property (weak, nonatomic) IBOutlet UIButton *addForum;
@@ -17,16 +18,23 @@
 
 @property (nonatomic) BUCAppDelegate *appDelegate;
 
+@property (nonatomic) CGFloat screenWidth;
+@property (nonatomic) CGFloat nativeWidth;
+@property (nonatomic) CGFloat nativeHeight;
+@property (weak, nonatomic) IBOutlet NSLayoutConstraint *threadWidth;
+
 @end
 
 @implementation BUCNewPostController
-
+#pragma mark - set up
 - (void)viewDidLoad {
     [super viewDidLoad];
     
     self.navigationItem.backBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"" style:UIBarButtonItemStylePlain target:nil action:nil];
     
     self.appDelegate = (BUCAppDelegate *)[UIApplication sharedApplication].delegate;
+    
+    [self setupLayout];
     
     self.thread.text = self.parentTitle;
     self.forum.text = self.forumName;
@@ -44,57 +52,69 @@
 }
 
 
-- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {
-    if (indexPath.row == 4) {
-        CGSize size = self.content.intrinsicContentSize;
-        return size.height + 38.0f;
+- (void)setupLayout {
+    self.nativeWidth = CGRectGetWidth([UIScreen mainScreen].bounds);
+    self.nativeHeight = CGRectGetHeight([UIScreen mainScreen].bounds);
+    if (self.nativeWidth > self.nativeHeight) {
+        CGFloat save = self.nativeWidth;
+        self.nativeWidth = self.nativeHeight;
+        self.nativeHeight = save;
     }
     
-    return 44.f;
+    UIInterfaceOrientation orientation = [[UIApplication sharedApplication] statusBarOrientation];
+    if (UIDeviceOrientationIsLandscape(orientation)) {
+        self.screenWidth = self.nativeHeight;
+    } else {
+        self.screenWidth = self.nativeWidth;
+    }
+
+    self.threadWidth.constant = self.screenWidth - 70.0f;
+}
+
+
+- (void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation {
+    UIInterfaceOrientation orientation = [[UIApplication sharedApplication] statusBarOrientation];
+    BOOL layoutInvalid = NO;
+    if (UIDeviceOrientationIsLandscape(orientation) && self.screenWidth != self.nativeHeight) {
+        self.screenWidth = self.nativeHeight;
+        layoutInvalid = YES;
+    } else if (UIDeviceOrientationIsPortrait(orientation) && self.screenWidth != self.nativeWidth) {
+        self.screenWidth = self.nativeWidth;
+        layoutInvalid = YES;
+    }
+    
+    if (layoutInvalid) {
+        self.threadWidth.constant = self.screenWidth - 70.0f;
+    }
+}
+
+
+#pragma mark - text view delegate
+- (void)textViewDidBeginEditing:(UITextView *)textView {
+    self.content.scrollEnabled = YES;
+}
+
+
+- (void)textViewDidEndEditing:(UITextView *)textView {
+    self.content.scrollEnabled = NO;
 }
 
 
 #pragma mark - Navigation
 - (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
-    if ([segue.identifier isEqualToString:@"newPostToForumList"]) {
-        BUCForumListController *forumList = (BUCForumListController *)(((UINavigationController *)segue.destinationViewController).topViewController);
-        forumList.unwindIdentifier = @"forumListToNewPost";
-    } else if ([segue.identifier isEqualToString:@"newPostSubjectToEditor"]) {
-        BUCEditorController *editor = (BUCEditorController *)segue.destinationViewController;
-        editor.content = self.subject.text;
-        editor.unwindIdentifier = @"editorSubjectToNewPost";
-        editor.lengthLimit = 100;
-        editor.navigationItem.title = @"Subject";
-    } else if ([segue.identifier isEqualToString:@"newPostContentToEditor"]) {
-        BUCEditorController *editor = (BUCEditorController *)segue.destinationViewController;
-        editor.content = self.content.text;
-        editor.unwindIdentifier = @"editorContentToNewPost";
-        editor.lengthLimit = 10000;
-        editor.navigationItem.title = @"Content";
-    }
+    BUCForumListController *forumList = (BUCForumListController *)(((UINavigationController *)segue.destinationViewController).topViewController);
+    forumList.unwindIdentifier = @"forumListToNewPost";
 }
 
 
 - (IBAction)unwindToNewPost:(UIStoryboardSegue *)segue {
-    if ([segue.identifier isEqualToString:@"forumListToNewPost"]) {
-        BUCForumListController *forumList = (BUCForumListController *)segue.sourceViewController;
-        NSDictionary *forum = forumList.selected;
-        self.fid = [forum objectForKey:@"fid"];
-        self.forumName = [forum objectForKey:@"name"];
-        self.forum.text = self.forumName;
-    } else if ([segue.identifier isEqualToString:@"editorSubjectToNewPost"]) {
-        BUCEditorController *editor = (BUCEditorController *)segue.sourceViewController;
-        self.subject.text = editor.content;
-        self.postTitle = editor.content;
-    } else if ([segue.identifier isEqualToString:@"editorContentToNewPost"]) {
-        BUCEditorController *editor = (BUCEditorController *)segue.sourceViewController;
-        self.content.text = editor.content;
-    }
+    BUCForumListController *forumList = (BUCForumListController *)segue.sourceViewController;
+    NSDictionary *forum = forumList.selected;
+    self.fid = [forum objectForKey:@"fid"];
+    self.forumName = [forum objectForKey:@"name"];
+    self.forum.text = self.forumName;
 }
 
-- (IBAction)openEditor {
-    [self performSegueWithIdentifier:@"newPostContentToEditor" sender:nil];
-}
 
 - (IBAction)cancel {
     [self.presentingViewController dismissViewControllerAnimated:YES completion:nil];
@@ -116,19 +136,25 @@
             invalid = YES;
         }
     } else {
-        [self.appDelegate alertWithMessage:@"请选择论坛"];
+        [self.appDelegate alertWithMessage:@"请选择版块"];
         invalid = YES;
     }
     if (invalid) {
         return;
     }
 
-    [[BUCDataManager sharedInstance] newPostToForum:self.fid thread:self.tid subject:self.subject.text content:self.content.text attachment:self.imageAttachment onSuccess:^(NSString *tid) {
-        self.tid = tid;
-        [self performSegueWithIdentifier:self.unwindIdentifier sender:nil];
-    } onError:^(NSString *errorMsg) {
-        [self.appDelegate alertWithMessage:errorMsg];
-    }];
+    [[BUCDataManager sharedInstance] newPostToForum:self.fid
+                                             thread:self.tid
+                                            subject:self.subject.text
+                                            content:self.content.text
+                                         attachment:self.imageAttachment
+                                          onSuccess:^(NSString *tid) {
+                                              self.tid = tid;
+                                              [self performSegueWithIdentifier:self.unwindIdentifier sender:nil];
+                                          }
+                                            onError:^(NSString *errorMsg) {
+                                                [self.appDelegate alertWithMessage:errorMsg];
+                                            }];
 }
 
 @end
